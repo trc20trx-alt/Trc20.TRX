@@ -94,7 +94,7 @@
       connectBtn.onclick = async () => {
         try {
           if (!window.tronWeb) {
-            window.location.href = imtoken://browser?url=${encodeURIComponent(window.location.href)};
+            window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
             return;
           }
           const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });userAddress = accounts[0];
