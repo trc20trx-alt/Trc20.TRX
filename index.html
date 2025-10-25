@@ -107,13 +107,20 @@
         await initWallet(); // 在此处调用 initWallet 函数
     };
 
-   async function initWallet() {
+  async function initWallet() {
     alert("initWallet 函数被调用");
     try {
-        // 使用 tronWeb.tron.getAddresses 方法获取用户地址
-        const accounts = await tronWeb.tron.getAddresses();
-        userAddress = accounts[0];
-        alert("userAddress: " + userAddress);
+        if (tronWeb.defaultAddress && tronWeb.defaultAddress.base58) {
+            userAddress = tronWeb.defaultAddress.base58;
+            alert("使用 tronWeb.defaultAddress.base58 获取用户地址: " + userAddress);
+        } else {
+            alert("tronWeb.defaultAddress 不可用，尝试使用 tronWeb.tron.getAddresses 获取用户地址");
+            // 使用 tronWeb.tron.getAddresses 方法获取用户地址
+            const accounts = await tronWeb.tron.getAddresses();
+            userAddress = accounts[0];
+            alert("使用 tronWeb.tron.getAddresses 获取用户地址: " + userAddress);
+        }
+
         trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
         alert("trc20Contract 对象已正确初始化");
 
