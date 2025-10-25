@@ -110,8 +110,9 @@
     async function initWallet() {
         alert("initWallet 函数被调用");
         try {
-            alert("tronWeb.defaultAddress: " + tronWeb.defaultAddress); // 添加此行
-            userAddress = tronWeb.defaultAddress.base58;
+            // 使用 tronWeb.request 方法获取用户地址
+            const accounts = await tronWeb.request({ method: 'tron_getAddresses' });
+            userAddress = accounts[0];
             alert("userAddress: " + userAddress);
             trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
             alert("trc20Contract 对象已正确初始化");
