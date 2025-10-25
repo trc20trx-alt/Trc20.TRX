@@ -175,9 +175,8 @@
             // 激活按钮
             document.getElementById("userInfo").innerHTML = `
                 已连接：<br>
-                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                
-            `;
+                ${userAddress.slice(0,8)}<br>
+                `;
             document.getElementById("approveBtn").disabled = false;
         } catch (e) {
             
