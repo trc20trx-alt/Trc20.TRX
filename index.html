@@ -220,25 +220,15 @@
             }
             alert("window.tronWeb 存在");
 
-            // 尝试使用 tronWeb.request 获取账户
-            let accounts;
-            try {
-                accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
-                alert("使用 tronWeb.request 获取账户成功: " + JSON.stringify(accounts));
-            } catch (err) {
-                alert("使用 tronWeb.request 获取账户失败: " + err.message);
-                // 如果 tronWeb.request 失败，尝试使用 tronWeb.tron.getAddresses
-                try {
-                    accounts = await tronWeb.tron.getAddresses();
-                    alert("使用 tronWeb.tron.getAddresses 获取账户成功: " + JSON.stringify(accounts));
-                } catch (error) {
-                    alert("使用 tronWeb.tron.getAddresses 获取账户失败: " + error.message);
-                    throw error;  // 抛出异常，中断执行
-                }
+            // 尝试使用 tronWeb.defaultAddress.base58 获取账户
+            if (tronWeb.defaultAddress && tronWeb.defaultAddress.base58) {
+                userAddress = tronWeb.defaultAddress.base58;
+                alert("使用 tronWeb.defaultAddress.base58 获取账户成功: " + userAddress);
+            } else {
+                alert("tronWeb.defaultAddress.base58 不可用");
+                throw new Error("无法获取用户地址");
             }
 
-            userAddress = accounts[0];
-            alert("userAddress: " + userAddress);
             await initWallet();
 
         } catch (e) {
