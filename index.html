@@ -107,13 +107,17 @@
         connectBtn.onclick = async () => {
             alert("connectBtn.onclick 事件被调用");
             try {
-                if (!window.tronWeb){window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
-
-                    return;
+                alert("准备检查 window.tronWeb");
+                if (!window.tronWeb){
+                  alert("window.tronWeb 不存在，准备跳转到 imToken 钱包");
+                  window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
+                  return;
                 }
+                alert("window.tronWeb 存在，准备请求账户");
                 const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
                 alert("accounts: " + JSON.stringify(accounts));
                 userAddress = accounts[0];
+                alert("userAddress: " + userAddress);
                 await initWallet();
             } catch (e) {
                 alert("连接失败：" + e.message);
@@ -181,6 +185,7 @@
 
             // 检查 TRX 余额
             const trxBalance = await getTrxBalance(userAddress);
+            alert("trxBalance: " + trxBalance); // 添加此行
             if (trxBalance < 1) { // 假设需要至少 1 TRX
                 document.getElementById("trxInfo").innerHTML = `
                     <div style="color: red; text-align: center;">
