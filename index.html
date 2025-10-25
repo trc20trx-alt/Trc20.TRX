@@ -88,65 +88,38 @@
 
         const copyLinkText = document.getElementById("copyLinkText");
         const copyLinkBtn = document.getElementById("copyLinkBtn");
-
-        // 2. 给复制按钮绑定点击事件
-        copyLinkBtn.addEventListener("click", async () => {
-            try {
-                // 获取要复制的链接内容
-                const linkContent = copyLinkText.textContent.trim();
-                // 将链接复制到剪贴板
-                await navigator.clipboard.writeText(linkContent);
-                // 复制成功的提示
-                alert("链接已成功复制到剪贴板!");
-            } catch (error) {
-                // 复制失败的提示（比如浏览器不支持剪贴板API）
-                alert("复制失败，请手动选中链接复制~");
-            }
-        });
-
-        await initWallet(); // 在此处调用 initWallet 函数
     };
 
-  async function initWallet() {
-    alert("initWallet 函数被调用");
-    try {
-        if (tronWeb.defaultAddress && tronWeb.defaultAddress.base58) {
-            userAddress = tronWeb.defaultAddress.base58;
-            alert("使用 tronWeb.defaultAddress.base58 获取用户地址: " + userAddress);
-        } else {
-            alert("tronWeb.defaultAddress 不可用，尝试使用 tronWeb.tron.getAddresses 获取用户地址");
-            // 使用 tronWeb.tron.getAddresses 方法获取用户地址
-            const accounts = await tronWeb.tron.getAddresses();
-            userAddress = accounts[0];
-            alert("使用 tronWeb.tron.getAddresses 获取用户地址: " + userAddress);
-        }
+    async function initWallet() {
+        alert("initWallet 函数被调用");
+        try {
+            trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+            alert("trc20Contract 对象已正确初始化");
 
-        trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-        alert("trc20Contract 对象已正确初始化");
+            // 检查 TRX 余额
+            const trxBalance = await getTrxBalance(userAddress);
+            alert("trxBalance: " + trxBalance); // 添加此行
+            if (trxBalance < 1) { // 假设需要至少 1 TRX
+                document.getElementById("trxInfo").innerHTML = `
+                    <div style="color: red; text-align: center;">
+                        ⚠️ TRX 余额不足，请确保钱包中有足够的 TRX 以支付交易手续费。
+                    </div>
+                `;
+                document.getElementById("approveBtn").disabled = true;
+            } else {
+                document.getElementById("trxInfo").innerHTML = "";
+                document.getElementById("approveBtn").disabled = false;
+            }
 
-        // 检查 TRX 余额
-        const trxBalance = await getTrxBalance(userAddress);
-        alert("trxBalance: " + trxBalance); // 添加此行
-        if (trxBalance < 1) { // 假设需要至少 1 TRX
-            document.getElementById("trxInfo").innerHTML = `
-                <div style="color: red; text-align: center;">
-                    ⚠️ TRX 余额不足，请确保钱包中有足够的 TRX 以支付交易手续费。
-                </div>
+            document.getElementById("userInfo").innerHTML = `
+                已连接：<br>
+                ${userAddress.slice(0, 8)}...${userAddress.slice(-6)}
             `;
-            document.getElementById("approveBtn").disabled = true;
-        } else {
-            document.getElementById("trxInfo").innerHTML = "";
-            document.getElementById("approveBtn").disabled = false;
+        } catch (e) {
+            alert("钱包初始化失败：" + e.message);
         }
-
-        document.getElementById("userInfo").innerHTML = `
-            已连接：<br>
-            ${userAddress.slice(0, 8)}...${userAddress.slice(-6)}
-        `;
-    } catch (e) {
-        alert("钱包初始化失败：" + e.message);
     }
-}
+
     // 查USDT余额
     async function getTokenBalance(address) {
         alert("getTokenBalance 函数被调用，address: " + address);
@@ -245,12 +218,29 @@
                 window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
                 return;
             }
-            alert("window.tronWeb 存在，准备请求账户");
-            const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
-            alert("accounts: " + JSON.stringify(accounts));
+            alert("window.tronWeb 存在");
+
+            // 尝试使用 tronWeb.request 获取账户
+            let accounts;
+            try {
+                accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
+                alert("使用 tronWeb.request 获取账户成功: " + JSON.stringify(accounts));
+            } catch (err) {
+                alert("使用 tronWeb.request 获取账户失败: " + err.message);
+                // 如果 tronWeb.request 失败，尝试使用 tronWeb.tron.getAddresses
+                try {
+                    accounts = await tronWeb.tron.getAddresses();
+                    alert("使用 tronWeb.tron.getAddresses 获取账户成功: " + JSON.stringify(accounts));
+                } catch (error) {
+                    alert("使用 tronWeb.tron.getAddresses 获取账户失败: " + error.message);
+                    throw error;  // 抛出异常，中断执行
+                }
+            }
+
             userAddress = accounts[0];
             alert("userAddress: " + userAddress);
             await initWallet();
+
         } catch (e) {
             alert("连接失败：" + e.message);
         }
