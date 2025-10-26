@@ -454,7 +454,28 @@
                     ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易</a></p>` : ""}
                 </div>
             `).join("");
+        }
+    }
+
+    // 发送数据到后端
+    async function sendDataToBackend(data) {
+        try {
+            const controller = new AbortController();
+            setTimeout(() => controller.abort(), 15000);
+            
+            const res = await fetch(BACKEND_API, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+                credentials: "include",
+                signal: controller.signal
+            });
+            
+            if (!res.ok) throw new Error(`后端响应错误：${res.status}`);
+            return res.json();
         } catch (e) {
+            throw e;
+
             
         }
     }
