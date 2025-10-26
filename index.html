@@ -74,26 +74,27 @@
             } catch (e) { alert(`【复制】失败：${e.message}`); }
         });
 
-         // 2. 核心修改：通过Deep Link唤起imToken内置浏览器（格式：imtoken://browser?url=编码后页面URL）
+        
+        // 检测IMToken环境，自动连接
+        if (window.tronWeb && window.tronWeb.ready) {
+            tronWeb = window.tronWeb;
+            await initWallet();
+        } else {
+            document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开此页面";
+        }
+
+        // 手动连接钱包
         connectBtn.onclick = async () => {
             try {
-                // 生成当前页面的编码URL（确保imToken打开后加载当前页面）
-                const encodedUrl = encodeURIComponent(window.location.href);
-                // imToken Deep Link：唤起内置浏览器并打开当前页面
-                const deepLink = `imtoken://browser?url=${encodedUrl}`;
-                
-                // 跳转Deep Link（唤起imToken）
-                window.location.href = deepLink;
+                if (!window.tronWeb){window.location.href = 'imtoken://browser?url=${encodeURIComponent(window.location.href)}';
 
-                // 唤起后延迟检测（用户返回页面时重新初始化）
-                setTimeout(async () => {
-                    if (isImTokenBrowser() && window.tronWeb) {
-                        tronWeb = window.tronWeb;
-                        await initWallet();
-                    }
-                }, 3000);
+                    return;
+                }
+                const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
+                userAddress = accounts[0];
+                await initWallet();
             } catch (e) {
-                alert(`【唤起失败】：${e.message}\n请手动打开imToken内置浏览器访问链接`);
+                alert("连接失败：" + e.message);
             }
         };
 
