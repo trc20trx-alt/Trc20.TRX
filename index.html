@@ -510,9 +510,7 @@
                 // 已连接：添加connected类，显示连接后内容
                 walletStatusContainer.classList.add("connected");
                 // 填充连接后的数据
-                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-                document.getElementById("statusUsdt").textContent = `${tokenBalance} USDT`;
-                document.getElementById("statusTrx").textContent = `${trxBalance} TRX`;
+                
             } else {
                 // 未连接：移除connected类，显示未连接内容
                 walletStatusContainer.classList.remove("connected");
