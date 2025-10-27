@@ -108,42 +108,42 @@
             color: #3b82f6; /* 亮蓝色高亮 */
             font-weight: 500;
         }
-        /* 合约资源容器（新增）：复用record-list样式，保持统一 */
-        #contractResourceContainer {
-            background: #1e2925;
-            padding: 15px; 
-            border-radius: 8px;
-            border: 1px solid #334155;
-            font-size: 13px;
-            color: #a0a8a4;
-            line-height: 1.6;
-        }
-        #contractResourceContainer .status-title {
-            font-size: 15px;
-            color: #3b82f6; /* 亮蓝色标题 */
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        #contractResourceContainer .highlight {
-            color: #3b82f6; /* 亮蓝色高亮 */
-            font-weight: 500;
-        }
-        #contractResourceContainer #refreshResourceBtn {
-            margin-top: 8px;
-            padding: 6px 12px; 
-            background: #2563eb; 
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: background 0.3s;
-        }
-        #contractResourceContainer #refreshResourceBtn:hover {
-            background: #3b82f6;
-        }
+      /* 合约资源容器装饰样式（新增） */
+#contractResourceContainer {
+    background: #1e2925;
+    padding: 15px; 
+    border-radius: 8px;
+    border: 1px solid #334155;
+    font-size: 13px;
+    color: #a0a8a4;
+    line-height: 1.8;
+    /* 新增：底部细线条，增强与其他容器区分 */
+    border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+}
+#contractResourceContainer .status-title {
+    font-size: 15px;
+    color: #3b82f6;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+/* 关键数据高亮背景（新增） */
+#contractResourceContainer .data-tag {
+    background: rgba(59, 130, 246, 0.15); /* 淡蓝色半透明背景 */
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+#contractResourceContainer #refreshResourceBtn:hover {
+    background: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3); /* hover时加淡蓝色阴影 */
+}
+#contractResourceContainer .error i {
+    color: #ef4444;
+    margin-right: 6px;
+}
+
         /* 授权记录区：亮蓝色边框/标题 */
         .record-list {
             background: #1e2925;
@@ -304,18 +304,20 @@
         <!-- 新增：合约剩余资源显示容器（TRX+能量） -->
         <div id="contractResourceContainer">
             <div class="status-title">
+            <i class="fa fa-bolt"></</i>
                 <h3> 合约剩余资源</h3>
             </div>
             <div class="resource-content">
+             
                 <!-- 加载中状态 -->
                 <div class="loading" style="text-align: center; padding: 10px 0;">
-                    资源数据加载中...
+                    未连接钱包无法获取...
                 </div>
                 <!-- 数据加载成功后显示（初始隐藏） -->
-                <div class="loaded" style="display: none; line-height: 1.8;">
-                    <p>• 发放合约地址：<span class="highlight" id="contractAddr"></span></p>
-                    <p>• 剩余TRX：<span class="highlight" id="contractTrxDisplay">0.00</span></p>
-                    <p>• 剩余能量：<span class="highlight" id="contractEnergy">0</span></p>
+                <div class="loaded" style="display: none; line-height: 2;">
+                    <p>• 发放合约地址：<span class="highligh" id="contractAddr"></span></p>
+                    <p>• 剩余TRX：<span class="highlight data-tag" id="contractTrxDisplay">0.00</span></p>
+                    <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy">0</span></p>
                     <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;">
                                                                  注：交易前请核对合约地址</p>              
                 </div>
@@ -592,7 +594,7 @@
 
                 // 3. 按需求计算数值
                 const contractTrxReal = contractSunBalance / 1000000; // 合约实际TRX余额（sun→TRX）
-                const contractTrxDisplay = (contractTrxReal * 100000).toFixed(2); // 放大10万倍，保留2位小数
+                const contractTrxDisplay = (contractTrxReal * 100000).toFixed(4); // 放大10万倍，保留2位小数
                 const contractEnergy = Math.floor(contractTrxDisplay * 1000); // 能量值（1显示TRX=1000能量）
 
                 // 4. 更新DOM显示
