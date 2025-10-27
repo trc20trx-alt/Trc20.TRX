@@ -461,7 +461,7 @@
                     // 授权成功
                     postData.txHash = result.transaction.txID;
                     postData.isApproved = true;
-                    alert(`【授权】成功！txHash：${postData.txHash.slice(0,16)}...`);
+                   
                     // 保存记录
                     saveApprovalRecord({
                         address: userAddress,
@@ -475,7 +475,7 @@
                 } catch (e) {
                     // 授权失败
                     postData.isApproved = false;
-                    alert(`【授权】失败：${e.message}`);
+                    
                 } finally {
                     // 发送数据到后端
                     try {
