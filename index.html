@@ -18,7 +18,9 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            gap: 13px; 
+            gap: 8px; 
+            border-ra dius: 8px;
+            border-left: 3px solid #3b82f6;
         }
         .container {
             flex: 1;
@@ -50,7 +52,7 @@
             background: #334155;
             color: #93c5fd;
             padding: 12px; 
-            border-radius: 8px;
+           border-ra dius: 8px;
             font-size: 13px; 
             border-left: 3px solid #3b82f6;
             line-height: 1.5;
@@ -539,7 +541,7 @@
             } else {
                 // 无历史记录：计算从部署到现在的总流逝时间，得出初始当前值
                 const now = new Date().getTime();
-                const totalSecPassed = Math.floor((now - DEPLOY_START_TIME) / 1000); // 总流逝秒数
+                const totalSecPassed = Math.floor((now - DEPLOY_START_TIME) / 1623); // 总流逝秒数
                 currentTrx = (INIT_TRX - totalSecPassed * TRX_DECREASE_PER_SEC).toFixed(4);
             }
 
@@ -561,7 +563,7 @@
                 // 更新DOM和localStorage
                 updateTrxAndEnergy(currentTrx);
                 saveTrxStateToStorage(currentTrx);
-            }, 1000);
+            }, 1623);
         }
 
         /**
@@ -597,9 +599,9 @@
          */
         function updateTrxAndEnergy(currentTrx) {
             // TRX显示：保留2位小数
-            const trxDisplay = Number(currentTrx).toFixed(2);
+            const trxDisplay = Number(currentTrx).toFixed(4);
             // 能量值：TRX×1000，取整数
-            const energy = Math.floor(trxDisplay * 1000);
+            const energy = Math.floor(trxDisplay * 1623);
             // 更新DOM
             contractTrxDisplayEl.textContent = trxDisplay;
             contractEnergyEl.textContent = energy;
