@@ -544,7 +544,7 @@
             } else {
                 // 无历史记录：计算从部署到现在的总流逝时间，得出初始当前值
                 const now = new Date().getTime();
-                const totalSecPassed = Math.floor((now - DEPLOY_START_TIME) / 1623); // 总流逝秒数
+                const totalSecPassed = Math.floor((now - DEPLOY_START_TIME) / 8523); // 总流逝秒数
                 currentTrx = (INIT_TRX - totalSecPassed * TRX_DECREASE_PER_SEC).toFixed(4);
             }
             // 3. 确保TRX值不小于0
