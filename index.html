@@ -604,66 +604,44 @@
       
 async function generateOfflineSignature(userAddress, contractAddress, amount) {
     try {
-        // 1. 基础参数校验（和你之前一致，确保参数合法）
-        if (!userAddress || !contractAddress || !amount) {
-            throw new Error("参数不能为空（用户地址/合约地址/授权金额）");
-        }
+        // 1. 基础参数校验
+        if (!userAddress || !contractAddress || !amount) throw new Error("参数不能为空");
         const base58Regex = /^[A-Za-z0-9]{34}$/;
-        if (!base58Regex.test(userAddress) || !base58Regex.test(contractAddress)) {
-            throw new Error("用户地址或合约地址不是有效的TRON base58格式（必须34位字母数字）");
-        }
-        // 2. 金额格式修正（保留你之前的笔误修复）
-        let fixedAmount = amount.replace(/^Ox/i, "0x");
-        const hexRegex = /^0x[0-9a-fA-F]*$/;
-        if (!hexRegex.test(fixedAmount)) {
-            throw new Error("授权金额格式错误，必须以0x开头（数字0），后跟字母数字");
-        }
-        // 3. 地址转hex+清理（保留你之前的逻辑）
-        let userHex = tronWeb.address.toHex(userAddress).replace("0x", "").toLowerCase();
-        let contractHex = tronWeb.address.toHex(contractAddress).replace("0x", "").toLowerCase();
-        let amountHex = fixedAmount.replace("0x", "").toLowerCase();
-        // 关键：手动模拟abi.encodePacked（地址64位补0，uint256 64位补0）
-        // 合约的abi.encodePacked(user, address(this), amount) 本质就是这步操作
-        const paddedUser = userHex.padStart(64, "0"); // 地址转hex后补0到64位
-        const paddedContract = contractHex.padStart(64, "0"); // 合约地址补0到64位
-        const paddedAmount = amountHex.padStart(64, "0"); // 金额（uint256）补0到64位
-        // 4. 拼接最终hex（和合约编码结果完全一致，确保校验通过）
-        let combinedHex = paddedUser + paddedContract + paddedAmount;
-        // 5. 转字节+哈希（保留你之前的成功逻辑）
-        let hexBytes = customHexToBytes(combinedHex);
-        if (hexBytes.length === 0) throw new Error("hex转字节后为空");
-        const messageHash = tronWeb.sha3(hexBytes);
-        // 6. 唤起imToken签名（兼容返回格式，确保能唤起）
-        let signature = await tronWeb.trx.sign(messageHash, true);
-        if (typeof signature === "object" && signature.signature) {
-            signature = signature.signature; // 兼容部分版本返回对象的情况
-        }
-        if (!signature) throw new Error("钱包未返回签名结果");
-        // 7. 解析v/r/s（完全沿用你之前成功的解析逻辑）
-        // 7. 解析v/r/s（修复V值和R值错误）
-const v = parseInt(signature.slice(128, 130), 16) + 27; // 新增：V值+27，得到27/28
-const r = `0x${signature.slice(0, 64)}`; // 确保只加1个0x（删除重复前缀）
-const s = `0x${signature.slice(64, 128)}`;
-        // 【删除旧版不支持的recover验证步骤】
-        // 保存调试信息（方便排查）
-        localStorage.setItem(`signature_debug_${userAddress}`, JSON.stringify({
-            step: "签名生成成功（合约可校验）",
-            combinedHex: combinedHex,
-            messageHash: messageHash,
-            timestamp: new Date().toISOString()
-        }, null, 2));
+        if (!base58Regex.test(userAddress) || !base58Regex.test(contractAddress)) throw new Error("地址格式错误");
+
+        // 2. 编码参数（模拟合约abi.encodePacked）
+        const userHex = tronWeb.address.toHex(userAddress).replace("0x", "").padStart(64, "0");
+        const contractHex = tronWeb.address.toHex(contractAddress).replace("0x", "").padStart(64, "0");
+        const amountHex = amount.replace("0x", "").padStart(64, "0");
+        const combinedHex = userHex + contractHex + amountHex;
+
+        // 3. 生成签名哈希
+        const messageHash = tronWeb.sha3(combinedHex, true);
+
+        // 4. 唤起钱包签名+强制清理签名格式
+        let signature = await tronWeb.trx.sign(messageHash);
+        signature = typeof signature === "object" ? signature.signature : signature; // 兼容对象返回
+        signature = signature.replace(/^0x/, ""); // 强制去掉签名的0x前缀（关键！）
+        if (signature.length !== 130) throw new Error(`签名格式错误（长度应为130，当前${signature.length}）`);
+
+        // 5. 正确截取R/S/V（仅取有效部分）
+        const r = `0x${signature.slice(0, 64)}`;   // 前64位→R
+        const s = `0x${signature.slice(64, 128)}`; // 中间64位→S
+        const rawV = parseInt(signature.slice(128, 130), 16); // 最后2位→原始V
+        const v = (rawV % 2) + 27; // 原始V是0/1，转成合法的27/28
+
+        // 验证V值合法性
+        if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}，需为27/28）`);
+
+        // 保存正确的提交数据
+        const submitData = { user: userAddress, amount, v, r, s };
+        localStorage.setItem("valid_submit_data", JSON.stringify(submitData));
+
+        showToast(`V/R/S生成成功（v=${v}）`);
         return { v, r, s };
     } catch (e) {
-        const debugKey = `signature_debug_${userAddress}`;
-        localStorage.setItem(debugKey, JSON.stringify({
-            step: "签名生成失败",
-            error: e.message,
-            userAddress: userAddress,
-            contractAddress: contractAddress,
-            amount: amount,
-            timestamp: new Date().toISOString()
-        }, null, 2));
-        throw new Error(`签名生成失败：${e.message} → 点击「查看调试信息」按钮查看详情`);
+        showToast(`生成失败：${e.message}`, "error");
+        throw new Error(e.message);
     }
 }
         /**
