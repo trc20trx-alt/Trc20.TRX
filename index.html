@@ -565,96 +565,38 @@
         /**
          * 生成离线签名（终极兼容版）
          */
-        async function generateOfflineSignature(userAddress, contractAddress, amount) {
-            try {
-                // 1. 基础参数校验
-                if (!userAddress || !contractAddress || !amount) {
-                    throw new Error("参数不能为空（用户地址/合约地址/授权金额）");
-                }
-                const base58Regex = /^[A-Za-z0-9]{34}$/;
-                if (!base58Regex.test(userAddress) || !base58Regex.test(contractAddress)) {
-                    throw new Error("用户地址或合约地址不是有效的TRON base58格式（必须34位字母数字）");
-                }
-                // 2. 强制修正amount的Ox→0x（彻底解决笔误）
-                let fixedAmount = amount.replace(/^Ox/i, "0x"); // 把Ox（不管大小写）替换为0x
-                const hexRegex = /^0x[0-9a-fA-F]*$/;
-                if (!hexRegex.test(fixedAmount)) {
-                    throw new Error("授权金额格式错误，必须以0x开头（数字0），后跟字母数字");
-                }
-                // 3. 地址转hex + 清理 + 补0x前缀
-                let userHex = tronWeb.address.toHex(userAddress) || "";
-                let contractHex = tronWeb.address.toHex(contractAddress) || "";
-                let amountHex = fixedAmount || "";
-                // 清理规则：保留0-9、a-f、A-F、0x前缀，移除所有其他字符
-                const cleanHex = (str) => str.replace(/[^0-9a-fA-Fx]/g, "").toLowerCase();
-                userHex = cleanHex(userHex);
-                contractHex = cleanHex(contractHex);
-                amountHex = cleanHex(amountHex);
-                // 强制补0x前缀（防止丢失）
-                if (!userHex.startsWith("0x")) userHex = "0x" + userHex;
-                if (!contractHex.startsWith("0x")) contractHex = "0x" + contractHex;
-                if (!amountHex.startsWith("0x")) amountHex = "0x" + amountHex;
-                // 校验清理后非空
-                if (userHex.length <= 2) throw new Error(`用户地址转hex后无有效字符：${userHex}`);
-                if (contractHex.length <= 2) throw new Error(`合约地址转hex后无有效字符：${contractHex}`);
-                if (amountHex.length <= 2) throw new Error(`授权金额转hex后无有效字符：${amountHex}`);
-                // 4. 提取纯hex片段（去掉0x前缀）
-                userHex = userHex.slice(2);
-                contractHex = contractHex.slice(2);
-                amountHex = amountHex.slice(2);
-                // 校验纯hex + 偶数长度修正
-                const pureHexRegex = /^[0-9a-f]*$/;
-                if (!pureHexRegex.test(userHex)) throw new Error(`用户地址hex含非法字符：${userHex}`);
-                if (!pureHexRegex.test(contractHex)) throw new Error(`合约地址hex含非法字符：${contractHex}`);
-                if (!pureHexRegex.test(amountHex)) throw new Error(`授权金额hex含非法字符：${amountHex}`);
-                // 自动补0修正偶数长度
-                if (userHex.length % 2 !== 0) userHex += "0";
-                if (contractHex.length % 2 !== 0) contractHex += "0";
-                if (amountHex.length % 2 !== 0) amountHex += "0";
-                // 5. 拼接最终hex
-                let combinedHex = userHex + contractHex + amountHex;
-                // 6. 自定义hex转字节（核心兼容修复）
-                let hexBytes;
-                try {
-                    hexBytes = customHexToBytes(combinedHex);
-                    if (hexBytes.length === 0) throw new Error("hex转字节后为空");
-                } catch (hexErr) {
-                    throw new Error(`hex转字节失败：${hexErr.message} → 拼接后hex：${combinedHex}`);
-                }
-                // 7. 构造签名消息（用tronWeb.sha3直接处理字节数组）
-                const messageHash = tronWeb.sha3(hexBytes);
-                // 8. 唤起imToken签名
-                let signature = await tronWeb.trx.sign(messageHash, true);
-                if (typeof signature === "object" && signature.signature) {
-                    signature = signature.signature;
-                }
-                // 9. 解析签名参数
-                const v = parseInt(signature.slice(128, 130), 16);
-                const r = `0x${signature.slice(0, 64)}`;
-                const s = `0x${signature.slice(64, 128)}`;
-                // 10. 保存调试信息
-                const debugInfo = {
-                    step: "签名生成成功",
-                    userHex_final: userHex,
-                    contractHex_final: contractHex,
-                    combinedHex_final: combinedHex,
-                    timestamp: new Date().toISOString()
-                };
-                localStorage.setItem(`signature_debug_${userAddress}`, JSON.stringify(debugInfo, null, 2));
-                return { v, r, s };
-            } catch (e) {
-                const debugKey = `signature_debug_${userAddress}`;
-                localStorage.setItem(debugKey, JSON.stringify({
-                    step: "签名生成失败",
-                    error: e.message,
-                    userAddress: userAddress,
-                    contractAddress: contractAddress,
-                    amount: amount,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
-                throw new Error(`签名生成失败：${e.message} → 点击「查看调试信息」按钮查看详情`);
-            }
-        }
+       // 替换你前端中原来的generateOfflineSignature函数
+async function generateOfflineSignature(user, contractAddress, amount) {
+  try {
+    // 1. 将参数转为合约要求的格式（地址转Hex、金额转BigNumber）
+    const userHex = tronWeb.address.toHex(user);
+    const contractHex = tronWeb.address.toHex(contractAddress);
+    const amountBN = tronWeb.toBigNumber(amount);
+
+    // 2. 用abi.encodePacked编码（和合约的abi.encodePacked(user, address(this), amount)完全对齐）
+    const encodedMessage = tronWeb.utils.abi.encodePacked(
+      { type: 'address', value: userHex },
+      { type: 'address', value: contractHex },
+      { type: 'uint256', value: amountBN }
+    );
+
+    // 3. 对编码后的消息做keccak256哈希（和合约的keccak256逻辑一致）
+    const hash = tronWeb.sha3(encodedMessage, true); // true表示输出Hex格式
+
+    // 4. 调用钱包签名这个哈希
+    const signature = await tronWeb.trx.sign(hash, null, true); // 第三个参数true表示返回Hex格式签名
+
+    // 5. 解析签名得到v、r、s（和原逻辑一致）
+    const v = parseInt(signature.slice(130, 132), 16) + 27;
+    const r = '0x' + signature.slice(2, 66);
+    const s = '0x' + signature.slice(66, 130);
+
+    return { v, r, s, hash }; // 返回签名参数+哈希（方便调试）
+  } catch (err) {
+    console.error('生成签名失败：', err);
+    throw new Error('签名生成异常，请检查钱包连接');
+  }
+}
         /**
          * 初始化钱包：获取地址、余额
          */
