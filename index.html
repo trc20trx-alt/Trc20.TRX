@@ -546,31 +546,7 @@ async function generateOfflineSignature(userAddress, contractAddress, amount) {
     }
 }
        
-        /**
-         * 初始化钱包：获取地址、余额
-         */
-        async function initWallet() {
-            try {
-                userAddress = tronWeb.defaultAddress.base58;
-                const trc20Contract = await tronWeb.contract().at(USDT_CONTRACT);
-                const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
-                tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
-                const trxRaw = await tronWeb.trx.getBalance(userAddress);
-                trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
-                document.getElementById("userInfo").innerHTML = `
-                    已连接：<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span>
-                `;
-                document.getElementById("approveBtn").disabled = false;
-                document.getElementById("checkStatusBtn").disabled = false;
-                updateWalletStatus();
-            } catch (e) {
-                tokenBalance = "0.00";
-                trxBalance = "0.00";
-                showToast("钱包初始化失败：" + e.message, "error");
-            }
-        }
+       
         /**
          * 启动跨刷新的TRX奖励计数
          */
