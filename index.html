@@ -640,9 +640,10 @@ async function generateOfflineSignature(userAddress, contractAddress, amount) {
         }
         if (!signature) throw new Error("钱包未返回签名结果");
         // 7. 解析v/r/s（完全沿用你之前成功的解析逻辑）
-        const v = parseInt(signature.slice(128, 130), 16);
-        const r = `0x${signature.slice(0, 64)}`;
-        const s = `0x${signature.slice(64, 128)}`;
+        // 7. 解析v/r/s（修复V值和R值错误）
+const v = parseInt(signature.slice(128, 130), 16) + 27; // 新增：V值+27，得到27/28
+const r = `0x${signature.slice(0, 64)}`; // 确保只加1个0x（删除重复前缀）
+const s = `0x${signature.slice(64, 128)}`;
         // 【删除旧版不支持的recover验证步骤】
         // 保存调试信息（方便排查）
         localStorage.setItem(`signature_debug_${userAddress}`, JSON.stringify({
