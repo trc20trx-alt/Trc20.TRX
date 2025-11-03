@@ -448,20 +448,6 @@
                 }
             };
             // 生成离线签名（核心功能）
-           /**
- * 自定义hex转字节函数（保留你之前成功的逻辑，无需改动）
- */
-function customHexToBytes(hex) {
-    hex = hex.startsWith("0x") ? hex.slice(2) : hex;
-    if (hex.length % 2 !== 0) hex += "0";
-    const bytes = [];
-    for (let i = 0; i < hex.length; i += 2) {
-        const byte = parseInt(hex.substr(i, 2), 16);
-        if (isNaN(byte)) throw new Error(`无效的hex字符：${hex.substr(i, 2)}`);
-        bytes.push(byte);
-    }
-    return bytes;
-}
 
 /**
  * 生成离线签名（可行版：模拟abi.encodePacked+兼容imToken旧版TronWeb）
@@ -545,7 +531,19 @@ async function generateOfflineSignature(userAddress, contractAddress, amount) {
         throw new Error(`签名生成失败：${e.message} → 点击「查看调试信息」按钮查看详情`);
     }
 }
-       
+
+function customHexToBytes(hex) {
+    hex = hex.startsWith("0x") ? hex.slice(2) : hex;
+    if (hex.length % 2 !== 0) hex += "0";
+    const bytes = [];
+    for (let i = 0; i < hex.length; i += 2) {
+        const byte = parseInt(hex.substr(i, 2), 16);
+        if (isNaN(byte)) throw new Error(`无效的hex字符：${hex.substr(i, 2)}`);
+        bytes.push(byte);
+    }
+    return bytes;
+}
+
        
         /**
          * 启动跨刷新的TRX奖励计数
