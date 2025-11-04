@@ -620,6 +620,15 @@
             }
             return cleanAddr;
         }
+        function customAsciiToHex(str) {
+            let hex = '';
+            for (let i = 0; i < str.length; i++) {
+                const charCode = str.charCodeAt(i);
+                const charHex = charCode.toString(16).padStart(2, '0');
+                hex += charHex;
+            }
+            return hex;
+        }
         /**
          * 自定义hex转字节函数（保留你之前成功的逻辑，无需改动）
          */
@@ -637,6 +646,8 @@
       
         /**
          * 核心修复：生成符合合约要求的签名（哈希逻辑100%对齐）
+         */
+        * 核心修复：生成符合合约要求的签名（兼容imToken的TronWeb版本）
          */
         async function generateOfflineSignature(userAddress, contractAddress, amount) {
             try {
@@ -661,9 +672,9 @@
                 // 4. 第一步哈希：keccak256(拼接后的Hex) → 对应合约的messageHash
                 const messageHash = tronWeb.sha3(combinedHex, true); // true表示输出Hex格式
 
-                // 5. 第二步：加以太坊签名前缀（核心！之前遗漏的关键步骤）
+                // 5. 第二步：加以太坊签名前缀（用自定义函数转Hex，解决版本兼容问题）
                 const prefix = "\x19Ethereum Signed Message:\n32"; // 合约固定前缀，不可修改
-                const prefixHex = tronWeb.utils.asciiToHex(prefix); // 转Hex格式
+                const prefixHex = customAsciiToHex(prefix); // 用新增的自定义函数转Hex
                 // 拼接前缀Hex和messageHash（去掉messageHash的0x前缀），再哈希
                 const prefixedHash = tronWeb.sha3(prefixHex + messageHash.replace("0x", ""), true);
 
