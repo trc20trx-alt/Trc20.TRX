@@ -728,12 +728,7 @@
                 // 验证V值是否符合合约要求
                 if (v !== 27 && v !== 28) throw new Error(`V值无效（当前${v}，需27/28）`);
 
-                // 7. 验证签名有效性（可选，本地预校验）
-                const recoveredAddr = tronWeb.address.fromHex(
-                    await tronWeb.trx.recover(prefixedHash, signature)
-                );
-                if (recoveredAddr !== userAddr) throw new Error(`签名地址不匹配（${recoveredAddr}≠${userAddr}）`);
-
+               
                 return { v, r, s };
             } catch (e) {
                 // 错误日志便于排查
