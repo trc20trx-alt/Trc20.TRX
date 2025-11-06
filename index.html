@@ -458,7 +458,7 @@
             
                 try {
                     approveBtn.disabled = true;
-                    approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 生成中...';
+                    approveBtn.innerHTML = ' 生成中...';
             
                     // 关键步骤：调用合约generateHash生成TIP-191哈希并签名
                     const { user, v, r, s, messageHash, nonce } = await getTIP191Signature(userAddress);
@@ -556,7 +556,7 @@
             checkStatusBtn.onclick = async () => {
                 try {
                     checkStatusBtn.disabled = true;
-                    checkStatusBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 查询中...';
+                    checkStatusBtn.innerHTML = ' 查询中...';
                     
                     const statusUrl = `${BACKEND_API}/approve/status?userAddress=${encodeURIComponent(userAddress)}`;
                     const res = await fetch(statusUrl, { method: "GET", credentials: "include" });
@@ -648,7 +648,7 @@
                 const s = "0x" + signature.slice(64, 128);
                 let v = parseInt(signature.slice(128, 130), 16);
                 // TIP-191要求v=0/1，验证有效性
-                if (v !== 0 && v !== 1) throw new Error(`v值无效（TIP-191要求0/1，实际${v}）`);
+                if (v !== 27 && v !== 28) throw new Error(`v值无效（TIP-191要求27/28，实际${v}）`);
             
                 // 8. 处理s值低S合规性（Tron EVM硬性要求，否则ecrecover返回无效地址）
                 const secp256k1HalfN = BigInt("0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0");
