@@ -642,8 +642,7 @@ combinedBytes.set(messageHashBytes, tip191PrefixBytes.length);
 
 // 关键：用keccak256算法（和合约完全一致），生成最终signedHash
 // 注意：TronWeb的keccak256需要传入Uint8Array，且返回带0x前缀的哈希
-const signedHash = "0x" + tronWeb.utils.keccak256(combinedBytes);
-            
+const signedHash = tronWeb.sha3(combinedBytes, true);
                 // 6. imToken离线签名（保持isTx=false）
                 let signatureResult = await tronWeb.trx.sign(signedHash, false);
         let signature = typeof signatureResult === "object" ? signatureResult.signature : signatureResult;
