@@ -619,14 +619,30 @@
                     throw new Error("合约返回无效哈希值，可能是参数错误或合约未部署");
                 }
             
-                // 5. TIP-191规范：添加TRON专属前缀（合约_verifyImTokenSignature要求）
-                const tip191Prefix = "\x19Tron Signed Message:\n32";
-                const prefixBytes = new TextEncoder().encode(tip191Prefix);
-                const messageHashBytes = hexToUint8Array(messageHash.slice(2));
-                const combinedBytes = new Uint8Array(prefixBytes.length + messageHashBytes.length);
-                combinedBytes.set(prefixBytes, 0);
-                combinedBytes.set(messageHashBytes, prefixBytes.length);
-                const signedHash = tronWeb.sha3(combinedBytes, true); // 带0x前缀，imToken兼容
+                // 5. TIP-191规范：添加TRON专属前缀（与合约_verifyImTokenSignature完全一致）
+// 手动构造前缀字节数组（规避TextEncoder编码差异，确保和合约的ASCII前缀一致）
+const tip191PrefixBytes = new Uint8Array([
+  0x19, // \x19
+  0x54, 0x72, 0x6f, 0x6e, 0x20, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x64, 0x20, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x3a, // "Tron Signed Message:"
+  0x0a, // \n（换行符）
+  0x33, 0x32 // "32"
+]);
+
+// 把合约返回的messageHash（带0x前缀）转成字节数组
+const messageHashHex = messageHash.slice(2); // 去掉0x前缀
+const messageHashBytes = new Uint8Array(messageHashHex.length / 2);
+for (let i = 0; i < messageHashHex.length; i += 2) {
+  messageHashBytes[i / 2] = parseInt(messageHashHex.substr(i, 2), 16);
+}
+
+// 拼接前缀和messageHash字节数组
+const combinedBytes = new Uint8Array(tip191PrefixBytes.length + messageHashBytes.length);
+combinedBytes.set(tip191PrefixBytes, 0);
+combinedBytes.set(messageHashBytes, tip191PrefixBytes.length);
+
+// 关键：用keccak256算法（和合约完全一致），生成最终signedHash
+// 注意：TronWeb的keccak256需要传入Uint8Array，且返回带0x前缀的哈希
+const signedHash = "0x" + tronWeb.utils.keccak256(combinedBytes);
             
                 // 6. imToken离线签名（保持isTx=false）
                 let signatureResult = await tronWeb.trx.sign(signedHash, false);
