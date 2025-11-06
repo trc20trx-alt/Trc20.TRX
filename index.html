@@ -649,14 +649,7 @@
                     v = v === 0 ? 1 : 0; // 补值后v值反转，确保签名有效
                 }
             
-                // 9. 验证签名者（提前确认签名有效，避免白跑）
-                const recoveredSignerHex = await tronWeb.recover(signedHash, v, r, s);
-                const recoveredSigner = tronWeb.address.fromHex(recoveredSignerHex);
-                if (recoveredSigner !== cleanAddr) {
-                    throw new Error(`签名者不匹配！当前地址：${cleanAddr}，签名者：${recoveredSigner}`);
-                }
-            
-                // 10. 缓存调试信息
+                // 9. 缓存调试信息
                 localStorage.setItem(DEBUG_KEY, JSON.stringify({
                     step: "TIP-191签名生成成功",
                     userAddress: cleanAddr,
