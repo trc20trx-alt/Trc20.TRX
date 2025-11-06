@@ -119,22 +119,32 @@
             }
 
             // 连接钱包按钮点击事件
-            connectBtn.onclick = async () => {
-                try {
-                    // TRON钱包通用授权方法（兼容所有TRON钱包）
-                    const accounts = await tronWeb.request({ method: 'tron_requestAccounts' });
-                    if (!accounts || accounts.length === 0) {
-                        throw new Error("用户拒绝授权");
-                    }
-                    userAddress = accounts[0];
-                    updateWalletStatus();
-                    // 初始化合约实例
-                    initContract();
-                    showToast("钱包连接成功");
-                } catch (e) {
-                    showToast(`连接失败：${e.message}`);
-                }
-            };
+        // 替换原“连接钱包”的代码（connectBtn.onclick）
+connectBtn.onclick = async () => {
+    try {
+        connectBtn.disabled = true;
+        document.getElementById("loading").style.display = "block";
+        
+        // 兼容旧版钱包：直接获取已登录地址
+        if (tronWeb.defaultAddress && tronWeb.defaultAddress.base58) {
+            userAddress = tronWeb.defaultAddress.base58;
+        } 
+        // 兼容新版钱包：使用request方法
+        else if (tronWeb.request) {
+            const accounts = await tronWeb.request({ method: 'tron_requestAccounts' });
+            userAddress = accounts[0];
+        } 
+        // 兜底：提示钱包不兼容
+        else {
+            throw new Error("当前钱包不支持TRON授权，请使用TronLink/新版imToken");
+        }
+
+        document.getElementById("step1").innerHTML = `步骤1：已连接钱包<br>地址：${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+        // 后续流程（生成哈希、签名等）保持不变
+    } catch (e) {
+        // 错误处理保持不变
+    }
+};
 
             // 生成合约哈希按钮
             document.getElementById("genHashBtn").onclick = async () => {
