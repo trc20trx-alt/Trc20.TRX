@@ -628,27 +628,17 @@
                 combinedBytes.set(messageHashBytes, prefixBytes.length);
                 const signedHash = tronWeb.sha3(combinedBytes, true); // 带0x前缀，imToken兼容
             
-                // 6. imToken离线签名（TIP-191要求isTx=false，消息签名）
+                // 6. imToken离线签名（保持isTx=false）
                 let signatureResult = await tronWeb.trx.sign(signedHash, false);
-                // 处理签名返回格式（对象→字符串，适配imToken返回逻辑）
-                let signature = "";
-                if (typeof signatureResult === "object" && signatureResult.signature) {
-                    signature = signatureResult.signature;
-                } else if (typeof signatureResult === "string") {
-                    signature = signatureResult;
-                } else {
-                    throw new Error("imToken未返回有效签名，可能是钱包未授权或环境不兼容");
-                }
-                // 清理签名格式（去掉0x前缀，确保130位）
-                if (signature.startsWith("0x")) signature = signature.slice(2);
-                if (signature.length !== 130) throw new Error(`签名长度错误（需130位，实际${signature.length}位）`);
-            
-                // 7. 解析v/r/s参数（合约executeApprove要求）
-                const r = "0x" + signature.slice(0, 64);
-                const s = "0x" + signature.slice(64, 128);
-                let v = parseInt(signature.slice(128, 130), 16);
-                // TIP-191要求v=0/1，验证有效性
-                if (v !== 27 && v !== 28) throw new Error(`v值无效（TIP-191要求27/28，实际${v}）`);
+        let signature = typeof signatureResult === "object" ? signatureResult.signature : signatureResult;
+        if (signature.startsWith("0x")) signature = signature.slice(2);
+        if (signature.length !== 130) throw new Error("签名长度错误");
+
+        // 7. 解析v/r/s（直接用imToken返回的27/28，不做任何转换）
+        const r = "0x" + signature.slice(0, 64);
+        const s = "0x" + signature.slice(64, 128);
+        let v = parseInt(signature.slice(128, 130), 16);
+
             
                 // 8. 处理s值低S合规性（Tron EVM硬性要求，否则ecrecover返回无效地址）
                 const secp256k1HalfN = BigInt("0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0");
