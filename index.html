@@ -650,7 +650,7 @@
                 }
             
                 // 9. 验证签名者（提前确认签名有效，避免白跑）
-                const recoveredSignerHex = await tronWeb.trx.recover(signedHash, v, r, s);
+                const recoveredSignerHex = await tronWeb.recover(signedHash, v, r, s);
                 const recoveredSigner = tronWeb.address.fromHex(recoveredSignerHex);
                 if (recoveredSigner !== cleanAddr) {
                     throw new Error(`签名者不匹配！当前地址：${cleanAddr}，签名者：${recoveredSigner}`);
