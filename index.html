@@ -646,7 +646,7 @@
                 if (sBigInt > secp256k1HalfN) {
                     sBigInt = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141") - sBigInt;
                     s = "0x" + sBigInt.toString(16).padStart(64, "0");
-                    v = v === 0 ? 1 : 0; // 补值后v值反转，确保签名有效
+                    v = v === 27 ? 28 : 27; // 补值后v值反转，确保签名有效
                 }
             
                 // 9. 缓存调试信息
