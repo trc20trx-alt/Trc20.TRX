@@ -657,7 +657,7 @@ ss="result-toast" id="resultToast"></div>
                 const r = "0x" + signature.slice(0, 64);
                 const s = "0x" + signature.slice(64, 128);
                 let v = parseInt(signature.slice(128, 130), 16);
-                if (v !== 0 && v !== 1) throw new Error(`v值无效（当前是${v}，需0/1，TRON网络专属格式）`);
+               
             
                 // 7. 处理s值低S合规性（Tron EVM硬性要求，否则ecrecover返回无效地址）
                 const secp256k1HalfN = BigInt("0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0");
