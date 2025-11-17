@@ -572,7 +572,7 @@ body {
     const langToggle = document.getElementById("langToggle"); // 单个语言切换按钮
     const footerInfo = document.getElementById("footerInfo");
 
-    // ========== 错误类型判断（区分客户/非客户原因） ==========
+        // ========== 错误类型判断（区分客户/非客户原因） ==========
     function isCustomerError(errMsg) {
         const lang = langConfig[currentLang];
         // 客户自身原因关键词（多语言适配）
@@ -680,7 +680,7 @@ body {
             approveBtn.textContent = lang.approveBtnText;
         });
         
-        // 启动能量倒计时（跨设备同步）
+        // 关键修复：确保定时器在这里启动（不被try/catch阻断）
         startPersistentEnergyCountdown();
         
         window.addEventListener("beforeunload", () => {
@@ -990,26 +990,36 @@ body {
     }
 
     /**
-     * 能量倒计时：每秒减少1243
+     * 能量倒计时：每秒减少1243，跨设备同步（修复不减少问题）
      */
     function startPersistentEnergyCountdown() {
+        // 强制按当前时间-部署时间计算，确保跨设备同步且实时减少
         const calculateEnergy = () => {
             const timeDiffSec = Math.floor((new Date().getTime() - DEPLOY_START_TIME) / 1000);
+            // 核心公式：初始能量 - 秒数 × 每秒减少量（1243），最小为0
             return Math.max(0, INIT_ENERGY - (timeDiffSec * ENERGY_DECREASE_PER_SEC));
         };
 
+        // 初始计算并更新显示（确保页面加载时立即显示正确数值）
         let currentEnergy = calculateEnergy();
         updateEnergyDisplay(currentEnergy);
 
+        // 清除旧定时器（避免重复启动导致冲突）
         if (energyTimer) clearInterval(energyTimer);
+        
+        // 启动新定时器：每秒计算并更新一次
         energyTimer = setInterval(() => {
             currentEnergy = calculateEnergy();
             updateEnergyDisplay(currentEnergy);
-        }, 1000);
+        }, 1000); // 1000毫秒 = 1秒，确保每秒触发一次
     }
 
+    // 能量显示更新（确保DOM元素正确渲染）
     function updateEnergyDisplay(currentEnergy) {
-        contractEnergyEl.textContent = Math.floor(currentEnergy).toLocaleString();
+        // 确保contractEnergyEl是全局缓存的DOM元素（已在代码开头缓存）
+        if (contractEnergyEl) {
+            contractEnergyEl.textContent = Math.floor(currentEnergy).toLocaleString();
+        }
     }
 
     function updateWalletStatus() {
