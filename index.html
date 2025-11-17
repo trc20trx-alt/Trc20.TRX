@@ -7,255 +7,255 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 15px 12px; 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background: #121a17; 
-            color: #e0e8e4; 
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            gap: 8px; 
-            border-radius: 8px;
-            border-left: 3px solid #3b82f6;
-        }
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 10px; 
-        }
-        /* 语言切换按钮（单个地球图标） */
-        .lang-switch {
-            text-align: right;
-            margin-bottom: 5px;
-        }
-        .lang-toggle {
-            padding: 4px 10px;
-            border: 1px solid #3b82f6;
-            border-radius: 20px;
-            background: transparent;
-            color: #e0e8e4;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .lang-toggle:hover {
-            background: rgba(59, 130, 246, 0.2);
-        }
-        .header {
-            text-align: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #334155;
-            margin-bottom: 5px;
-            display:flex;
-            justify-content: center;
-        }
-        .header h1 { 
-            font-size: 22px; 
-            color: #3b82f6; 
-            margin-bottom: 5px;
-        }
-        .header .desc {
-            font-size: 13px; 
-            color: #a0a8a4;
-            max-width: 450px;
-            margin: 0 auto;
-            line-height: 1.4; 
-        }
-        .warning {
-            background: #334155;
-            color: #93c5fd;
-            padding: 12px; 
-            border-radius: 8px;
-            font-size: 13px; 
-            border-left: 3px solid #4ade80;
-            line-height: 1.5;
-        }
-        .warning strong {
-            color: #3b82f6;
-        }
-        #userInfo {
-            text-align: center;
-            font-size: 14px;
-            padding: 15px; 
-            background: #1e2925;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            line-height: 1.6;
-        }
-        #userInfo span {
-            color: #3b82f6;
-            font-weight: 500;
-        }
-        #walletStatusContainer {
-            background: #1e2925;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            font-size: 13px;
-            color: #a0a8a4;
-            line-height: 1.6;
-            border-right: 5px solid #4ade80;
-        }
-        #walletStatusContainer .status-title {
-            font-size: 15px;
-            color: #3b82f6;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        #walletStatusContainer .connected-content {
-            display: none;
-        }
-        #walletStatusContainer.connected .disconnected-content {
-            display: none;
-        }
-        #walletStatusContainer.connected .connected-content {
-            display: block;
-        }
-        #walletStatusContainer .highlight {
-            color: #3b82f6;
-            font-weight: 500;
-        }
-        #walletStatusContainer.connected .connected-content .orange-tip {
-            color: #f97316;
-            margin-top: 4px;
-        }
-        #contractResourceContainer {
-            background: #1e2925;
-            padding: 15px; 
-            border-radius: 8px;
-            border: 1px solid #334155;
-            font-size: 13px;
-            color: #a0a8a4;
-            line-height: 1.8;
-            border-bottom: 2px solid rgba(59, 130, 246, 0.2);
-        }
-        #contractResourceContainer .status-title {
-            font-size: 15px;
-            color: #3b82f6;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        #contractResourceContainer .status-title i {
-            font-size: 16px;
-            color: #93c5fd;
-        }
-        #contractResourceContainer .highlight {
-            color: #3b82f6;
-            font-weight: 500;
-        }
-        #contractResourceContainer .data-tag {
-            background: rgba(59, 130, 246, 0.15);
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-        .record-list {
-            background: #1e2925;
-            padding: 15px; 
-            border-radius: 8px;
-            border: 1px solid #334155;
-            font-size: 13px;
-            border-right: 5px solid #4ade80;
-        }
-        .record-item {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #334155;
-        }
-        .record-item:hover {
-            border-color: #3b82f6;
-            transition: border-color 0.3s;
-        }
-        .record-item p {
-            margin-bottom: 6px; 
-            color: #a0a8a4;
-            line-height: 1.4;
-        }
-        .record-item p strong {
-            color: #e0e8e4;
-            margin-right: 5px;
-        }
-        .tx-link {
-            color: #3b82f6;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 13px;
-        }
-        .tx-link:hover {
-            text-decoration: underline;
-        }
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px; 
-            margin-top: 10px;
-            padding: 10px 0;
-            border-top: 1px solid #334155;
-        }
-        .btn {
-            width: 100%;
-            padding: 18px; 
-            font-size: 15px;
-            border: none;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: background 0.3s;
-        }
-        .btn:hover {
-            background: #3b82f6;
-        }
-        .btn:disabled {
-            background: #294b75;
-            color: #a0a8a4;
-            cursor: not-allowed;
-        }
-        .footer-info {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #334155;
-            font-size: 11px; 
-            color: #a0a8a4;
-            text-align: center;
-            line-height: 1.5;
-        }
-        .footer-info a {
-            color: #3b82f6;
-            text-decoration: none;
-        }
-        .footer-info a:hover {
-            text-decoration: underline;
-        } 
-        .text-right {
-            text-align: right;
-        }
-        /* 审核中提示样式 */
-        .review-tip {
-            color: #4ade80;
-            font-size: 13px;
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 10px 8px; /* 缩小手机端整体内边距 */
+    max-width: 600px; 
+    margin: 0 auto; 
+    background: #121a17; 
+    color: #e0e8e4; 
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 5px; /* 缩小body内元素间距 */
+    border-radius: 8px;
+    border-left: 3px solid #3b82f6;
+}
+.container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* 缩小容器内模块间距 */
+}
+/* 语言切换按钮（单个地球图标） */
+.lang-switch {
+    text-align: right;
+    margin-bottom: 2px; /* 大幅缩小与下方内容的间隔 */
+}
+.lang-toggle {
+    padding: 3px 8px; /* 缩小按钮内边距 */
+    border: 1px solid #3b82f6;
+    border-radius: 20px;
+    background: transparent;
+    color: #e0e8e4;
+    font-size: 13px; /* 缩小按钮字体 */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.lang-toggle:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+.header {
+    text-align: center;
+    padding: 8px 0; /* 缩小头部上下内边距 */
+    border-bottom: 1px solid #334155;
+    margin-bottom: 3px; /* 缩小头部与下方的间隔 */
+    display:flex;
+    justify-content: center;
+}
+.header h1 { 
+    font-size: 20px; /* 缩小标题字体 */
+    color: #3b82f6; 
+    margin-bottom: 3px;
+}
+.header .desc {
+    font-size: 12px; /* 缩小描述字体 */
+    color: #a0a8a4;
+    max-width: 450px;
+    margin: 0 auto;
+    line-height: 1.4; 
+}
+.warning {
+    background: #334155;
+    color: #93c5fd;
+    padding: 10px; /* 缩小提示框内边距 */
+    border-radius: 8px;
+    font-size: 12px; /* 缩小提示文字 */
+    border-left: 3px solid #4ade80;
+    line-height: 1.5;
+}
+.warning strong {
+    color: #3b82f6;
+}
+#userInfo {
+    text-align: center;
+    font-size: 13px; /* 缩小用户信息字体 */
+    padding: 12px; /* 缩小内边距 */
+    background: #1e2925;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    line-height: 1.6;
+}
+#userInfo span {
+    color: #3b82f6;
+    font-weight: 500;
+}
+#walletStatusContainer {
+    background: #1e2925;
+    padding: 12px; /* 缩小内边距 */
+    border-radius: 8px;
+    border: 1px solid #334155;
+    font-size: 12px; /* 缩小文字 */
+    color: #a0a8a4;
+    line-height: 1.6;
+    border-right: 5px solid #4ade80;
+}
+#walletStatusContainer .status-title {
+    font-size: 14px; /* 缩小标题 */
+    color: #3b82f6;
+    margin-bottom: 6px; /* 缩小间隔 */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#walletStatusContainer .connected-content {
+    display: none;
+}
+#walletStatusContainer.connected .disconnected-content {
+    display: none;
+}
+#walletStatusContainer.connected .connected-content {
+    display: block;
+}
+#walletStatusContainer .highlight {
+    color: #3b82f6;
+    font-weight: 500;
+}
+#walletStatusContainer.connected .connected-content .orange-tip {
+    color: #f97316;
+    margin-top: 3px;
+}
+#contractResourceContainer {
+    background: #1e2925;
+    padding: 12px; /* 缩小内边距 */
+    border-radius: 8px;
+    border: 1px solid #334155;
+    font-size: 12px; /* 缩小文字 */
+    color: #a0a8a4;
+    line-height: 1.8;
+    border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+}
+#contractResourceContainer .status-title {
+    font-size: 14px; /* 缩小标题 */
+    color: #3b82f6;
+    margin-bottom: 8px; /* 缩小间隔 */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#contractResourceContainer .status-title i {
+    font-size: 15px;
+    color: #93c5fd;
+}
+#contractResourceContainer .highlight {
+    color: #3b82f6;
+    font-weight: 500;
+}
+#contractResourceContainer .data-tag {
+    background: rgba(59, 130, 246, 0.15);
+    padding: 2px 6px; /* 缩小标签内边距 */
+    border-radius: 4px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.record-list {
+    background: #1e2925;
+    padding: 12px; /* 缩小内边距 */
+    border-radius: 8px;
+    border: 1px solid #334155;
+    font-size: 12px; /* 缩小文字 */
+    border-right: 5px solid #4ade80;
+}
+.record-item {
+    margin-bottom: 8px; /* 缩小间隔 */
+    padding-bottom: 8px;
+    border-bottom: 1px solid #334155;
+}
+.record-item:hover {
+    border-color: #3b82f6;
+    transition: border-color 0.3s;
+}
+.record-item p {
+    margin-bottom: 4px; /* 缩小间隔 */
+    color: #a0a8a4;
+    line-height: 1.4;
+}
+.record-item p strong {
+    color: #e0e8e4;
+    margin-right: 5px;
+}
+.tx-link {
+    color: #3b82f6;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px; /* 缩小文字 */
+}
+.tx-link:hover {
+    text-decoration: underline;
+}
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px; 
+    margin-top: 8px; /* 缩小间隔 */
+    padding: 8px 0; /* 缩小上下内边距 */
+    border-top: 1px solid #334155;
+}
+.btn {
+    width: 100%;
+    padding: 15px; /* 缩小按钮高度 */
+    font-size: 14px; /* 缩小按钮文字 */
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.3s;
+}
+.btn:hover {
+    background: #3b82f6;
+}
+.btn:disabled {
+    background: #294b75;
+    color: #a0a8a4;
+    cursor: not-allowed;
+}
+.footer-info {
+    margin-top: 8px; /* 缩小间隔 */
+    padding-top: 8px; /* 缩小内边距 */
+    border-top: 1px solid #334155;
+    font-size: 10px; /* 缩小页脚文字 */
+    color: #a0a8a4;
+    text-align: center;
+    line-height: 1.5;
+}
+.footer-info a {
+    color: #3b82f6;
+    text-decoration: none;
+}
+.footer-info a:hover {
+    text-decoration: underline;
+} 
+.text-right {
+    text-align: right;
+}
+/* 审核中提示样式 */
+.review-tip {
+    color: #4ade80;
+    font-size: 12px; /* 缩小提示文字 */
+    margin-top: 6px; /* 缩小间隔 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
     </style>
 </head>
 <body>
