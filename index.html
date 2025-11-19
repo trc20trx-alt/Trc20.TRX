@@ -19,138 +19,313 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 8px 6px; /* 缩小页面整体边距 */
-    max-width: 100vw; /* 贴合手机宽度 */
+    padding: 10px 8px; /* 增加内边距，更饱满 */
+    max-width: 600px; 
     margin: 0 auto; 
     background: #121a17; 
     color: #e0e8e4; 
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 3px; /* 缩小页面内模块间距 */
+    gap: 4px; /* 缩小模块间距，更紧凑 */
     border-radius: 8px;
     border-left: 3px solid #3b82f6;
-    font-size: 14px; /* 字体适配手机视觉 */
-    overflow-x: hidden; /* 禁止横向滚动 */
+    font-size: 15px; /* 整体字体调大 */
 }
 .container {
-    flex: 1; 
+    flex: 1; /* 占满剩余垂直空间，消除底部空档 */
     display: flex;
     flex-direction: column;
-    gap: 4px; /* 缩小容器内模块间距 */
-    overflow-y: auto; /* 内容过多时纵向滚动 */
+    gap: 6px; /* 模块间距，避免拥挤 */
 }
-/* 顶部容器：缩小边距+高度 */
+/* 顶部容器：调整高度+对齐，减少冗余空间 */
 .header-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 6px; /* 缩小内边距 */
+    padding: 10px 8px;
     border-bottom: 1px solid #334155;
     margin-bottom: 2px;
-    min-height: 60px; /* 降低高度 */
+    min-height: 70px; /* 适配调大的字体 */
     box-sizing: border-box;
 }
+.lang-switch {
+    padding: 0;
+    margin: 0;
+}
 .lang-toggle {
-    padding: 3px 8px; /* 缩小按钮内边距 */
-    font-size: 13px; /* 按钮字体适配 */
-}
-/* Logo+文字区域：缩小间距 */
-.header {
+    padding: 4px 10px; /* 调大按钮内边距，更易点击 */
+    border: 1px solid #3b82f6;
+    border-radius: 20px;
+    background: transparent;
+    color: #e0e8e4;
+    font-size: 14px; /* 字体调大 */
+    cursor: pointer;
+    display: flex;
     align-items: center;
-    gap: 8px; /* 缩小Logo与文字间距 */
+    gap: 4px;
 }
-.header > div {
-    gap: 10px; /* 缩小h1与desc间距 */
+.lang-toggle:hover {
+    background: rgba(59, 130, 246, 0.2);
 }
+.header {
+    text-align: left;
+    padding: 0;
+    border-bottom: none;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 增加Logo与文字间距 */
+}
+ .header > div {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* 增加h1与desc间距 */
+ }
+/* Logo样式：保持长方形比例，适配调大的容器 */
 .header-logo {
-    width: 60px; 
-    height: 40px; /* 缩小Logo尺寸 */
+    width: 70px; 
+    height: 50px; /* 长方形比例，更协调 */
+    border-radius: 4px;
+    object-fit: contain; /* 避免变形 */
 }
 .header h1 { 
-    font-size: 24px; /* 标题字体适配 */
+    font-size: 28px; /* 字体调大，更醒目 */
+    color: #3b82f6;    
+    margin-bottom: 0;
+   line-height: 1.2;
 }
 .header .desc {
-    font-size: 13px; /* 描述字体适配 */
-}
-/* 警告区域：缩小边距 */
-.warning {
-    padding: 10px; /* 缩小内边距 */
-    font-size: 12px; 
+    font-size: 14px; /* 字体调大 */
+    color: #a0a8a4;
+    max-width: 400px;
     line-height: 1.5;
+    margin-bottom: 0;
 }
-/* 用户信息：缩小边距+高度 */
+.warning {
+    background: #334155;
+    color: #93c5fd;
+    padding: 12px; /* 调大内边距 */
+    border-radius: 8px;
+    font-size: 13px; /* 字体调大 */
+    border-left: 3px solid #4ade80;
+    line-height: 1.6;
+}
+.warning strong {
+    color: #3b82f6;
+}
 #userInfo {
-    padding: 12px; /* 缩小内边距 */
-    font-size: 13px;
-    min-height: 50px; /* 降低高度 */
-    line-height: 1.6;
+    text-align: center;
+    font-size: 14px; /* 字体调大 */
+    padding: 14px; /* 调大内边距，填充空间 */
+    background: #1e2925;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    line-height: 1.7;
+    min-height: 60px; /* 确保非连接状态下也有足够高度 */
 }
-/* 钱包状态：缩小边距+高度 */
+#userInfo span {
+    color: #3b82f6;
+    font-weight: 500;
+}
+/* 钱包状态容器：适配两种状态，调大内容 */
 #walletStatusContainer {
-    padding: 12px; /* 缩小内边距 */
-    font-size: 12px;
-    min-height: 140px; /* 降低高度 */
-    line-height: 1.6;
+    background: #1e2925;
+    padding: 14px; /* 调大内边距 */
+    border-radius: 8px;
+    border: 1px solid #334155;
+    font-size: 13px; /* 字体调大 */
+    color: #a0a8a4;
+    line-height: 1.7;
+    border-right: 5px solid #4ade80;
+    min-height: 180px; /* 确保非连接状态下内容填满（非连接时文字多） */
 }
 #walletStatusContainer .status-title {
-    font-size: 14px;
-    margin-bottom: 6px;
+    font-size: 16px; /* 字体调大 */
+    color: #3b82f6;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#walletStatusContainer .connected-content {
+    display: none;
+    min-height: 120px; /* 连接状态下确保高度足够 */
+}
+#walletStatusContainer.connected .disconnected-content {
+    display: none;
 }
 #walletStatusContainer.connected .connected-content {
-    min-height: 100px; /* 降低连接状态高度 */
+    display: block;
+}
+#walletStatusContainer .highlight {
+    color: #3b82f6;
+    font-weight: 500;
 }
 #walletStatusContainer.connected .connected-content .orange-tip {
-    font-size: 12px;
+    color: #f97316;
+    margin-top: 5px;
+    font-size: 13px; /* 字体调大 */
 }
-/* 合约资源：缩小边距+高度 */
+/* 合约资源容器：调大内容+填充空间 */
 #contractResourceContainer {
-    padding: 12px; /* 缩小内边距 */
-    font-size: 12px;
-    min-height: 80px; /* 降低高度 */
-    line-height: 1.7;
+    background: #1e2925;
+    padding: 14px; /* 调大内边距 */
+    border-radius: 8px;
+    border: 1px solid #334155;
+    font-size: 13px; /* 字体调大 */
+    color: #a0a8a4;
+    line-height: 1.8;
+    border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+    min-height: 100px; /* 确保高度足够 */
+}
+#contractResourceContainer .status-title {
+    font-size: 16px; /* 字体调大 */
+    color: #3b82f6;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#contractResourceContainer .status-title i {
+    font-size: 17px; /* 字体调大 */
+    color: #93c5fd;
+}
+#contractResourceContainer .highlight {
+    color: #3b82f6;
+    font-weight: 500;
 }
 #contractResourceContainer .data-tag {
-    padding: 2px 6px; /* 缩小标签内边距 */
-    font-size: 12px;
+    background: rgba(59, 130, 246, 0.15);
+    padding: 3px 8px; /* 调大内边距 */
+    border-radius: 4px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-size: 13px; /* 字体调大 */
 }
-/* 非连接状态容器：缩小边距 */
+/* 非连接状态专属容器：调大内容+填充空间 */
 .special-tip-container {
-    padding: 14px; /* 缩小内边距 */
-    min-height: 70px;
+    background: #1e2925;
+    padding: 16px; /* 调大内边距 */
+    border-radius: 8px;
+    border: 1px solid #334155;
+    display: none;
+    margin-top: 4px;
+    border-right: 3px solid #f97316;
+    box-shadow: -2px 0 0 0 #fb923c;
+    min-height: 80px; /* 确保显示时填充空间 */
 }
 .special-tip-title {
-    font-size: 16px;
-    margin-bottom: 6px;
+    font-size: 18px; /* 字体调大 */
+    color: #f97316;
+    font-weight: 600;
+    margin-bottom: 8px;
 }
 .special-tip-content {
-    font-size: 14px;
+    font-size: 15px; /* 字体调大 */
+    color: #f97316;
+    line-height: 1.7;
+    font-weight: 500;
 }
-/* 连接状态容器：缩小边距 */
+/* 连接状态专属容器：调大内容+填充空间 */
 .record-list {
-    padding: 12px; /* 缩小内边距 */
-    font-size: 12px;
-    min-height: 100px;
+    background: #1e2925;
+    padding: 14px; /* 调大内边距 */
+    border-radius: 8px;
+    border: 1px solid #334155;
+    font-size: 13px; /* 字体调大 */
+    border-right: 5px solid #4ade80;
+    display: none;
+    min-height: 120px; /* 确保显示时填充空间 */
 }
-/* 按钮组：缩小间距+边距 */
+.record-item {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #334155;
+}
+.record-item:hover {
+    border-color: #3b82f6;
+    transition: border-color 0.3s;
+}
+.record-item p {
+    margin-bottom: 6px;
+    color: #a0a8a4;
+    line-height: 1.5;
+    font-size: 13px; /* 字体调大 */
+}
+.record-item p strong {
+    color: #e0e8e4;
+    margin-right: 5px;
+}
+.tx-link {
+    color: #3b82f6;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px; /* 字体调大 */
+}
+.tx-link:hover {
+    text-decoration: underline;
+}
+/* 按钮组：贴近上方容器，消除空档 */
 .btn-group {
-    gap: 6px; /* 缩小按钮间距 */
-    padding: 6px 0;
-    margin-top: 3px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* 增加按钮间距，更易点击 */
+    margin-top: 4px; /* 缩小与上方容器的间距 */
+    padding: 8px 0;
+    border-top: 1px solid #334155;
 }
 .btn {
-    padding: 12px; /* 缩小按钮内边距 */
-    font-size: 15px;
+    width: 100%;
+    padding: 14px; /* 调大内边距，更饱满 */
+    font-size: 16px; /* 字体调大，更醒目 */
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.3s;
 }
-/* 底部信息：缩小边距 */
+.btn:hover {
+    background: #3b82f6;
+}
+.btn:disabled {
+    background: #294b75;
+    color: #a0a8a4;
+    cursor: not-allowed;
+}
 .footer-info {
-    margin-top: 6px;
-    padding-top: 6px;
-    font-size: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #334155;
+    font-size: 11px; /* 字体调大 */
+    color: #a0a8a4;
+    text-align: center;
+    line-height: 1.7;
+}
+.footer-info a {
+    color: #3b82f6;
+    text-decoration: none;
+}
+.footer-info a:hover {
+    text-decoration: underline;
+} 
+.text-right {
+    text-align: right;
 }
 .review-tip {
-    font-size: 12px;
-    margin-top: 6px;
+    color: #4ade80;
+    font-size: 13px; /* 字体调大 */
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
     </style>
 </head>
@@ -168,7 +343,7 @@ body {
             </div>
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
-                  <i class="fa fa-globe"></i>
+                  <<i class="fa fa-globe"></</i>
                 </button>
             </div>
         </div>
@@ -200,7 +375,7 @@ body {
             </div>
             <div class="resource-content" style="line-height: 1.8;">
                 <p>• 合约地址：<span class="highlight" id="contractAddr"></span></p>
-                <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span> μs</p>
+                <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span>μs</p>
                 <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
                     注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
