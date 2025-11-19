@@ -33,20 +33,20 @@ body {
     font-size: 14px; /* 恢复原字体大小 */
 }
 .container {
-    flex: 1;
+   flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 5px; /* 减小间距 */
+    gap: 3px; /* 模块间间距从5px缩到3px */
 }
 /* 新增：标题+语言切换同一行容器 */
 .header-container {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; /* 改为靠上对齐，减少垂直空白 */
-    padding: 8px 8px;
+    align-items: center; /* 改为垂直居中，减少上下空白 */
+    padding: 6px 8px; /* 进一步减小内边距 */
     border-bottom: 1px solid #334155;
-    margin-bottom: 2px; /* 保持与下方容器的近间距 */
-    min-height: 60px; /* 缩小容器高度，减少冗余空白 */
+    margin-bottom: 2px; /* 与下方模块的间距缩到最小 */
+    min-height: 50px; /* 大幅缩小容器高度 */
     box-sizing: border-box;
 }
 .lang-switch {
@@ -70,14 +70,14 @@ body {
     background: rgba(59, 130, 246, 0.2);
 }
 .header {
-    text-align: left;
+   text-align: left;
     padding: 0;
     border-bottom: none;
     margin-bottom: 0;
-    display: flex; /* 新增：flex布局让Logo和文字同行 */
-    align-items: flex-start; /* 靠上对齐，减少垂直冗余 */
-    gap: 8px; /* 新增：Logo和文字间距 */
-    margin-top: 2px; /* 微调整体位置 */
+    display: flex;
+    align-items: center; /* 垂直居中，消除上下冗余 */
+    gap: 8px;
+    margin-top: 0; /* 去掉多余的上边距 */
 }
  .header > div {
     display: flex; /* 横向排列 */
@@ -123,11 +123,11 @@ body {
 #userInfo {
     text-align: center;
     font-size: 13px; /* 恢复原字体大小 */
-    padding: 12px; /* 减小内边距 */
+    padding: 10px; /* 减小内边距 */
     background: #1e2925;
     border-radius: 8px;
     border: 1px solid #334155;
-    line-height: 1.6;
+    line-height: 1.5;
 }
 #userInfo span {
     color: #3b82f6;
@@ -135,12 +135,12 @@ body {
 }
 #walletStatusContainer {
     background: #1e2925;
-    padding: 12px; /* 减小内边距 */
+    padding: 10px; /* 减小内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
     font-size: 12px; /* 恢复原字体大小 */
     color: #a0a8a4;
-    line-height: 1.6;
+    line-height: 1.5;
     border-right: 5px solid #4ade80;
 }
 #walletStatusContainer .status-title {
@@ -171,12 +171,12 @@ body {
 }
 #contractResourceContainer {
     background: #1e2925;
-    padding: 12px; /* 减小内边距 */
+    padding: 10px; /* 减小内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
     font-size: 12px; /* 恢复原字体大小 */
     color: #a0a8a4;
-    line-height: 1.8;
+    line-height: 1.7;
     border-bottom: 2px solid rgba(59, 130, 246, 0.2);
 }
 #contractResourceContainer .status-title {
@@ -204,11 +204,11 @@ body {
 /* 新增：非钱包环境专属容器样式 */
 .special-tip-container {
     background: #1e2925;
-    padding: 14px;
+    padding: 12px;
     border-radius: 8px;
     border: 1px solid #334155;
     display: none; /* 初始隐藏 */
-    margin-top: 5px;
+    margin-top: 3px;
     border-right: 3px solid #f97316; /* 外层边框-主橙色 */
     box-shadow: -2px 0 0 0 #fb923c; /* 内层边框-浅橙色，形成双层效果 */
 }
