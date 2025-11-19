@@ -42,16 +42,17 @@ body {
 .header-container {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start; /* 改为靠上对齐，减少垂直空白 */
     padding: 8px 8px;
     border-bottom: 1px solid #334155;
-    margin-bottom: 2px;
-    min-height: 80px;
+    margin-bottom: 2px; /* 保持与下方容器的近间距 */
+    min-height: 60px; /* 缩小容器高度，减少冗余空白 */
     box-sizing: border-box;
 }
 .lang-switch {
     padding: 0;
     margin: 0;
+    margin-top: 4px; /* 语言按钮微调整体位置 */
 }
 .lang-toggle {
     padding: 3px 8px; /* 减小按钮内边距 */
@@ -74,27 +75,29 @@ body {
     border-bottom: none;
     margin-bottom: 0;
     display: flex; /* 新增：flex布局让Logo和文字同行 */
-    align-items: center; /* 新增：垂直居中 */
+    align-items: flex-start; /* 靠上对齐，减少垂直冗余 */
     gap: 8px; /* 新增：Logo和文字间距 */
+    margin-top: 2px; /* 微调整体位置 */
 }
  .header > div {
     display: flex; /* 横向排列 */
-    align-items: center; /* 垂直居中 */
+    align-items: flex-end; /* 关键：让desc靠下对齐（相对于h1下移） */
     gap: 10px; /* 两个文本之间的间距，可按需调整 */
-   
+    margin-top: 6px; /* 整体往下挪，拉近与下方容器的距离 */
  }
-/* 新增：Logo样式 */
+/* 新增：Logo样式（缩小尺寸，减少占用空间） */
 .header-logo {
-    width: 62px; /* 适配文字高度，保持比例 */
-    height: 62px;
+    width: 40px; /* 缩小Logo，与文字更协调 */
+    height: 40px;
     border-radius: 4px; /* 轻微圆角更美观 */
     object-fit: cover;
+    margin-top: 4px; /* 微调整Logo位置 */
 }
 .header h1 { 
     font-size: 26px; /* 恢复原字体大小 */
     color: #3b82f6;    
     margin-bottom: 0;
-   line-height: 1.2;
+    line-height: 1.2;
 }
 .header .desc {
     font-size: 12px; /* 恢复原字体大小 */
@@ -102,7 +105,9 @@ body {
     max-width: 400px;
     line-height: 1.5;
     margin-bottom: 0;
+    margin-top: 2px; /* 强化desc下移效果 */
 }
+/* 以下为原CSS其他部分，保持不变 */
 .warning {
     background: #334155;
     color: #93c5fd;
@@ -193,8 +198,7 @@ body {
 #contractResourceContainer .data-tag {
     background: rgba(59, 130, 246, 0.15);
     padding: 2px 6px; /* 减小内边距 */
-    border-radius: 4px;
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 4px;border: 1px solid rgba(59, 130, 246, 0.3);
     font-size: 12px; /* 恢复原字体大小 */
 }
 /* 新增：非钱包环境专属容器样式 */
