@@ -40,12 +40,15 @@ body {
 }
 /* 新增：标题+语言切换同一行容器 */
 .header-container {
+    flex-direction: column;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 8px 8px;
     border-bottom: 1px solid #334155;
     margin-bottom: 2px;
+    min-height: 80px;
+    box-sizing: border-box;
 }
 .lang-switch {
     padding: 0;
@@ -79,18 +82,20 @@ body {
     display: flex; /* 横向排列 */
     align-items: center; /* 垂直居中 */
     gap: 10px; /* 两个文本之间的间距，可按需调整 */
+   
  }
 /* 新增：Logo样式 */
 .header-logo {
-    width: 52px; /* 适配文字高度，保持比例 */
-    height: 52px;
+    width: 62px; /* 适配文字高度，保持比例 */
+    height: 62px;
     border-radius: 4px; /* 轻微圆角更美观 */
     object-fit: cover;
 }
 .header h1 { 
-    font-size: 32px; /* 恢复原字体大小 */
+    font-size: 26px; /* 恢复原字体大小 */
     color: #3b82f6;    
     margin-bottom: 0;
+   line-height: 1.2;
 }
 .header .desc {
     font-size: 12px; /* 恢复原字体大小 */
