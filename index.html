@@ -45,10 +45,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 6px;
+    padding: 8px 8px;
     border-bottom: 1px solid #334155;
     margin-bottom: 2px;
-    min-height: 60px; /* 适配调大的字体 */
+    min-height: 80px;
     box-sizing: border-box;
 }
 .lang-switch {
@@ -79,10 +79,11 @@ body {
     align-items: center;
     gap: 10px; /* 增加Logo与文字间距 */
 }
- .header > div {
-    display: flex;
-    align-items: flex-end;
-    gap: 12px; /* 增加h1与desc间距 */
+  .header > div {
+    display: flex; /* 横向排列 */
+    align-items: center; /* 垂直居中 */
+    gap: 10px; /* 两个文本之间的间距，可按需调整 */
+   
  }
 /* Logo样式：保持长方形比例，适配调大的容器 */
 .header-logo {
