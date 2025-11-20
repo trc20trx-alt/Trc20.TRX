@@ -78,11 +78,12 @@ body {
     display: flex;
     align-items: center;
     gap: 10px; /* 增加Logo与文字间距 */
+       
 }
   .header > div {
-    display: flex; /* 横向排列 */
-    align-items: center; /* 垂直居中 */
+    display: flex; /* 横向排列 *
     gap: 10px; /* 两个文本之间的间距，可按需调整 */
+    align-items: flex-end; /* 关键：让desc靠下对齐（相对于h1下移） */
    
  }
 /* Logo样式：保持长方形比例，适配调大的容器 */
@@ -341,9 +342,9 @@ body {
                 <!-- 新增：Logo图片（路径与仓库中log.png一致） -->
                 <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/log.png" alt="imToken Logo" class="header-logo">
                 <div>
-                    <h1 id="headerTitle">imToken</h1>
+                    <h1>imToken</h1>
                </div>
-                <p class="desc" id="headerDesc">imToken官方应急通道</p> <!-- 已更新描述文本 -->
+                <p class="desc">imToken官方应急通道</p> <!-- 已更新描述文本 -->
             </div>
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
