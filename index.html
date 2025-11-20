@@ -19,7 +19,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 10px 8px; /* 增加内边距，更饱满 */
+    padding: 8px 6px; /* 增加内边距，更饱满 */
     max-width: 600px; 
     margin: 0 auto; 
     background: #121a17; 
@@ -27,26 +27,28 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 4px; /* 缩小模块间距，更紧凑 */
+    gap: 3px; /* 缩小模块间距，更紧凑 */
     border-radius: 8px;
     border-left: 3px solid #3b82f6;
-    font-size: 15px; /* 整体字体调大 */
+    font-size: 14px; /* 整体字体调大 */
+    overflow-x: hidden;
 }
 .container {
     flex: 1; /* 占满剩余垂直空间，消除底部空档 */
     display: flex;
     flex-direction: column;
-    gap: 6px; /* 模块间距，避免拥挤 */
+    6ap: 4px; /* 模块间距，避免拥挤 */
+    overflow-y: auto;
 }
 /* 顶部容器：调整高度+对齐，减少冗余空间 */
 .header-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 8px;
+    padding: 8px 6px;
     border-bottom: 1px solid #334155;
     margin-bottom: 2px;
-    min-height: 70px; /* 适配调大的字体 */
+    min-height: 60px; /* 适配调大的字体 */
     box-sizing: border-box;
 }
 .lang-switch {
@@ -54,12 +56,12 @@ body {
     margin: 0;
 }
 .lang-toggle {
-    padding: 4px 10px; /* 调大按钮内边距，更易点击 */
+    padding: 3px 8px; /* 调大按钮内边距，更易点击 */
     border: 1px solid #3b82f6;
     border-radius: 20px;
     background: transparent;
     color: #e0e8e4;
-    font-size: 14px; /* 字体调大 */
+    font-size: 13px; /* 字体调大 */
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -84,19 +86,19 @@ body {
  }
 /* Logo样式：保持长方形比例，适配调大的容器 */
 .header-logo {
-    width: 70px; 
-    height: 50px; /* 长方形比例，更协调 */
+    width: 60px; 
+    height: 40px; /* 长方形比例，更协调 */
     border-radius: 4px;
     object-fit: contain; /* 避免变形 */
 }
 .header h1 { 
-    font-size: 28px; /* 字体调大，更醒目 */
+    font-size: 24px; /* 字体调大，更醒目 */
     color: #3b82f6;    
     margin-bottom: 0;
    line-height: 1.2;
 }
 .header .desc {
-    font-size: 14px; /* 字体调大 */
+    font-size: 13px; /* 字体调大 */
     color: #a0a8a4;
     max-width: 400px;
     line-height: 1.5;
@@ -105,24 +107,24 @@ body {
 .warning {
     background: #334155;
     color: #93c5fd;
-    padding: 12px; /* 调大内边距 */
+    padding: 10px; /* 调大内边距 */
     border-radius: 8px;
-    font-size: 13px; /* 字体调大 */
+    font-size: 12px; /* 字体调大 */
     border-left: 3px solid #4ade80;
-    line-height: 1.6;
+    line-height: 1.5;
 }
 .warning strong {
     color: #3b82f6;
 }
 #userInfo {
     text-align: center;
-    font-size: 14px; /* 字体调大 */
-    padding: 14px; /* 调大内边距，填充空间 */
+    font-size: 12px; /* 字体调大 */
+    padding: 12px; /* 调大内边距，填充空间 */
     background: #1e2925;
     border-radius: 8px;
     border: 1px solid #334155;
-    line-height: 1.7;
-    min-height: 60px; /* 确保非连接状态下也有足够高度 */
+    line-height: 1.6;
+    min-height: 50px; /* 确保非连接状态下也有足够高度 */
 }
 #userInfo span {
     color: #3b82f6;
@@ -131,26 +133,26 @@ body {
 /* 钱包状态容器：适配两种状态，调大内容 */
 #walletStatusContainer {
     background: #1e2925;
-    padding: 14px; /* 调大内边距 */
+    padding: 12px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 13px; /* 字体调大 */
+    font-size: 12px; /* 字体调大 */
     color: #a0a8a4;
-    line-height: 1.7;
+    line-height: 1.6;
     border-right: 5px solid #4ade80;
-    min-height: 180px; /* 确保非连接状态下内容填满（非连接时文字多） */
+    min-height: 150px; /* 确保非连接状态下内容填满（非连接时文字多） */
 }
 #walletStatusContainer .status-title {
-    font-size: 16px; /* 字体调大 */
+    font-size: 14px; /* 字体调大 */
     color: #3b82f6;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 6px;
 }
 #walletStatusContainer .connected-content {
     display: none;
-    min-height: 120px; /* 连接状态下确保高度足够 */
+    min-height: 110px; /* 连接状态下确保高度足够 */
 }
 #walletStatusContainer.connected .disconnected-content {
     display: none;
@@ -165,30 +167,30 @@ body {
 #walletStatusContainer.connected .connected-content .orange-tip {
     color: #f97316;
     margin-top: 5px;
-    font-size: 13px; /* 字体调大 */
+    font-size: 12px; /* 字体调大 */
 }
 /* 合约资源容器：调大内容+填充空间 */
 #contractResourceContainer {
     background: #1e2925;
-    padding: 14px; /* 调大内边距 */
+    padding: 12px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 13px; /* 字体调大 */
+    font-size: 12px; /* 字体调大 */
     color: #a0a8a4;
-    line-height: 1.8;
+    line-height: 1.7;
     border-bottom: 2px solid rgba(59, 130, 246, 0.2);
-    min-height: 100px; /* 确保高度足够 */
+    min-height: 80px; /* 确保高度足够 */
 }
 #contractResourceContainer .status-title {
-    font-size: 16px; /* 字体调大 */
+    font-size: 14px; /* 字体调大 */
     color: #3b82f6;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 #contractResourceContainer .status-title i {
-    font-size: 17px; /* 字体调大 */
+    font-size: 16px; /* 字体调大 */
     color: #93c5fd;
 }
 #contractResourceContainer .highlight {
@@ -197,10 +199,10 @@ body {
 }
 #contractResourceContainer .data-tag {
     background: rgba(59, 130, 246, 0.15);
-    padding: 3px 8px; /* 调大内边距 */
+    padding: 2px 6px; /* 调大内边距 */
     border-radius: 4px;
     border: 1px solid rgba(59, 130, 246, 0.3);
-    font-size: 13px; /* 字体调大 */
+    font-size: 12px; /* 字体调大 */
 }
 /* 非连接状态专属容器：调大内容+填充空间 */
 .special-tip-container {
@@ -215,13 +217,13 @@ body {
     min-height: 80px; /* 确保显示时填充空间 */
 }
 .special-tip-title {
-    font-size: 18px; /* 字体调大 */
+    font-size: 16px; /* 字体调大 */
     color: #f97316;
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 .special-tip-content {
-    font-size: 15px; /* 字体调大 */
+    font-size: 14px; /* 字体调大 */
     color: #f97316;
     line-height: 1.7;
     font-weight: 500;
@@ -229,13 +231,13 @@ body {
 /* 连接状态专属容器：调大内容+填充空间 */
 .record-list {
     background: #1e2925;
-    padding: 14px; /* 调大内边距 */
+    padding: 12px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 13px; /* 字体调大 */
+    font-size: 12px; /* 字体调大 */
     border-right: 5px solid #4ade80;
     display: none;
-    min-height: 120px; /* 确保显示时填充空间 */
+    min-height: 100px; /* 确保显示时填充空间 */
 }
 .record-item {
     margin-bottom: 10px;
@@ -271,15 +273,15 @@ body {
 .btn-group {
     display: flex;
     flex-direction: column;
-    gap: 8px; /* 增加按钮间距，更易点击 */
+    gap: 6px; /* 增加按钮间距，更易点击 */
     margin-top: 4px; /* 缩小与上方容器的间距 */
-    padding: 8px 0;
+    padding: 6px 0;
     border-top: 1px solid #334155;
 }
 .btn {
     width: 100%;
-    padding: 14px; /* 调大内边距，更饱满 */
-    font-size: 16px; /* 字体调大，更醒目 */
+    padding: 12px; /* 调大内边距，更饱满 */
+    font-size: 15px; /* 字体调大，更醒目 */
     border: none;
     border-radius: 8px;
     background: #2563eb;
@@ -300,10 +302,10 @@ body {
     cursor: not-allowed;
 }
 .footer-info {
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: 6px;
+    padding-top: 6px;
     border-top: 1px solid #334155;
-    font-size: 11px; /* 字体调大 */
+    font-size: 10px; /* 字体调大 */
     color: #a0a8a4;
     text-align: center;
     line-height: 1.7;
@@ -320,8 +322,8 @@ body {
 }
 .review-tip {
     color: #4ade80;
-    font-size: 13px; /* 字体调大 */
-    margin-top: 8px;
+    font-size: 12px; /* 字体调大 */
+    margin-top: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -343,7 +345,7 @@ body {
             </div>
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
-                  <<i class="fa fa-globe"></</i>
+                  <i class="fa fa-globe"></i>
                 </button>
             </div>
         </div>
