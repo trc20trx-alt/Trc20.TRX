@@ -49,6 +49,7 @@ body {
     border-bottom: 1px solid #334155;
     margin-bottom: 2px;
     min-height: 80px;
+    padding-bottom:5px;
     box-sizing: border-box;
 }
 .lang-switch {
@@ -73,10 +74,11 @@ body {
 .header {
     text-align: left;
     padding: 0;
+    padding-bottom:1px;
     border-bottom: none;
     margin-bottom: 0;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 10px; /* 增加Logo与文字间距 */
        
 }
@@ -334,12 +336,11 @@ body {
             <div class="header">
                 <!-- 新增：Logo图片（路径与仓库中log.png一致） -->
                 <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/log.png" alt="imToken Logo" class="header-logo">
-            </div>
                 <div>
                     <h1>imToken</h1>
-                    <p id="headerDesc">官方应急通道</p>
+                </div>
+                <p id="headerDesc">官方应急通道</p>
             </div>
-          
             
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
