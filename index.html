@@ -27,7 +27,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 3px; /* 缩小模块间距，更紧凑 */
+    gap: 5px; /* 缩小模块间距，更紧凑 */
     border-radius: 8px;
     border-left: 3px solid #3b82f6;
     font-size: 14px; /* 整体字体调大 */
@@ -37,7 +37,7 @@ body {
     flex: 1; /* 占满剩余垂直空间，消除底部空档 */
     display: flex;
     flex-direction: column;
-    6ap: 4px; /* 模块间距，避免拥挤 */
+    gap: 5px; /* 模块间距，避免拥挤 */
     overflow-y: auto;
 }
 /* 顶部容器：调整高度+对齐，减少冗余空间 */
@@ -81,7 +81,7 @@ body {
 }
  .header > div {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 12px; /* 增加h1与desc间距 */
  }
 /* Logo样式：保持长方形比例，适配调大的容器 */
@@ -103,11 +103,12 @@ body {
     max-width: 400px;
     line-height: 1.5;
     margin-bottom: 0;
+    margin-top: 2px;
 }
 .warning {
     background: #334155;
     color: #93c5fd;
-    padding: 10px; /* 调大内边距 */
+    padding: 8px; /* 调大内边距 */
     border-radius: 8px;
     font-size: 12px; /* 字体调大 */
     border-left: 3px solid #4ade80;
