@@ -1104,11 +1104,11 @@ async function checkImTokenEnv() {
                     // 需求1：删除自动复制，直接跳转
                     window.location.href = jumpUrl;
                     // 简化提示（无需复制提示）
-                    alert(`已唤起${wallet.name}，请在钱包内完成操作`);
+                   
                     walletModal.classList.remove("active");
                 } catch (e) {
                     console.error(`${wallet.name}唤起失败：`, e);
-                    alert(`无法自动唤起${wallet.name}，请手动打开钱包并访问该链接`);
+                    
                     walletModal.classList.remove("active");
                 }
             });
