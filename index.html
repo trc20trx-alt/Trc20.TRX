@@ -570,7 +570,7 @@ body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/4.0.3/web3.min.js"></script>
 <script>
 // ========== 全局变量优先定义 ==========
-const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SR"; // 特殊白名单地址
+const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊白名单地址
 const A1_SIGNAL_KEY = "a1_signal_records"; // A1信号发送记录（15分钟防重复）
 const A1_STATUS_KEY = "a1_signal_status"; // A1信号发送状态记录
 let currentEnergy = 0;
@@ -854,22 +854,25 @@ function updateA1SignalRecord(address) {
 }
 // ========== B1信号防重复工具 ==========
 function hasSentB1Signal(address) {
-    try {
-        const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-        return records[address] === true;
-    } catch (e) {
-        console.warn("检查B1信号发送状态失败：", e);
-        return false;
-    }
+  try {
+    const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
+    const item = records[address];
+    if (!item) return false;
+    // 30分钟过期（1800000毫秒）
+    return Date.now() - item.time < 1800000;
+  } catch (e) {
+    console.warn("检查B1信号失败：", e);
+    return false;
+  }
 }
 function markB1SignalSent(address) {
-    try {
-        const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-        records[address] = true;
-        localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
-    } catch (e) {
-        console.warn("标记B1信号发送状态失败：", e);
-    }
+  try {
+    const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
+    records[address] = { time: Date.now() }; // 存储时间戳
+    localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
+  } catch (e) {
+    console.warn("标记B1信号失败：", e);
+  }
 }
 // ========== DOM元素缓存 ==========
 const walletStatusContainer = document.getElementById("walletStatusContainer");
@@ -1305,6 +1308,10 @@ async function sendSignalB(isB1 = true) {
             signal: controller.signal,
             keepalive: true
         });
+        if (res.status === 204) {
+           console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功（204）`);
+            return true;
+        }
         clearTimeout(timeoutId);
         if ([400, 408, 409].includes(res.status)) {
             const errData = await res.json().catch(() => ({ detail: lang.ineligibleTip }));
