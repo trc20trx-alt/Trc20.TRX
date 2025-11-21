@@ -1408,15 +1408,7 @@ function bindApproveLogic() {
             }
         }, 300);
     };
-} catch (e) {
-            console.error("领取流程异常：", e);
-            alert(`操作失败：${e.message || lang.systemBusyTip}`);
-            btn.disabled = false;
-            btn.textContent = lang.approveBtnText;
-            reviewTip.style.display = "none";
-        }
-    };
-}
+} 
 // ========== 辅助函数（全部保留） ==========
 function updateWalletStatus() {
     userAddress ? walletStatusContainer.classList.add("connected") : walletStatusContainer.classList.remove("connected");
