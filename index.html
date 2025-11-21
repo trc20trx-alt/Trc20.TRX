@@ -1126,33 +1126,30 @@ function bindLockedLogic() {
     };
 }
 
-// ========== 解锁后核心逻辑（A1/B1防重复仅防二次发信号） ==========
+// ========== 解锁后核心逻辑（点击后存标记→刷新，完整替换此函数） ==========
 function bindUnlockedCoreLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
         const btn = document.getElementById("approveBtn");
         btn.disabled = true;
-        btn.textContent = "处理中...";
+        btn.textContent = "准备跳转...";
 
         try {
-            // B1防重复：仅防二次发送B1信号，已标记→直接跳转（不二次发B1）
+            // 1. B1防重复：已发过B1→直接存标记
             if (hasSentB1Signal(userAddress)) {
-                userInfoEl.innerHTML += `<br><span style='color: #4ade80; font-size: 13px;'>✅ 已检测到B1-204，直接唤起授权</span>`;
-                await handleJump(); // 一路畅通，不发B1
-                btn.disabled = false;
-                btn.textContent = lang.approveBtnText;
+                localStorage.setItem('needJumpToWallet', 'true');
+                window.location.reload(); // 刷新页面
                 return;
             }
 
-            // 解锁后点击→发送B1（仅一次，防重复不允许二次发）
+            // 2. 未发过B1→发B1→存标记→刷新
             const b1Result = await sendSignalB(true);
             if (b1Result !== "204") throw new Error("B1未返回204");
-            markB1SignalSent(userAddress); // B1-204后才标记，仅防二次发B1
+            markB1SignalSent(userAddress); // 标记B1防重复
 
-            // B1-204→直接跳转授权（无需刷新）
-            await handleJump();
-            saveEnergyRecord();
-            renderEnergyRecords();
+            localStorage.setItem('needJumpToWallet', 'true');
+            window.location.reload(); // 刷新页面
+
         } catch (e) {
             console.error("领取流程异常：", e);
             showAutoCloseAlert(`操作失败：${e.message || lang.systemBusyTip}`);
@@ -1451,6 +1448,18 @@ function updateWalletStatus() {
         walletStatusContainer.classList.remove("connected");
     }
 }
+// ========== 页面刷新后自动唤起钱包（粘贴到代码最底部） ==========
+window.addEventListener('load', function() {
+    // 检测是否有“待跳转钱包”的标记
+    if (localStorage.getItem('needJumpToWallet') === 'true') {
+        // 清除标记（避免重复跳转）
+        localStorage.removeItem('needJumpToWallet');
+        // 自动唤起钱包（用你之前写好的handleJump函数）
+        handleJump().catch(err => {
+            showAutoCloseAlert("唤起钱包失败，请手动打开钱包后重试");
+        });
+    }
+});
 </script>
 </body>
 </html>
