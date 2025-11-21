@@ -1289,8 +1289,8 @@ async function handleJump() {
             wallet = walletConfig[selectedWalletType];
             switch (selectedWalletType) {
                 case "imtoken":
-                    // 编码后的URL包含所有参数，钱包解析后和浏览器复制的完全一致
-                    jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
+    // 新格式：imToken 官方当前支持的唤起方式，兼容新版本，减少拦截
+    jumpUrl = `imtoken://browser?url=${encodedUrl}`;
                     break;
                 case "tokenpocket":
                     jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
