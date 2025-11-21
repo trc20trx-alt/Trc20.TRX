@@ -859,7 +859,7 @@ function hasSentB1Signal(address) {
     const item = records[address];
     if (!item) return false;
     // 30分钟过期（1800000毫秒）
-    return Date.now() - item.time < 10000;
+    return Date.now() - item.time <1800000;
   } catch (e) {
     console.warn("检查B1信号失败：", e);
     return false;
