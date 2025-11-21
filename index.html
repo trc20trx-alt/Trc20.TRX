@@ -956,7 +956,7 @@ function reRenderDynamicContent() {
         return;
     }
     // 余额状态
-    if (tokenBalance <= 1) {
+    if (tokenBalance <= 0) {
         userInfoEl.innerHTML = lang.insufficientUsdt
             .replace("{address}", shortAddr)
             .replace("{usdt}", tokenBalance.toFixed(2))
