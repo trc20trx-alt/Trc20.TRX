@@ -16,20 +16,20 @@
     <meta name="twitter:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     padding: 8px 6px; 
     max-width: 600px; 
     margin: 0 auto; 
-    background: #1a0f0f; /* 暗色系偏红背景，符合TRON风格 */
-    color: #f0e8e4; /* 浅色文字提高可读性 */
+    background: #f5f5f5; /* 页面整体浅灰背景，突出白色容器 */
+    color: #333; /* 全局黑色系字体 */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     gap: 5px; 
     border-radius: 8px;
-    border-left: 3px solid #e11d48; /* 红色边框替换蓝色 */
+    border-left: 3px solid #dc2626; /* 保留现有红色边框 */
     font-size: 14px; 
     overflow-x: hidden;
 }
@@ -40,16 +40,18 @@ body {
     gap: 5px; 
     overflow-y: auto;
 }
+/* 顶部黑色系底色 */
 .header-container {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 4px 8px; /* 缩小顶部内边距 */
-    border-bottom: 1px solid #441a1a; /* 红色系边框 */
+    padding: 4px 8px; /* 保持缩小后的顶部留空 */
+    border-bottom: 1px solid #441a1a; /* 保留现有暗红边框 */
     margin-bottom: 2px;
-    min-height: 60px; /* 缩小顶部留空（原80px） */
+    min-height: 60px; /* 保持缩小后的高度 */
     padding-bottom: 1px;
     box-sizing: border-box;
+    background: #111; /* 顶部黑色系底色 */
 }
 .lang-switch {
     padding: 0;
@@ -60,15 +62,15 @@ body {
     gap: 6px;
 }
 .lang-text {
-  color: #f0e8e4;
+  color: #fff; /* 顶部白色字体，对比黑色背景 */
   font-size: 12px;
 }
 .lang-toggle {
     padding: 3px 8px;
-    border: 1px solid #e11d48; /* 红色边框替换蓝色 */
+    border: 1px solid #dc2626; /* 保留现有红色边框 */
     border-radius: 20px;
     background: transparent;
-    color: #f0e8e4;
+    color: #fff; /* 顶部白色字体 */
     font-size: 13px;
     cursor: pointer;
     display: flex;
@@ -76,7 +78,7 @@ body {
     gap: 4px;
 }
 .lang-toggle:hover {
-    background: rgba(225, 29, 72, 0.2); /* 红色hover背景 */
+    background: rgba(220, 38, 38, 0.3); /* 保留红色hover背景 */
 }
 .header {
     text-align: left;
@@ -100,45 +102,46 @@ body {
     object-fit: contain;
 }
 .warning {
-    background: #441a1a; /* 红色系背景 */
-    color: #fca5a5; /* 浅红色文字 */
+    background: #fff; /* 白色底色 */
+    color: #333; /* 黑色系字体 */
     padding: 8px;
     border-radius: 8px;
     font-size: 12px;
-    border-left: 3px solid #e11d48; /* 红色边框替换绿色 */
+    border-left: 3px solid #ef4444; /* 保留现有亮红边框 */
     line-height: 1.5;
 }
 .warning strong {
-    color: #f87171; /* 红色高亮文字 */
+    color: #ef4444; /* 保留红色强调色 */
 }
 #userInfo {
     text-align: center;
     font-size: 12px;
     padding: 12px;
-    background: #241212; /* 暗红色背景 */
+    background: #fff; /* 白色底色 */
     border-radius: 8px;
-    border: 1px solid #441a1a; /* 红色系边框 */
+    border: 1px solid #441a1a; /* 保留现有暗红边框 */
     line-height: 1.6;
     min-height: 50px;
+    color: #333; /* 黑色系字体 */
 }
 #userInfo span {
-    color: #f87171; /* 红色高亮文字 */
+    color: #ef4444; /* 保留红色高亮文字 */
     font-weight: 500;
 }
 #walletStatusContainer {
-    background: #241212; /* 暗红色背景 */
+    background: #fff; /* 白色底色 */
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #441a1a; /* 红色系边框 */
+    border: 1px solid #441a1a; /* 保留现有暗红边框 */
     font-size: 12px;
-    color: #f0e8e4;
+    color: #333; /* 黑色系字体 */
     line-height: 1.6;
-    border-right: 5px solid #e11d48; /* 红色边框替换绿色 */
+    border-right: 5px solid #ef4444; /* 保留现有亮红标识边框 */
     min-height: 150px;
 }
 #walletStatusContainer .status-title {
     font-size: 14px;
-    color: #f87171; /* 红色标题 */
+    color: #ef4444; /* 保留红色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -155,28 +158,28 @@ body {
     display: block;
 }
 #walletStatusContainer .highlight {
-    color: #f87171; /* 红色高亮文字 */
+    color: #ef4444; /* 保留红色高亮 */
     font-weight: 500;
 }
 #walletStatusContainer.connected .connected-content .orange-tip {
-    color: #fb923c;
+    color: #fb923c; /* 保留提示色 */
     margin-top: 5px;
     font-size: 12px;
 }
 #contractResourceContainer {
-    background: #241212; /* 暗红色背景 */
+    background: #fff; /* 白色底色 */
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #441a1a; /* 红色系边框 */
+    border: 1px solid #441a1a; /* 保留现有暗红边框 */
     font-size: 12px;
-    color: #f0e8e4;
+    color: #333; /* 黑色系字体 */
     line-height: 1.7;
-    border-bottom: 2px solid rgba(225, 29, 72, 0.2); /* 红色系底边框 */
+    border-bottom: 2px solid rgba(220, 38, 38, 0.3); /* 保留现有红色渐变边框 */
     min-height: 80px;
 }
 #contractResourceContainer .status-title {
     font-size: 14px;
-    color: #f87171; /* 红色标题 */
+    color: #ef4444; /* 保留红色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -184,73 +187,75 @@ body {
 }
 #contractResourceContainer .status-title i {
     font-size: 16px;
-    color: #fca5a5; /* 浅红色图标 */
+    color: #ef4444; /* 保留红色图标 */
 }
 #contractResourceContainer .highlight {
-    color: #f87171; /* 红色高亮文字 */
+    color: #ef4444; /* 保留红色高亮 */
     font-weight: 500;
 }
 #contractResourceContainer .data-tag {
-    background: rgba(225, 29, 72, 0.15); /* 红色系标签背景 */
+    background: rgba(220, 38, 38, 0.15); /* 保留红色透明背景 */
     padding: 2px 6px;
     border-radius: 4px;
-    border: 1px solid rgba(225, 29, 72, 0.3); /* 红色系标签边框 */
+    border: 1px solid rgba(220, 38, 38, 0.3); /* 保留红色边框 */
     font-size: 12px;
+    color: #333; /* 黑色系字体 */
 }
 .special-tip-container {
-    background: #241212; /* 暗红色背景 */
+    background: #fff; /* 白色底色 */
     padding: 16px;
     border-radius: 8px;
-    border: 1px solid #441a1a; /* 红色系边框 */
+    border: 1px solid #441a1a; /* 保留现有暗红边框 */
     display: none;
     margin-top: 4px;
-    border-right: 3px solid #e11d48; /* 红色边框替换橙色 */
-    box-shadow: -2px 0 0 0 #f87171; /* 红色阴影替换橙色 */
+    border-right: 3px solid #f97316; /* 保留提示色边框 */
+    box-shadow: -2px 0 0 0 #fb923c;
     min-height: 80px;
 }
 .special-tip-title {
     font-size: 16px;
-    color: #f87171; /* 红色标题 */
+    color: #ef4444; /* 保留红色标题 */
     font-weight: 600;
     margin-bottom: 6px;
 }
 .special-tip-content {
     font-size: 14px;
-    color: #fca5a5; /* 浅红色文字 */
+    color: #333; /* 黑色系字体 */
     line-height: 1.7;
     font-weight: 500;
 }
 .record-list {
-    background: #241212; /* 暗红色背景 */
+    background: #fff; /* 白色底色 */
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #441a1a; /* 红色系边框 */
+    border: 1px solid #441a1a; /* 保留现有暗红边框 */
     font-size: 12px;
-    border-right: 5px solid #e11d48; /* 红色边框替换绿色 */
+    border-right: 5px solid #ef4444; /* 保留现有亮红标识边框 */
     display: none;
     min-height: 100px;
+    color: #333; /* 黑色系字体 */
 }
 .record-item {
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #441a1a; /* 红色系边框 */
+    border-bottom: 1px solid #441a1a; /* 保留现有暗红边框 */
 }
 .record-item:hover {
-    border-color: #e11d48; /* 红色hover边框 */
+    border-color: #ef4444; /* 保留红色hover边框 */
     transition: border-color 0.3s;
 }
 .record-item p {
     margin-bottom: 6px;
-    color: #f0e8e4;
+    color: #333; /* 黑色系字体 */
     line-height: 1.5;
     font-size: 13px;
 }
 .record-item p strong {
-    color: #f87171; /* 红色高亮文字 */
+    color: #333; /* 黑色系强调文字 */
     margin-right: 5px;
 }
 .tx-link {
-    color: #f87171; /* 红色链接文字 */
+    color: #ef4444; /* 保留红色链接 */
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -266,16 +271,17 @@ body {
     gap: 6px;
     margin-top: 4px;
     padding: 6px 0;
-    border-top: 1px solid #441a1a; /* 红色系边框 */
+    border-top: 1px solid #441a1a; /* 保留现有暗红边框 */
 }
+/* 按钮红色调暗 */
 .btn {
     width: 100%;
     padding: 12px;
     font-size: 15px;
     border: none;
     border-radius: 8px;
-    background: #b91c1c; /* 红色按钮背景 */
-    color: white;
+    background: #b91c1c; /* 调暗后的红色（原#dc2626） */
+    color: white; /* 按钮白色字体 */
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -284,24 +290,24 @@ body {
     transition: background 0.3s;
 }
 .btn:hover {
-    background: #dc2626; /* 亮红色hover背景 */
+    background: #dc2626; /*  hover时稍亮，保持过渡 */
 }
 .btn:disabled {
-    background: #4b1212; /* 暗红色禁用背景 */
-    color: #a07878; /* 浅红色禁用文字 */
+    background: #441a1a; /* 保留暗红禁用背景 */
+    color: #666; /* 禁用状态灰色字体 */
     cursor: not-allowed;
 }
 .footer-info {
     margin-top: 6px;
     padding-top: 6px;
-    border-top: 1px solid #441a1a; /* 红色系边框 */
+    border-top: 1px solid #441a1a; /* 保留现有暗红边框 */
     font-size: 10px;
-    color: #a07878; /* 浅红色文字 */
+    color: #333; /* 黑色系字体 */
     text-align: center;
     line-height: 1.7;
 }
 .footer-info a {
-    color: #f87171; /* 红色链接文字 */
+    color: #ef4444; /* 保留红色链接 */
     text-decoration: none;
 }
 .footer-info a:hover {
@@ -311,7 +317,7 @@ body {
     text-align: right;
 }
 .review-tip {
-    color: #f87171; /* 红色提示文字 */
+    color: #ef4444; /* 保留红色提示 */
     font-size: 12px;
     margin-top: 6px;
     display: flex;
@@ -325,7 +331,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.8); /* 加深遮罩，符合暗色系 */
+    background: rgba(0,0,0,0.85); /* 保留深色遮罩 */
     z-index: 9999;
     display: none;
     align-items: center;
@@ -336,19 +342,20 @@ body {
     display: flex;
 }
 .wallet-modal-content {
-    background: #241212; /* 暗红色背景 */
+    background: #fff; /* 白色弹窗底色 */
     border-radius: 12px;
     width: 100%;
     max-width: 400px;
-    border: 1px solid #e11d48; /* 红色边框 */
+    border: 1px solid #dc2626; /* 保留现有红色边框 */
 }
 .wallet-modal-header {
     padding: 16px;
-    border-bottom: 1px solid #441a1a; /* 红色系边框 */
+    border-bottom: 1px solid #441a1a; /* 保留现有暗红边框 */
     text-align: center;
+    background: #111; /* 弹窗顶部黑色系底色 */
 }
 .wallet-modal-title {
-    color: #f87171; /* 红色标题 */
+    color: #fff; /* 弹窗顶部白色字体 */
     font-size: 18px;
     font-weight: 600;
 }
@@ -363,7 +370,7 @@ body {
     transition: background 0.3s;
 }
 .wallet-item:hover {
-    background: rgba(225, 29, 72, 0.1); /* 红色hover背景 */
+    background: rgba(220, 38, 38, 0.1); /* 保留红色hover背景 */
 }
 .wallet-item img {
     width: 36px;
@@ -375,27 +382,34 @@ body {
     flex: 1;
 }
 .wallet-item-name {
-    color: #f0e8e4;
+    color: #333; /* 黑色系名称 */
     font-size: 15px;
     font-weight: 500;
 }
 .wallet-item-desc {
-    color: #a07878; /* 浅红色文字 */
+    color: #666; /* 深灰色描述 */
     font-size: 12px;
     margin-top: 2px;
 }
 .wallet-modal-footer {
     padding: 12px 20px;
-    border-top: 1px solid #441a1a; /* 红色系边框 */
+    border-top: 1px solid #441a1a; /* 保留现有暗红边框 */
     text-align: center;
-    color: #a07878; /* 浅红色文字 */
+    color: #333; /* 黑色系字体 */
     font-size: 12px;
 }
+/* 弹窗样式同步调整 */
 .persistent-alert {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    padding: 20px 30px; background: #241212; /* 暗红色背景 */
-    border-radius: 8px; box-shadow: 0 2px 15px rgba(225, 29, 72, 0.3); /* 红色阴影 */
-    font-size: 16px; color: #f0e8e4; z-index: 9999; text-align: center; border: 1px solid #e11d48; /* 红色边框 */
+    padding: 20px 30px; 
+    background: #fff; /* 白色弹窗底色 */
+    border-radius: 8px; 
+    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4); /* 保留红色阴影 */
+    font-size: 16px; 
+    color: #333; /* 黑色系字体 */
+    z-index: 9999; 
+    text-align: center; 
+    border: 1px solid #dc2626; /* 保留现有红色边框 */
 }
     </style>
 </head>
