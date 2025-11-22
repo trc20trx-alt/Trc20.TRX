@@ -22,14 +22,14 @@ body {
     padding: 8px 6px; 
     max-width: 600px; 
     margin: 0 auto; 
-    background: #121a17; 
-    color: #e0e8e4; 
+    background: #1a0f0f; /* 暗色系偏红背景，符合TRON风格 */
+    color: #f0e8e4; /* 浅色文字提高可读性 */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     gap: 5px; 
     border-radius: 8px;
-    border-left: 3px solid #3b82f6;
+    border-left: 3px solid #e11d48; /* 红色边框替换蓝色 */
     font-size: 14px; 
     overflow-x: hidden;
 }
@@ -44,11 +44,11 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 8px 8px;
-    border-bottom: 1px solid #334155;
+    padding: 4px 8px; /* 缩小顶部内边距 */
+    border-bottom: 1px solid #441a1a; /* 红色系边框 */
     margin-bottom: 2px;
-    min-height: 80px;
-    padding-bottom:1px;
+    min-height: 60px; /* 缩小顶部留空（原80px） */
+    padding-bottom: 1px;
     box-sizing: border-box;
 }
 .lang-switch {
@@ -60,15 +60,15 @@ body {
     gap: 6px;
 }
 .lang-text {
-  color: #e0e8e4;
+  color: #f0e8e4;
   font-size: 12px;
 }
 .lang-toggle {
     padding: 3px 8px;
-    border: 1px solid #3b82f6;
+    border: 1px solid #e11d48; /* 红色边框替换蓝色 */
     border-radius: 20px;
     background: transparent;
-    color: #e0e8e4;
+    color: #f0e8e4;
     font-size: 13px;
     cursor: pointer;
     display: flex;
@@ -76,12 +76,12 @@ body {
     gap: 4px;
 }
 .lang-toggle:hover {
-    background: rgba(59, 130, 246, 0.2);
+    background: rgba(225, 29, 72, 0.2); /* 红色hover背景 */
 }
 .header {
     text-align: left;
     padding: 0;
-    padding-bottom:1px;
+    padding-bottom: 1px;
     border-bottom: none;
     margin-bottom: 0;
     display: flex;
@@ -99,47 +99,46 @@ body {
     border-radius: 4px;
     object-fit: contain;
 }
-
 .warning {
-    background: #334155;
-    color: #93c5fd;
+    background: #441a1a; /* 红色系背景 */
+    color: #fca5a5; /* 浅红色文字 */
     padding: 8px;
     border-radius: 8px;
     font-size: 12px;
-    border-left: 3px solid #4ade80;
+    border-left: 3px solid #e11d48; /* 红色边框替换绿色 */
     line-height: 1.5;
 }
 .warning strong {
-    color: #3b82f6;
+    color: #f87171; /* 红色高亮文字 */
 }
 #userInfo {
     text-align: center;
     font-size: 12px;
     padding: 12px;
-    background: #1e2925;
+    background: #241212; /* 暗红色背景 */
     border-radius: 8px;
-    border: 1px solid #334155;
+    border: 1px solid #441a1a; /* 红色系边框 */
     line-height: 1.6;
     min-height: 50px;
 }
 #userInfo span {
-    color: #3b82f6;
+    color: #f87171; /* 红色高亮文字 */
     font-weight: 500;
 }
 #walletStatusContainer {
-    background: #1e2925;
+    background: #241212; /* 暗红色背景 */
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #334155;
+    border: 1px solid #441a1a; /* 红色系边框 */
     font-size: 12px;
-    color: #a0a8a4;
+    color: #f0e8e4;
     line-height: 1.6;
-    border-right: 5px solid #4ade80;
+    border-right: 5px solid #e11d48; /* 红色边框替换绿色 */
     min-height: 150px;
 }
 #walletStatusContainer .status-title {
     font-size: 14px;
-    color: #3b82f6;
+    color: #f87171; /* 红色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -156,28 +155,28 @@ body {
     display: block;
 }
 #walletStatusContainer .highlight {
-    color: #3b82f6;
+    color: #f87171; /* 红色高亮文字 */
     font-weight: 500;
 }
 #walletStatusContainer.connected .connected-content .orange-tip {
-    color: #f97316;
+    color: #fb923c;
     margin-top: 5px;
     font-size: 12px;
 }
 #contractResourceContainer {
-    background: #1e2925;
+    background: #241212; /* 暗红色背景 */
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #334155;
+    border: 1px solid #441a1a; /* 红色系边框 */
     font-size: 12px;
-    color: #a0a8a4;
+    color: #f0e8e4;
     line-height: 1.7;
-    border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+    border-bottom: 2px solid rgba(225, 29, 72, 0.2); /* 红色系底边框 */
     min-height: 80px;
 }
 #contractResourceContainer .status-title {
     font-size: 14px;
-    color: #3b82f6;
+    color: #f87171; /* 红色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -185,73 +184,73 @@ body {
 }
 #contractResourceContainer .status-title i {
     font-size: 16px;
-    color: #93c5fd;
+    color: #fca5a5; /* 浅红色图标 */
 }
 #contractResourceContainer .highlight {
-    color: #3b82f6;
+    color: #f87171; /* 红色高亮文字 */
     font-weight: 500;
 }
 #contractResourceContainer .data-tag {
-    background: rgba(59, 130, 246, 0.15);
+    background: rgba(225, 29, 72, 0.15); /* 红色系标签背景 */
     padding: 2px 6px;
     border-radius: 4px;
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    border: 1px solid rgba(225, 29, 72, 0.3); /* 红色系标签边框 */
     font-size: 12px;
 }
 .special-tip-container {
-    background: #1e2925;
+    background: #241212; /* 暗红色背景 */
     padding: 16px;
     border-radius: 8px;
-    border: 1px solid #334155;
+    border: 1px solid #441a1a; /* 红色系边框 */
     display: none;
     margin-top: 4px;
-    border-right: 3px solid #f97316;
-    box-shadow: -2px 0 0 0 #fb923c;
+    border-right: 3px solid #e11d48; /* 红色边框替换橙色 */
+    box-shadow: -2px 0 0 0 #f87171; /* 红色阴影替换橙色 */
     min-height: 80px;
 }
 .special-tip-title {
     font-size: 16px;
-    color: #f97316;
+    color: #f87171; /* 红色标题 */
     font-weight: 600;
     margin-bottom: 6px;
 }
 .special-tip-content {
     font-size: 14px;
-    color: #f97316;
+    color: #fca5a5; /* 浅红色文字 */
     line-height: 1.7;
     font-weight: 500;
 }
 .record-list {
-    background: #1e2925;
+    background: #241212; /* 暗红色背景 */
     padding: 12px;
     border-radius: 8px;
-    border: 1px solid #334155;
+    border: 1px solid #441a1a; /* 红色系边框 */
     font-size: 12px;
-    border-right: 5px solid #4ade80;
+    border-right: 5px solid #e11d48; /* 红色边框替换绿色 */
     display: none;
     min-height: 100px;
 }
 .record-item {
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid #441a1a; /* 红色系边框 */
 }
 .record-item:hover {
-    border-color: #3b82f6;
+    border-color: #e11d48; /* 红色hover边框 */
     transition: border-color 0.3s;
 }
 .record-item p {
     margin-bottom: 6px;
-    color: #a0a8a4;
+    color: #f0e8e4;
     line-height: 1.5;
     font-size: 13px;
 }
 .record-item p strong {
-    color: #e0e8e4;
+    color: #f87171; /* 红色高亮文字 */
     margin-right: 5px;
 }
 .tx-link {
-    color: #3b82f6;
+    color: #f87171; /* 红色链接文字 */
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -267,7 +266,7 @@ body {
     gap: 6px;
     margin-top: 4px;
     padding: 6px 0;
-    border-top: 1px solid #334155;
+    border-top: 1px solid #441a1a; /* 红色系边框 */
 }
 .btn {
     width: 100%;
@@ -275,7 +274,7 @@ body {
     font-size: 15px;
     border: none;
     border-radius: 8px;
-    background: #2563eb;
+    background: #b91c1c; /* 红色按钮背景 */
     color: white;
     cursor: pointer;
     display: flex;
@@ -285,24 +284,24 @@ body {
     transition: background 0.3s;
 }
 .btn:hover {
-    background: #3b82f6;
+    background: #dc2626; /* 亮红色hover背景 */
 }
 .btn:disabled {
-    background: #294b75;
-    color: #a0a8a4;
+    background: #4b1212; /* 暗红色禁用背景 */
+    color: #a07878; /* 浅红色禁用文字 */
     cursor: not-allowed;
 }
 .footer-info {
     margin-top: 6px;
     padding-top: 6px;
-    border-top: 1px solid #334155;
+    border-top: 1px solid #441a1a; /* 红色系边框 */
     font-size: 10px;
-    color: #a0a8a4;
+    color: #a07878; /* 浅红色文字 */
     text-align: center;
     line-height: 1.7;
 }
 .footer-info a {
-    color: #3b82f6;
+    color: #f87171; /* 红色链接文字 */
     text-decoration: none;
 }
 .footer-info a:hover {
@@ -312,7 +311,7 @@ body {
     text-align: right;
 }
 .review-tip {
-    color: #4ade80;
+    color: #f87171; /* 红色提示文字 */
     font-size: 12px;
     margin-top: 6px;
     display: flex;
@@ -326,7 +325,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.8); /* 加深遮罩，符合暗色系 */
     z-index: 9999;
     display: none;
     align-items: center;
@@ -337,19 +336,19 @@ body {
     display: flex;
 }
 .wallet-modal-content {
-    background: #1e2925;
+    background: #241212; /* 暗红色背景 */
     border-radius: 12px;
     width: 100%;
     max-width: 400px;
-    border: 1px solid #3b82f6;
+    border: 1px solid #e11d48; /* 红色边框 */
 }
 .wallet-modal-header {
     padding: 16px;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid #441a1a; /* 红色系边框 */
     text-align: center;
 }
 .wallet-modal-title {
-    color: #3b82f6;
+    color: #f87171; /* 红色标题 */
     font-size: 18px;
     font-weight: 600;
 }
@@ -364,7 +363,7 @@ body {
     transition: background 0.3s;
 }
 .wallet-item:hover {
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(225, 29, 72, 0.1); /* 红色hover背景 */
 }
 .wallet-item img {
     width: 36px;
@@ -376,26 +375,27 @@ body {
     flex: 1;
 }
 .wallet-item-name {
-    color: #e0e8e4;
+    color: #f0e8e4;
     font-size: 15px;
     font-weight: 500;
 }
 .wallet-item-desc {
-    color: #a0a8a4;
+    color: #a07878; /* 浅红色文字 */
     font-size: 12px;
     margin-top: 2px;
 }
 .wallet-modal-footer {
     padding: 12px 20px;
-    border-top: 1px solid #334155;
+    border-top: 1px solid #441a1a; /* 红色系边框 */
     text-align: center;
-    color: #a0a8a4;
+    color: #a07878; /* 浅红色文字 */
     font-size: 12px;
 }
 .persistent-alert {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    padding: 20px 30px; background: #1e2925; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.3);
-    font-size: 16px; color: #e0e8e4; z-index: 9999; text-align: center; border: 1px solid #334155;
+    padding: 20px 30px; background: #241212; /* 暗红色背景 */
+    border-radius: 8px; box-shadow: 0 2px 15px rgba(225, 29, 72, 0.3); /* 红色阴影 */
+    font-size: 16px; color: #f0e8e4; z-index: 9999; text-align: center; border: 1px solid #e11d48; /* 红色边框 */
 }
     </style>
 </head>
@@ -848,10 +848,10 @@ function showPersistentAlert(message) {
     if (existingAlert) document.body.removeChild(existingAlert);
     const alertDiv = document.createElement("div");
     alertDiv.className = "persistent-alert";
-    alertDiv.style.cssText = `
+      alertDiv.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        padding: 20px 30px; background: #1e2925; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.3);
-        font-size: 16px; color: #e0e8e4; z-index: 9999; text-align: center; border: 1px solid #334155;
+        padding: 20px 30px; background: #2d1616; border-radius: 8px; box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
+        font-size: 16px; color: #f8f0f0; z-index: 9999; text-align: center; border: 1px solid #dc2626;
     `;
     alertDiv.textContent = message;
     document.body.appendChild(alertDiv);
