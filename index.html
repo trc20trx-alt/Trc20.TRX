@@ -19,10 +19,10 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 8px 6px; 
+    padding: 0; /* 移除默认padding，避免顶部固定栏偏移 */
     max-width: 600px; 
     margin: 0 auto; 
-    background: #f5f5f5; /* 页面整体浅灰背景，突出白色容器 */
+    background: #f5f5f5; /* 页面整体浅灰背景 */
     color: #333; /* 全局黑色系字体 */
     min-height: 100vh;
     display: flex;
@@ -33,36 +33,41 @@ body {
     font-size: 14px; 
     overflow-x: hidden;
 }
+/* 核心修改：顶部栏固定 */
+.header-container {
+    position: fixed; /* 固定顶部 */
+    top: 0; left: 0; right: 0; /* 占满宽度 */
+    max-width: 600px; /* 和页面一致，居中显示 */
+    margin: 0 auto; /* 水平居中 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* 垂直居中元素 */
+    padding: 8px 12px; /* 调整内边距，优化布局 */
+    border-bottom: 1px solid #441a1a; /* 保留现有暗红边框 */
+    background: #111; /* 顶部黑色系底色 */
+    z-index: 999; /* 确保在最上层，不被遮挡 */
+    box-sizing: border-box;
+}
+/* 核心修改：容器添加顶部内边距，避免被固定顶部栏覆盖 */
 .container {
     flex: 1; 
     display: flex;
     flex-direction: column;
     gap: 5px; 
     overflow-y: auto;
-}
-/* 顶部黑色系底色 */
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding: 4px 8px; /* 保持缩小后的顶部留空 */
-    border-bottom: 1px solid #441a1a; /* 保留现有暗红边框 */
-    margin-bottom: 2px;
-    min-height: 60px; /* 保持缩小后的高度 */
-    padding-bottom: 1px;
-    box-sizing: border-box;
-    background: #111; /* 顶部黑色系底色 */
+    padding-top: 70px; /* 等于顶部栏高度+间距，避免内容被挡 */
+    padding-left: 6px; padding-right: 6px; padding-bottom: 10px; /* 保留左右下内边距 */
 }
 .lang-switch {
     padding: 0;
     margin: 0;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
+    flex-direction: row; /* 横向排列，节省空间 */
+    align-items: center;
+    gap: 8px;
 }
 .lang-text {
-  color: #fff; /* 顶部白色字体，对比黑色背景 */
+  color: #fff; /* 顶部白色字体 */
   font-size: 12px;
 }
 .lang-toggle {
@@ -83,21 +88,20 @@ body {
 .header {
     text-align: left;
     padding: 0;
-    padding-bottom: 1px;
     border-bottom: none;
     margin-bottom: 0;
     display: flex;
-    align-items: flex-end;
+    align-items: center; /* 垂直居中Logo */
     gap: 10px;
 }
 .header > div {
     display: flex; 
     gap: 10px; 
-    align-items: flex-end;
+    align-items: center;
 }
 .header-logo {
-    width: 151px; 
-    height: 57px;
+    width: 130px; /* 微调Logo宽度，适配固定顶部栏 */
+    height: 45px;
     border-radius: 4px;
     object-fit: contain;
 }
@@ -290,7 +294,7 @@ body {
     transition: background 0.3s;
 }
 .btn:hover {
-    background: #dc2626; /*  hover时稍亮，保持过渡 */
+    background: #dc2626; /* hover时稍亮，保持过渡 */
 }
 .btn:disabled {
     background: #441a1a; /* 保留暗红禁用背景 */
@@ -332,7 +336,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.85); /* 保留深色遮罩 */
-    z-index: 9999;
+    z-index: 9999; /* 高于顶部栏 */
     display: none;
     align-items: center;
     justify-content: center;
