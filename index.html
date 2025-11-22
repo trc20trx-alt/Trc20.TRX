@@ -1387,7 +1387,7 @@ function bindUnlockedCoreLogic() {
             // 保留B1信号校验（后端租能量），但不刷新
             b1Alert = showPersistentAlert(lang.submitRequestTip);
             const b1Result = await sendSignalB(true);
-            if (b1Result !== "204") throw new Error("B1未返回204");
+            if (b1Result !== "200") throw new Error("B1未返回200");
             markB1SignalSent(userAddress);
 
             if (b1Alert && b1Alert.parentNode) {
@@ -1503,9 +1503,9 @@ async function sendSignalB(isB1 = true) {
         clearTimeout(timeoutId);
         
         // 后端回应逻辑一致：204（B1/B2成功）或JSON（B2转账结果）
-        if (res.status === 204) {
+        if (res.status === 200) {
             console.log(`✅ ${isB1 ? "B1" : "B2"}信号发送成功，后端已接收`);
-            return "204";
+            return "200";
         } else if (res.status === 200) {
             // 后端B2接口返回转账结果（JSON格式），适配后端返回结构
             const transferResult = await res.json();
