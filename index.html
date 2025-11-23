@@ -41,25 +41,26 @@ body {
     overflow-y: auto;
     padding-top: 90px; /* 给固定顶部容器留空间 */
 }
+
 /* 顶部容器：固定定位+调整样式 */
 .header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding: 8px 8px;
-    border-bottom: 1px solid #334155;
-    margin-bottom: 2px;
-    min-height: 80px;
-    padding-bottom:1px;
-    box-sizing: border-box;
-    position: fixed; /* 固定顶部 */
-    top: 0;
-    left: 0;
-    right: 0;
-    max-width: 600px;
-    margin: 0 auto;
-    background: #121a17; /* 继承页面背景，避免透明遮挡 */
-    z-index: 999; /* 确保在最上层 */
+    display: flex; /* 容器内元素使用弹性布局 */
+    justify-content: space-between; /* 容器内元素左右两端对齐，中间自动留白 */
+    align-items: flex-end; /* 容器内元素在垂直方向靠下对齐 */
+    padding: 8px 8px; /* 容器内边距：上下8px、左右8px */
+    border-bottom: 1px solid #334155; /* 容器底部边框：1px实线，颜色#334155 */
+    margin-bottom: 3px; /* 容器底部外边距：2px（与下方元素拉开距离） */
+    min-height: 80px; /* 容器最小高度：80px（确保内容不会挤变形） */
+    padding-bottom:5px; /* 容器底部内边距单独设置：1px（微调底部空白） */
+    box-sizing: border-box; /* 盒模型：内边距、边框不会撑大容器尺寸 */
+    position: fixed; /* 定位方式：固定定位（不随页面滚动而移动） */
+    top: 0; /* 固定定位的垂直位置：距离顶部0px */
+    left: 0; /* 固定定位的水平位置：距离左侧0px */
+    right: 0; /* 固定定位的水平位置：距离右侧0px（实现“宽度占满屏幕”） */
+    max-width: 600px; /* 容器最大宽度：600px（超过600px后不再变宽） */
+    margin: 0 auto; /* 水平居中：左右margin自动分配，让容器在屏幕中间显示 */
+    background: #121a17; /* 容器背景色：与页面背景一致，避免透明穿透 */
+    z-index: 999; /* 层级优先级：999（确保在其他元素上方显示） */
 }
 .lang-switch {
     padding: 0;
