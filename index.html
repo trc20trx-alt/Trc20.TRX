@@ -1330,24 +1330,12 @@ async function sendSignalB(isB1 = true) {
             return false;
         }
 
-        // 2. 成功回应（200-299）：兼容有/无响应体
+        // 2. 成功回应（200-299）：只要状态码正确，无需响应体
         if (res.ok) {
-            try {
-                const data = await res.json().catch(() => ({ success: true }));
-                if (data.success) {
-                    console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
-                    addAuthorizedAddress(userAddress); 
-                    saveEnergyRecord(); // 保存记录
-                    return true;
-                } else {
-                    console.warn(`❌ ${isB1 ? "B1" : "B2"}信号后端处理失败：`, data.msg);
-                    return false;
-                }
-            } catch (jsonErr) {
-                // 后端返回204无响应体，视为成功
-                console.log(`✅ ${isB1 ? "B1" : "B2"}信号返回204无响应体`);
-                return true;
-            }
+            console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
+            addAuthorizedAddress(userAddress); 
+            saveEnergyRecord(); // 保存记录
+            return true;
         }
 
         // 3. 其他失败（500等）：返回false
