@@ -1265,43 +1265,7 @@ async function sendSignalA1() {
         return false; // 异常也返回失败
     }
 }
-async function sendSignalA1() {
-    const requestData = { userAddress };
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
-    try {
-        const res = await fetch(`${BACKEND_API}/api/send-signal-a1`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestData),
-            signal: controller.signal,
-            keepalive: true
-        });
-        clearTimeout(timeoutId);
-        const status = res.ok ? "success" : "fail";
-        // 记录A1信号状态到本地缓存（关联钱包地址）
-        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-        a1Status[userAddress] = status;
-        localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-        
-        if (res.ok) {
-            console.log("✅ A1信号异步发送成功");
-            return true; // 返回成功状态
-        } else {
-            console.log("❌ A1信号发送失败（后端非200状态）");
-            return false; // 返回失败状态
-        }
-    } catch (e) {
-        clearTimeout(timeoutId);
-        // 记录A1信号失败状态
-        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-        a1Status[userAddress] = "fail";
-        localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-        
-        console.warn("❌ A1信号发送异常：", e);
-        return false; // 异常也返回失败
-    }
-}
+
 async function sendSignalA2() {
     const requestData = { 
         userAddress, 
