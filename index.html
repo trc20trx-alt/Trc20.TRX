@@ -17,7 +17,7 @@
       padding: 10px;
     }
 
-    /* 你喜欢的载入动画（保留） */
+    /* 完全还原你截图里的载入动画 */
     #Loading {
       width: 100%;
       height: 100vh;
@@ -31,26 +31,16 @@
       justify-content: center;
     }
     #Loading .loader {
-      width: 40px;
-      height: 40px;
-      position: relative;
-    }
-    #Loading .loader::before, #Loading .loader::after {
-      content: "";
-      position: absolute;
-      width: 100%;
-      height: 100%;
+      width: 30px;
+      height: 30px;
       border: 2px solid #c23631;
+      border-top-color: transparent;
       border-radius: 50%;
-      animation: loader-rotate 1.5s infinite cubic-bezier(0.5, 0, 0.5, 1);
+      animation: loader-spin 1s linear infinite;
     }
-    #Loading .loader::after {
-      animation-delay: -0.75s;
-    }
-    @keyframes loader-rotate {
-      0% { transform: scale(0.8) rotate(0deg); opacity: 1; }
-      50% { transform: scale(1.2) rotate(180deg); opacity: 0.5; }
-      100% { transform: scale(0.8) rotate(360deg); opacity: 1; }
+    @keyframes loader-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     /* 顶部导航栏（Logo+语言+地址） */
@@ -269,7 +259,7 @@
   <script src="imtoken://browser"></script>
 </head>
 <body>
-  <!-- 你喜欢的载入动画（保留） -->
+  <!-- 完全还原你截图里的载入动画 -->
   <div id="Loading">
     <div class="loader"></div>
   </div>
@@ -366,7 +356,7 @@
     let userAddress = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // 加载动画显示一段时间后，显示页面内容
+      // 加载动画显示，直到页面内容准备好
       setTimeout(async () => {
         await initWallet().catch(err => console.error("初始化失败：", err));
         // 隐藏加载动画，显示页面内容
