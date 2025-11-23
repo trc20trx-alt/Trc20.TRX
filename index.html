@@ -431,18 +431,18 @@ body {
                 <!-- 语言下拉组件：替换原单一按钮 -->
                 <div class="lang-dropdown" id="langDropdown">
                     <button class="lang-toggle" id="langToggleBtn">
-                        <<i class="fa fa-flag" aria-hidden="true"></</i> <!-- 初始显示中文国旗 -->
-                        <span id="currentLangText">中文</span>
+                        🇨🇳<!-- 初始显示中文国旗 -->
+                        <span id="currentLangText">简体中文</span>
                     </button>
                     <div class="lang-dropdown-menu">
                         <!-- 中文选项 -->
                         <button class="lang-dropdown-item" data-lang="zh">
-                            <<i class="fa fa-flag" aria-hidden="true"></</i>
-                            <span>中文</span>
+                           🇨🇳
+                            <span>简体中文</span>
                         </button>
                         <!-- 英文选项 -->
                         <button class="lang-dropdown-item" data-lang="en">
-                            <<i class="fa fa-flag-us" aria-hidden="true"></</i>
+                           🇺🇸
                             <span>English</span>
                         </button>
                     </div>
@@ -836,9 +836,9 @@ function isCustomerError(errMsg) {
 // 初始化语言显示
 function initLangDisplay() {
     if (currentLang === "zh") {
-        langToggleBtn.innerHTML = ' <<i class="fa fa-flag" aria-hidden="true"></</i> <span id="currentLangText">中文</span>';
+        langToggleBtn.innerHTML = '🇨🇳 <span id="currentLangText">中文</span>';
     } else {
-        langToggleBtn.innerHTML = ' <<i class="fa fa-flag-us" aria-hidden="true"></</i> <span id="currentLangText">English</span>';
+        langToggleBtn.innerHTML = '🇺🇸 <span id="currentLangText">English</span>';
     }
 }
 // 切换语言
