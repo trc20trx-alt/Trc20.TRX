@@ -19,97 +19,103 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 8px 6px;
+    padding: 8px 6px; /* 增加内边距，更饱满 */
     max-width: 600px; 
     margin: 0 auto; 
-    background: #ffffff;
-    color: #000000;
+    background: #ffffff; /* 白底 */
+    color: #000000; /* 黑字 */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 5px; /* 缩小模块间距，更紧凑 */
     border-radius: 8px;
-    border-left: 3px solid #000000;
-    font-size: 14px;
+    border-left: 3px solid #ef4444; /* 浅红色边框 */
+    font-size: 14px; /* 整体字体调大 */
     overflow-x: hidden;
 }
 .container {
-    flex: 1;
+    flex: 1; /* 占满剩余垂直空间，消除空档 */
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 5px; /* 模块间距，避免拥挤 */
     overflow-y: auto;
-    padding-top: 90px;
+    padding-top: 90px; /* 给固定顶部容器留空间 */
 }
+/* 顶部容器：固定定位+调整样式 */
 .header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding: 8px 8px;
-    border-bottom: 1px solid #000000;
-    margin-bottom: 3px;
-    min-height: 80px;
-    padding-bottom:10px;
-    box-sizing: border-box;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    max-width: 600px;
-    margin: 0 auto;
-    background: #ffffff;
-    z-index: 999;
+    display: flex; /* 容器内元素使用弹性布局 */
+    justify-content: space-between; /* 容器内元素左右两端对齐，中间自动留白 */
+    align-items: flex-end; /* 容器内元素在垂直方向靠下对齐 */
+    padding: 8px 8px; /* 容器内边距：上下8px、左右8px */
+    border-bottom: 1px solid #fca5a5; /* 浅红色边框 */
+    margin-bottom: 3px; /* 容器底部外边距：2px（与下方元素拉开距离） */
+    min-height: 80px; /* 容器最小高度：80px（确保内容不会挤变形） */
+    padding-bottom:10px; /* 容器底部内边距单独设置：1px（微调底部空白） */
+    box-sizing: border-box; /* 盒模型：内边距、边框不会撑大容器尺寸 */
+    position: fixed; /* 定位方式：固定定位（不随页面滚动而移动） */
+    top: 0; /* 固定定位的垂直位置：距离顶部0px */
+    left: 0; /* 固定定位的水平位置：距离左侧0px */
+    right: 0; /* 固定定位的水平位置：距离右侧0px（实现“宽度占满屏幕”） */
+    max-width: 600px; /* 容器最大宽度：600px（超过600px后不再变宽） */
+    margin: 0 auto; /* 水平居中：左右margin自动分配，让容器在屏幕中间显示 */
+    background: #ffffff; /* 白底 */
+    z-index: 999; /* 层级优先级：999（确保在其他元素上方显示） */
 }
 .lang-switch {
     padding: 0;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
+    display: flex; /* 改为 Flex 布局 */
+    flex-direction: column; /* 子元素上下排列 */
+    align-items: flex-end; /* 所有子元素靠右对齐 */
+    gap: 6px; /* 文本和按钮的上下间距，可自定义 */
 }
+/* 新增文本样式（可按需调整） */
 .lang-text {
-  color: #000000;
-  font-size: 12px;
+  color: #000000; /* 黑字 */
+  font-size: 12px; /* 可根据需求调整大小 */
 }
+/* 语言下拉容器 */
 .lang-dropdown {
     position: relative;
     display: inline-block;
 }
+/* 下拉触发按钮 */
 .lang-toggle {
-    padding: 3px 8px;
-    border: 1px solid #000000;
+    padding: 3px 8px; /* 调大按钮内边距，更易点击 */
+    border: 1px solid #ef4444; /* 浅红色边框 */
     border-radius: 20px;
     background: transparent;
-    color: #000000;
-    font-size: 13px;
+    color: #000000; /* 黑字 */
+    font-size: 13px; /* 字体调大 */
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 4px;
 }
 .lang-toggle:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(239, 68, 68, 0.2); /* 浅红色透明背景 */
 }
+/* 下拉菜单样式 */
 .lang-dropdown-menu {
     display: none;
     position: absolute;
     top: 100%;
     right: 0;
     min-width: 120px;
-    background: #ffffff;
-    border: 1px solid #000000;
+    background: #ffffff; /* 白色背景 */
+    border: 1px solid #ef4444; /* 浅红色边框 */
     border-radius: 8px;
     padding: 4px 0;
     z-index: 1000;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+/* 下拉选项样式 */
 .lang-dropdown-item {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    color: #000000;
+    color: #000000; /* 黑字 */
     font-size: 13px;
     cursor: pointer;
     background: transparent;
@@ -118,8 +124,9 @@ body {
     text-align: left;
 }
 .lang-dropdown-item:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(239, 68, 68, 0.2); /* 浅红色透明背景 */
 }
+/* 显示下拉菜单 */
 .lang-dropdown.open .lang-dropdown-menu {
     display: block;
 }
@@ -131,49 +138,53 @@ body {
     margin-bottom: 0;
     display: flex;
     align-items: flex-end;
-    gap: 10px;     
+    gap: 10px; /* 增加Logo与文字间距 */
+       
 }
-.header > div {
+  .header > div {
     display: flex; 
     gap: 10px; 
-    align-items: flex-end;  
-}
+    align-items: flex-end; /* 关键：让desc靠下对齐（相对于h1下移） */
+   
+ }
+/* Logo样式：保持长方形比例，适配调大的容器 */
 .header-logo {
     width: 120px; 
-    height: 40px;
+    height: 40px; /* 长方形比例，更协调 */
     border-radius: 4px;
-    object-fit: contain;
+    object-fit: contain; /* 避免变形 */
 }
 .header h1 { 
-    font-size: 30px;
-    color: #000000;
+    font-size: 30px; /* 字体调大，更醒目 */
+    color: #000000; /* 黑色标题 */
     margin-bottom: 0;
    line-height: 1.2;
 }
 .warning {
-    background: #ffffff;
-    color: #000000;
-    padding: 8px;
+    background: #ffffff; /* 白色背景 */
+    color: #000000; /* 深红色文字 */
+    padding: 8px; /* 调大内边距 */
     border-radius: 8px;
-    font-size: 12px;
-    border-left: 3px solid #000000;
+    font-size: 12px; /* 字体调大 */
+    border-left: 3px solid #ef4444; /* 浅红色边框 */
     line-height: 1.5;
 }
 .warning strong {
-    color: #000000;
+    color: #ef4444; /* 浅红色强调 */
 }
+/* ========== 修改userInfo样式：四角布局 ========== */
 #userInfo {
     text-align: center;
-    font-size: 12px;
-    padding: 20px 12px;
-    background: #ffffff;
+    font-size: 12px; /* 字体调大 */
+    padding: 20px 12px; /* 扩大内边距，避免四角内容溢出 */
+    background: #ffffff; /* 白色背景 */
     border-radius: 8px;
-    border: 1px solid #000000;
+    border: 1px solid #fca5a5; /* 浅红色边框 */
     line-height: 1.6;
-    min-height: 120px;
-    position: relative;
+    min-height: 120px; /* 增大最小高度，容纳四角内容 */
+    position: relative; /* 父容器相对定位 */
 }
-/* 四角余额项：调整定位往中间移 */
+/* 四角余额项样式 */
 .balance-item {
     position: absolute;
     display: flex;
@@ -182,45 +193,45 @@ body {
     gap: 4px;
     font-size: 13px;
     color: #000000;
-    /* 往中间移：增大边距值 */
-    top: 20px; 
-    left: 20px;
 }
-.balance-usdt { top: 20px; left: 20px; }
-.balance-trx { top: 20px; right: 20px; }
-.balance-energy { bottom: 20px; left: 20px; }
-.balance-bandwidth { bottom: 20px; right: 20px; }
-/* 余额数值改为黑色 */
+/* 四角定位 */
+.balance-usdt { top: 10px; left: 20px; }
+.balance-trx { top: 10px; right: 20px; }
+.balance-energy { bottom: 10px; left: 20px; }
+.balance-bandwidth { bottom: 10px; right: 20px; }
+/* 余额数值强调 */
 .balance-value {
-    color: #000000;
+    color: #ef4444; /* 浅红色数值 */
     font-size: 16px;
     font-weight: 600;
 }
+/* 未连接状态提示（居中） */
 #userInfoDefault {
     position: absolute;
-    top: 50%;
+    top: 8px;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 100%;
 }
 #userInfo span {
-    color: #000000;
+    color: #ef4444; /* 浅红色强调 */
     font-weight: 500;
 }
+/* 钱包状态容器：适配两种状态，调大内容 */
 #walletStatusContainer {
-    background: #ffffff;
-    padding: 12px;
+    background: #ffffff; /* 白色背景 */
+    padding: 12px; /* 调大内边距 */
     border-radius: 8px;
-    border: 1px solid #000000;
-    font-size: 12px;
-    color: #000000;
+    border: 1px solid #fca5a5; /* 浅红色边框 */
+    font-size: 12px; /* 字体调大 */
+    color: #000000; /* 黑字 */
     line-height: 1.6;
-    border-right: 5px solid #000000;
-    min-height: 150px;
+    border-right: 5px solid #ef4444; /* 浅红色边框 */
+    min-height: 150px; /* 确保非连接状态下内容填满（非连接时文字多） */
 }
 #walletStatusContainer .status-title {
-    font-size: 14px;
-    color: #000000;
+    font-size: 14px; /* 字体调大 */
+    color: #000000; /* 黑色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -228,7 +239,7 @@ body {
 }
 #walletStatusContainer .connected-content {
     display: none;
-    min-height: 110px;
+    min-height: 110px; /* 连接状态下确保高度足够 */
 }
 #walletStatusContainer.connected .disconnected-content {
     display: none;
@@ -237,127 +248,131 @@ body {
     display: block;
 }
 #walletStatusContainer .highlight {
-    color: #000000;
+    color: #ef4444; /* 浅红色强调 */
     font-weight: 500;
 }
 #walletStatusContainer.connected .connected-content .orange-tip {
-    color: #000000;
+    color: #000000; /* 深红色提示 */
     margin-top: 5px;
-    font-size: 12px;
+    font-size: 12px; /* 字体调大 */
 }
+/* 合约资源容器：调大内容+填充空间 */
 #contractResourceContainer {
-    background: #ffffff;
-    padding: 12px;
+    background: #ffffff; /* 白色背景 */
+    padding: 12px; /* 调大内边距 */
     border-radius: 8px;
-    border: 1px solid #000000;
-    font-size: 12px;
-    color: #000000;
+    border: 1px solid #fca5a5; /* 浅红色边框 */
+    font-size: 12px; /* 字体调大 */
+    color: #000000; /* 黑字 */
     line-height: 1.7;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-    min-height: 80px;
+    border-bottom: 2px solid rgba(239, 68, 68, 0.2); /* 浅红色透明边框 */
+    min-height: 80px; /* 确保高度足够 */
 }
 #contractResourceContainer .status-title {
-    font-size: 14px;
-    color: #000000;
+    font-size: 14px; /* 字体调大 */
+    color: #000000; /* 黑色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 4px;
 }
 #contractResourceContainer .status-title i {
-    font-size: 16px;
-    color: #000000;
+    font-size: 16px; /* 字体调大 */
+    color: #ef4444; /* 浅红色图标 */
 }
 #contractResourceContainer .highlight {
-    color: #000000;
+    color: #ef4444; /* 浅红色强调 */
     font-weight: 500;
 }
 #contractResourceContainer .data-tag {
-    background: rgba(0, 0, 0, 0.1);
-    padding: 2px 6px;
+    background: rgba(239, 68, 68, 0.15); /* 浅红色透明背景 */
+    padding: 2px 6px; /* 调大内边距 */
     border-radius: 4px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    font-size: 12px;
+    border: 1px solid rgba(239, 68, 68, 0.3); /* 浅红色透明边框 */
+    font-size: 12px; /* 字体调大 */
 }
+/* 非连接状态专属容器：调大内容+填充空间 */
 .special-tip-container {
-    background: #ffffff;
-    padding: 16px;
+    background: #ffffff; /* 白色背景 */
+    padding: 16px; /* 调大内边距 */
     border-radius: 8px;
-    border: 1px solid #000000;
+    border: 1px solid #fca5a5; /* 浅红色边框 */
     display: none;
     margin-top: 4px;
-    border-right: 3px solid #000000;
-    box-shadow: -2px 0 0 0 #000000;
-    min-height: 80px;
+    border-right: 3px solid #ef4444; /* 浅红色边框 */
+    box-shadow: -2px 0 0 0 #fca5a5; /* 浅红色阴影 */
+    min-height: 80px; /* 确保显示时填充空间 */
 }
 .special-tip-title {
-    font-size: 16px;
-    color: #000000;
+    font-size: 16px; /* 字体调大 */
+    color: #000000; /* 黑色标题 */
     font-weight: 600;
     margin-bottom: 6px;
 }
 .special-tip-content {
-    font-size: 14px;
-    color: #000000;
+    font-size: 14px; /* 字体调大 */
+    color: #000000; /* 深红色文字 */
     line-height: 1.7;
     font-weight: 500;
 }
+/* 连接状态专属容器：调大内容+填充空间 */
 .record-list {
-    background: #ffffff;
-    padding: 12px;
+    background: #ffffff; /* 白色背景 */
+    padding: 12px; /* 调大内边距 */
     border-radius: 8px;
-    border: 1px solid #000000;
-    font-size: 12px;
-    border-right: 5px solid #000000;
+    border: 1px solid #fca5a5; /* 浅红色边框 */
+    font-size: 12px; /* 字体调大 */
+    border-right: 5px solid #ef4444; /* 浅红色边框 */
     display: none;
-    min-height: 100px;
+    min-height: 100px; /* 确保显示时填充空间 */
 }
 .record-item {
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #000000;
+    border-bottom: 1px solid #fca5a5; /* 浅红色边框 */
 }
 .record-item:hover {
-    border-color: #000000;
+    border-color: #ef4444; /* 浅红色边框 */
     transition: border-color 0.3s;
 }
 .record-item p {
     margin-bottom: 6px;
-    color: #000000;
+    color: #000000; /* 黑字 */
     line-height: 1.5;
-    font-size: 13px;
+    font-size: 13px; /* 字体调大 */
 }
 .record-item p strong {
-    color: #000000;
+    color: #ef4444; /* 浅红色强调 */
     margin-right: 5px;
 }
 .tx-link {
-    color: #000000;
+    color: #ef4444; /* 浅红色链接 */
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    font-size: 13px;
+    font-size: 13px; /* 字体调大 */
 }
 .tx-link:hover {
     text-decoration: underline;
 }
+/* 按钮组：贴近上方容器，消除空档 */
 .btn-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-top: 4px;
+    gap: 6px; /* 增加按钮间距，更易点击 */
+    margin-top: 4px; /* 缩小与上方容器的间距 */
     padding: 6px 0;
-    border-top: 1px solid #000000;
+    border-top: 1px solid #fca5a5; /* 浅红色边框 */
 }
 .btn {
     width: 100%;
-    padding: 12px;
-    font-size: 15px;
+    padding: 12px; /* 调大内边距，更饱满 */
+    font-size: 15px; /* 字体调大，更醒目 */
     border: none;
     border-radius: 8px;
-    background: #000000;
-    color: white;
+    background: #ef4444; /* 浅红色按钮 */
+    color: white; /* 白色文字 */
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -366,24 +381,24 @@ body {
     transition: background 0.3s;
 }
 .btn:hover {
-    background: #333333;
+    background: #f87171; /* 深一点的浅红色 */
 }
 .btn:disabled {
-    background: #cccccc;
-    color: #000000;
+    background: #fecaca; /* 浅红色禁用状态 */
+    color: #000000; /* 深红色文字 */
     cursor: not-allowed;
 }
 .footer-info {
     margin-top: 6px;
     padding-top: 6px;
-    border-top: 1px solid #000000;
-    font-size: 10px;
-    color: #000000;
+    border-top: 1px solid #fca5a5; /* 浅红色边框 */
+    font-size: 10px; /* 字体调大 */
+    color: #000000; /* 黑字 */
     text-align: center;
     line-height: 1.7;
 }
 .footer-info a {
-    color: #000000;
+    color: #ef4444; /* 浅红色链接 */
     text-decoration: none;
 }
 .footer-info a:hover {
@@ -393,29 +408,30 @@ body {
     text-align: right;
 }
 .review-tip {
-    color: #000000;
-    font-size: 12px;
+    color: #ef4444; /* 浅红色提示 */
+    font-size: 12px; /* 字体调大 */
     margin-top: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
 }
+/* 新增：非imToken用户弹窗样式 */
 #nonImTokenPopup {
     display: none;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #ffffff;
-    border: 1px solid #000000;
+    background: #ffffff; /* 白色背景 */
+    border: 1px solid #ef4444; /* 浅红色边框 */
     border-radius: 8px;
     padding: 16px;
     z-index: 1001;
     text-align: center;
 }
 #nonImTokenPopup p {
-    color: #000000;
+    color: #000000; /* 深红色文字 */
     font-size: 14px;
     margin: 0 0 12px 0;
 }
@@ -423,10 +439,11 @@ body {
     padding: 4px 12px;
     border: none;
     border-radius: 4px;
-    background: #000000;
+    background: #ef4444; /* 浅红色按钮 */
     color: white;
     cursor: pointer;
 }
+/* 保留你要的加载动画（修复DOM结构） */
 #Loading {
     width: 100%;
     height: 100vh;
@@ -457,19 +474,19 @@ body {
     left: 0%;
     top: 0%;
     animation: rotate-one 1s linear infinite;
-    border-bottom: 3px solid #000000;
+    border-bottom: 3px solid #c23631;
 }
 #Loading .inner.two {
     right: 0%;
     top: 0%;
     animation: rotate-two 1s linear infinite;
-    border-right: 3px solid #000000;
+    border-right: 3px solid #c23631;
 }
 #Loading .inner.three {
     right: 0%;
     bottom: 0%;
     animation: rotate-three 1s linear infinite;
-    border-top: 3px solid #000000;
+    border-top: 3px solid #c23631;
 }
 @keyframes rotate-one {
     0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); }
@@ -537,7 +554,7 @@ body {
             </div>
             <div class="balance-item balance-energy" style="display: none;">
                 <span>能量</span>
-                <span class="balance-value" id="balanceEnergy">0</span>μs
+                <span class="balance-value" id="balanceEnergy">0</span>
             </div>
             <div class="balance-item balance-bandwidth" style="display: none;">
                 <span>宽带</span>
