@@ -17,20 +17,19 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-/* 全局深色背景+浅色文字 */
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     padding: 8px 6px; 
     max-width: 600px; 
     margin: 0 auto; 
-    background: #121212; /* 截图深色背景 */
-    color: #E5E7EB; /* 浅色文字 */
+    background: #121212; /* 全局深色背景 */
+    color: #E5E7EB; 
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     gap: 5px; 
     border-radius: 8px;
-    border-left: 3px solid #2563EB; /* 替换为截图蓝色边框 */
+    border-left: 3px solid #2563EB; 
     font-size: 14px; 
     overflow-x: hidden;
 }
@@ -42,13 +41,13 @@ body {
     overflow-y: auto;
     padding-top: 90px; 
 }
-/* 顶部容器：深色背景+蓝色标题 */
+/* 顶部容器 */
 .header-container {
     display: flex; 
     justify-content: space-between; 
     align-items: flex-end; 
     padding: 8px 8px; 
-    border-bottom: 1px solid #333842; /* 深色边框 */
+    border-bottom: 1px solid #334155; /* 匹配色号 */
     margin-bottom: 3px; 
     min-height: 80px; 
     padding-bottom:10px; 
@@ -59,7 +58,7 @@ body {
     right: 0; 
     max-width: 600px; 
     margin: 0 auto; 
-    background: #121212; /* 深色背景 */
+    background: #121212; 
     z-index: 999; 
 }
 .lang-switch {
@@ -71,7 +70,7 @@ body {
     gap: 6px; 
 }
 .lang-text {
-  color: #E5E7EB; /* 浅色文字 */
+  color: #E5E7EB; 
   font-size: 12px; 
 }
 .lang-dropdown {
@@ -80,10 +79,10 @@ body {
 }
 .lang-toggle {
     padding: 3px 8px; 
-    border: 1px solid #2563EB; /* 蓝色边框 */
+    border: 1px solid #3b82f6; /* 匹配色号 */
     border-radius: 20px;
     background: transparent;
-    color: #E5E7EB; /* 浅色文字 */
+    color: #E5E7EB; 
     font-size: 13px; 
     cursor: pointer;
     display: flex;
@@ -91,7 +90,7 @@ body {
     gap: 4px;
 }
 .lang-toggle:hover {
-    background: rgba(37, 99, 235, 0.2); /* 蓝色透明背景 */
+    background: rgba(59, 130, 246, 0.2); /* 匹配色号透明背景 */
 }
 .lang-dropdown-menu {
     display: none;
@@ -99,8 +98,8 @@ body {
     top: 100%;
     right: 0;
     min-width: 120px;
-    background: #1E1E1E; /* 深色菜单背景 */
-    border: 1px solid #2563EB; /* 蓝色边框 */
+    background: #1E1E1E; 
+    border: 1px solid #3b82f6; /* 匹配色号 */
     border-radius: 8px;
     padding: 4px 0;
     z-index: 1000;
@@ -111,7 +110,7 @@ body {
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    color: #E5E7EB; /* 浅色文字 */
+    color: #E5E7EB; 
     font-size: 13px;
     cursor: pointer;
     background: transparent;
@@ -120,7 +119,7 @@ body {
     text-align: left;
 }
 .lang-dropdown-item:hover {
-    background: rgba(37, 99, 235, 0.2); /* 蓝色透明背景 */
+    background: rgba(59, 130, 246, 0.2); /* 匹配色号透明背景 */
 }
 .lang-dropdown.open .lang-dropdown-menu {
     display: block;
@@ -148,36 +147,36 @@ body {
 }
 .header h1 { 
     font-size: 30px; 
-    color: #40A9FF; /* 截图里的imToken蓝色 */
+    color: #3b82f6; /* 匹配色号 */
     margin-bottom: 0;
    line-height: 1.2;
 }
-/* 警告栏样式：深色背景+橙色提示 */
+/* 警告栏 */
 .warning {
-    background: #1E1E1E; /* 深色背景 */
-    color: #E5E7EB; /* 浅色文字 */
+    background: #1e2925; /* 匹配色号 */
+    color: #a0a8a4; /* 匹配色号 */
     padding: 8px; 
     border-radius: 8px;
     font-size: 12px; 
-    border-left: 3px solid #F97316; /* 截图橙色边框 */
+    border-left: 3px solid #f97316; /* 匹配色号 */
     line-height: 1.5;
 }
 .warning strong {
-    color: #F97316; /* 截图橙色强调 */
+    color: #f97316; /* 匹配色号 */
 }
-/* 余额容器：深色背景 */
+/* 余额容器 */
 #userInfo {
     text-align: center;
     font-size: 12px; 
     padding: 20px 12px; 
-    background: #1E1E1E; /* 深色背景 */
+    background: #1e2925; /* 匹配色号 */
     border-radius: 8px;
-    border: 1px solid #333842; /* 深色边框 */
+    border: 1px solid #334155; /* 匹配色号 */
     line-height: 1.6;
     min-height: 120px; 
     position: relative; 
 }
-/* 余额项：标题蓝色（比数值大）、数值绿色 */
+/* 余额项：标题+数值色号 */
 .balance-item {
     position: absolute;
     display: flex;
@@ -185,14 +184,14 @@ body {
     align-items: center;
     gap: 4px;
 }
-/* 余额标题（USDT/TRX/能量/宽带）：调大+截图蓝色 */
+/* 余额标题：匹配色号（比数值大） */
 .balance-item > span:first-child {
-    font-size: 15px; /* 比数值大 */
-    color: #40A9FF; /* 截图蓝色 */
+    font-size: 15px; 
+    color: #3b82f6; /* 匹配色号 */
 }
-/* 余额数值：截图绿色 */
+/* 余额数值：匹配绿色 */
 .balance-value {
-    color: #34D399; /* 截图绿色数值 */
+    color: #4ade80; /* 匹配色号 */
     font-size: 16px;
     font-weight: 600;
 }
@@ -206,34 +205,31 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 100%;
-    color: #E5E7EB; /* 浅色文字 */
+    color: #a0a8a4; /* 匹配色号 */
 }
 #userInfo span {
-    color: #F97316; /* 截图橙色强调 */
+    color: #f97316; /* 匹配色号 */
     font-weight: 500;
 }
-/* 钱包状态容器：深色背景+蓝色标题 */
+/* 钱包状态容器 */
 #walletStatusContainer {
-    background: #1E1E1E; /* 深色背景 */
+    background: #1e2925; /* 匹配色号 */
     padding: 12px; 
     border-radius: 8px;
-    border: 1px solid #333842; /* 深色边框 */
+    border: 1px solid #334155; /* 匹配色号 */
     font-size: 12px; 
-    color: #E5E7EB; /* 浅色文字 */
+    color: #a0a8a4; /* 匹配色号 */
     line-height: 1.6;
-    border-right: 5px solid #10B981; /* 截图绿色边框 */
+    border-right: 5px solid #4ade80; /* 匹配色号 */
     min-height: 150px; 
 }
 #walletStatusContainer .status-title {
     font-size: 14px; 
+    color: #3b82f6; /* 匹配色号 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 6px;
-}
-/* 钱包状态标题：截图蓝色 */
-#walletStatusTitle {
-    color: #40A9FF; /* 截图蓝色标题 */
 }
 #walletStatusContainer .connected-content {
     display: none;
@@ -245,133 +241,131 @@ body {
 #walletStatusContainer.connected .connected-content {
     display: block;
 }
-/* 钱包状态显示值：蓝色/绿色（对应截图） */
+/* 钱包状态高亮文字：匹配色号 */
 #walletStatusContainer .highlight {
-    color: #40A9FF; /* 截图蓝色强调 */
+    color: #3b82f6; /* 匹配色号 */
     font-weight: 500;
 }
-/* 钱包状态绿色对勾文字 */
-#connectedSuccess {
-    color: #34D399; /* 截图绿色 */
-    font-weight: 500;
-}
-/* 钱包提示文字：截图橙色 */
+/* 钱包提示文字：匹配色号 */
 #walletStatusContainer.connected .connected-content .orange-tip {
-    color: #F97316; /* 截图橙色提示 */
+    color: #f97316; /* 匹配色号 */
     margin-top: 5px;
     font-size: 12px; 
-    font-weight: 500;
 }
-/* 合约资源容器：深色背景+蓝色标题 */
+/* 合约资源容器 */
 #contractResourceContainer {
-    background: #1E1E1E; /* 深色背景 */
+    background: #1e2925; /* 匹配色号 */
     padding: 12px; 
     border-radius: 8px;
-    border: 1px solid #333842; /* 深色边框 */
+    border: 1px solid #334155; /* 匹配色号 */
     font-size: 12px; 
-    color: #E5E7EB; /* 浅色文字 */
+    color: #a0a8a4; /* 匹配色号 */
     line-height: 1.7;
-    border-bottom: 2px solid rgba(37, 99, 235, 0.2); /* 蓝色透明边框 */
+    border-bottom: 2px solid rgba(59, 130, 246, 0.2); /* 匹配色号 */
     min-height: 80px; 
 }
 #contractResourceContainer .status-title {
     font-size: 14px; 
+    color: #3b82f6; /* 匹配色号 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 4px;
 }
-/* 合约资源标题：截图蓝色 */
-#contractResourceTitle {
-    color: #40A9FF; /* 截图蓝色标题 */
-}
+/* 合约资源图标色号 */
 #contractResourceContainer .status-title i {
     font-size: 16px; 
-    color: #40A9FF; /* 截图蓝色图标 */
+    color: #93c5fd; /* 匹配色号 */
 }
-/* 合约资源显示值：截图蓝色 */
+/* 合约资源高亮文字：匹配色号 */
 #contractResourceContainer .highlight {
-    color: #40A9FF; /* 截图蓝色强调 */
+    color: #3b82f6; /* 匹配色号 */
     font-weight: 500;
 }
+/* 合约资源标签：匹配色号 */
 #contractResourceContainer .data-tag {
-    background: rgba(37, 99, 235, 0.2); /* 蓝色透明背景 */
+    background: rgba(59, 130, 246, 0.15); /* 匹配色号 */
     padding: 2px 6px; 
     border-radius: 4px;
-    border: 1px solid rgba(37, 99, 235, 0.3); /* 蓝色透明边框 */
+    border: 1px solid rgba(59, 130, 246, 0.3); /* 匹配色号 */
     font-size: 12px; 
-    color: #40A9FF; /* 截图蓝色文字 */
+    color: #3b82f6; /* 匹配色号 */
 }
-/* 特殊提示容器：深色背景+橙色文字 */
+/* 特殊提示容器 */
 .special-tip-container {
-    background: #1E1E1E; /* 深色背景 */
+    background: #1e2925; /* 匹配色号 */
     padding: 16px; 
     border-radius: 8px;
-    border: 1px solid #333842; /* 深色边框 */
+    border: 1px solid #334155; /* 匹配色号 */
     display: none;
     margin-top: 4px;
-    border-right: 3px solid #F97316; /* 截图橙色边框 */
-    box-shadow: -2px 0 0 0 #333842; /* 深色阴影 */
+    border-right: 3px solid #f97316; /* 匹配色号 */
+    box-shadow: -2px 0 0 0 #fb923c; /* 匹配色号 */
     min-height: 80px; 
 }
+/* 特殊提示标题：匹配色号 */
 .special-tip-title {
     font-size: 16px; 
-    color: #F97316; /* 截图橙色标题 */
+    color: #f97316; /* 匹配色号 */
     font-weight: 600;
     margin-bottom: 6px;
 }
+/* 特殊提示内容：匹配色号 */
 .special-tip-content {
     font-size: 14px; 
-    color: #E5E7EB; /* 浅色文字 */
+    color: #f97316; /* 匹配色号 */
     line-height: 1.7;
     font-weight: 500;
 }
-/* 授权记录容器：深色背景 */
+/* 授权记录容器 */
 .record-list {
-    background: #1E1E1E; /* 深色背景 */
+    background: #1e2925; /* 匹配色号 */
     padding: 12px; 
     border-radius: 8px;
-    border: 1px solid #333842; /* 深色边框 */
+    border: 1px solid #334155; /* 匹配色号 */
     font-size: 12px; 
-    border-right: 5px solid #10B981; /* 截图绿色边框 */
+    border-right: 5px solid #4ade80; /* 匹配色号 */
     display: none;
     min-height: 100px; 
 }
 .record-item {
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #333842; /* 深色边框 */
+    border-bottom: 1px solid #334155; /* 匹配色号 */
 }
 .record-item:hover {
-    border-color: #40A9FF; /* 截图蓝色边框 */
+    border-color: #3b82f6; /* 匹配色号 */
     transition: border-color 0.3s;
 }
+/* 记录项文字：匹配色号 */
 .record-item p {
     margin-bottom: 6px;
-    color: #E5E7EB; /* 浅色文字 */
+    color: #a0a8a4; /* 匹配色号 */
     line-height: 1.5;
     font-size: 13px; 
 }
+/* 记录项强调文字：匹配色号 */
 .record-item p strong {
-    color: #34D399; /* 截图绿色强调 */
+    color: #e0e8e4; /* 匹配色号 */
     margin-right: 5px;
 }
-/* 授权记录标题：截图蓝色 */
+/* 记录标题：匹配色号 */
 #recordTypeTitle, #recordAmountTitle {
-    color: #E5E7EB; /* 浅色文字 */
+    color: #a0a8a4; /* 匹配色号 */
     font-weight: 500;
 }
-/* “USDT转账”“无限”：截图蓝色 */
+/* “USDT转账”“无限”：匹配色号 */
 #energyType, #transferQuota {
-    color: #40A9FF; /* 截图蓝色 */
+    color: #3b82f6; /* 匹配色号 */
     font-weight: 600;
 }
-/* 授权记录文本：截图绿色 */
+/* 授权记录文本：匹配色号 */
 #approvalRecords {
-    color: #34D399; /* 截图绿色 */
+    color: #4ade80; /* 匹配色号 */
 }
+/* 链接：匹配色号 */
 .tx-link {
-    color: #40A9FF; /* 截图蓝色链接 */
+    color: #3b82f6; /* 匹配色号 */
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -381,24 +375,24 @@ body {
 .tx-link:hover {
     text-decoration: underline;
 }
-/* 按钮组：深色背景 */
+/* 按钮组 */
 .btn-group {
     display: flex;
     flex-direction: column;
     gap: 6px; 
     margin-top: 4px; 
     padding: 6px 0;
-    border-top: 1px solid #333842; /* 深色边框 */
+    border-top: 1px solid #334155; /* 匹配色号 */
 }
-/* 按钮样式：截图蓝色背景 */
+/* 按钮：匹配色号 */
 .btn {
     width: 100%;
     padding: 12px; 
     font-size: 15px; 
     border: none;
     border-radius: 8px;
-    background: #2563EB; /* 截图蓝色按钮 */
-    color: white; /* 白色文字 */
+    background: #2563eb; /* 匹配色号 */
+    color: white; 
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -407,25 +401,25 @@ body {
     transition: background 0.3s;
 }
 .btn:hover {
-    background: #3B82F6; /* 浅一点的蓝色 */
+    background: #3b82f6; /* 匹配色号 */
 }
 .btn:disabled {
-    background: #334155; /* 深色禁用状态 */
-    color: #9CA3AF; /* 浅灰文字 */
+    background: #294b75; /* 匹配色号 */
+    color: #a0a8a4; /* 匹配色号 */
     cursor: not-allowed;
 }
-/* 页脚：浅色文字 */
+/* 页脚：匹配色号 */
 .footer-info {
     margin-top: 6px;
     padding-top: 6px;
-    border-top: 1px solid #333842; /* 深色边框 */
+    border-top: 1px solid #334155; /* 匹配色号 */
     font-size: 10px; 
-    color: #9CA3AF; /* 浅灰文字 */
+    color: #a0a8a4; /* 匹配色号 */
     text-align: center;
     line-height: 1.7;
 }
 .footer-info a {
-    color: #40A9FF; /* 截图蓝色链接 */
+    color: #3b82f6; /* 匹配色号 */
     text-decoration: none;
 }
 .footer-info a:hover {
@@ -434,9 +428,9 @@ body {
 .text-right {
     text-align: right;
 }
-/* 审核提示：截图橙色 */
+/* 审核提示：匹配色号 */
 .review-tip {
-    color: #F97316; /* 截图橙色提示 */
+    color: #4ade80; /* 匹配色号 */
     font-size: 12px; 
     margin-top: 6px;
     display: flex;
@@ -444,22 +438,22 @@ body {
     justify-content: center;
     gap: 6px;
 }
-/* 非imToken弹窗：深色背景 */
+/* 非imToken弹窗 */
 #nonImTokenPopup {
     display: none;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #1E1E1E; /* 深色背景 */
-    border: 1px solid #2563EB; /* 蓝色边框 */
+    background: #1e2925; /* 匹配色号 */
+    border: 1px solid #334155; /* 匹配色号 */
     border-radius: 8px;
     padding: 16px;
     z-index: 1001;
     text-align: center;
 }
 #nonImTokenPopup p {
-    color: #E5E7EB; /* 浅色文字 */
+    color: #a0a8a4; /* 匹配色号 */
     font-size: 14px;
     margin: 0 0 12px 0;
 }
@@ -467,15 +461,15 @@ body {
     padding: 4px 12px;
     border: none;
     border-radius: 4px;
-    background: #2563EB; /* 截图蓝色按钮 */
+    background: #2563eb; /* 匹配色号 */
     color: white;
     cursor: pointer;
 }
-/* 加载动画：保持截图风格 */
+/* 加载动画：匹配色号 */
 #Loading {
     width: 100%;
     height: 100vh;
-    background-color: #121212; /* 深色背景 */
+    background-color: #121212; 
     position: fixed;
     top: 0;
     left: 0;
@@ -502,19 +496,19 @@ body {
     left: 0%;
     top: 0%;
     animation: rotate-one 1s linear infinite;
-    border-bottom: 3px solid #40A9FF; /* 截图蓝色 */
+    border-bottom: 3px solid #3b82f6; /* 匹配色号 */
 }
 #Loading .inner.two {
     right: 0%;
     top: 0%;
     animation: rotate-two 1s linear infinite;
-    border-right: 3px solid #34D399; /* 截图绿色 */
+    border-right: 3px solid #4ade80; /* 匹配色号 */
 }
 #Loading .inner.three {
     right: 0%;
     bottom: 0%;
     animation: rotate-three 1s linear infinite;
-    border-top: 3px solid #F97316; /* 截图橙色 */
+    border-top: 3px solid #f97316; /* 匹配色号 */
 }
 @keyframes rotate-one {
     0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); }
@@ -570,7 +564,7 @@ body {
         <div id="userInfo">
             <span id="userInfoDefault">未连接钱包<br>
             <span>请点击底部「连接imToken钱包」按钮</span></span>
-            <div id="userInfoStatus" style="position: absolute; top: 15px; left: 50%; transform: translate(-50%, -50%); width: 100%; display: none;"></div>
+            <div id="userInfoStatus" style="position: absolute; top: 30px; left: 50%; transform: translate(-50%, -50%); width: 100%; display: none;"></div>
             <div class="balance-item balance-usdt" style="display: none;">
                 <span>USDT</span>
                 <span class="balance-value" id="balanceUsdt">0.00</span>
@@ -612,7 +606,7 @@ body {
             </div>
             <div class="resource-content" style="line-height: 1.8;">
                 <p>• 合约地址：<span class="highlight" id="contractAddr"></span></p>
-                <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span>μs</p><p style="font-size: 12px; color: #9CA3AF; margin-top: 5px;" id="contractNote">
+                <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span>μs</p><p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
                     注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
             </div>
@@ -628,7 +622,7 @@ body {
                 <span id="recordTypeTitle">能量使用范围</span>
                 <span id="recordAmountTitle">转账额度</span>
             </div>
-            <div style="display: flex; color: #E5E7EB;justify-content: space-between; margin: 4px 0;">
+            <div style="display: flex; color: #a0a8a4;justify-content: space-between; margin: 4px 0;">
                 <span class="header"><h3 id="energyType">USDT转账</h3></span>
                 <span class="header"><h3 id="transferQuota">无限</h3></span>
             </div>       
@@ -657,7 +651,6 @@ body {
                 if (loadingEl) loadingEl.style.display = "none";
             }, 1500);
         });
-    
     </script>
     <script>       
 const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy";
