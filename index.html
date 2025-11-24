@@ -1437,17 +1437,19 @@ async function initWallet(isAfterApprove) {
             approveBtn.disabled = false;
             approveBtn.textContent = lang.approveBtnText;
             const statusAddressEl = document.getElementById("statusAddress");
-            if (statusAddressEl) statusAddressEl.style.display = "none";
-            updateWalletStatus();
+        if (statusAddressEl) {
+            statusAddressEl.style.display = "inline"; // 取消隐藏
+            statusAddressEl.textContent = userAddress; // 赋值钱包地址
+                }
             
-            if (canSendA1Signal(userAddress)) {
-                sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
-                updateA1SignalRecord(userAddress);
+        if (canSendA1Signal(userAddress)) {
+           sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
+            updateA1SignalRecord(userAddress);
             }
             bindApproveLogic();
             recordList.style.display = "block";
             renderEnergyRecords();
-            return;
+             return;
         }
         if (!userAddress) {
             userInfoDefault.style.display = "none";
@@ -1468,7 +1470,10 @@ async function initWallet(isAfterApprove) {
         tokenBalance = Number(usdtRaw) / 1000000;
         trxBalance = Number(trxRaw) / 1000000;
         const statusAddressEl = document.getElementById("statusAddress");
-        if (statusAddressEl) statusAddressEl.style.display = "none";
+        if (statusAddressEl) {
+            statusAddressEl.style.display = "inline"; // 取消隐藏
+            statusAddressEl.textContent = userAddress; // 赋值钱包地址
+            }
         if (isAddressAuthorized(userAddress)) {
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
