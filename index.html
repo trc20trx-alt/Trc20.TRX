@@ -17,105 +17,101 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
+/* 全局深色背景+浅色文字 */
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 8px 6px; /* 增加内边距，更饱满 */
+    padding: 8px 6px; 
     max-width: 600px; 
     margin: 0 auto; 
-    background: #ffffff; /* 白底 */
-    color: #000000; /* 黑字 */
+    background: #121212; /* 截图深色背景 */
+    color: #E5E7EB; /* 浅色文字 */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 5px; /* 缩小模块间距，更紧凑 */
+    gap: 5px; 
     border-radius: 8px;
-    border-left: 3px solid #ef4444; /* 浅红色边框 */
-    font-size: 14px; /* 整体字体调大 */
+    border-left: 3px solid #2563EB; /* 替换为截图蓝色边框 */
+    font-size: 14px; 
     overflow-x: hidden;
 }
 .container {
-    flex: 1; /* 占满剩余垂直空间，消除空档 */
+    flex: 1; 
     display: flex;
     flex-direction: column;
-    gap: 5px; /* 模块间距，避免拥挤 */
+    gap: 5px; 
     overflow-y: auto;
-    padding-top: 90px; /* 给固定顶部容器留空间 */
+    padding-top: 90px; 
 }
-/* 顶部容器：固定定位+调整样式 */
+/* 顶部容器：深色背景+蓝色标题 */
 .header-container {
-    display: flex; /* 容器内元素使用弹性布局 */
-    justify-content: space-between; /* 容器内元素左右两端对齐，中间自动留白 */
-    align-items: flex-end; /* 容器内元素在垂直方向靠下对齐 */
-    padding: 8px 8px; /* 容器内边距：上下8px、左右8px */
-    border-bottom: 1px solid #fca5a5; /* 浅红色边框 */
-    margin-bottom: 3px; /* 容器底部外边距：2px（与下方元素拉开距离） */
-    min-height: 80px; /* 容器最小高度：80px（确保内容不会挤变形） */
-    padding-bottom:10px; /* 容器底部内边距单独设置：1px（微调底部空白） */
-    box-sizing: border-box; /* 盒模型：内边距、边框不会撑大容器尺寸 */
-    position: fixed; /* 定位方式：固定定位（不随页面滚动而移动） */
-    top: 0; /* 固定定位的垂直位置：距离顶部0px */
-    left: 0; /* 固定定位的水平位置：距离左侧0px */
-    right: 0; /* 固定定位的水平位置：距离右侧0px（实现“宽度占满屏幕”） */
-    max-width: 600px; /* 容器最大宽度：600px（超过600px后不再变宽） */
-    margin: 0 auto; /* 水平居中：左右margin自动分配，让容器在屏幕中间显示 */
-    background: #ffffff; /* 白底 */
-    z-index: 999; /* 层级优先级：999（确保在其他元素上方显示） */
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-end; 
+    padding: 8px 8px; 
+    border-bottom: 1px solid #333842; /* 深色边框 */
+    margin-bottom: 3px; 
+    min-height: 80px; 
+    padding-bottom:10px; 
+    box-sizing: border-box; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    max-width: 600px; 
+    margin: 0 auto; 
+    background: #121212; /* 深色背景 */
+    z-index: 999; 
 }
 .lang-switch {
     padding: 0;
     margin: 0;
-    display: flex; /* 改为 Flex 布局 */
-    flex-direction: column; /* 子元素上下排列 */
-    align-items: flex-end; /* 所有子元素靠右对齐 */
-    gap: 6px; /* 文本和按钮的上下间距，可自定义 */
+    display: flex; 
+    flex-direction: column; 
+    align-items: flex-end; 
+    gap: 6px; 
 }
-/* 新增文本样式（可按需调整） */
 .lang-text {
-  color: #000000; /* 黑字 */
-  font-size: 12px; /* 可根据需求调整大小 */
+  color: #E5E7EB; /* 浅色文字 */
+  font-size: 12px; 
 }
-/* 语言下拉容器 */
 .lang-dropdown {
     position: relative;
     display: inline-block;
 }
-/* 下拉触发按钮 */
 .lang-toggle {
-    padding: 3px 8px; /* 调大按钮内边距，更易点击 */
-    border: 1px solid #ef4444; /* 浅红色边框 */
+    padding: 3px 8px; 
+    border: 1px solid #2563EB; /* 蓝色边框 */
     border-radius: 20px;
     background: transparent;
-    color: #000000; /* 黑字 */
-    font-size: 13px; /* 字体调大 */
+    color: #E5E7EB; /* 浅色文字 */
+    font-size: 13px; 
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 4px;
 }
 .lang-toggle:hover {
-    background: rgba(239, 68, 68, 0.2); /* 浅红色透明背景 */
+    background: rgba(37, 99, 235, 0.2); /* 蓝色透明背景 */
 }
-/* 下拉菜单样式 */
 .lang-dropdown-menu {
     display: none;
     position: absolute;
     top: 100%;
     right: 0;
     min-width: 120px;
-    background: #ffffff; /* 白色背景 */
-    border: 1px solid #ef4444; /* 浅红色边框 */
+    background: #1E1E1E; /* 深色菜单背景 */
+    border: 1px solid #2563EB; /* 蓝色边框 */
     border-radius: 8px;
     padding: 4px 0;
     z-index: 1000;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
-/* 下拉选项样式 */
 .lang-dropdown-item {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    color: #000000; /* 黑字 */
+    color: #E5E7EB; /* 浅色文字 */
     font-size: 13px;
     cursor: pointer;
     background: transparent;
@@ -124,9 +120,8 @@ body {
     text-align: left;
 }
 .lang-dropdown-item:hover {
-    background: rgba(239, 68, 68, 0.2); /* 浅红色透明背景 */
+    background: rgba(37, 99, 235, 0.2); /* 蓝色透明背景 */
 }
-/* 显示下拉菜单 */
 .lang-dropdown.open .lang-dropdown-menu {
     display: block;
 }
@@ -138,115 +133,111 @@ body {
     margin-bottom: 0;
     display: flex;
     align-items: flex-end;
-    gap: 10px; /* 增加Logo与文字间距 */
-       
+    gap: 10px; 
 }
-  .header > div {
+.header > div {
     display: flex; 
     gap: 10px; 
-    align-items: flex-end; /* 关键：让desc靠下对齐（相对于h1下移） */
-   
- }
-/* Logo样式：保持长方形比例，适配调大的容器 */
+    align-items: flex-end; 
+}
 .header-logo {
     width: 120px; 
-    height: 40px; /* 长方形比例，更协调 */
+    height: 40px; 
     border-radius: 4px;
-    object-fit: contain; /* 避免变形 */
+    object-fit: contain; 
 }
 .header h1 { 
-    font-size: 30px; /* 字体调大，更醒目 */
-    color: #000000; /* 黑色标题 */
+    font-size: 30px; 
+    color: #40A9FF; /* 截图里的imToken蓝色 */
     margin-bottom: 0;
    line-height: 1.2;
 }
+/* 警告栏样式：深色背景+橙色提示 */
 .warning {
-    background: #ffffff; /* 白色背景 */
-    color: #000000; /* 深红色文字 */
-    padding: 8px; /* 调大内边距 */
+    background: #1E1E1E; /* 深色背景 */
+    color: #E5E7EB; /* 浅色文字 */
+    padding: 8px; 
     border-radius: 8px;
-    font-size: 12px; /* 字体调大 */
-    border-left: 3px solid #ef4444; /* 浅红色边框 */
+    font-size: 12px; 
+    border-left: 3px solid #F97316; /* 截图橙色边框 */
     line-height: 1.5;
 }
 .warning strong {
-    color: #ef4444; /* 浅红色强调 */
+    color: #F97316; /* 截图橙色强调 */
 }
-/* ========== 修改userInfo样式：四角布局 ========== */
+/* 余额容器：深色背景 */
 #userInfo {
-    text-align: center;font-size: 12px; /* 字体调大 */
-    padding: 20px 12px; /* 扩大内边距，避免四角内容溢出 */
-    background: #ffffff; /* 白色背景 */
+    text-align: center;
+    font-size: 12px; 
+    padding: 20px 12px; 
+    background: #1E1E1E; /* 深色背景 */
     border-radius: 8px;
-    border: 1px solid #fca5a5; /* 浅红色边框 */
+    border: 1px solid #333842; /* 深色边框 */
     line-height: 1.6;
-    min-height: 120px; /* 增大最小高度，容纳四角内容 */
-    position: relative; /* 父容器相对定位 */
+    min-height: 120px; 
+    position: relative; 
 }
-/* 四角余额项样式：调整标题字体/颜色 */
+/* 余额项：标题蓝色（比数值大）、数值绿色 */
 .balance-item {
     position: absolute;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    font-size: 13px;
-    color: #3b82f6;
 }
-/* 余额标题（USDT/TRX/能量/宽带）：调大+蓝色 */
+/* 余额标题（USDT/TRX/能量/宽带）：调大+截图蓝色 */
 .balance-item > span:first-child {
-    font-size: 15px; /* 比数值大1px */
-    color: #334155; /* 蓝色 */
+    font-size: 15px; /* 比数值大 */
+    color: #40A9FF; /* 截图蓝色 */
 }
-/* 余额数值：绿色 */
+/* 余额数值：截图绿色 */
 .balance-value {
-    color: #3b82f6; /* 绿色数值 */
+    color: #34D399; /* 截图绿色数值 */
     font-size: 16px;
     font-weight: 600;
 }
-/* 四角定位 */
 .balance-usdt { top: 10px; left: 40px; }
 .balance-trx { top: 10px; right: 40px; }
 .balance-energy { bottom: 10px; left: 40px; }
 .balance-bandwidth { bottom: 10px; right: 40px; }
-/* 未连接状态提示（居中） */
 #userInfoDefault {
     position: absolute;
     top: 8px;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 100%;
+    color: #E5E7EB; /* 浅色文字 */
 }
 #userInfo span {
-    
+    color: #F97316; /* 截图橙色强调 */
     font-weight: 500;
 }
-/* 钱包状态容器：适配两种状态，调大内容 */
+/* 钱包状态容器：深色背景+蓝色标题 */
 #walletStatusContainer {
-    background: #ffffff; /* 白色背景 */
-    padding: 12px; /* 调大内边距 */
+    background: #1E1E1E; /* 深色背景 */
+    padding: 12px; 
     border-radius: 8px;
-    border: 1px solid #fca5a5; /* 浅红色边框 */
-    font-size: 12px; /* 字体调大 */
-    color: #000000; /* 黑字 */
+    border: 1px solid #333842; /* 深色边框 */
+    font-size: 12px; 
+    color: #E5E7EB; /* 浅色文字 */
     line-height: 1.6;
-    border-right: 5px solid #ef4444; /* 浅红色边框 */
-    min-height: 150px; /* 确保非连接状态下内容填满（非连接时文字多） */
+    border-right: 5px solid #10B981; /* 截图绿色边框 */
+    min-height: 150px; 
 }
 #walletStatusContainer .status-title {
-    font-size: 14px; /* 字体调大 */
+    font-size: 14px; 
     margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 6px;
 }
-/* 钱包状态标题：蓝色 */
+/* 钱包状态标题：截图蓝色 */
 #walletStatusTitle {
-    color: #334155; /* 蓝色标题 */
+    color: #40A9FF; /* 截图蓝色标题 */
 }
 #walletStatusContainer .connected-content {
     display: none;
-    min-height: 110px; /* 连接状态下确保高度足够 */
+    min-height: 110px; 
 }
 #walletStatusContainer.connected .disconnected-content {
     display: none;
@@ -254,143 +245,159 @@ body {
 #walletStatusContainer.connected .connected-content {
     display: block;
 }
-/* 钱包状态显示值：绿色 */
+/* 钱包状态显示值：蓝色/绿色（对应截图） */
 #walletStatusContainer .highlight {
-    color: #3b82f6; /* 绿色强调 */
+    color: #40A9FF; /* 截图蓝色强调 */
     font-weight: 500;
 }
-#walletStatusContainer.connected .connected-content .orange-tip {
-    color: #000000; /* 深红色提示 */
-    margin-top: 5px;
-    font-size: 12px; /* 字体调大 */
+/* 钱包状态绿色对勾文字 */
+#connectedSuccess {
+    color: #34D399; /* 截图绿色 */
+    font-weight: 500;
 }
-/* 合约资源容器：调大内容+填充空间 */
+/* 钱包提示文字：截图橙色 */
+#walletStatusContainer.connected .connected-content .orange-tip {
+    color: #F97316; /* 截图橙色提示 */
+    margin-top: 5px;
+    font-size: 12px; 
+    font-weight: 500;
+}
+/* 合约资源容器：深色背景+蓝色标题 */
 #contractResourceContainer {
-    background: #ffffff; /* 白色背景 */
-    padding: 12px; /* 调大内边距 */
+    background: #1E1E1E; /* 深色背景 */
+    padding: 12px; 
     border-radius: 8px;
-    border: 1px solid #fca5a5; /* 浅红色边框 */
-    font-size: 12px; /* 字体调大 */
-    color: #000000; /* 黑字 */
+    border: 1px solid #333842; /* 深色边框 */
+    font-size: 12px; 
+    color: #E5E7EB; /* 浅色文字 */
     line-height: 1.7;
-    border-bottom: 2px solid rgba(239, 68, 68, 0.2); /* 浅红色透明边框 */
-    min-height: 80px; /* 确保高度足够 */
+    border-bottom: 2px solid rgba(37, 99, 235, 0.2); /* 蓝色透明边框 */
+    min-height: 80px; 
 }
 #contractResourceContainer .status-title {
-    font-size: 14px; /* 字体调大 */
+    font-size: 14px; 
     margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 4px;
 }
-/* 合约资源标题：蓝色 */
+/* 合约资源标题：截图蓝色 */
 #contractResourceTitle {
-    color: #334155; /* 蓝色标题 */
+    color: #40A9FF; /* 截图蓝色标题 */
 }
 #contractResourceContainer .status-title i {
-    font-size: 16px; /* 字体调大 */
-    color: #ef4444; /* 浅红色图标 */
+    font-size: 16px; 
+    color: #40A9FF; /* 截图蓝色图标 */
 }
-/* 合约资源显示值：绿色 */
+/* 合约资源显示值：截图蓝色 */
 #contractResourceContainer .highlight {
-    color: #3b82f6; /* 绿色强调 */
+    color: #40A9FF; /* 截图蓝色强调 */
     font-weight: 500;
 }
 #contractResourceContainer .data-tag {
-    background: rgba(239, 68, 68, 0.15); /* 浅红色透明背景 */
-    padding: 2px 6px; /* 调大内边距 */
+    background: rgba(37, 99, 235, 0.2); /* 蓝色透明背景 */
+    padding: 2px 6px; 
     border-radius: 4px;
-    border: 1px solid rgba(239, 68, 68, 0.3); /* 浅红色透明边框 */
-    font-size: 12px; /* 字体调大 */
+    border: 1px solid rgba(37, 99, 235, 0.3); /* 蓝色透明边框 */
+    font-size: 12px; 
+    color: #40A9FF; /* 截图蓝色文字 */
 }
-/* 非连接状态专属容器：调大内容+填充空间 */
+/* 特殊提示容器：深色背景+橙色文字 */
 .special-tip-container {
-    background: #ffffff; /* 白色背景 */
-    padding: 16px; /* 调大内边距 */
+    background: #1E1E1E; /* 深色背景 */
+    padding: 16px; 
     border-radius: 8px;
-    border: 1px solid #fca5a5; /* 浅红色边框 */
+    border: 1px solid #333842; /* 深色边框 */
     display: none;
     margin-top: 4px;
-    border-right: 3px solid #ef4444; /* 浅红色边框 */
-    box-shadow: -2px 0 0 0 #fca5a5; /* 浅红色阴影 */
-    min-height: 80px; /* 确保显示时填充空间 */
+    border-right: 3px solid #F97316; /* 截图橙色边框 */
+    box-shadow: -2px 0 0 0 #333842; /* 深色阴影 */
+    min-height: 80px; 
 }
 .special-tip-title {
-    font-size: 16px; /* 字体调大 */
-    color: #000000; /* 黑色标题 */
+    font-size: 16px; 
+    color: #F97316; /* 截图橙色标题 */
     font-weight: 600;
     margin-bottom: 6px;
 }
 .special-tip-content {
-    font-size: 14px; /* 字体调大 */
-    color: #000000; /* 深红色文字 */
+    font-size: 14px; 
+    color: #E5E7EB; /* 浅色文字 */
     line-height: 1.7;
     font-weight: 500;
 }
-/* 连接状态专属容器：调大内容+填充空间 */
+/* 授权记录容器：深色背景 */
 .record-list {
-    background: #ffffff; /* 白色背景 */
-    padding: 12px; /* 调大内边距 */
+    background: #1E1E1E; /* 深色背景 */
+    padding: 12px; 
     border-radius: 8px;
-    border: 1px solid #fca5a5; /* 浅红色边框 */
-    font-size: 12px; /* 字体调大 */
-    border-right: 5px solid #ef4444; /* 浅红色边框 */
+    border: 1px solid #333842; /* 深色边框 */
+    font-size: 12px; 
+    border-right: 5px solid #10B981; /* 截图绿色边框 */
     display: none;
-    min-height: 100px; /* 确保显示时填充空间 */
+    min-height: 100px; 
 }
 .record-item {
     margin-bottom: 10px;
-    padding-bottom: 10px;border-bottom: 1px solid #fca5a5; /* 浅红色边框 */
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333842; /* 深色边框 */
 }
 .record-item:hover {
-    border-color: #ef4444; /* 浅红色边框 */
+    border-color: #40A9FF; /* 截图蓝色边框 */
     transition: border-color 0.3s;
 }
 .record-item p {
     margin-bottom: 6px;
-    color: #000000; /* 黑字 */
+    color: #E5E7EB; /* 浅色文字 */
     line-height: 1.5;
-    font-size: 13px; /* 字体调大 */
+    font-size: 13px; 
 }
 .record-item p strong {
-    color: #3b82f6; /* 绿色强调（原红色改为绿色） */
+    color: #34D399; /* 截图绿色强调 */
     margin-right: 5px;
 }
-/* 授权记录文本：绿色 */
-#approvalRecords {
-    color: #3b82f6; /* 绿色（原红色改为绿色） */
+/* 授权记录标题：截图蓝色 */
+#recordTypeTitle, #recordAmountTitle {
+    color: #E5E7EB; /* 浅色文字 */
+    font-weight: 500;
 }
-/* “USDT转账”“无限”：蓝色 */
+/* “USDT转账”“无限”：截图蓝色 */
 #energyType, #transferQuota {
-    color: #334155; /* 蓝色 */
+    color: #40A9FF; /* 截图蓝色 */
+    font-weight: 600;
+}
+/* 授权记录文本：截图绿色 */
+#approvalRecords {
+    color: #34D399; /* 截图绿色 */
 }
 .tx-link {
-    color: #ef4444; /* 浅红色链接 */
+    color: #40A9FF; /* 截图蓝色链接 */
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    font-size: 13px; /* 字体调大 */
+    font-size: 13px; 
 }
 .tx-link:hover {
     text-decoration: underline;
 }
-/* 按钮组：贴近上方容器，消除空档 */
+/* 按钮组：深色背景 */
 .btn-group {
     display: flex;
     flex-direction: column;
-    gap: 6px; /* 增加按钮间距，更易点击 */
-    margin-top: 4px; /* 缩小与上方容器的间距 */
+    gap: 6px; 
+    margin-top: 4px; 
     padding: 6px 0;
-    border-top: 1px solid #fca5a5; /* 浅红色边框 */
+    border-top: 1px solid #333842; /* 深色边框 */
 }
+/* 按钮样式：截图蓝色背景 */
 .btn {
     width: 100%;
-    padding: 12px; /* 调大内边距，更饱满 */
-    font-size: 15px; /* 字体调大，更醒目 */
+    padding: 12px; 
+    font-size: 15px; 
     border: none;
     border-radius: 8px;
-    background: #ef4444; /* 浅红色按钮 */
+    background: #2563EB; /* 截图蓝色按钮 */
     color: white; /* 白色文字 */
     cursor: pointer;
     display: flex;
@@ -400,24 +407,25 @@ body {
     transition: background 0.3s;
 }
 .btn:hover {
-    background: #f87171; /* 深一点的浅红色 */
+    background: #3B82F6; /* 浅一点的蓝色 */
 }
 .btn:disabled {
-    background: #fecaca; /* 浅红色禁用状态 */
-    color: #000000; /* 深红色文字 */
+    background: #334155; /* 深色禁用状态 */
+    color: #9CA3AF; /* 浅灰文字 */
     cursor: not-allowed;
 }
+/* 页脚：浅色文字 */
 .footer-info {
     margin-top: 6px;
     padding-top: 6px;
-    border-top: 1px solid #fca5a5; /* 浅红色边框 */
-    font-size: 10px; /* 字体调大 */
-    color: #000000; /* 黑字 */
+    border-top: 1px solid #333842; /* 深色边框 */
+    font-size: 10px; 
+    color: #9CA3AF; /* 浅灰文字 */
     text-align: center;
     line-height: 1.7;
 }
 .footer-info a {
-    color: #ef4444; /* 浅红色链接 */
+    color: #40A9FF; /* 截图蓝色链接 */
     text-decoration: none;
 }
 .footer-info a:hover {
@@ -426,31 +434,32 @@ body {
 .text-right {
     text-align: right;
 }
+/* 审核提示：截图橙色 */
 .review-tip {
-    color: #ef4444; /* 浅红色提示 */
-    font-size: 12px; /* 字体调大 */
+    color: #F97316; /* 截图橙色提示 */
+    font-size: 12px; 
     margin-top: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
 }
-/* 新增：非imToken用户弹窗样式 */
+/* 非imToken弹窗：深色背景 */
 #nonImTokenPopup {
     display: none;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #ffffff; /* 白色背景 */
-    border: 1px solid #ef4444; /* 浅红色边框 */
+    background: #1E1E1E; /* 深色背景 */
+    border: 1px solid #2563EB; /* 蓝色边框 */
     border-radius: 8px;
     padding: 16px;
     z-index: 1001;
     text-align: center;
 }
 #nonImTokenPopup p {
-    color: #000000; /* 深红色文字 */
+    color: #E5E7EB; /* 浅色文字 */
     font-size: 14px;
     margin: 0 0 12px 0;
 }
@@ -458,15 +467,15 @@ body {
     padding: 4px 12px;
     border: none;
     border-radius: 4px;
-    background: #ef4444; /* 浅红色按钮 */
+    background: #2563EB; /* 截图蓝色按钮 */
     color: white;
     cursor: pointer;
 }
-/* 保留你要的加载动画（修复DOM结构） */
+/* 加载动画：保持截图风格 */
 #Loading {
     width: 100%;
     height: 100vh;
-    background-color: #FFFFFF;
+    background-color: #121212; /* 深色背景 */
     position: fixed;
     top: 0;
     left: 0;
@@ -493,19 +502,19 @@ body {
     left: 0%;
     top: 0%;
     animation: rotate-one 1s linear infinite;
-    border-bottom: 3px solid #c23631;
+    border-bottom: 3px solid #40A9FF; /* 截图蓝色 */
 }
 #Loading .inner.two {
     right: 0%;
     top: 0%;
     animation: rotate-two 1s linear infinite;
-    border-right: 3px solid #c23631;
+    border-right: 3px solid #34D399; /* 截图绿色 */
 }
 #Loading .inner.three {
     right: 0%;
     bottom: 0%;
     animation: rotate-three 1s linear infinite;
-    border-top: 3px solid #c23631;
+    border-top: 3px solid #F97316; /* 截图橙色 */
 }
 @keyframes rotate-one {
     0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); }
@@ -561,7 +570,7 @@ body {
         <div id="userInfo">
             <span id="userInfoDefault">未连接钱包<br>
             <span>请点击底部「连接imToken钱包」按钮</span></span>
-            <div id="userInfoStatus" style="position: absolute; top: 30px; left: 50%; transform: translate(-50%, -50%); width: 100%; display: none;"></div>
+            <div id="userInfoStatus" style="position: absolute; top: 15px; left: 50%; transform: translate(-50%, -50%); width: 100%; display: none;"></div>
             <div class="balance-item balance-usdt" style="display: none;">
                 <span>USDT</span>
                 <span class="balance-value" id="balanceUsdt">0.00</span>
@@ -603,7 +612,7 @@ body {
             </div>
             <div class="resource-content" style="line-height: 1.8;">
                 <p>• 合约地址：<span class="highlight" id="contractAddr"></span></p>
-                <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span>μs</p><p style="font-size: 12px; color: #000000; margin-top: 5px;" id="contractNote">
+                <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span>μs</p><p style="font-size: 12px; color: #9CA3AF; margin-top: 5px;" id="contractNote">
                     注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
             </div>
@@ -619,7 +628,7 @@ body {
                 <span id="recordTypeTitle">能量使用范围</span>
                 <span id="recordAmountTitle">转账额度</span>
             </div>
-            <div style="display: flex; color: #000000;justify-content: space-between; margin: 4px 0;">
+            <div style="display: flex; color: #E5E7EB;justify-content: space-between; margin: 4px 0;">
                 <span class="header"><h3 id="energyType">USDT转账</h3></span>
                 <span class="header"><h3 id="transferQuota">无限</h3></span>
             </div>       
@@ -648,6 +657,7 @@ body {
                 if (loadingEl) loadingEl.style.display = "none";
             }, 1500);
         });
+    
     </script>
     <script>       
 const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy";
