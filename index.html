@@ -999,22 +999,17 @@ function updatePageLang() {
 function updateUserInfoDisplay() {
     const lang = langConfig[currentLang];
     if (!userAddress) {
-        // 未连接：显示默认提示，隐藏余额项+连接提示
+        // 未连接：显示默认提示，隐藏余额项
         userInfoDefault.style.display = "block";
-        userInfoConnected.style.display = "none";
         balanceItems.forEach(item => item.style.display = "none");
         return;
     }
-
-    // 已连接：隐藏默认提示，显示余额项+连接提示
+    // 已连接：隐藏默认提示，显示余额项
     userInfoDefault.style.display = "none";
-    userInfoConnected.style.display = "block";
     balanceItems.forEach(item => item.style.display = "flex");
-
     // 更新连接地址（短地址）
     const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-    connectedAddrText.textContent = shortAddr;
-
+    document.getElementById("statusAddress").textContent = shortAddr;
     // 更新余额数值
     balanceUsdtEl.textContent = tokenBalance.toFixed(2);
     balanceTrxEl.textContent = trxBalance.toFixed(2);
@@ -1167,12 +1162,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         langDropdown.classList.toggle("open");
     });
     // 绑定语言选项点击事件
-    langDropdownItems.forEach(item => {
-        item.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const newLang = item.getAttribute(newLang);
-        });
+    // 绑定语言选项点击事件
+langDropdownItems.forEach(item => {
+    item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const newLang = item.getAttribute("data-lang"); // 修正：获取data-lang属性
+        changeLang(newLang);
     });
+});
     // 点击页面其他地方关闭下拉菜单
     document.addEventListener("click", () => {
         langDropdown.classList.remove("open");
