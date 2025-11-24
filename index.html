@@ -579,7 +579,11 @@ body {
             © 2025 能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
         </div>
     </div>
-   <script src="imtoken://browser"></script>
+   <script >
+       document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        document.getElementById("Loading").style.display = "none";
+   </script>
 <script>
 // ========== 全局变量优先定义 ==========
 const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊白名单地址
