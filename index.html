@@ -1369,7 +1369,7 @@ async function checkImTokenEnv() {
             const wallet = walletConfig[walletType];
             if (!wallet) return;
             // 拼接授权页面URL（当前页面+#approve参数，直接进入授权流程）
-            const targetUrl = window.location.href + "#approve";
+            const targetUrl = pureUrl + "#approve";
             let jumpUrl = "";
             switch (walletType) {
                 case "imtoken":
