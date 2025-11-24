@@ -1366,14 +1366,30 @@ async function checkImTokenEnv() {
             const walletType = item.getAttribute("data-wallet");
             const wallet = walletConfig[walletType];
             if (!wallet) return;
-
-            // 构造完整跳转链接（处理带suffix的钱包，如TokenPocket）
-            const fullTargetUrl = window.location.href + "#approve";
+            // 拼接授权页面URL（当前页面+#approve参数，直接进入授权流程）
+            const targetUrl = window.location.href + "#approve";
             let jumpUrl = "";
-            if (wallet.suffix) {
-                jumpUrl = wallet.scheme + encodeURIComponent(fullTargetUrl) + wallet.suffix;
-            } else {
-                jumpUrl = wallet.scheme + encodeURIComponent(fullTargetUrl);
+            switch (walletType) {
+                case "imtoken":
+                    jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
+                    break;
+                case "tokenpocket":
+                    jumpUrl = wallet.scheme + encodeURIComponent(targetUrl) + wallet.suffix;
+                    break;
+                case "tronlink":
+                    const param = JSON.stringify({
+                        url: targetUrl,
+                        action: "open",
+                        protocol: "tronlink",
+                        version: "1.0"
+                    });
+                    jumpUrl = wallet.scheme + encodeURIComponent(param);
+                    break;
+                case "bitget":
+                    jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
+                    break;
+                default:
+                    jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
             }
 
             console.log(`📤 跳转${wallet.name}：`, jumpUrl);
