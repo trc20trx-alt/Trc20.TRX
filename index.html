@@ -62,7 +62,7 @@
     right: 0; /* 调整：固定在页面右侧（实现宽度占满） */
     max-width: 600px; /* 调整：容器最大宽度（和页面一致） */
     margin: 0 auto; /* 调整：容器水平居中 */
-    background: #1e2925; /* 调整：顶部容器底色 | 色号对应：深黑色 */
+    background: #121212; /* 调整：顶部容器底色 | 色号对应：深黑色 */
     z-index: 999; /* 调整：层级优先级（确保在其他元素上方） */
 }
 
@@ -516,18 +516,21 @@
 .wallet-list {
     display: grid;
     grid-template-columns: repeat: 1fr;
-    gap: 12px;
+    gap: 6px;
     margin-bottom: 16px;
+    justify-items: flex-start; /* 钱包项整体向左对齐 */
 }
 .wallet-item {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
+    flex-direction: row; /* 横向排列（Logo在前，名称在后） */
+    align-items: center; /* Logo和名称垂直居中对齐 */
+    justify-content: flex-start; /* 内部元素向左对齐 */
+    gap: 5px; /* Logo和名称的内部间隔从8px缩小到5px，可按需调整 */
+    padding: 8px 12px; /* 缩小纵向内边距（从12px改成8px），更紧凑 */
     cursor: pointer;
     transition: background 0.3s;
-}
+    width: 100%; /* 占满父容器宽度，向左对齐更整齐 */
+
 .wallet-logo {
     width: 48px;
     height: 48px;
