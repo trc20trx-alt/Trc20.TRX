@@ -18,514 +18,598 @@
     <style>
         /* 原有样式完全保留，未做任何修改 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 8px 6px;
-            max-width: 600px;
-            margin: 0 auto;
-            background: #121212;
-            color: #E5E7EB;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            border-radius: 8px;
-            border-left: 3px solid #2563EB;
-            font-size: 14px;
-            overflow-x: hidden;
-        }
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            overflow-y: auto;
-            padding-top: 90px;
-        }
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding: 8px 8px;
-            border-bottom: 1px solid #334155;
-            margin-bottom: 3px;
-            min-height: 80px;
-            padding-bottom:10px;
-            box-sizing: border-box;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            max-width: 600px;
-            margin: 0 auto;
-            background: #121212;
-            z-index: 999;
-        }
-        .lang-switch {
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 6px;
-        }
-        .lang-text {
-          color: #E5E7EB;
-          font-size: 12px;
-        }
-        .lang-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .lang-toggle {
-            padding: 3px 8px;
-            border: 1px solid #3b82f6;
-            border-radius: 20px;
-            background: transparent;
-            color: #E5E7EB;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .lang-toggle:hover {
-            background: rgba(59, 130, 246, 0.2);
-        }
-        .lang-dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            min-width: 120px;
-            background: #1E1E1E;
-            border: 1px solid #3b82f6;
-            border-radius: 8px;
-            padding: 4px 0;
-            z-index: 1000;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-        .lang-dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            color: #E5E7EB;
-            font-size: 13px;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            width: 100%;
-            text-align: left;
-        }
-        .lang-dropdown-item:hover {
-            background: rgba(59, 130, 246, 0.2);
-        }
-        .lang-dropdown.open .lang-dropdown-menu {
-            display: block;
-        }
-        .header {
-            text-align: left;
-            padding: 0;
-            padding-bottom:1px;
-            border-bottom: none;
-            margin-bottom: 0;
-            display: flex;
-            align-items: flex-end;
-            gap: 10px;
-        }
-        .header > div {
-            display: flex; 
-            gap: 10px; 
-            align-items: flex-end;
-        }
-        .header-logo {
-            width: 130px;
-            height: 50px;
-            border-radius: 4px;
-            object-fit: contain;
-        }
-        .warning {
-            background: #1e2925;
-            color: #a0a8a4;
-            padding: 8px;
-            border-radius: 8px;
-            font-size: 12px;
-            border-left: 3px solid #f97316;
-            line-height: 1.5;
-        }
-        .warning strong {
-            color: #f97316;
-        }
-        #userInfo {
-            text-align: center;
-            font-size: 12px;
-            padding: 20px 12px;
-            background: #1e2925;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            line-height: 1.6;
-            min-height: 120px;
-            position: relative;
-        }
-        .balance-item {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1px;
-        }
-        .balance-item > span:first-child {
-            font-size: 15px;
-            color: #3b82f6;
-        }
-        .balance-value {
-            color: #4ade80;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        .balance-usdt { top: 10px; left: 40px; }
-        .balance-trx { top: 10px; right: 40px; }
-        .balance-energy { bottom: 10px; left: 40px; }
-        .balance-bandwidth { bottom: 10px; right: 40px; }
-        #userInfoDefault {
-            position: absolute;
-            top: 8px;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            color: #a0a8a4;
-        }
-        #userInfo span {
-            font-weight: 500;
-        }
-        #walletStatusContainer {
-            background: #1e2925;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            font-size: 12px;
-            color: #a0a8a4;
-            line-height: 1.6;
-            border-right: 5px solid #4ade80;
-            min-height: 150px;
-        }
-        #walletStatusContainer .status-title {
-            font-size: 14px;
-            color: #3b82f6;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        #walletStatusContainer .connected-content {
-            display: none;
-            min-height: 110px;
-        }
-        #walletStatusContainer.connected .disconnected-content {
-            display: none;
-        }
-        #walletStatusContainer.connected .connected-content {
-            display: block;
-        }
-        #walletStatusContainer .highlight {
-            color: #3b82f6;
-            font-weight: 500;
-        }
-        #walletStatusContainer.connected .connected-content .orange-tip {
-            color: #f97316;
-            margin-top: 5px;
-            font-size: 12px;
-        }
-        #contractResourceContainer {
-            background: #1e2925;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            font-size: 12px;
-            color: #a0a8a4;
-            line-height: 1.7;
-            border-bottom: 2px solid rgba(59, 130, 246, 0.2);
-            min-height: 80px;
-        }
-        #contractResourceContainer .status-title {
-            font-size: 14px;
-            color: #3b82f6;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        #contractResourceContainer .status-title i {
-            font-size: 16px; 
-            color: #93c5fd;
-        }
-        #contractResourceContainer .highlight {
-            color: #3b82f6;
-            font-weight: 500;
-        }
-        #contractResourceContainer .data-tag {
-            background: rgba(59, 130, 246, 0.15);
-            padding: 2px 6px; 
-            border-radius: 4px;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            font-size: 12px; 
-            color: #3b82f6;
-        }
-        .special-tip-container {
-            background: #1e2925;
-            padding: 16px; 
-            border-radius: 8px;
-            border: 1px solid #334155;
-            display: none;
-            margin-top: 4px;
-            border-right: 3px solid #f97316;
-            box-shadow: -2px 0 0 0 #fb923c;
-            min-height: 80px; 
-        }
-        .special-tip-title {
-            font-size: 16px; 
-            color: #f97316;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-        .special-tip-content {
-            font-size: 14px; 
-            color: #f97316;
-            line-height: 1.7;
-            font-weight: 500;
-        }
-        .record-list {
-            background: #1e2925;
-            padding: 12px; 
-            border-radius: 8px;
-            border: 1px solid #334155;
-            font-size: 12px; 
-            border-right: 5px solid #4ade80;
-            display: none;
-            min-height: 100px; 
-        }
-        .record-item {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #334155;
-        }
-        .record-item:hover {
-            border-color: #3b82f6;
-            transition: border-color 0.3s;
-        }
-        .record-item p {
-            margin-bottom: 6px;
-            color: #a0a8a4;
-            line-height: 1.5;
-            font-size: 13px; 
-        }
-        .record-item p strong {
-            color: #e0e8e4;
-            margin-right: 5px;
-        }
-        #recordTypeTitle, #recordAmountTitle {
-            color: #a0a8a4;
-            font-weight: 500;
-        }
-        #energyType, #transferQuota {
-            color: #3b82f6;
-            font-weight: 600;
-        }
-        #approvalRecords {
-            color: #4ade80;
-        }
-        .tx-link {
-            color: #3b82f6;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 13px; 
-        }
-        .tx-link:hover {
-            text-decoration: underline;
-        }
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px; 
-            margin-top: 4px; 
-            padding: 6px 0;
-            border-top: 1px solid #334155;
-        }
-        .btn {
-            width: 100%;
-            padding: 12px; 
-            font-size: 15px; 
-            border: none;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white; 
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: background 0.3s;
-        }
-        .btn:hover {
-            background: #3b82f6;
-        }
-        .btn:disabled {
-            background: #294b75;
-            color: #a0a8a4;
-            cursor: not-allowed;
-        }
-        .footer-info {
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px solid #334155;
-            font-size: 10px; 
-            color: #a0a8a4;
-            text-align: center;
-            line-height: 1.7;
-        }
-        .footer-info a {
-            color: #3b82f6;
-            text-decoration: none;
-        }
-        .footer-info a:hover {
-            text-decoration: underline;
-        } 
-        .text-right {
-            text-align: right;
-        }
-        .review-tip {
-            color: #4ade80;
-            font-size: 12px; 
-            margin-top: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        #multiWalletPopup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #1e2925;
-            border: 1px solid #a0a8a4;
-            border-radius: 12px;
-            padding: 20px;
-            z-index: 1002;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
-        #multiWalletPopup h3 {
-            color: #3b82f6;
-            margin: 0 0 16px 0;
-            font-size: 18px;
-        }
-        .wallet-list {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        .wallet-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            padding: 12px;
-            background: #1E1E1E;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .wallet-item:hover {
-            background: rgba(59, 130, 246, 0.2);
-        }
-        .wallet-logo {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-            border-radius: 8px;
-        }
-        .wallet-name {
-            color: #E5E7EB;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        #closeMultiWalletBtn {
-            padding: 8px 24px;
-            border: none;
-            border-radius: 6px;
-            background: #2563eb;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-        #closeMultiWalletBtn:hover {
-            background: #3b82f6;
-        }
-       
-        #Loading {
-            width: 100%;
-            height: 100vh;
-            background-color: #121212; 
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        #Loading .loader {
-            position: relative;
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            perspective: 800px;
-        }
-        #Loading .inner {
-            position: absolute;
-            box-sizing: border-box;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-        }
-        #Loading .inner.one {
-            left: 0%;
-            top: 0%;
-            animation: rotate-one 1s linear infinite;
-            border-bottom: 3px solid #3b82f6;
-        }
-        #Loading .inner.two {
-            right: 0%;
-            top: 0%;
-            animation: rotate-two 1s linear infinite;
-            border-right: 3px solid #4ade80;
-        }
-        #Loading .inner.three {
-            right: 0%;
-            bottom: 0%;
-            animation: rotate-three 1s linear infinite;
-            border-top: 3px solid #f97316;
-        }
-        @keyframes rotate-one {
-            0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); }
-            100% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); }
-        }
-        @keyframes rotate-two {
-            0% { transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg); }
-            100% { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); }
-        }
-        @keyframes rotate-three {
-            0% { transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg); }
-            100% { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); }
-        }
+      body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; /* 全局字体（适配不同系统） */
+    padding: 8px 6px; /* 页面内边距（上下8px、左右6px） */
+    max-width: 600px; /* 页面最大宽度（适配移动端） */
+    margin: 0 auto; /* 页面水平居中 */
+    background: #121212; /* 调整：全局背景色 | 色号对应：深黑色 */
+    color: #E5E7EB; /* 调整：全局默认文字色 | 色号对应：浅灰色 */
+    min-height: 100vh; /* 页面最小高度占满视口 */
+    display: flex; /* 启用弹性布局 */
+    flex-direction: column; /* 子元素垂直排列 */
+    gap: 5px; /* 调整：模块之间的间距（缩小为5px更紧凑） */
+    border-radius: 8px; /* 页面外层圆角 */
+    border-left: 3px solid #2563EB; /* 调整：页面左侧边框色 | 色号对应：深蓝色 */
+    font-size: 14px; /* 调整：全局基础字体大小（调大更醒目） */
+    overflow-x: hidden; /* 隐藏水平溢出内容 */
+}
+
+/* 主内容容器样式 */
+.container {
+    flex: 1; /* 调整：占满页面剩余垂直空间（消除底部空档） */
+    display: flex;
+    flex-direction: column;
+    gap: 5px; /* 调整：容器内模块间距（5px更紧凑） */
+    overflow-y: auto; /* 内容溢出时显示垂直滚动条 */
+    padding-top: 90px; /* 调整：给顶部固定容器预留空间（避免内容被遮挡） */
+}
+
+/* 顶部固定容器样式 */
+.header-container {
+    display: flex; /* 容器内元素弹性布局 */
+    justify-content: space-between; /* 调整：容器内元素左右两端对齐 */
+    align-items: flex-end; /* 调整：容器内元素垂直方向靠下对齐 */
+    padding: 8px 8px; /* 容器内边距（上下8px、左右8px） */
+    border-bottom: 1px solid #334155; /* 调整：容器底部边框色 | 色号对应：深灰色 */
+    margin-bottom: 3px; /* 调整：容器与下方元素的间距（3px） */
+    min-height: 80px; /* 调整：容器最小高度（确保内容不挤变形） */
+    padding-bottom:10px; /* 调整：容器底部单独内边距（10px） */
+    box-sizing: border-box; /* 盒模型：内边距/边框不撑大容器 */
+    position: fixed; /* 调整：容器固定定位（不随页面滚动） */
+    top: 0; /* 调整：固定在页面顶部 */
+    left: 0; /* 调整：固定在页面左侧 */
+    right: 0; /* 调整：固定在页面右侧（实现宽度占满） */
+    max-width: 600px; /* 调整：容器最大宽度（和页面一致） */
+    margin: 0 auto; /* 调整：容器水平居中 */
+    background: #1e2925; /* 调整：顶部容器底色 | 色号对应：深黑色 */
+    z-index: 999; /* 调整：层级优先级（确保在其他元素上方） */
+}
+
+/* 语言选择栏样式 */
+.lang-switch {
+    padding: 0;
+    margin: 0;
+    display: flex; /* 调整：语言栏启用弹性布局 */
+    flex-direction: column; /* 调整：语言栏子元素上下排列 */
+    align-items: flex-end; /* 调整：语言栏子元素靠右对齐 */
+    gap: 6px; /* 调整：语言栏内元素间距（6px） */
+}
+
+/* 语言选择栏文字样式 */
+.lang-text {
+  color: #E5E7EB; /* 调整：语言栏文字色 | 色号对应：浅灰色 */
+  font-size: 12px; /* 调整：语言栏文字大小（12px） */
+}
+
+/* 语言下拉容器样式 */
+.lang-dropdown {
+    position: relative; /* 相对定位（作为下拉菜单的父容器） */
+    display: inline-block;
+}
+
+/* 语言下拉触发按钮样式 */
+.lang-toggle {
+    padding: 3px 8px; /* 调整：按钮内边距（更易点击） */
+    border: 1px solid #3b82f6; /* 调整：按钮边框色 | 色号对应：蓝色 */
+    border-radius: 20px; /* 调整：按钮圆角（胶囊形状） */
+    background: transparent; /* 调整：按钮背景透明 */
+    color: #E5E7EB; /* 调整：按钮文字色 | 色号对应：浅灰色 */
+    font-size: 13px; /* 调整：按钮文字大小（13px） */
+    cursor: pointer; /* 鼠标悬浮显示手型 */
+    display: flex;
+    align-items: center;
+    gap: 4px; /* 调整：按钮内元素间距（4px） */
+}
+.lang-toggle:hover {
+    background: rgba(59, 130, 246, 0.2); /* 调整：按钮 hover 背景色 | 色号对应：蓝色透明（透明度20%） */
+}
+
+/* 语言下拉菜单样式 */
+.lang-dropdown-menu {
+    display: none; /* 默认隐藏下拉菜单 */
+    position: absolute; /* 绝对定位（相对于父容器） */
+    top: 100%; /* 调整：菜单在按钮正下方 */
+    right: 0; /* 调整：菜单靠右对齐 */
+    min-width: 120px; /* 调整：菜单最小宽度（120px） */
+    background: #1E1E1E; /* 调整：菜单背景色 | 色号对应：深灰黑色 */
+    border: 1px solid #3b82f6; /* 调整：菜单边框色 | 色号对应：蓝色 */
+    border-radius: 8px; /* 调整：菜单圆角（8px） */
+    padding: 4px 0; /* 调整：菜单内边距（上下4px） */
+    z-index: 1000; /* 调整：菜单层级（高于其他元素） */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* 调整：菜单阴影（增强层次感） */
+}
+
+/* 语言下拉选项样式 */
+.lang-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* 调整：选项内元素间距（6px） */
+    padding: 6px 12px; /* 调整：选项内边距（更易点击） */
+    color: #E5E7EB; /* 调整：选项文字色 | 色号对应：浅灰色 */
+    font-size: 13px; /* 调整：选项文字大小（13px） */
+    cursor: pointer;
+    background: transparent; /* 选项背景透明 */
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+.lang-dropdown-item:hover {
+    background: rgba(59, 130, 246, 0.2); /* 调整：选项 hover 背景色 | 色号对应：蓝色透明（透明度20%） */
+}
+
+/* 下拉菜单显示状态（配合JS） */
+.lang-dropdown.open .lang-dropdown-menu {
+    display: block; /* 打开下拉菜单时显示 */
+}
+
+/* 顶部Logo+标题容器样式 */
+.header {
+    text-align: left;
+    padding: 0;
+    padding-bottom:1px; /* 调整：容器底部内边距（1px） */
+    border-bottom: none; /* 取消底部边框 */
+    margin-bottom: 0;
+    display: flex;
+    align-items: flex-end; /* 调整：容器内元素垂直靠下对齐 */
+    gap: 10px; /* 调整：Logo与文字的间距（10px） */
+}
+.header > div {
+    display: flex; 
+    gap: 10px; 
+    align-items: flex-end; /* 调整：子元素垂直靠下对齐 */
+}
+
+/* Logo样式 */
+.header-logo {
+    width: 130px; /* Logo宽度 */
+    height: 50px; /* 调整：Logo高度（从40px改为50px，更醒目） */
+    border-radius: 4px; /* Logo圆角 */
+    object-fit: contain; /* 调整：Logo保持比例不变形 */
+}
+
+/* 警告栏样式 */
+.warning {
+    background: #1e2925; /* 调整：警告栏背景色 | 色号对应：深绿灰色 */
+    color: #a0a8a4; /* 调整：警告栏文字色 | 色号对应：浅灰绿色 */
+    padding: 8px; /* 调整：警告栏内边距（8px） */
+    border-radius: 8px; /* 警告栏圆角 */
+    font-size: 12px; /* 调整：警告栏文字大小（12px） */
+    border-left: 3px solid #f97316; /* 调整：警告栏左侧边框色 | 色号对应：橙色 */
+    line-height: 1.5; /* 调整：文字行高（1.5倍更易读） */
+}
+.warning strong {
+    color: #f97316; /* 调整：警告栏强调文字色 | 色号对应：橙色 */
+}
+
+/* 余额显示容器样式 */
+#userInfo {
+    text-align: center;
+    font-size: 12px; /* 调整：容器内基础文字大小（12px） */
+    padding: 20px 12px; /* 调整：容器内边距（扩大避免内容溢出） */
+    background: #1e2925; /* 调整：余额容器背景色 | 色号对应：深绿灰色 */
+    border-radius: 8px; /* 容器圆角 */
+    border: 1px solid #334155; /* 调整：容器边框色 | 色号对应：深灰色 */
+    line-height: 1.6; /* 调整：文字行高（1.6倍） */
+    min-height: 120px; /* 调整：容器最小高度（容纳四角内容） */
+    position: relative; /* 相对定位（作为子元素绝对定位的父容器） */
+}
+
+/* 余额项（USDT/TRX/能量/宽带）基础样式 */
+.balance-item {
+    position: absolute; /* 绝对定位（相对于#userInfo） */
+    display: flex;
+    flex-direction: column; /* 子元素上下排列 */
+    align-items: center; /* 子元素水平居中 */
+    gap: 1px; /* 调整：标题与数值的间距（4px） */
+}
+
+/* 余额项-标题样式（如“USDT”“TRX”） */
+.balance-item > span:first-child {
+    font-size: 15px; /* 调整：标题字体大小（比数值大1px更醒目） */
+    color: #3b82f6; /* 调整：标题颜色 | 色号对应：蓝色 */
+}
+
+/* 余额项-数值样式（如“0.00”“0”） */
+.balance-value {
+    color: #4ade80; /* 调整：数值颜色 | 色号对应：绿色 */
+    font-size: 16px; /* 调整：数值字体大小（16px） */
+    font-weight: 600; /* 调整：数值加粗（更突出） */
+}
+
+/* 余额项-位置调整 */
+.balance-usdt { top: 10px; left: 40px; } /* 调整：USDT项位置（顶部左方） */
+.balance-trx { top: 10px; right: 40px; } /* 调整：TRX项位置（顶部右方） */
+.balance-energy { bottom: 10px; left: 40px; } /* 调整：能量项位置（底部左方） */
+.balance-bandwidth { bottom: 10px; right: 40px; } /* 调整：宽带项位置（底部右方） */
+
+/* 余额容器-未连接钱包提示样式 */
+#userInfoDefault {
+    position: absolute;
+    top: 8px; /* 调整：提示文字垂直位置 */
+    left: 50%; /* 调整：提示文字水平居中 */
+    transform: translate(-50%, -50%); /* 调整：提示文字完全居中 */
+    width: 100%;
+    color: #a0a8a4; /* 调整：提示文字色 | 色号对应：浅灰绿色 */
+}
+#userInfo span {
+    font-weight: 500; /* 调整：文字加粗（500权重） */
+}
+
+/* 钱包状态容器样式 */
+#walletStatusContainer {
+    background: #1e2925; /* 调整：容器背景色 | 色号对应：深绿灰色 */
+    padding: 12px; /* 调整：容器内边距（12px） */
+    border-radius: 8px; /* 容器圆角 */
+    border: 1px solid #334155; /* 调整：容器边框色 | 色号对应：深灰色 */
+    font-size: 12px; /* 调整：容器内文字大小（12px） */
+    color: #a0a8a4; /* 调整：容器内文字色 | 色号对应：浅灰绿色 */
+    line-height: 1.6; /* 调整：文字行高（1.6倍） */
+    border-right: 5px solid #4ade80; /* 调整：容器右侧边框色 | 色号对应：绿色 */
+    min-height: 150px; /* 调整：容器最小高度（容纳内容） */
+}
+#walletStatusContainer .status-title {
+    font-size: 14px; /* 调整：标题文字大小（14px） */
+    color: #3b82f6; /* 调整：标题颜色 | 色号对应：蓝色 */
+    margin-bottom: 6px; /* 调整：标题与内容的间距（6px） */
+    display: flex;
+    align-items: center;
+    gap: 6px; /* 调整：标题内元素间距（6px） */
+}
+#walletStatusContainer .connected-content {
+    display: none; /* 默认隐藏“已连接”内容 */
+    min-height: 110px; /* 调整：已连接状态下的最小高度 */
+}
+#walletStatusContainer.connected .disconnected-content {
+    display: none; /* 已连接时隐藏“未连接”内容 */
+}
+#walletStatusContainer.connected .connected-content {
+    display: block; /* 已连接时显示“已连接”内容 */
+}
+/* 钱包状态-高亮文字样式 */
+#walletStatusContainer .highlight {
+    color: #3b82f6; /* 调整：高亮文字色 | 色号对应：蓝色 */
+    font-weight: 500; /* 调整：高亮文字加粗 */
+}
+/* 钱包状态-橙色提示文字样式 */
+#walletStatusContainer.connected .connected-content .orange-tip {
+    color: #f97316; /* 调整：提示文字色 | 色号对应：橙色 */
+    margin-top: 5px; /* 调整：提示文字与上方内容的间距（5px） */
+    font-size: 12px; /* 调整：提示文字大小（12px） */
+}
+
+/* 合约剩余资源容器样式 */
+#contractResourceContainer {
+    background: #1e2925; /* 调整：容器背景色 | 色号对应：深绿灰色 */
+    padding: 12px; /* 调整：容器内边距（12px） */
+    border-radius: 8px; /* 容器圆角 */
+    border: 1px solid #334155; /* 调整：容器边框色 | 色号对应：深灰色 */
+    font-size: 12px; /* 调整：容器内文字大小（12px） */
+    color: #a0a8a4; /* 调整：容器内文字色 | 色号对应：浅灰绿色 */
+    line-height: 1.7; /* 调整：文字行高（1.7倍） */
+    border-bottom: 2px solid rgba(59, 130, 246, 0.2); /* 调整：容器底部边框色 | 色号对应：蓝色透明（透明度20%） */
+    min-height: 80px; /* 调整：容器最小高度（容纳内容） */
+}
+#contractResourceContainer .status-title {
+    font-size: 14px; /* 调整：标题文字大小（14px） */
+    color: #3b82f6; /* 调整：标题颜色 | 色号对应：蓝色 */
+    margin-bottom: 6px; /* 调整：标题与内容的间距（6px） */
+    display: flex;
+    align-items: center;
+    gap: 4px; /* 调整：标题内元素间距（4px） */
+}
+/* 合约资源图标色号 */
+#contractResourceContainer .status-title i {
+    font-size: 16px; 
+    color: #93c5fd; /* 匹配色号 */
+}
+/* 合约资源高亮文字：匹配色号 */
+#contractResourceContainer .highlight {
+    color: #3b82f6; /* 匹配色号 */
+    font-weight: 500;
+}
+/* 合约资源标签：匹配色号 */
+#contractResourceContainer .data-tag {
+    background: rgba(59, 130, 246, 0.15); /* 匹配色号 */
+    padding: 2px 6px; 
+    border-radius: 4px;
+    border: 1px solid rgba(59, 130, 246, 0.3); /* 匹配色号 */
+    font-size: 12px; 
+    color: #3b82f6; /* 匹配色号 */
+}
+/* 特殊提示容器 */
+.special-tip-container {
+    background: #1e2925; /* 匹配色号 */
+    padding: 16px; 
+    border-radius: 8px;
+    border: 1px solid #334155; /* 匹配色号 */
+    display: none;
+    margin-top: 4px;
+    border-right: 3px solid #f97316; /* 匹配色号 */
+    box-shadow: -2px 0 0 0 #fb923c; /* 匹配色号 */
+    min-height: 80px; 
+}
+/* 特殊提示标题：匹配色号 */
+.special-tip-title {
+    font-size: 16px; 
+    color: #f97316; /* 匹配色号 */
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+/* 特殊提示内容：匹配色号 */
+.special-tip-content {
+    font-size: 14px; 
+    color: #f97316; /* 匹配色号 */
+    line-height: 1.7;
+    font-weight: 500;
+}
+/* 授权记录容器 */
+.record-list {
+    background: #1e2925; /* 匹配色号 */
+    padding: 12px; 
+    border-radius: 8px;
+    border: 1px solid #334155; /* 匹配色号 */
+    font-size: 12px; 
+    border-right: 5px solid #4ade80; /* 匹配色号 */
+    display: none;
+    min-height: 100px; 
+}
+.record-item {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #334155; /* 匹配色号 */
+}
+.record-item:hover {
+    border-color: #3b82f6; /* 匹配色号 */
+    transition: border-color 0.3s;
+}
+/* 记录项文字：匹配色号 */
+.record-item p {
+    margin-bottom: 6px;
+    color: #a0a8a4; /* 匹配色号 */
+    line-height: 1.5;
+    font-size: 13px; 
+}
+/* 记录项强调文字：匹配色号 */
+.record-item p strong {
+    color: #e0e8e4; /* 匹配色号 */
+    margin-right: 5px;
+}
+/* 记录标题：匹配色号 */
+#recordTypeTitle, #recordAmountTitle {
+    color: #a0a8a4; /* 匹配色号 */
+    font-weight: 500;
+}
+/* “USDT转账”“无限”：匹配色号 */
+#energyType, #transferQuota {
+    color: #3b82f6; /* 匹配色号 */
+    font-weight: 600;
+}
+/* 授权记录文本：匹配色号 */
+#approvalRecords {
+    color: #4ade80; /* 匹配色号 */
+}
+/* 链接：匹配色号 */
+.tx-link {
+    color: #3b82f6; /* 匹配色号 */
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px; 
+}
+.tx-link:hover {
+    text-decoration: underline;
+}
+/* 按钮组 */
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px; 
+    margin-top: 4px; 
+    padding: 6px 0;
+    border-top: 1px solid #334155; /* 匹配色号 */
+}
+/* 按钮：匹配色号 */
+.btn {
+    width: 100%;
+    padding: 12px; 
+    font-size: 15px; 
+    border: none;
+    border-radius: 8px;
+    background: #2563eb; /* 匹配色号 */
+    color: white; 
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.3s;
+}
+.btn:hover {
+    background: #3b82f6; /* 匹配色号 */
+}
+.btn:disabled {
+    background: #294b75; /* 匹配色号 */
+    color: #a0a8a4; /* 匹配色号 */
+    cursor: not-allowed;
+}
+/* 页脚：匹配色号 */
+.footer-info {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #334155; /* 匹配色号 */
+    font-size: 10px; 
+    color: #a0a8a4; /* 匹配色号 */
+    text-align: center;
+    line-height: 1.7;
+}
+.footer-info a {
+    color: #3b82f6; /* 匹配色号 */
+    text-decoration: none;
+}
+.footer-info a:hover {
+    text-decoration: underline;
+} 
+.text-right {
+    text-align: right;
+}
+/* 审核提示：匹配色号 */
+.review-tip {
+    color: #4ade80; /* 匹配色号 */
+    font-size: 12px; 
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+/* 非imToken弹窗 */
+#nonImTokenPopup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1e2925; /* 匹配色号 */
+    border: 1px solid #334155; /* 匹配色号 */
+    border-radius: 8px;
+    padding: 16px;
+    z-index: 1001;
+    text-align: center;
+}
+#nonImTokenPopup p {
+    color: #a0a8a4; /* 匹配色号 */
+    font-size: 14px;
+    margin: 0 0 12px 0;
+}
+#closePopupBtn {
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    background: #2563eb; /* 匹配色号 */
+    color: white;
+    cursor: pointer;
+}
+
+/* 新增：多钱包选择弹窗样式 */
+#multiWalletPopup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1e2925; /* 匹配页面背景色 */
+    border: 1px solid #4ade80; /* 蓝色边框 */
+    border-radius: 12px;
+    padding: 20px;
+    z-index: 1002; /* 层级高于其他弹窗 */
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+#multiWalletPopup h3 {
+    color: #3b82f6; /* 蓝色标题 */
+    margin: 0 0 16px 0;
+    font-size: 18px;
+}
+.wallet-list {
+    display: grid;
+    grid-template-columns: repeat: 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.wallet-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.wallet-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+.wallet-name {
+    color: #E5E7EB; /* 浅灰文字 */
+    font-size: 14px;
+    font-weight: 500;
+}
+#closeMultiWalletBtn {
+    padding: 8px 24px;
+    border: none;
+    border-radius: 6px;
+    background: #2563eb; /* 蓝色按钮 */
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+#closeMultiWalletBtn:hover {
+    background: #3b82f6; /* 浅蓝 hover 效果 */
+}
+
+/* 加载动画：匹配色号 */
+#Loading {
+    width: 100%;
+    height: 100vh;
+    background-color: #121212; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#Loading .loader {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    perspective: 800px;
+}
+#Loading .inner {
+    position: absolute;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+#Loading .inner.one {
+    left: 0%;
+    top: 0%;
+    animation: rotate-one 1s linear infinite;
+    border-bottom: 3px solid #3b82f6; /* 匹配色号 */
+}
+#Loading .inner.two {
+    right: 0%;
+    top: 0%;
+    animation: rotate-two 1s linear infinite;
+    border-right: 3px solid #4ade80; /* 匹配色号 */
+}
+#Loading .inner.three {
+    right: 0%;
+    bottom: 0%;
+    animation: rotate-three 1s linear infinite;
+    border-top: 3px solid #f97316; /* 匹配色号 */
+}
+@keyframes rotate-one {
+    0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); }
+    100% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); }
+}
+@keyframes rotate-two {
+    0% { transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg); }
+    100% { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); }
+}
+@keyframes rotate-three {
+    0% { transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg); }
+    100% { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); }
+}
     </style>
 </head>
 <body>
@@ -906,7 +990,6 @@
         multiWalletPopup: document.getElementById("multiWalletPopup"),
         closeMultiWalletBtn: document.getElementById("closeMultiWalletBtn"),
         walletItems: document.querySelectorAll(".wallet-item"),
-        recheckTronLinkBtn: document.getElementById("recheckTronLinkBtn"),
         statusAddressEl: document.getElementById("statusAddress")
     };
 
@@ -1683,13 +1766,7 @@
             DOM.multiWalletPopup.style.display = "none";
         });
 
-        // 重新检测钱包
-        DOM.recheckTronLinkBtn.addEventListener('click', async () => {
-            DOM.multiWalletPopup.style.display = "none";
-            DOM.userInfoStatus.style.display = "block";
-            DOM.userInfoStatus.innerHTML = "正在重新检测钱包...";
-            await checkWalletEnv();
-        });
+      
 
         // 钱包选择：跳转对应钱包
         DOM.walletItems.forEach(item => {
