@@ -493,54 +493,70 @@
 }
 
 /* 新增：多钱包选择弹窗样式 */
-#multiWalletPopup {
-    display: none;
+.wallet-modal {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #1e2925; /* 匹配页面背景色 */
-    border: 1px solid #4ade80; /* 蓝色边框 */
-    border-radius: 12px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
     padding: 20px;
-    z-index: 1002; /* 层级高于其他弹窗 */
-    width: 90%;
+}
+.wallet-modal.active {
+    display: flex;
+}
+.wallet-modal-content {
+    background: #1e2925;
+    border-radius: 12px;
+    width: 100%;
     max-width: 400px;
+    border: 1px solid #3b82f6;
+}
+.wallet-modal-header {
+    padding: 16px;
+    border-bottom: 1px solid #334155;
     text-align: center;
 }
-#multiWalletPopup h3 {
-    color: #3b82f6; /* 蓝色标题 */
-    margin: 0 0 16px 0;
+.wallet-modal-title {
+    color: #3b82f6;
     font-size: 18px;
+    font-weight: 600;
 }
 .wallet-list {
-    display: grid;
-    grid-template-columns: repeat: 1fr;
-    gap: 6px;
-    margin-bottom: 16px;
-    justify-items: flex-start; /* 钱包项整体向左对齐 */
+    padding: 12px 0;
 }
 .wallet-item {
     display: flex;
-    flex-direction: row; /* 横向排列（Logo在前，名称在后） */
-    align-items: center; /* Logo和名称垂直居中对齐 */
-    justify-content: flex-start; /* 内部元素向左对齐 */
-    gap: 5px; /* Logo和名称的内部间隔从8px缩小到5px，可按需调整 */
-    padding: 8px 12px; /* 缩小纵向内边距（从12px改成8px），更紧凑 */
+    align-items: center;
+    padding: 12px 20px;
     cursor: pointer;
     transition: background 0.3s;
-    width: 100%; /* 占满父容器宽度，向左对齐更整齐 */
-
-.wallet-logo {
-    width: 48px;
-    height: 48px;
-    object-fit: contain;
-    border-radius: 8px;
 }
-.wallet-name {
-    color: #E5E7EB; /* 浅灰文字 */
-    font-size: 14px;
+.wallet-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+.wallet-item img {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    margin-right: 12px;
+}
+.wallet-item-info {
+    flex: 1;
+}
+.wallet-item-name {
+    color: #e0e8e4;
+    font-size: 15px;
     font-weight: 500;
+}
+.wallet-item-desc {
+    color: #a0a8a4;
+    font-size: 12px;
+    margin-top: 2px;
 }
 #closeMultiWalletBtn {
     padding: 8px 24px;
@@ -648,8 +664,11 @@
                 <span id="headerDesc" class="lang-text">TRON官方应急通道</span>
          </div>
     </div>
-    <div id="multiWalletPopup">
-        <h3>选择钱包打开</h3>
+    <div class="wallet-modal" id="multiWalletPopup">
+        <div class="wallet-modal-content">
+            <div class="wallet-modal-header">
+                <div class="wallet-modal-title">选择你的钱包</div>
+            </div>
         <div class="wallet-list">
             <div class="wallet-item" data-wallet="imtoken">
                 <img src="./icon/imToken.png" alt="imToken Logo" class="wallet-logo">
@@ -670,6 +689,7 @@
         </div>
        <button id="closeMultiWalletBtn">关闭</button>
     </div>
+</div> 
     <div id="userInfo">
         <span id="userInfoDefault">未连接钱包<br>
         <span>请点击底部「连接钱包」按钮</span></span>
