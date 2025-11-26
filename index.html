@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1583,71 +1584,66 @@ async function queryUserEnergyBalance(address) {
      * @param {boolean} isAfterApprove - 是否为授权后初始化
      */
     async function initWallet(isAfterApprove = false) {
-    const lang = langConfig[currentLang];
-    try {
-        // ========== 步骤1：连接钱包 - 获取钱包地址（核心第一步） ==========
-        userAddress = tronWeb.defaultAddress?.base58; // 兼容多钱包的地址获取方式
-        if (!userAddress) {
-            // 无地址兜底：仅显示提示，不执行后续逻辑
+        const lang = langConfig[currentLang];
+        try {
+            // 步骤1：获取钱包地址（第一步）
+            userAddress = tronWeb.defaultAddress?.base58;
+            if (!userAddress) {
+                // 无地址：仅显示提示，不执行后续操作
+                DOM.userInfoDefault.style.display = "none";
+                DOM.userInfoStatus.style.display = "block";
+                DOM.userInfoStatus.innerHTML = lang.noWalletAddress;
+                DOM.balanceItems.forEach(item => item.style.display = "none"); // 隐藏余额
+                DOM.approveBtn.disabled = true;
+                DOM.approveBtn.textContent = lang.insufficientBtn;
+                updateWalletStatus(); // 切换为未连接状态
+                DOM.recordList.style.display = "none";
+                return;
+            }
+
+            // 修复1：拿到地址后立即显示钱包地址（不管验证是否通过）
+            if (DOM.statusAddressEl) {         
+             DOM.statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+            }
+            updateWalletStatus(); // 切换为已连接状态，显示钱包地址
+
+            // 步骤2：立即查询本地余额（第二步，仅查询不显示）
             DOM.userInfoDefault.style.display = "none";
             DOM.userInfoStatus.style.display = "block";
-            DOM.userInfoStatus.innerHTML = lang.noWalletAddress;
-            DOM.approveBtn.disabled = true;
-            DOM.approveBtn.textContent = lang.insufficientBtn;
-       
-            DOM.recordList.style.display = "none";
-            return;
-        }
+            DOM.userInfoStatus.innerHTML = lang.queryingBalance; // 显示“查询中”
+            DOM.balanceItems.forEach(item => item.style.display = "none"); // 未验证前不显示余额
 
-        // ========== 步骤2：显示查询中状态（提升用户体验） ==========
-        DOM.userInfoDefault.style.display = "none";
-        DOM.userInfoStatus.style.display = "block";
-        DOM.userInfoStatus.innerHTML = lang.queryingBalance; // 显示"查询中..."
-        DOM.balanceItems.forEach(item => item.style.display = "none"); // 查询期间暂隐余额
+            // 本地查询余额（修复2：去掉false参数，确保能量/宽带能获取）
+            const [usdtRaw, trxRaw, userEnergy, userBandwidth] = await Promise.all([
+                // 初始化合约实例（若未初始化）+ 本地查询USDT余额
+                (trc20Contract || await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS)).balanceOf(userAddress).call().catch(err => 0),
+                tronWeb.trx.getBalance(userAddress).catch(err => 0), // 修复：去掉false参数
+                queryUserEnergyBalance(userAddress), // 修复后：能正常获取能量
+                queryBandwidthBalance(userAddress) // 修复后：能正常获取宽带
+            ]);
+            // 格式化余额（确保能量/宽带赋值）
+            tokenBalance = Number(usdtRaw) / 1000000;
+            trxBalance = Number(trxRaw) / 1000000;
+            currentEnergy = userEnergy; // 保存查询到的能量
+            currentBandwidth = userBandwidth; // 保存查询到的宽带
 
-        // ========== 步骤3：初始化合约实例（提前初始化，后续可复用） ==========
-        trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
-        if (!trc20Contract) throw new Error("合约实例初始化失败");
+            // 步骤3：验证用户资格（前置“门”，第三步）
+            const { eligible, tip, btnText } = verifyUserEligibility();
+            if (!eligible) {
+                // 验证不通过：仅显示提示，不显示余额、不绑定按钮
+                DOM.userInfoStatus.innerHTML = tip;
+                DOM.balanceItems.forEach(item => item.style.display = "none");
+                DOM.approveBtn.disabled = true;
+                DOM.approveBtn.textContent = btnText;
+                DOM.recordList.style.display = userAddress ? "block" : "none";
+                if (userAddress) renderEnergyRecords();
+                return;
+            }
 
-        // ========== 步骤4：并行查询余额/能量/宽带（提升性能，兼容多钱包） ==========
-        const [usdtRaw, trxRaw, userEnergy, userBandwidth] = await Promise.all([
-            // USDT余额查询（异常兜底为0，避免阻断流程）
-            trc20Contract.balanceOf(userAddress).call().catch(err => 0),
-            // TRX余额查询（异常兜底为0）
-            tronWeb.trx.getBalance(userAddress).catch(err => 0),
-            // 能量查询（兼容多钱包的官方API方式）
-            queryUserEnergyBalance(userAddress),
-            // 宽带查询（兼容多钱包的官方API方式）
-            queryBandwidthBalance(userAddress)
-        ]);
+            // 步骤4：验证通过！执行后续操作（第四步）
+            // 4.1 仅在#userInfo容器显示余额（包含能量/宽带）
+            showBalanceInUserInfo();
 
-        // 格式化数据（保留2位小数，确保数值可读性）
-        tokenBalance = (Number(usdtRaw) / 1000000).toFixed(2); // USDT余额（6位小数转正常单位）
-        trxBalance = (Number(trxRaw) / 1000000).toFixed(2); // TRX余额（6位小数转正常单位）
-        currentEnergy = userEnergy; // 保存查询到的用户能量
-        currentBandwidth = userBandwidth; // 保存查询到的用户宽带
-
-        // ========== 步骤5：显示钱包地址（脱敏处理，保护隐私） ==========
-        if (DOM.statusAddressEl) {
-            // 地址脱敏：显示前8位+后6位，中间用...代替
-            DOM.statusAddressEl.textContent = `${userAddress.slice(0, 8)}...${userAddress.slice(-6)}`;
-        }
-        updateWalletStatus(); // 标记为已连接状态
-
-        // ========== 步骤6：显示余额（与验证解耦，无论验证结果都显示） ==========
-        showBalanceInUserInfo(); // 渲染余额到页面（USDT/TRX/能量/宽带）
-        DOM.balanceItems.forEach(item => item.style.display = "block"); // 显示余额模块
-        DOM.userInfoStatus.innerHTML = lang.balanceLoaded; // 更新状态为"余额已加载"
-
-        // ========== 步骤7：显示授权记录（与验证解耦，提升用户感知） ==========
-        DOM.recordList.style.display = "block"; // 显示记录容器
-        renderEnergyRecords(); // 渲染历史领取记录
-
-        // ========== 步骤8：验证用户资格（仅影响按钮状态，不遮挡余额/记录） ==========
-        const { eligible, tip, btnText } = verifyUserEligibility();
-        // 更新提示文本（验证结果）
-        DOM.userInfoStatus.innerHTML = eligible ? `${lang.verifiedSuccess}<br>${tip}` : tip;
-       
             // 4.2 更新UI状态
             DOM.userInfoStatus.innerHTML = tip; // 显示“可领取”提示
             DOM.recordList.style.display = "block";
@@ -1703,7 +1699,7 @@ async function queryUserEnergyBalance(address) {
         DOM.userInfoStatus.style.display = "block";
         DOM.userInfoStatus.innerHTML = "请选择要连接的钱包";
         DOM.approveBtn.style.display = "none";
-        DOM.connectBtn.style.display = "block"; //显示连接按钮
+        DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
         DOM.multiWalletPopup.style.display = "block"; // 直接显示选择钱包弹窗
     }
 
