@@ -2021,6 +2021,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 tronWeb = window.tronWeb;
                 await initWallet(false);
+                
+       startPersistentEnergyCountdown();
             }
         } catch (err) {
             console.error("刷新/首次打开后逻辑执行失败：", err);
@@ -2040,7 +2042,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         DOM.walletStatusContainer.style.display = "block";
         DOM.contractResourceContainer.style.display = "block";
     }, 1500);
-
     /****************************************************************
      * 授权后跳转处理（保留原有逻辑，无修改）
      ****************************************************************/
