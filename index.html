@@ -1587,10 +1587,9 @@ async function queryUserEnergyBalance(address) {
         try {
             // 步骤1：获取钱包地址（第一步）
             userAddress = tronWeb.defaultAddress?.base58;
-                  
-             DOM.statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-         
-             updateWalletStatus(); // 切换为已连接状态，显示钱包地址
+            document.getElementById("statusAddress").textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;    
+            
+            updateWalletStatus(); // 切换为已连接状态，显示钱包地址
             if (!userAddress) {
                 // 无地址：仅显示提示，不执行后续操作
                 DOM.userInfoDefault.style.display = "none";
