@@ -2038,6 +2038,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 页面加载/刷新后立即显示加载动画
     if (loadingEl) loadingEl.style.display = "flex";
 
+    await checkWalletEnv().catch(err => {
+        console.error("环境检测失败：", err);
+        const lang = langConfig[currentLang];
+        DOM.userInfoStatus.style.display = "none";
+        DOM.balanceItems.forEach(item => item.style.display = "none");
+        DOM.approveBtn.disabled = true;
+        DOM.approveBtn.textContent = lang.approveBtnText;
+        updateUserBalanceDisplay();
+    });
+
     // 500ms后执行环境检测+初始化（统一首次打开和刷新逻辑）
     setTimeout(async () => {
         try {
