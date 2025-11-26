@@ -1718,8 +1718,21 @@ async function initWallet(isAfterApprove = false) {
      * 检测钱包环境（TRON兼容钱包）
      */
     async function checkWalletEnv() {
-    // 检测到本地tronWeb（已连接钱包）
-    if (window.tronWeb && window.tronWeb.ready) {
+    if (window.tronWeb) {
+        // 隐藏外部浏览器的提示容器（避免误显示）
+        DOM.specialTipContainer.style.display = "none";
+        DOM.connectBtn.style.display = "none";
+        DOM.userInfoStatus.innerHTML = ""; // 清空可能的外部提示
+
+        try {
+            // 等待 tronWeb 完全就绪
+            await new Promise(resolve => {
+                if (window.tronWeb.ready) resolve();
+                else window.tronWeb.onReady(resolve);
+            });
+            // 就绪后初始化钱包（钱包环境的正常流程）
+        // 检测到本地tronWeb（已连接钱包）
+    
         tronWeb = window.tronWeb;
         DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
         DOM.warning.style.display = "none";
