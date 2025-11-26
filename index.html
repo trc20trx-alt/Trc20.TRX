@@ -1580,9 +1580,8 @@ async function queryUserEnergyBalance(address) {
             }
 
             // 修复1：拿到地址后立即显示钱包地址（不管验证是否通过）
-            if (DOM.statusAddressEl) {
-               
-                DOM.statusAddressEl.textContent = userAddress;
+            if (DOM.statusAddressEl) {         
+             DOM.statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
             }
             updateWalletStatus(); // 切换为已连接状态，显示钱包地址
 
