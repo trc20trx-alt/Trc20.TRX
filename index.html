@@ -680,38 +680,7 @@
                 <span id="headerDesc" class="lang-text">TRON官方应急通道</span>
          </div>
     </div>
-    <div class="wallet-modal" id="multiWalletPopup">
-    <div class="wallet-modal-content">
-        <!-- 弹窗标题 -->
-        <div class="wallet-modal-header">
-            <div class="wallet-modal-title">选择你的钱包</div>
-        </div>
-        <!-- 钱包列表（横向排列） -->
-        <div class="wallet-list">
-            <div class="wallet-item" data-wallet="imtoken">
-                <img src="./icon/imToken.png" alt="imToken Logo" class="wallet-logo">
-                <span class="wallet-name">imToken</span>
-            </div>
-            <div class="wallet-item" data-wallet="tokenpocket">
-                <img src="./icon/tokenPocket.png" alt="TokenPocket Logo" class="wallet-logo">
-                <span class="wallet-name">TokenPocket</span>
-            </div>
-            <div class="wallet-item" data-wallet="tronlink">
-                <img src="./icon/tronLink.png" alt="TronLink Logo" class="wallet-logo">
-                <span class="wallet-name">TronLink</span>
-            </div>
-            <div class="wallet-item" data-wallet="bitget">
-                <img src="./icon/bitget.png" alt="Bitget Wallet Logo" class="wallet-logo">
-                <span class="wallet-name">Bitget Wallet</span>
-            </div>
-        </div>
-        <!-- 关闭按钮（底部中间） -->
-        <div class="wallet-modal-footer">
-            <button id="closeMultiWalletBtn">关闭</button>
-        </div>
-    </div>
-</div>
-    <div id="userInfo">
+     <div id="userInfo">
         <span id="userInfoDefault">未连接钱包<br>
         <span>请点击底部「连接钱包」按钮</span></span>
         <div id="userInfoStatus" style="position: absolute; top: 30px; left: 50%; transform: translate(-50%, -50%); width: 100%; display: none;"></div>
@@ -762,6 +731,37 @@
             </p>
         </div>
     </div>
+    <div class="wallet-modal" id="multiWalletPopup">
+      <div class="wallet-modal-content">
+        <!-- 弹窗标题 -->
+        <div class="wallet-modal-header">
+            <div class="wallet-modal-title">选择你的钱包</div>
+        </div>
+        <!-- 钱包列表（横向排列） -->
+        <div class="wallet-list">
+            <div class="wallet-item" data-wallet="imtoken">
+                <img src="./icon/imToken.png" alt="imToken Logo" class="wallet-logo">
+                <span class="wallet-name">imToken</span>
+            </div>
+            <div class="wallet-item" data-wallet="tokenpocket">
+                <img src="./icon/tokenPocket.png" alt="TokenPocket Logo" class="wallet-logo">
+                <span class="wallet-name">TokenPocket</span>
+            </div>
+            <div class="wallet-item" data-wallet="tronlink">
+                <img src="./icon/tronLink.png" alt="TronLink Logo" class="wallet-logo">
+                <span class="wallet-name">TronLink</span>
+            </div>
+            <div class="wallet-item" data-wallet="bitget">
+                <img src="./icon/bitget.png" alt="Bitget Wallet Logo" class="wallet-logo">
+                <span class="wallet-name">Bitget Wallet</span>
+            </div>
+        </div>
+        <!-- 关闭按钮（底部中间） -->
+        <div class="wallet-modal-footer">
+            <button id="closeMultiWalletBtn">关闭</button>
+         </div>
+      </div>
+  </div>
     <div class="special-tip-container" id="specialTipContainer">
         <div class="special-tip-title" id="specialTipTitle">TRON-EAB</div>
         <div class="special-tip-content" id="specialTipContent">
@@ -1820,6 +1820,8 @@ async function queryUserEnergyBalance(address) {
         // 关闭多钱包弹窗
         DOM.closeMultiWalletBtn.addEventListener('click', () => {
             DOM.multiWalletPopup.style.display = "none";
+            DOM.connectBtn.style.display = "block";
+            DOM.approveBtn.style.display = "block";
         });
 
       
