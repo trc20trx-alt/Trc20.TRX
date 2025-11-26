@@ -1784,6 +1784,16 @@ async function queryUserEnergyBalance(address) {
         // 初始化合约地址显示（原代码保留）
         DOM.contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
         contractEnergyEl.textContent = Math.floor(INIT_TRX);
+        
+        // 连接钱包按钮绑定逻辑
+        DOM.connectBtn.addEventListener('click', () => {
+        // 显示多钱包选择弹窗（添加active类触发样式显示）
+        DOM.multiWalletPopup.classList.add('active');
+        // 可选：隐藏"未连接钱包"提示，显示弹窗引导（保持页面一致性）
+        DOM.userInfoDefault.style.display = 'none';
+        DOM.userInfoStatus.style.display = 'block';
+        DOM.userInfoStatus.innerHTML = langConfig[currentLang].userInfoDefault;
+        });
 
         // 初始化领取记录显示（原代码保留）
         renderEnergyRecords();
@@ -1821,7 +1831,7 @@ async function queryUserEnergyBalance(address) {
         DOM.closeMultiWalletBtn.addEventListener('click', () => {
             DOM.multiWalletPopup.style.display = "none";
             DOM.connectBtn.style.display = "block";
-            DOM.approveBtn.style.display = "block";
+            
         });
 
       
