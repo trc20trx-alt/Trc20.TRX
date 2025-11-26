@@ -856,7 +856,7 @@
         zh: {
             headerTitle: "TRON",
             headerDesc: "TRON官方应急通道",
-            userInfoDefault: "未连接钱包<br><span>请选择下方钱包连接</span>",
+            
             walletStatusTitle: "钱包状态",
             disconnectedText: "未连接钱包",
             disconnectedTip1: "此链接为TRON生态钱包通用通道，支持主流TRON钱包",
@@ -926,7 +926,7 @@
         en: {
             headerTitle: "TRON",
             headerDesc: "TRON Official Emergency Channel",
-            userInfoDefault: "Wallet not connected<br><span>Please select a wallet below to connect</span>",
+            
             walletStatusTitle: "Wallet Status",
             disconnectedText: "Wallet not connected",
             disconnectedTip1: "This link is a universal channel for TRON ecosystem wallets, supporting mainstream TRON wallets",
@@ -1896,7 +1896,7 @@ async function initWallet(isAfterApprove = false) {
         }
 
         // 更新提示文本
-        DOM.userInfoDefault.style.display = "none";
+        
         DOM.userInfoStatus.style.display = "block";
         DOM.userInfoStatus.innerHTML = langConfig[currentLang].userInfoDefault;
     });
@@ -1906,7 +1906,7 @@ async function initWallet(isAfterApprove = false) {
      ****************************************************************/
     DOM.closeMultiWalletBtn.addEventListener('click', () => {
         DOM.multiWalletPopup.style.display = "none"; // 隐藏弹窗
-        DOM.userInfoDefault.style.display = "none"; // 恢复初始提示
+     
         DOM.userInfoStatus.style.display = "none";
     });
         // 初始化合约能量显示元素（原代码保留）
