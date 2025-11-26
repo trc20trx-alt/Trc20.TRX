@@ -1581,7 +1581,7 @@ async function queryUserEnergyBalance(address) {
 
             // 修复1：拿到地址后立即显示钱包地址（不管验证是否通过）
             if (DOM.statusAddressEl) {
-                DOM.statusAddressEl.style.display = "inline";
+               
                 DOM.statusAddressEl.textContent = userAddress;
             }
             updateWalletStatus(); // 切换为已连接状态，显示钱包地址
