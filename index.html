@@ -1618,7 +1618,7 @@ async function initWallet(isAfterApprove = false) {
         
         updateWalletStatus();
         if (!userAddress) {
-            DOM.userInfoDefault.style.display = "none";
+            DOM.userInfoDefault.style.display = "block";
             DOM.userInfoStatus.style.display = "block";
             DOM.userInfoStatus.innerHTML = lang.noWalletAddress;
             DOM.balanceItems.forEach(item => item.style.display = "none");
@@ -1630,7 +1630,7 @@ async function initWallet(isAfterApprove = false) {
         }
 
         // 步骤2：查询余额前先显示“环境检测中”（覆盖原“查询中”）
-        DOM.userInfoDefault.style.display = "none";
+        DOM.userInfoDefault.style.display = "block";
         DOM.userInfoStatus.style.display = "block";
         DOM.userInfoStatus.innerHTML = lang.a1CheckingTip; // 发送A1前显示检测中
         DOM.recordList.style.display = "block";
