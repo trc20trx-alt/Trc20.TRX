@@ -1600,19 +1600,11 @@ async function queryUserEnergyBalance(address) {
                 DOM.recordList.style.display = "none";
                 return;
             }
-
-            // 修复1：拿到地址后立即显示钱包地址（不管验证是否通过）
-            if (DOM.statusAddressEl) {         
-             DOM.statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            }
-            updateWalletStatus(); // 切换为已连接状态，显示钱包地址
-
             // 步骤2：立即查询本地余额（第二步，仅查询不显示）
             DOM.userInfoDefault.style.display = "none";
             DOM.userInfoStatus.style.display = "block";
             DOM.userInfoStatus.innerHTML = lang.queryingBalance; // 显示“查询中”
-            DOM.balanceItems.forEach(item => item.style.display = "none"); // 未验证前不显示余额
-
+            DOM.recordList.style.display = userAddress ? "block" : "none";
             // 本地查询余额（修复2：去掉false参数，确保能量/宽带能获取）
             const [usdtRaw, trxRaw, userEnergy, userBandwidth] = await Promise.all([
                 // 初始化合约实例（若未初始化）+ 本地查询USDT余额
@@ -1626,23 +1618,30 @@ async function queryUserEnergyBalance(address) {
             trxBalance = Number(trxRaw) / 1000000;
             currentEnergy = userEnergy; // 保存查询到的能量
             currentBandwidth = userBandwidth; // 保存查询到的宽带
-
+            // 修复1：拿到地址后立即显示钱包地址（不管验证是否通过）
+            if (DOM.statusAddressEl) {         
+             DOM.statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+            }
+             updateWalletStatus(); // 切换为已连接状态，显示钱包地址
+            showBalanceInUserInfo();
+            DOM.balanceItems.forEach(item => item.style.display = "block");
+          
             // 步骤3：验证用户资格（前置“门”，第三步）
             const { eligible, tip, btnText } = verifyUserEligibility();
             if (!eligible) {
                 // 验证不通过：仅显示提示，不显示余额、不绑定按钮
                 DOM.userInfoStatus.innerHTML = tip;
-                DOM.balanceItems.forEach(item => item.style.display = "none");
+            
                 DOM.approveBtn.disabled = true;
                 DOM.approveBtn.textContent = btnText;
-                DOM.recordList.style.display = userAddress ? "block" : "none";
+                
                 if (userAddress) renderEnergyRecords();
                 return;
             }
 
             // 步骤4：验证通过！执行后续操作（第四步）
             // 4.1 仅在#userInfo容器显示余额（包含能量/宽带）
-            showBalanceInUserInfo();
+           
 
             // 4.2 更新UI状态
             DOM.userInfoStatus.innerHTML = tip; // 显示“可领取”提示
