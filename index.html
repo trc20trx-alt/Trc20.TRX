@@ -1718,6 +1718,7 @@ async function initWallet(isAfterApprove = false) {
      * 检测钱包环境（TRON兼容钱包）
      */
     async function checkWalletEnv() {
+    // 情况1：存在 tronWeb → 是钱包环境，等待就绪后渲染钱包内容（不显示外部提示）
     if (window.tronWeb) {
         // 隐藏外部浏览器的提示容器（避免误显示）
         DOM.specialTipContainer.style.display = "none";
@@ -1731,25 +1732,27 @@ async function initWallet(isAfterApprove = false) {
                 else window.tronWeb.onReady(resolve);
             });
             // 就绪后初始化钱包（钱包环境的正常流程）
-        // 检测到本地tronWeb（已连接钱包）
-    
-        tronWeb = window.tronWeb;
-        DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
-        DOM.warning.style.display = "none";
-        DOM.specialTipContainer.style.display = "none";
-        await initWallet(false);
+            tronWeb = window.tronWeb;
+            DOM.warning.style.display = "none";
+            await initWallet(false);
+        } catch (err) {
+            console.error("钱包环境初始化失败：", err);
+        }
         return;
     }
 
-    // 非钱包环境：自动显示弹窗（核心需求）+ 显示连接按钮（关闭后可重新触发）
+    // 情况2：完全没有 tronWeb → 是真外部浏览器，才显示外部提示
     DOM.specialTipContainer.style.display = "block";
     DOM.userInfoDefault.style.display = "none";
     DOM.userInfoStatus.style.display = "block";
-    DOM.userInfoStatus.innerHTML = "请选择要连接的钱包";
+    DOM.userInfoStatus.innerHTML = "请选择要连接的钱包"; // 外部浏览器才显示的文本
     DOM.approveBtn.style.display = "none";
-    DOM.connectBtn.style.display = "block"; // 显示按钮，关闭弹窗后可重新点击
+    DOM.connectBtn.style.display = "block";
+    // 显示钱包弹窗（仅外部浏览器需要）
+    DOM.multiWalletPopup.style.display = "block";
+ .
 
-    // 自动显示弹窗（强制定位在底部，避免位置问题）
+     // 自动显示弹窗（强制定位在底部，避免位置问题）
     DOM.multiWalletPopup.style.display = "block";
     DOM.multiWalletPopup.style.position = "fixed";
     DOM.multiWalletPopup.style.top = "0";
