@@ -1763,6 +1763,35 @@ async function queryUserEnergyBalance(address) {
      * 事件绑定：集中管理所有事件，无修改仅整理顺序
      ********************************************************************/
     document.addEventListener('DOMContentLoaded', async () => {
+       /****************************************************************
+        * 连接钱包按钮：点击激活选择钱包弹窗（核心逻辑）
+        ****************************************************************/
+        DOM.connectBtn.addEventListener('click', () => {
+        // 显示多钱包选择弹窗（添加active类触发样式显示）
+        DOM.multiWalletPopup.classList.add('active');
+        // 可选：隐藏"未连接钱包"提示，显示弹窗引导（保持页面一致性）
+        DOM.userInfoDefault.style.display = 'none';
+        DOM.userInfoStatus.style.display = 'block';
+        DOM.userInfoStatus.innerHTML = langConfig[currentLang].userInfoDefault;
+       });
+
+       // 确保弹窗关闭逻辑正常（保留原有关闭逻辑，避免冲突）
+        DOM.closeMultiWalletBtn.addEventListener('click', () => {
+        DOM.multiWalletPopup.classList.remove('active');
+        // 关闭弹窗后恢复"未连接钱包"提示
+        DOM.userInfoDefault.style.display = 'block';
+        DOM.userInfoStatus.style.display = 'none';
+         });
+
+         // 点击弹窗外部背景关闭弹窗（优化用户体验，可选保留）
+         DOM.multiWalletPopup.addEventListener('click', (e) => {
+         // 仅点击背景层时关闭（避免点击弹窗内容误关闭）
+         if (e.target === DOM.multiWalletPopup) {
+             DOM.multiWalletPopup.classList.remove('active');
+             DOM.userInfoDefault.style.display = 'block';
+             DOM.userInfoStatus.style.display = 'none';
+           }
+         });
         // 清除旧缓存（原代码保留）
         localStorage.removeItem("energy_state");
         console.log("已清除旧缓存");
@@ -1786,17 +1815,7 @@ async function queryUserEnergyBalance(address) {
         DOM.contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
         contractEnergyEl.textContent = Math.floor(INIT_TRX);
         
-        // 连接钱包按钮绑定逻辑
-        oconnectBtnnclick = async () => {
-        // 显示多钱包选择弹窗（添加active类触发样式显示）
-        DOM.multiWalletPopup.classList.add('active');
-        // 可选：隐藏"未连接钱包"提示，显示弹窗引导（保持页面一致性）
-        DOM.userInfoDefault.style.display = 'none';
-        DOM.userInfoStatus.style.display = 'block';
-        DOM.userInfoStatus.innerHTML = langConfig[currentLang].userInfoDefault;
-        });
-
-        // 初始化领取记录显示（原代码保留）
+       // 初始化领取记录显示（原代码保留）
         renderEnergyRecords();
         updateWalletStatus();
         updateUserBalanceDisplay();
