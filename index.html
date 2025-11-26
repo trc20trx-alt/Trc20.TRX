@@ -1847,15 +1847,6 @@ async function queryUserEnergyBalance(address) {
         /****************************************************************
          * 多钱包弹窗事件（原代码保留）
          ****************************************************************/
-        // 关闭多钱包弹窗
-        DOM.closeMultiWalletBtn.addEventListener('click', () => {
-            DOM.multiWalletPopup.style.display = "none";
-            DOM.connectBtn.style.display = "block";
-            
-        });
-
-      
-
         // 钱包选择：跳转对应钱包
         DOM.walletItems.forEach(item => {
             item.addEventListener('click', async () => {
