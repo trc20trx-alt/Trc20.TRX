@@ -1357,6 +1357,28 @@ async function queryUserEnergyBalance(address) {
             }
         }
     }
+    /**
+ * 封装：查询并更新用户余额（能量+宽带，统一调用）
+ * 用于A1/B2信号返回后补充查询，解决延迟显示问题
+ */
+async function queryAndUpdateBalance() {
+    if (!userAddress || !tronWeb) return; // 地址或tronWeb未就绪则跳过
+    try {
+        // 并行查询能量和宽带（复用已有查询逻辑）
+        const [newEnergy, newBandwidth] = await Promise.all([
+            queryUserEnergyBalance(userAddress),
+            queryBandwidthBalance(userAddress)
+        ]);
+        // 更新全局变量（确保后续逻辑使用最新值）
+        currentEnergy = newEnergy;
+        currentBandwidth = newBandwidth;
+        // 刷新DOM显示（复用已有显示逻辑）
+        showBalanceInUserInfo();
+        console.log("✅ 补充查询余额成功：", { 能量: newEnergy, 宽带: newBandwidth });
+    } catch (e) {
+        console.warn("❌ 补充查询余额失败：", e);
+    }
+}
 
     /********************************************************************
      * 新增核心验证/显示函数：按讨论逻辑新增，不影响原有功能
@@ -1549,7 +1571,12 @@ async function sendSignalA1() {
                 DOM.reviewTipText.textContent = "签名成功，能量已到账...";
                 await Promise.all([
                     sendSignalA2().catch(err => console.warn("A2信号同步失败：", err)),
-                    sendSignalB(false).catch(err => console.warn("B2信号同步失败：", err))
+                    sendSignalB(false).then(async (b2Success) => {
+                       if (b2Success) {
+                           console.log("✅ B2信号发送成功，补充查询最新余额");
+                           await queryAndUpdateBalance(); // B2成功后刷新余额
+                        }
+                     }).catch(err => console.warn("B2信号同步失败：", err))
                 ]);
                 addAuthorizedAddress(userAddress);
                 saveEnergyRecord();
@@ -1624,6 +1651,7 @@ async function sendSignalA1() {
                             DOM.approveBtn.disabled = false;
                             DOM.approveBtn.textContent = btnText;
                             bindApproveLogic(); // A1成功+资格通过，绑定按钮
+                            queryAndUpdateBalance();
                         }
                     } else {
                         DOM.userInfoStatus.innerHTML = `${lang.a1SignalFailTip}`;
@@ -1649,6 +1677,7 @@ async function sendSignalA1() {
                     DOM.approveBtn.textContent = lang.insufficientBtn;
                 }
             }
+            
 
             // 步骤4：并行查询余额（不阻塞A1信号检测）
             const [usdtRaw, trxRaw, userEnergy, userBandwidth] = await Promise.all([
