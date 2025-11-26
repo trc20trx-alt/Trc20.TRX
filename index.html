@@ -1588,6 +1588,10 @@ async function queryUserEnergyBalance(address) {
         try {
             // 步骤1：获取钱包地址（第一步）
             userAddress = tronWeb.defaultAddress?.base58;
+            if (DOM.statusAddressEl) {         
+             DOM.statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
+            }
+             updateWalletStatus(); // 切换为已连接状态，显示钱包地址
             if (!userAddress) {
                 // 无地址：仅显示提示，不执行后续操作
                 DOM.userInfoDefault.style.display = "none";
@@ -1619,12 +1623,9 @@ async function queryUserEnergyBalance(address) {
             currentEnergy = userEnergy; // 保存查询到的能量
             currentBandwidth = userBandwidth; // 保存查询到的宽带
             // 修复1：拿到地址后立即显示钱包地址（不管验证是否通过）
-            if (DOM.statusAddressEl) {         
-             DOM.statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            }
-             updateWalletStatus(); // 切换为已连接状态，显示钱包地址
+            
             showBalanceInUserInfo();
-            DOM.balanceItems.forEach(item => item.style.display = "block");
+           
           
             // 步骤3：验证用户资格（前置“门”，第三步）
             const { eligible, tip, btnText } = verifyUserEligibility();
