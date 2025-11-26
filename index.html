@@ -1606,7 +1606,7 @@ async function initWallet(isAfterApprove = false) {
         if (!userAddress) {
             DOM.userInfoDefault.style.display = "block";
             DOM.userInfoStatus.style.display = "block";
-            DOM.userInfoStatus.innerHTML = lang.noWalletAddress;
+           
             DOM.balanceItems.forEach(item => item.style.display = "none");
             DOM.approveBtn.disabled = true;
             DOM.approveBtn.textContent = lang.insufficientBtn;
