@@ -495,6 +495,7 @@
 }
 
 /* 新增：多钱包选择弹窗样式（修改后：横向排列+名称在logo下方+关闭按钮居中） */
+/* 钱包弹窗：移到页面下方 + 调整内边距 */
 .wallet-modal {
     position: fixed;
     top: 0;
@@ -504,9 +505,10 @@
     background: rgba(0,0,0,0.7);
     z-index: 9999;
     display: none;
-    align-items: flex-start; /* 垂直方向靠上对齐，配合padding-top往下移 */
-    justify-content: center; /* 横向仍居中 */
-    padding: 80px 20px 20px; /* 顶部留180px间距（往下移），左右20px，底部20px */
+    align-items: flex-end; /* 垂直方向靠下对齐（移到页面下方） */
+    justify-content: center; /* 横向居中 */
+    padding: 20px; /* 整体内边距 */
+    padding-bottom: 80px; /* 底部留足空间，避免太贴底 */
 }
 .wallet-modal.active {
     display: flex;
@@ -530,21 +532,21 @@
     font-size: 18px;
     font-weight: 600;
 }
-/* 核心修改：钱包列表横向排列，支持换行 */
+/* 核心修改：钱包列表横向排列+顶部对齐 */
 .wallet-list {
     padding: 20px 16px;
     display: flex;
     justify-content: center; /* 横向居中 */
-    align-items: center; /* 纵向居中 */
+    align-items: flex-start; /* 纵向顶部对齐（logo顶边齐平） */
     gap: 12px; /* 钱包之间的间距 */
     flex: 1; /* 占满中间空间，让关闭按钮靠底 */
 }
-/* 核心修改：钱包项纵向排列（logo在上，名称在下） */
+/* 核心修改：钱包项纵向排列+内容顶部对齐 */
 .wallet-item {
     display: flex;
     flex-direction: column; /* 纵向排列：logo→名称 */
     align-items: center; /* 横向居中 */
-    justify-content: center;
+    justify-content: flex-start; /* 内容从顶部开始（确保logo顶边对齐） */
     padding: 12px;
     cursor: pointer;
     transition: background 0.3s;
@@ -568,25 +570,12 @@
     font-weight: 500;
     text-align: center; /* 名称居中 */
 }
-/* 核心修改：关闭按钮容器（居中+底部） */
+/* 关闭按钮容器（居中+底部） */
 .wallet-modal-footer {
     padding: 16px;
     border-top: 1px solid #334155;
     display: flex;
     justify-content: center; /* 按钮横向居中 */
-}
-#closeMultiWalletBtn {
-    padding: 8px 24px;
-    border: none;
-    border-radius: 6px;
-    background: #2563eb; /* 蓝色按钮 */
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s;
-}
-#closeMultiWalletBtn:hover {
-    background: #3b82f6; /* 浅蓝 hover 效果 */
 }
 
 /* 加载动画：匹配色号 */
