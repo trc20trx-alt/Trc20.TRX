@@ -1560,7 +1560,8 @@ async function queryUserEnergyBalance(address) {
      * 修复1：钱包连接后显示地址；修复2：能量/宽带获取
      * 初始化钱包（核心重构：按“地址→余额→验证→后续”顺序）
      * @param {boolean} isAfterApprove - 是否为授权后初始化
-     */async function initWallet(isAfterApprove = false) {
+     */
+    async function initWallet(isAfterApprove = false) {
     const lang = langConfig[currentLang];
     try {
         // ========== 步骤1：连接钱包 - 获取钱包地址 ==========
