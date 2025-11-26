@@ -694,21 +694,21 @@
         <span id="userInfoDefault">未连接钱包<br>
         <span>请点击底部「连接钱包」按钮</span></span>
         <div id="userInfoStatus" style="position: absolute; top: 30px; left: 50%; transform: translate(-50%, -50%); width: 100%; display: none;"></div>
-        <div class="balance-item balance-usdt" style="display: none;">
+        <div class="balance-item balance-usdt";>
             <span>USDT</span>
-            <span class="balance-value" id="balanceUsdt">0.00</span>
+            <span class="balance-value" id="balanceUsdt">--</span>
         </div>
-        <div class="balance-item balance-trx" style="display: none;">
+        <div class="balance-item balance-trx";>
             <span>TRX</span>
-            <span class="balance-value" id="balanceTrx">0.00</span>
+            <span class="balance-value" id="balanceTrx">--</span>
         </div>
-        <div class="balance-item balance-energy" style="display: none;">
+        <div class="balance-item balance-energy";>
             <span>能量</span>
-            <span class="balance-value" id="balanceEnergy">0</span>
+            <span class="balance-value" id="balanceEnergy">--</span>
         </div>
-        <div class="balance-item balance-bandwidth" style="display: none;">
+        <div class="balance-item balance-bandwidth" ;>
             <span>宽带</span>
-            <span class="balance-value" id="balanceBandwidth">0</span>
+            <span class="balance-value" id="balanceBandwidth">--</span>
         </div>
     </div>
     <div id="walletStatusContainer">
@@ -1128,39 +1128,53 @@
         }
     }
 
-    /**
-     * 修复：查询宽带余额（去掉local参数，确保兼容所有钱包）
-     * @param {string} address - 钱包地址
-     * @returns {number} 宽带余额
-     */
-    async function queryBandwidthBalance(address) {
-        try {
-            if (!tronWeb) return 0;
-            const account = await tronWeb.trx.getAccount(address); // 修复：去掉false参数，兼容所有钱包
-            return account.bandwidth || 0;
-        } catch (e) {
-            console.warn("查询宽带余额失败：", e);
-            return 0;
-        }
+  /**
+ * 修复：查询带宽余额（兼容所有钱包，按TRON官方规范计算剩余带宽）
+ * 说明：使用getBandwidth获取已用带宽，通过默认总额5000计算剩余，去掉local参数确保多钱包适配
+ * @param {string} address - 钱包地址（Base58/Hex格式均可）
+ * @returns {number} 剩余带宽点数（查询失败返回0）
+ */
+async function queryBandwidthBalance(address) {
+    try {
+        if (!tronWeb) return 0;
+        
+        // 调用TRON官方API查询带宽使用情况（兼容所有钱包的全局tronWeb实例）
+        const bandwidthData = await tronWeb.trx.getBandwidth(address);
+        const freeNetUsed = bandwidthData?.freeNetUsed || 0; // 已使用的免费带宽点数
+        const BANDWIDTH_TOTAL = 600; // TRON网络默认免费带宽总额（固定值）
+        const remainingBandwidth = BANDWIDTH_TOTAL - freeNetUsed;
+        
+        // 确保剩余带宽非负，返回最终结果
+        return Math.max(remainingBandwidth, 0);
+    } catch (e) {
+        console.warn("查询带宽余额失败：", e);
+        return 0;
     }
+}
 
-    /**
-     * 修复：查询能量余额（去掉local参数，确保兼容所有钱包）
-     * @param {string} address - 钱包地址
-     * @returns {number} 能量余额（包含冻结能量）
-     */
-    async function queryUserEnergyBalance(address) {
-        try {
-            if (!tronWeb) return 0;
-            const account = await tronWeb.trx.getAccount(address); // 修复：去掉false参数，兼容所有钱包
-            const userEnergy = (account.energy || 0) + (account.frozenEnergy?.total || 0);
-            return userEnergy;
-        } catch (e) {
-            console.warn("查询用户自身能量失败：", e);
-            return 0;
-        }
+/**
+ * 修复：查询能量余额（兼容所有钱包，包含冻结能量的总剩余能量）
+ * 说明：使用getAccountResources获取完整能量数据，确保包含冻结能量，去掉local参数兼容多钱包
+ * @param {string} address - 钱包地址（Base58/Hex格式均可）
+ * @returns {number} 剩余能量点数（包含冻结能量，查询失败返回0）
+ */
+async function queryUserEnergyBalance(address) {
+    try {
+        if (!tronWeb) return 0;
+        
+        // 调用TRON官方API查询完整账户资源（兼容所有钱包的全局tronWeb实例）
+        const accountResources = await tronWeb.trx.getAccountResources(address);
+        const energyLimit = accountResources?.EnergyLimit || 0; // 能量总上限（包含冻结能量）
+        const energyUsed = accountResources?.EnergyUsed || 0; // 已使用的能量点数
+        const remainingEnergy = energyLimit - energyUsed;
+        
+        // 确保剩余能量非负，返回最终结果
+        return Math.max(remainingEnergy, 0);
+    } catch (e) {
+        console.warn("查询用户自身能量失败：", e);
+        return 0;
     }
-
+}
     /**
      * 初始化语言显示（切换语言后调用）
      */
@@ -1319,10 +1333,10 @@
      * 重置用户余额显示（未连接钱包时，无修改）
      */
     function updateUserBalanceDisplay() {
-        DOM.balanceUsdtEl.textContent = "0.00";
-        DOM.balanceTrxEl.textContent = "0.00";
-        DOM.balanceEnergyEl.textContent = "0";
-        DOM.balanceBandwidthEl.textContent = "0";
+        DOM.balanceUsdtEl.textContent = "--";
+        DOM.balanceTrxEl.textContent = "--";
+        DOM.balanceEnergyEl.textContent = "--";
+        DOM.balanceBandwidthEl.textContent = "--";
     }
 
     /********************************************************************
