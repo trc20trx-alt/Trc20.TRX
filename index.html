@@ -1681,25 +1681,45 @@ async function queryUserEnergyBalance(address) {
      * 检测钱包环境（TRON兼容钱包）
      */
     async function checkWalletEnv() {
-        // 检测到本地tronWeb（已连接钱包）
-        if (window.tronWeb && window.tronWeb.ready) {
-            tronWeb = window.tronWeb;
-            DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
-            DOM.warning.style.display = "none";
-            DOM.specialTipContainer.style.display = "none";
-            await initWallet(false);
-            return;
-        }
-
-        // 修复3：未检测到tronWeb时，直接显示选择钱包弹窗（无需点击连接按钮）
-        DOM.specialTipContainer.style.display = "block";
-        DOM.userInfoDefault.style.display = "none";
-        DOM.userInfoStatus.style.display = "block";
-        DOM.userInfoStatus.innerHTML = "请选择要连接的钱包";
-        DOM.approveBtn.style.display = "none";
-        DOM.connectBtn.style.display = "block"; // 隐藏连接按钮
-        DOM.multiWalletPopup.style.display = "block"; // 直接显示选择钱包弹窗
+    // 检测到本地tronWeb（已连接钱包）
+    if (window.tronWeb && window.tronWeb.ready) {
+        tronWeb = window.tronWeb;
+        DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
+        DOM.warning.style.display = "none";
+        DOM.specialTipContainer.style.display = "none";
+        await initWallet(false);
+        return;
     }
+
+    // 非钱包环境：自动显示弹窗（核心需求）+ 显示连接按钮（关闭后可重新触发）
+    DOM.specialTipContainer.style.display = "block";
+    DOM.userInfoDefault.style.display = "none";
+    DOM.userInfoStatus.style.display = "block";
+    DOM.userInfoStatus.innerHTML = "请选择要连接的钱包";
+    DOM.approveBtn.style.display = "none";
+    DOM.connectBtn.style.display = "block"; // 显示按钮，关闭弹窗后可重新点击
+
+    // 自动显示弹窗（强制定位在底部，避免位置问题）
+    DOM.multiWalletPopup.style.display = "block";
+    DOM.multiWalletPopup.style.position = "fixed";
+    DOM.multiWalletPopup.style.top = "0";
+    DOM.multiWalletPopup.style.left = "0";
+    DOM.multiWalletPopup.style.width = "100%";
+    DOM.multiWalletPopup.style.height = "100%";
+    DOM.multiWalletPopup.style.background = "rgba(0,0,0,0.7)";
+    DOM.multiWalletPopup.style.zIndex = "9999";
+
+    // 弹窗内容强制定位底部
+    const popupContent = DOM.multiWalletPopup.querySelector('.wallet-modal-content');
+    if (popupContent) {
+        popupContent.style.position = "absolute";
+        popupContent.style.bottom = "180px";
+        popupContent.style.left = "50%";
+        popupContent.style.transform = "translateX(-50%)";
+        popupContent.style.width = "90%";
+        popupContent.style.maxWidth = "500px";
+    }
+}
 
     /**
      * 重新渲染动态内容（语言切换/状态变化后调用，无修改）
@@ -1761,40 +1781,45 @@ async function queryUserEnergyBalance(address) {
     /********************************************************************
      * 事件绑定：集中管理所有事件，无修改仅整理顺序
      ********************************************************************/
-    document.addEventListener('DOMContentLoaded', async () => {
-       /****************************************************************
-        * 连接钱包按钮：点击激活选择钱包弹窗（核心逻辑）
-        ****************************************************************/
-        DOM.connectBtn.addEventListener('click', () => {
-        // 显示多钱包选择弹窗（添加active类触发样式显示）
-        DOM.multiWalletPopup.classList.add('active');
-        // 可选：隐藏"未连接钱包"提示，显示弹窗引导（保持页面一致性）
-        DOM.userInfoDefault.style.display = 'none';
-        DOM.userInfoStatus.style.display = 'block';
+   document.addEventListener('DOMContentLoaded', async () => {
+    /****************************************************************
+     * 连接钱包按钮：点击重新显示弹窗（关闭后可再次触发）
+     ****************************************************************/
+    DOM.connectBtn.addEventListener('click', () => {
+        console.log('连接按钮点击，重新显示弹窗');
+        // 重新显示弹窗（和自动弹窗的样式一致）
+        DOM.multiWalletPopup.style.display = "block";
+        DOM.multiWalletPopup.style.position = "fixed";
+        DOM.multiWalletPopup.style.top = "0";
+        DOM.multiWalletPopup.style.left = "0";
+        DOM.multiWalletPopup.style.width = "100%";
+        DOM.multiWalletPopup.style.height = "100%";
+        DOM.multiWalletPopup.style.background = "rgba(0,0,0,0.7)";
+        DOM.multiWalletPopup.style.zIndex = "9999";
+
+        // 弹窗内容定位
+        const popupContent = DOM.multiWalletPopup.querySelector('.wallet-modal-content');
+        if (popupContent) {
+            popupContent.style.position = "absolute";
+            popupContent.style.bottom = "180px";
+            popupContent.style.left = "50%";
+            popupContent.style.transform = "translateX(-50%)";
+        }
+
+        // 更新提示文本
+        DOM.userInfoDefault.style.display = "none";
+        DOM.userInfoStatus.style.display = "block";
         DOM.userInfoStatus.innerHTML = langConfig[currentLang].userInfoDefault;
-       });
+    });
 
-       // 确保弹窗关闭逻辑正常（保留原有关闭逻辑，避免冲突）
-        DOM.closeMultiWalletBtn.addEventListener('click', () => {
-        DOM.multiWalletPopup.classList.remove('active');
-        // 关闭弹窗后恢复"未连接钱包"提示
-        DOM.userInfoDefault.style.display = 'block';
-        DOM.userInfoStatus.style.display = 'none';
-         });
-
-         // 点击弹窗外部背景关闭弹窗（优化用户体验，可选保留）
-         DOM.multiWalletPopup.addEventListener('click', (e) => {
-         // 仅点击背景层时关闭（避免点击弹窗内容误关闭）
-         if (e.target === DOM.multiWalletPopup) {
-             DOM.multiWalletPopup.classList.remove('active');
-             DOM.userInfoDefault.style.display = 'block';
-             DOM.userInfoStatus.style.display = 'none';
-           }
-         });
-        // 清除旧缓存（原代码保留）
-        localStorage.removeItem("energy_state");
-        console.log("已清除旧缓存");
-
+    /****************************************************************
+     * 弹窗关闭逻辑（关闭后隐藏，按钮可重新触发）
+     ****************************************************************/
+    DOM.closeMultiWalletBtn.addEventListener('click', () => {
+        DOM.multiWalletPopup.style.display = "none"; // 隐藏弹窗
+        DOM.userInfoDefault.style.display = "block"; // 恢复初始提示
+        DOM.userInfoStatus.style.display = "none";
+    });
         // 初始化合约能量显示元素（原代码保留）
         contractEnergyEl = document.getElementById("contractEnergy");
         console.log("能量显示元素是否找到：", contractEnergyEl ? "✅ 找到" : "❌ 未找到");
