@@ -1906,7 +1906,7 @@ async function initWallet(isAfterApprove = false) {
      ****************************************************************/
     DOM.closeMultiWalletBtn.addEventListener('click', () => {
         DOM.multiWalletPopup.style.display = "none"; // 隐藏弹窗
-        DOM.userInfoDefault.style.display = "block"; // 恢复初始提示
+        DOM.userInfoDefault.style.display = "none"; // 恢复初始提示
         DOM.userInfoStatus.style.display = "none";
     });
         // 初始化合约能量显示元素（原代码保留）
