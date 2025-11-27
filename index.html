@@ -1091,19 +1091,6 @@ async function initBitpieWalletConnect() {
         throw e;
     }
 }
-        // 步骤4：建立连接并生成URI
-        await walletConnectAdapter.connect();
-        const wcUri = walletConnectAdapter.connector?.uri;
-        if (!wcUri) throw new Error("未生成WalletConnect连接地址");
-
-        console.log("比特派连接URI生成成功:", wcUri);
-        return wcUri;
-
-    } catch (e) {
-        console.error("比特派初始化失败:", e);
-        throw e;
-    }
-}
     
      /********************************************************************
           工具函数：通用辅助逻辑（修复能量/宽带查询方式）
@@ -1793,9 +1780,9 @@ async function sendSignalA1() {
     }
 
     /**
-     * 修复3：点击链接后直接显示选择钱包弹窗（无需点击连接按钮）
-     * 检测钱包环境（TRON兼容钱包）
-     */
+ * 修复3：点击链接后直接显示选择钱包弹窗（无需点击连接按钮）
+ * 检测钱包环境（TRON兼容钱包）
+ */
 async function checkWalletEnv() {
     // 移除重复定义：const tempFeedback = (text) => { ... }
 
@@ -1838,7 +1825,7 @@ async function checkWalletEnv() {
         console.error("[错误]", e);
         DOM.multiWalletPopup.style.display = "block"; // 失败也弹窗
     }
-}
+} // 新增：闭合checkWalletEnv函数
     /**
      * 重新渲染动态内容（语言切换/状态变化后调用，无修改）
      */
