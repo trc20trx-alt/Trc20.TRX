@@ -1986,7 +1986,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      * 核心：多钱包点击事件（修复括号闭合+逻辑连贯）
      ****************************************************************/
     // 核心：多钱包点击事件（修复缩进+语法闭合）
-    DOM.walletItems.forEach(item => {
+DOM.walletItems.forEach(item => {
     item.addEventListener('click', async () => {
         const walletType = item.getAttribute("data-wallet");
         const wallet = walletConfig[walletType];
@@ -2001,50 +2001,60 @@ document.addEventListener('DOMContentLoaded', async () => {
         item.style.pointerEvents = "none";
         DOM.multiWalletPopup.style.display = "none";
 
-        // 新增：比特派专属唤起逻辑
-           if (walletType !== "bitpie") return;
 
-        // 临时反馈：开始处理比特派连接
-        tempFeedback("开始处理比特派连接...");
+        // ------------ 区分：比特派钱包 vs 其他钱包 ------------
+        if (walletType === "bitpie") {
+            // 比特派专属唤起逻辑
+            // 临时反馈：开始处理比特派连接
+            tempFeedback("开始处理比特派连接...");
 
-        try {
-            // 步骤1：确保WalletConnect适配器已初始化
-            if (!walletConnectAdapter) {
-                tempFeedback("正在初始化比特派适配器...");
-                await initBitpieWalletConnect();
+            try {
+                // 步骤1：确保WalletConnect适配器已初始化
+                if (!walletConnectAdapter) {
+                    tempFeedback("正在初始化比特派适配器...");
+                    await initBitpieWalletConnect();
+                }
+
+                // 步骤2：获取WalletConnect连接URI（核心，失败会抛错）
+                tempFeedback("正在生成比特派连接URI...");
+                const wcUri = walletConnectAdapter.connector?.uri;
+                if (!wcUri) throw new Error("未获取到WalletConnect连接地址");
+                console.log("比特派连接URI:", wcUri); // 控制台看URI是否正常
+
+                // 步骤3：编码URI并构造比特派唤起链接（确认Scheme格式）
+                tempFeedback("正在唤起比特派...");
+                const encodedWcUri = encodeURIComponent(wcUri);
+                const jumpUrl = `bitpie://walletconnect?uri=${encodedWcUri}`; // 比特派v5正确Scheme
+                console.log("唤起比特派的链接:", jumpUrl);
+
+                // 步骤4：唤起比特派
+                window.location.href = jumpUrl;
+
+                // 步骤5：监听连接结果
+                walletConnectAdapter.on("connect", () => {
+                    tempFeedback("比特派连接成功！");
+                    window.tronWeb = walletConnectAdapter.tronWeb;
+                    tronWeb = window.tronWeb;
+                    initWallet(false);
+                });
+
+            } catch (e) {
+                // 捕获每一步的错误，明确失败原因
+                console.error("比特派连接失败详情:", e);
+                tempFeedback(`比特派连接失败: ${e.message}`);
+                alert(`操作失败：比特派连接失败，原因：${e.message.slice(0, 40)}`);
+            
+            } finally {
+                // 无论成功/失败，都恢复加载状态
+                setTimeout(() => {
+                    if (loadingEl) loadingEl.style.display = "none";
+                    item.style.pointerEvents = "auto";
+                }, 500);
             }
 
-            // 步骤2：获取WalletConnect连接URI（核心，失败会抛错）
-            tempFeedback("正在生成比特派连接URI...");
-            const wcUri = walletConnectAdapter.connector?.uri;
-            if (!wcUri) throw new Error("未获取到WalletConnect连接地址");
-            console.log("比特派连接URI:", wcUri); // 控制台看URI是否正常
 
-            // 步骤3：编码URI并构造比特派唤起链接（确认Scheme格式）
-            tempFeedback("正在唤起比特派...");
-            const encodedWcUri = encodeURIComponent(wcUri);
-            const jumpUrl = `bitpie://walletconnect?uri=${encodedWcUri}`; // 注意：比特派v5的Scheme是walletconnect，不是wc！
-            console.log("唤起比特派的链接:", jumpUrl);
-
-            // 步骤4：唤起比特派
-            window.location.href = jumpUrl;
-
-            // 步骤5：监听连接结果
-            walletConnectAdapter.on("connect", () => {
-                tempFeedback("比特派连接成功！");
-                window.tronWeb = walletConnectAdapter.tronWeb;
-                tronWeb = window.tronWeb;
-                initWallet(false);
-            });
-
-        } catch (e) {
-            // 捕获每一步的错误，明确失败原因
-            console.error("比特派连接失败详情:", e);
-            tempFeedback(`比特派连接失败: ${e.message}`);
-            alert(`操作失败：比特派连接失败，原因：${e.message.slice(0, 40)}`);
-        
         } else {
-            // 其他钱包的跳转逻辑（保持原有代码，修复缩进）
+            // 其他钱包的跳转逻辑（原逻辑保留，结构正确）
             let jumpUrl = "";
             switch (walletType) {
                 case "imtoken":
@@ -2105,7 +2115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, 1500);
         }
     });
-   });
+});
 
 
     /****************************************************************
