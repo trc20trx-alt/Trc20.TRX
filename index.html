@@ -1062,48 +1062,56 @@ const tempFeedback = (text) => {
 /********************************************************************
  * 比特派专属：WalletConnect TronProvider初始化（TRON网络+v5.0.206适配）
  ********************************************************************/
+/********************************************************************
+ * 比特派专属：WalletConnect 初始化（整合动态加载适配器+超时处理）
+ ********************************************************************/
 async function initBitpieWalletConnect() {
     try {
-        // 步骤1的动态加载部分修改为：
-    await new Promise((resolve, reject) => {
-         const script = document.createElement('script');
-                script.src = "https://unpkg.com/@tronweb3/tronwallet-adapter-walletconnect@1.0.0/dist/index.umd.min.js";
-         const timeoutId = setTimeout(() => {
-               reject(new Error("适配器脚本加载超时（10秒）"));
-          }, 10000); // 10秒超时
-          script.onload = () => {
-               clearTimeout(timeoutId);
-               resolve();
-           };
-          script.onerror = () => {
-               clearTimeout(timeoutId);
-               reject(new Error("适配器脚本加载失败，请检查网络"));
-             };
-               document.head.appendChild(script);
-           });
+        // 步骤1：动态加载TRON官方WalletConnect适配器（带10秒超时）
+        if (!window.TronWalletAdapterWalletConnect) {
+            tempFeedback("正在加载TRON官方适配器脚本...");
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                // 用稳定CDN地址，避免加载失败
+                script.src = "https://cdn.jsdelivr.net/npm/@tronweb3/tronwallet-adapter-walletconnect@1.0.0/dist/index.umd.min.js";
+                const timeoutId = setTimeout(() => {
+                    reject(new Error("适配器脚本加载超时（10秒）"));
+                }, 10000);
+                script.onload = () => {
+                    clearTimeout(timeoutId);
+                    resolve();
+                };
+                script.onerror = () => {
+                    clearTimeout(timeoutId);
+                    reject(new Error("适配器脚本加载失败，请检查网络"));
+                };
+                document.head.appendChild(script);
+            });
+        }
+
         // 步骤2：确认适配器已加载
         if (!window.TronWalletAdapterWalletConnect) {
             throw new Error("TRON官方WalletConnect适配器加载失败");
         }
 
-        // 步骤3：初始化适配器
+        // 步骤3：初始化适配器（比特派v5兼容配置）
         walletConnectAdapter = new window.TronWalletAdapterWalletConnect({
             projectId: WC_PROJECT_ID,
-            chains: [195], // TRON主网
-            showQrModal: false,
-            rpcMap: { 195: "https://api.trongrid.io" }
+            chains: [195], // TRON主网固定链ID
+            showQrModal: false, // 不显示默认弹窗
+            rpcMap: { 195: "https://api.trongrid.io" } // 官方节点
         });
 
-        // 步骤4：等待connect完成，生成URI
+        // 步骤4：建立连接并生成URI
         await walletConnectAdapter.connect();
         const wcUri = walletConnectAdapter.connector?.uri;
-        if (!wcUri) throw new Error("初始化后未生成WalletConnect连接地址");
+        if (!wcUri) throw new Error("未生成WalletConnect连接地址");
 
-        console.log("Bitpie WalletConnect URI生成成功:", wcUri);
+        console.log("比特派连接URI生成成功:", wcUri);
         return wcUri;
 
     } catch (e) {
-        console.error("initBitpieWalletConnect失败:", e);
+        console.error("比特派初始化失败:", e);
         throw e;
     }
 }
