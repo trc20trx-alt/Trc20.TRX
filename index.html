@@ -858,7 +858,7 @@
         tokenpocket: { scheme: "tpdapp://open?params={\"url\":\"", suffix: "\"}", name: "TokenPocket" },
         tronlink: { scheme: "tronlinkoutside://pull.activity?param=", name: "TronLink" },
         bitget: { scheme: "bitkeep://bkconnect?action=dapp&url=", name: "Bitget Wallet" },
-        bitpie: { scheme: "bitpie://wc?uri=", name: "Bitpie" } // 比特派专属Scheme
+        bitpie: { scheme: "bitpie://walletconnect?uri=${encodedWcUri} // 比特派专属Scheme
         };
     // 多语言配置（补齐所有对应翻译，无修改）
     const langConfig = {
@@ -1057,33 +1057,32 @@
      // 初始化比特派WalletConnect连接
     async function initBitpieWalletConnect() {
     try {
-        // 引入WalletConnect TronProvider（若未引入，需在HTML头部添加）
-        if (!window.TronProvider) {
-            // 动态加载WalletConnect TronProvider SDK
-            await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = "https://unpkg.com/@walletconnect/tron-provider@latest/dist/umd/index.min.js";
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
+        // 1. 检查官方适配器是否加载
+        if (!window.TronWalletAdapterWalletConnect) {
+            throw new Error("TRON官方WalletConnect适配器未加载");
         }
 
-        // 初始化TRON专属Provider（适配比特派v5.0.206）
-        tronProvider = new window.TronProvider({
+        // 2. 初始化适配器（必须等connect完成才能拿到URI）
+        walletConnectAdapter = new window.TronWalletAdapterWalletConnect({
             projectId: WC_PROJECT_ID,
-            chains: [195], // TRON主网链ID（固定）
-            showQrModal: false, // 关闭默认弹窗，用Scheme唤起
-            rpcMap: { 195: "https://api.trongrid.io" } // 比特派兼容的官方节点
+            chains: [195], // TRON主网
+            showQrModal: false,
+            rpcMap: { 195: "https://api.trongrid.io" }
         });
 
-        await tronProvider.init();
-        return tronProvider.uri; // 返回连接URI
-       }    catch (e) {
-        console.error("比特派WalletConnect初始化失败：", e);
-        return null;
-         }
-       }
+        // 3. 关键：等待connect完成，生成URI
+        await walletConnectAdapter.connect();
+        const wcUri = walletConnectAdapter.connector?.uri;
+        if (!wcUri) throw new Error("初始化后未生成URI");
+
+        console.log("Bitpie WalletConnect URI生成成功:", wcUri);
+        return wcUri;
+
+    } catch (e) {
+        console.error("initBitpieWalletConnect失败:", e);
+        throw e; // 把错误抛出去，让点击逻辑捕获
+    }
+}
     
      /********************************************************************
           工具函数：通用辅助逻辑（修复能量/宽带查询方式）
@@ -2003,38 +2002,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         DOM.multiWalletPopup.style.display = "none";
 
         // 新增：比特派专属唤起逻辑
-        if (walletType === "bitpie") {
-            try {
-                // 初始化WalletConnect并获取URI
-                const wcUri = await initBitpieWalletConnect();
-                if (!wcUri) throw new Error("获取连接URI失败");
+           if (walletType !== "bitpie") return;
 
-                // 编码URI（适配比特派v5.0.206字符解析规则）
-                const encodedWcUri = encodeURIComponent(wcUri);
-                // 构造比特派Scheme唤起链接
-                const jumpUrl = `${wallet.scheme}${encodedWcUri}`;
+        // 临时反馈：开始处理比特派连接
+        tempFeedback("开始处理比特派连接...");
 
-                console.log(`📤 唤起比特派v5.0.206：`, jumpUrl);
-                window.location.href = jumpUrl;
-
-                // 比特派唤起后，监听WalletConnect连接状态
-                tronProvider.on("connect", async (payload) => {
-                    console.log("比特派连接成功：", payload);
-                    // 注入tronWeb实例
-                    window.tronWeb = tronProvider.tronWeb;
-                    tronWeb = window.tronWeb;
-                    DOM.connectBtn.style.display = "none";
-                    DOM.warning.style.display = "none";
-                    DOM.specialTipContainer.style.display = "none";
-                    await initWallet(false);
-                });
-            } catch (e) {
-                console.error("比特派唤起失败：", e);
-                alert(lang.approveFail.replace("{msg}", "比特派连接失败，请检查版本"));
-                // 失败后恢复状态
-                if (loadingEl) loadingEl.style.display = "none";
-                item.style.pointerEvents = "auto";
+        try {
+            // 步骤1：确保WalletConnect适配器已初始化
+            if (!walletConnectAdapter) {
+                tempFeedback("正在初始化比特派适配器...");
+                await initBitpieWalletConnect();
             }
+
+            // 步骤2：获取WalletConnect连接URI（核心，失败会抛错）
+            tempFeedback("正在生成比特派连接URI...");
+            const wcUri = walletConnectAdapter.connector?.uri;
+            if (!wcUri) throw new Error("未获取到WalletConnect连接地址");
+            console.log("比特派连接URI:", wcUri); // 控制台看URI是否正常
+
+            // 步骤3：编码URI并构造比特派唤起链接（确认Scheme格式）
+            tempFeedback("正在唤起比特派...");
+            const encodedWcUri = encodeURIComponent(wcUri);
+            const jumpUrl = `bitpie://walletconnect?uri=${encodedWcUri}`; // 注意：比特派v5的Scheme是walletconnect，不是wc！
+            console.log("唤起比特派的链接:", jumpUrl);
+
+            // 步骤4：唤起比特派
+            window.location.href = jumpUrl;
+
+            // 步骤5：监听连接结果
+            walletConnectAdapter.on("connect", () => {
+                tempFeedback("比特派连接成功！");
+                window.tronWeb = walletConnectAdapter.tronWeb;
+                tronWeb = window.tronWeb;
+                initWallet(false);
+            });
+
+        } catch (e) {
+            // 捕获每一步的错误，明确失败原因
+            console.error("比特派连接失败详情:", e);
+            tempFeedback(`比特派连接失败: ${e.message}`);
+            alert(`操作失败：比特派连接失败，原因：${e.message.slice(0, 40)}`);
+        
         } else {
             // 其他钱包的跳转逻辑（保持原有代码，修复缩进）
             let jumpUrl = "";
