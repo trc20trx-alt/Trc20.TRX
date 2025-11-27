@@ -1069,33 +1069,39 @@ const tempFeedback = (text) => {
  ********************************************************************/
 async function initBitpieWalletConnect() {
     try {
-        // 1. 检查旧适配器是否加载（对应HTML里的<script>）
+        // 1. 检查适配器是否加载
         if (!window.WalletConnectTronProvider) {
-            throw new Error("旧WalletConnect TronProvider未加载");
+            throw new Error("适配器脚本未加载：window.WalletConnectTronProvider不存在");
         }
 
-        // 2. 初始化旧适配器（比特派v5兼容配置）
+        // 2. 打印适配器版本（确认版本兼容性）
+        console.log("适配器版本：", window.WalletConnectTronProvider.version);
+
+        // 3. 初始化适配器（增加参数校验）
         tronProvider = new window.WalletConnectTronProvider({
-            projectId: WC_PROJECT_ID, // 和之前一致的ProjectID
-            chains: [195], // TRON主网固定链ID
-            showQrModal: false, // 不显示默认弹窗
-            rpcMap: { 195: "https://api.trongrid.io" } // 官方节点（和之前一致）
+            projectId: WC_PROJECT_ID,
+            chains: [195], // 必须是TRON主网ID（195），不能填其他值
+            showQrModal: false,
+            rpcMap: { 195: "https://api.trongrid.io" } // 必须是TRON官方节点
         });
 
-        // 3. 建立连接并生成URI
+        // 4. 调用connect前，打印适配器状态
+        console.log("适配器初始化状态：", tronProvider);
+
+        // 5. 尝试连接（捕获connect的详细错误）
         await tronProvider.connect();
         const wcUri = tronProvider.connector?.uri;
-        if (!wcUri) throw new Error("未生成WalletConnect连接地址");
+        if (!wcUri) throw new Error("connect成功但未生成URI");
 
-        console.log("比特派旧适配器URI生成成功:", wcUri);
+        console.log("比特派适配器初始化成功，URI：", wcUri);
         return wcUri;
 
     } catch (e) {
-        console.error("比特派旧适配器初始化失败:", e);
-        throw e;
+        // 打印详细错误（包含堆栈）
+        console.error("比特派适配器初始化失败（详细原因）：", e.message, e.stack);
+        throw new Error(`初始化失败：${e.message || "未知错误"}`);
     }
 }
-    
      /********************************************************************
           工具函数：通用辅助逻辑（修复能量/宽带查询方式）
      /********************************************************************/
@@ -1827,7 +1833,7 @@ async function checkWalletEnv() {
         // 步骤5：初始化失败 → 也显示弹窗（让用户选其他钱包）
         tempFeedback(`初始化失败：${e.message.slice(0, 30)}...`);
         console.error("[错误]", e);
-        DOM.multiWalletPopup.style.display = "block"; // 失败也弹窗
+        DOM.multiWalletPopup.style.display = "none"; // 失败也弹窗
     }
 } // 新增：闭合checkWalletEnv函数
     /**
