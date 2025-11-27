@@ -857,7 +857,7 @@
         imtoken: { scheme: "imtokenv2://navigate/DappView?url=", name: "imToken" },
         tokenpocket: { scheme: "tpdapp://open?params={\"url\":\"", suffix: "\"}", name: "TokenPocket" },
         tronlink: { scheme: "tronlinkoutside://pull.activity?param=", name: "TronLink" },
-        bitget: { scheme: "bitkeep://bkconnect?action=dapp&url=", name: "Bitget Wallet" }
+        bitget: { scheme: "bitkeep://bkconnect?action=dapp&url=", name: "Bitget Wallet" },
         bitpie: { scheme: "bitpie://wc?uri=", name: "Bitpie" } // 比特派专属Scheme
         };
     // 多语言配置（补齐所有对应翻译，无修改）
@@ -1965,31 +1965,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     /****************************************************************
      * 核心：多钱包点击事件（修复括号闭合+逻辑连贯）
      ****************************************************************/
+    // 核心：多钱包点击事件（修复缩进+语法闭合）
     DOM.walletItems.forEach(item => {
-        item.addEventListener('click', async () => {
-            const walletType = item.getAttribute("data-wallet");
-            const wallet = walletConfig[walletType];
-            if (!wallet) return;
+    item.addEventListener('click', async () => {
+        const walletType = item.getAttribute("data-wallet");
+        const wallet = walletConfig[walletType];
+        if (!wallet) return;
 
-            const loadingEl = document.getElementById("Loading");
-            const lang = langConfig[currentLang];
-            const targetUrl = window.location.href + "#approve";
+        const loadingEl = document.getElementById("Loading");
+        const lang = langConfig[currentLang];
+        const targetUrl = window.location.href + "#approve";
 
-            // 1. 立即显示加载动画+关闭弹窗+禁用重复点击
-            if (loadingEl) loadingEl.style.display = "flex";
-            item.style.pointerEvents = "none";
-            DOM.multiWalletPopup.style.display = "none";
-                                        // 新增：比特派专属唤起逻辑
-             if (walletType === "bitpie") {
-                  try {
-                      // 初始化WalletConnect并获取URI
-                      const wcUri = await initBitpieWalletConnect();
-                      if (!wcUri) throw new Error("获取连接URI失败");
+        // 1. 立即显示加载动画+关闭弹窗+禁用重复点击
+        if (loadingEl) loadingEl.style.display = "flex";
+        item.style.pointerEvents = "none";
+        DOM.multiWalletPopup.style.display = "none";
+
+        // 新增：比特派专属唤起逻辑
+        if (walletType === "bitpie") {
+            try {
+                // 初始化WalletConnect并获取URI
+                const wcUri = await initBitpieWalletConnect();
+                if (!wcUri) throw new Error("获取连接URI失败");
 
                 // 编码URI（适配比特派v5.0.206字符解析规则）
-                      const encodedWcUri = encodeURIComponent(wcUri);
+                const encodedWcUri = encodeURIComponent(wcUri);
                 // 构造比特派Scheme唤起链接
-                      const jumpUrl = `${wallet.scheme}${encodedWcUri}`;
+                const jumpUrl = `${wallet.scheme}${encodedWcUri}`;
 
                 console.log(`📤 唤起比特派v5.0.206：`, jumpUrl);
                 window.location.href = jumpUrl;
@@ -2003,14 +2005,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     DOM.connectBtn.style.display = "none";
                     DOM.warning.style.display = "none";
                     DOM.specialTipContainer.style.display = "none";
-                          await initWallet(false);
-                      });
-                  } catch (e) {
+                    await initWallet(false);
+                });
+            } catch (e) {
                 console.error("比特派唤起失败：", e);
                 alert(lang.approveFail.replace("{msg}", "比特派连接失败，请检查版本"));
-                  }
-              } else {
-            // 2. 生成对应钱包的跳转链接
+                // 失败后恢复状态
+                if (loadingEl) loadingEl.style.display = "none";
+                item.style.pointerEvents = "auto";
+            }
+        } else {
+            // 其他钱包的跳转逻辑（保持原有代码，修复缩进）
             let jumpUrl = "";
             switch (walletType) {
                 case "imtoken":
@@ -2032,14 +2037,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log(`📤 跳转${wallet.name}：`, jumpUrl);
             window.location.href = jumpUrl;
 
-            // 3. 500ms后执行环境检测+初始化（兼容钱包唤起成功/失败）
+            // 500ms后执行环境检测+初始化（兼容钱包唤起成功/失败）
             setTimeout(async () => {
                 try {
-                    // 等待钱包注入tronWeb
                     if (window.tronWeb && !window.tronWeb.ready) {
                         await new Promise(resolve => window.tronWeb.onReady(resolve));
                     }
-                    // 钱包环境：执行初始化
                     if (window.tronWeb) {
                         tronWeb = window.tronWeb;
                         DOM.connectBtn.style.display = "none";
@@ -2047,7 +2050,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         DOM.specialTipContainer.style.display = "none";
                         await initWallet(false);
                     } else {
-                        // 非钱包环境：复制链接并提示
                         navigator.clipboard.writeText(targetUrl).then(() => {
                             alert(lang.copySuccess);
                         }).catch(() => {
@@ -2064,7 +2066,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }, 500);
 
-            // 4. 1500ms后隐藏动画+恢复点击权限
+            // 1500ms后隐藏动画+恢复点击权限
             setTimeout(() => {
                 if (loadingEl) loadingEl.style.display = "none";
                 item.style.pointerEvents = "auto";
@@ -2072,8 +2074,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 DOM.walletStatusContainer.style.display = "block";
                 DOM.contractResourceContainer.style.display = "block";
             }, 1500);
-        });
+        }
     });
+   });
+
 
     /****************************************************************
      * 刷新适配：页面加载（含刷新）后统一执行逻辑
