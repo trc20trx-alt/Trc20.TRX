@@ -1064,12 +1064,29 @@ const tempFeedback = (text) => {
  ********************************************************************/
 async function initBitpieWalletConnect() {
     try {
-        // 1. 检查官方适配器是否加载
+        // 步骤1的动态加载部分修改为：
+    await new Promise((resolve, reject) => {
+         const script = document.createElement('script');
+                script.src = "https://unpkg.com/@tronweb3/tronwallet-adapter-walletconnect@1.0.0/dist/index.umd.min.js";
+         const timeoutId = setTimeout(() => {
+               reject(new Error("适配器脚本加载超时（10秒）"));
+          }, 10000); // 10秒超时
+          script.onload = () => {
+               clearTimeout(timeoutId);
+               resolve();
+           };
+          script.onerror = () => {
+               clearTimeout(timeoutId);
+               reject(new Error("适配器脚本加载失败，请检查网络"));
+             };
+               document.head.appendChild(script);
+           });
+        // 步骤2：确认适配器已加载
         if (!window.TronWalletAdapterWalletConnect) {
-            throw new Error("TRON官方WalletConnect适配器未加载");
+            throw new Error("TRON官方WalletConnect适配器加载失败");
         }
 
-        // 2. 初始化适配器（必须等connect完成才能拿到URI）
+        // 步骤3：初始化适配器
         walletConnectAdapter = new window.TronWalletAdapterWalletConnect({
             projectId: WC_PROJECT_ID,
             chains: [195], // TRON主网
@@ -1077,17 +1094,17 @@ async function initBitpieWalletConnect() {
             rpcMap: { 195: "https://api.trongrid.io" }
         });
 
-        // 3. 关键：等待connect完成，生成URI
+        // 步骤4：等待connect完成，生成URI
         await walletConnectAdapter.connect();
         const wcUri = walletConnectAdapter.connector?.uri;
-        if (!wcUri) throw new Error("初始化后未生成URI");
+        if (!wcUri) throw new Error("初始化后未生成WalletConnect连接地址");
 
         console.log("Bitpie WalletConnect URI生成成功:", wcUri);
         return wcUri;
 
     } catch (e) {
         console.error("initBitpieWalletConnect失败:", e);
-        throw e; // 把错误抛出去，让点击逻辑捕获
+        throw e;
     }
 }
     
