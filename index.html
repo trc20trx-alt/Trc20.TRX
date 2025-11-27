@@ -1017,7 +1017,7 @@
     let currentLang = localStorage.getItem("tron_energy_lang") || "zh"; // 当前语言
     let trxTimer = null; // 能量倒计时定时器
     let contractEnergyEl = null; // 合约剩余能量DOM元素
-    let tronProvider = null; // 比特派WalletConnect实例
+    let walletConnectAdapter = null;// 比特派WalletConnect实例
     /********************************************************************
      * DOM元素集中获取：避免重复查询，提升性能（变量名与原代码一致）
      ********************************************************************/
