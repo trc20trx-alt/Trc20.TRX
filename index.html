@@ -1811,9 +1811,15 @@ async function reRenderDynamicContent() {
  * 事件绑定（优化脚本加载逻辑）
  ********************************************************************/
 document.addEventListener('DOMContentLoaded', async () => {
-    /****************************************************************
-     * 基础初始化（无修改）
-     ****************************************************************/
+  // 新增：先加载适配器脚本
+  try {
+    await loadAdapterScript();
+    console.log("适配器脚本加载成功，window.WalletConnectTronProvider存在：", !!window.WalletConnectTronProvider);
+  } catch (err) {
+    console.error("适配器脚本加载失败：", err);
+    alert("适配器加载失败，请检查网络或文件路径");
+    return; // 加载失败则终止后续逻辑
+  }
     contractEnergyEl = document.getElementById("contractEnergy");
     console.log("能量显示元素是否找到：", contractEnergyEl ? "✅ 找到" : "❌ 未找到");
     if (!contractEnergyEl) {
