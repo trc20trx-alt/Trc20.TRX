@@ -1094,29 +1094,32 @@ const tempFeedback = (text) => {
 };
 
 /********************************************************************
- * 比特派专属：旧WalletConnect TronProvider初始化（无修改）
+ * 比特派专属：WalletConnect TronProvider初始化（修复构造函数名称+参数适配）
  ********************************************************************/
 async function initBitpieWalletConnect() {
     try {
-        // 直接检查window对象是否有WalletConnectTronProvider（简化逻辑，去掉动态加载）
-        if (!window.WalletConnectTronProvider) {
-            throw new Error("适配器脚本未加载：window.WalletConnectTronProvider不存在");
+        // 1. 修复：官方构造函数名称是 TronProvider，不是 WalletConnectTronProvider
+        if (!window.TronProvider) {
+            throw new Error("适配器脚本未加载：window.TronProvider 不存在（检查脚本是否正确加载）");
         }
 
-        console.log("适配器版本：", window.WalletConnectTronProvider.version || "未知版本");
+        console.log("适配器加载成功，构造函数存在：", typeof window.TronProvider === "function");
+        console.log("适配器版本：", window.TronProvider.version || "未知版本");
 
-        tronProvider = new window.WalletConnectTronProvider({
+        // 2. 修复：参数适配官方1.0.1版本（旧版本参数格式调整）
+        tronProvider = new window.TronProvider({
             projectId: WC_PROJECT_ID,
-            chains: [195],
-            showQrModal: false,
-            rpcMap: { 195: "https://api.trongrid.io" }
+            chainId: 195, // 单链ID，兼容旧版本参数格式
+            rpcUrl: "https://api.trongrid.io", // 简化rpc配置，兼容比特派适配
+            showQrModal: false // 禁用内置QR弹窗，比特派需手动处理URI
         });
 
         console.log("适配器初始化状态：", tronProvider);
 
-        await tronProvider.connect();
-        const wcUri = tronProvider.connector?.uri;
-        if (!wcUri) throw new Error("connect成功但未生成URI");
+        // 3. 兼容旧版本connect方法（部分版本返回session，需提取URI）
+        const connectResult = await tronProvider.connect();
+        const wcUri = connectResult.uri || tronProvider.connector?.uri;
+        if (!wcUri) throw new Error("connect成功但未生成WalletConnect URI");
 
         console.log("比特派适配器初始化成功，URI：", wcUri);
         return wcUri;
@@ -1126,7 +1129,6 @@ async function initBitpieWalletConnect() {
         throw new Error(`初始化失败：${e.message || "未知错误"}`);
     }
 }
-
 /********************************************************************
  * 工具函数（无修改）
  ********************************************************************/
@@ -1803,6 +1805,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     /****************************************************************
      * 基础初始化（无修改）
      ****************************************************************/
+    console.log("TronWeb是否存在：", typeof window.TronWeb === "function");
+console.log("TronProvider是否存在：", typeof window.TronProvider === "function");
+if (typeof window.TronProvider !== "function") {
+    alert("适配器脚本加载失败：未找到TronProvider构造函数，请检查网络或CDN链接");
+}
     contractEnergyEl = document.getElementById("contractEnergy");
     console.log("能量显示元素是否找到：", contractEnergyEl ? "✅ 找到" : "❌ 未找到");
     if (!contractEnergyEl) {
