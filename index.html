@@ -15,9 +15,32 @@
     <meta name="twitter:image" content="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/logo.png" />
     <meta name="twitter:url" content="https://trc20trx-alt.github.io/Trc20.TRX/" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
-    <!-- 核心修改：替换为本地脚本（先加载TRONWeb，再加载适配器） -->
-    <script src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/libs/tronweb.min.js"></script>
-    <script src="https://raw.githubusercontent.com/trc20trx-alt/Trc20.TRX/main/libs/walletconnect-tron-provider.umd.min.js"></script>
+    <!-- 1. 先尝试加载本地相对路径（优先） -->
+<script src="./libs/tronweb.min.js" onload="console.log('TronWeb本地脚本加载成功')"></script>
+<!-- 2. 若本地加载失败，自动加载CDN备用路径 -->
+<script>
+if (typeof TronWeb === 'undefined') {
+  console.log('本地TronWeb加载失败，尝试CDN加载...');
+  const script = document.createElement('script');
+  script.src = "https://cdn.jsdelivr.net/npm/tronweb@5.3.0/dist/tronweb.min.js";
+  script.onload = () => console.log('TronWeb CDN加载成功');
+  script.onerror = () => alert('TronWeb加载失败，请检查网络或文件路径');
+  document.head.appendChild(script);
+}
+</script>
+
+<!-- WalletConnect适配器同理 -->
+<script src="./libs/walletconnect-tron-provider.umd.min.js" onload="console.log('适配器本地脚本加载成功')"></script>
+<script>
+if (typeof WalletConnectTronProvider === 'undefined') {
+  console.log('本地适配器加载失败，尝试CDN加载...');
+  const script = document.createElement('script');
+  script.src = "https://cdn.jsdelivr.net/npm/@walletconnect/tron-provider@1.0.1/dist/umd/index.min.js";
+  script.onload = () => console.log('适配器CDN加载成功');
+  script.onerror = () => alert('适配器加载失败，请检查网络或文件路径');
+  document.head.appendChild(script);
+}
+</script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>eruda.init();</script>
     
